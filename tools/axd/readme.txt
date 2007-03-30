@@ -1,3 +1,5 @@
+"export TWL_DEBUGGER=ARM" または "make TWL_DEBUGGER=ARM" でビルドして下さい。
+
 デスクトップへ AXD-Debugger のショートカットを作成し、
 「リンク先」に下記のように設定すると便利です。
 
