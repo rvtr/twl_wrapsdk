@@ -1,0 +1,194 @@
+#! make -f
+#----------------------------------------------------------------------------
+# Project:  TwlSDK - commondefs - common definitions for build system
+# File:     commondefs
+#
+#  Copyright 2007 Nintendo.  All rights reserved.
+#
+# These coded instructions, statements, and computer programs contain
+# proprietary information of Nintendo of America Inc. and/or Nintendo
+# Company Ltd., and are protected by Federal copyright law.  They may
+# not be disclosed to third parties or copied or duplicated in any form,
+# in whole or in part, without the prior written consent of Nintendo.
+#
+# $Log: $
+# $NoKeywords: $
+#----------------------------------------------------------------------------
+ifndef TWLSDK_COMMONDEFS_
+TWLSDK_COMMONDEFS_ = TRUE
+
+NITRO_NO_STD_PCHDR = TRUE # プリコンパイルヘッダ抑止
+
+EMPTY	 	?=
+SPACE 		?= $(EMPTY) $(EMPTY)
+
+#
+# SDK Major Version
+#
+
+TWLSDK_VERSION_MAJOR	?= 0
+
+#
+# CodeGen Target
+#
+#	TWL_PLATFORM  = [TEG/TS]
+#	TWL_MEMSIZE   = [4M/8M]
+#	TWL_CODEGEN	= [ARM/THUMB]
+#	TWL_PROC      = [ARM9/ARM7]
+#
+
+TWL_PLATFORM		?= TS
+TWL_MEMSIZE		?= 8M
+TWL_CODEGEN		?= ARM
+TWL_PROC		?= ARM9
+
+NITRO_PLATFORM		= $(TWL_PLATFORM)
+NITRO_MEMSIZE		= $(TWL_MEMSIZE)
+NITRO_CODEGEN		= $(TWL_CODEGEN)
+NITRO_PROC		= $(TWL_PROC)
+
+ifndef	TWL_CODEGEN_PROC
+TWL_CODEGEN_PROC		:= $(TWL_PROC)
+endif
+
+ifeq	($(TWL_CODEGEN),ALL)
+TWL_CODEGEN_ALL	?= TRUE
+override TWL_CODEGEN	 = ARM
+endif
+
+ifeq	($(TWL_CODEGEN),ARM)
+TWL_CODEGEN_ARCH		=
+else #	($(TWL_CODEGEN),THUMB)
+TWL_CODEGEN_ARCH		= .thumb
+endif
+
+#
+# Debugger Type
+#
+#	one of [ISD/KMC/ARM]
+#
+
+TWL_DEBUGGER	?= KMC
+
+
+#----------------------------------------------------------------------------
+#  TWL-SDK path settings
+#
+
+TWL_ROOT			:= $(subst $(SPACE),\ ,$(subst \,/,$(TWLSDK_ROOT)))
+TWL_BUILDTOOLSDIR	:= $(TWL_ROOT)/build/buildtools
+TWL_BUILDSETUPDIR	:= $(TWL_ROOT)/build/buildsetup
+TWL_INCDIR		:= $(TWL_ROOT)/include
+TWL_TOOLSDIR		:= $(TWL_ROOT)/tools
+TWL_COMPONENTSDIR	:= $(TWL_ROOT)/components
+TWL_ADDINS		?= $(TWL_ROOT)/add-ins
+
+TWL_NITROSDK_ROOT   ?=$(shell cygpath -w $(NITROSDK_ROOT))
+
+TWL_BUILDARCH		?= $(TWL_CODEGEN_PROC)-$(TWL_PLATFORM)$(TWL_CODEGEN_ARCH)
+TWL_BUILDARCH_ARM9	:= ARM9-$(TWL_PLATFORM)$(TWL_CODEGEN_ARCH)
+TWL_BUILDARCH_ARM7	:= ARM7-$(TWL_PLATFORM)$(TWL_CODEGEN_ARCH)
+
+TWL_BUILDTYPE		?= $(TWL_BUILDARCH)/$(TWL_BUILD_DIR)
+TWL_BUILDTYPE_ARM9	:= $(TWL_BUILDARCH_ARM9)/$(TWL_BUILD_DIR)
+TWL_BUILDTYPE_ARM7	:= $(TWL_BUILDARCH_ARM7)/$(TWL_BUILD_DIR)
+
+TWL_LIBARCH		:= $(TWL_CODEGEN_PROC)-$(TWL_PLATFORM)
+TWL_LIBTYPE		:= $(TWL_LIBARCH)/$(TWL_BUILD_DIR)
+TWL_LIBDIR		:= $(TWL_ROOT)/lib/$(TWL_LIBTYPE)
+TWL_LIBSYSCALLDIR	:= $(TWL_ROOT)/lib/$(TWL_LIBARCH)/etc
+TWL_LIBSUFFIX		:= .twl$(TWL_CODEGEN_ARCH)
+
+
+TWL_SPECDIR		:= $(TWL_INCDIR)/twl/specfiles
+DEFAULT_TWL_LCFILE		:= $(TWL_SPECDIR)/$(TWL_LIBARCH).lcf
+DEFAULT_TWL_LCFILE_TEMPLATE	:= $(TWL_SPECDIR)/$(TWL_LIBARCH)$(LCF_SUFFIX_).lcf.template
+DEFAULT_TWL_LCFILE_SPEC	:= $(TWL_SPECDIR)/$(TWL_LIBARCH).lsf
+DEFAULT_TWL_ROM_SPEC	:= $(TWL_SPECDIR)/ROM-$(TWL_PLATFORM).rsf
+
+
+### Compiler & Linker settings
+
+LCFILE_TEMPLATE		?= $(DEFAULT_TWL_LCFILE_TEMPLATE)
+LCFILE_SPEC		?= $(DEFAULT_TWL_LCFILE_SPEC)
+
+
+### SDK Library settings
+
+CRT0_O			?=  crt0.o
+
+ifeq	($(TWL_CODEGEN_PROC),ARM9)
+
+TWL_LIBS		?= \
+			   libos$(TWL_LIBSUFFIX).a \
+			   libmi$(TWL_LIBSUFFIX).a \
+			   libvlink$(TWL_LIBSUFFIX).a \
+
+ifdef		TWL_PROFILE_TYPE
+TWL_LIBS		+= libos.$(TWL_PROFILE_TYPE)$(TWL_LIBSUFFIX).a
+endif
+
+else #	($(TWL_CODEGEN_PROC),ARM7)
+
+TWL_LIBS		?= \
+			   libos_sp$(TWL_LIBSUFFIX).a		\
+			   libmi_sp$(TWL_LIBSUFFIX).a		\
+			   libvlink_sp$(TWL_LIBSUFFIX).a \
+
+ifdef		TWL_PROFILE_TYPE
+TWL_LIBS		+= libos_sp.$(TWL_PROFILE_TYPE)$(TWL_LIBSUFFIX).a
+endif
+
+endif
+
+#----------------------------------------------------------------------------
+### NITRO-commondefs
+#
+include	$(NITROSDK_ROOT)/build/buildtools/commondefs
+
+#----------------------------------------------------------------------------
+
+### Global Library resettings
+
+GINCLUDES		:= $(TWL_INCDIR) $(GINCLUDES)
+GLIBRARY_DIRS	:= $(TWL_LIBDIR) $(GLIBRARY_DIRS)
+GLIBRARIES		:= $(TWL_LIBS) \
+					$(filter-out libos$(NITRO_LIBSUFFIX).a libos_sp$(NITRO_LIBSUFFIX).a \
+								libmi$(NITRO_LIBSUFFIX).a libmi_sp$(NITRO_LIBSUFFIX).a \
+								,$(GLIBRARIES))
+
+
+#----------------------------------------------------------------------------
+#  TWLSDK_INSTALL_ROOT
+#
+
+ifdef	TWLSDK_INSTALL_ROOT
+TWLSDK_INSTALL_ROOT_ 	:= $(TWLSDK_INSTALL_ROOT)
+else
+TWLSDK_INSTALL_ROOT_ 	:= $(TWLSDK_ROOT)
+endif
+
+TWL_INSTALL_ROOT	:= $(subst $(SPACE),\ ,$(subst \,/,$(TWLSDK_INSTALL_ROOT_)))
+TWL_INSTALL_INCDIR	:= $(TWL_INSTALL_ROOT)/include
+TWL_INSTALL_TOOLSDIR	:= $(TWL_INSTALL_ROOT)/tools
+TWL_INSTALL_LIBDIR	:= $(TWL_INSTALL_ROOT)/lib/$(TWL_LIBTYPE)
+TWL_INSTALL_COMPONENTSDIR	:= $(TWL_INSTALL_ROOT)/components
+TWL_INSTALL_ADDINS	:= $(TWL_INSTALL_ROOT)/add-ins
+
+
+#----------------------------------------------------------------------------
+#  Compiler flags
+#
+MACRO_FLAGS += -DSDK_DEBUGGER_$(TWL_DEBUGGER)
+
+
+#----------------------------------------------------------------------------
+### Work-around
+#
+# TEGではバイトアクセス不可のため
+CCFLAGS_PROC	+= $(CW_AVOID_STRB)
+
+
+#----------------------------------------------------------------------------
+endif	# TWLSDK_COMMONDEFS_
+#----- End of commondefs -----
