@@ -365,10 +365,10 @@ sub output {
     #
     print $handle <<ENDDOC;
 /*---------------------------------------------------------------------------*
-  Project:  NitroSDK - IO Register List - 
+  Project:  TwlSDK - IO Register List - 
   File:     $output_filename
 
-  Copyright 2003-2004 Nintendo.  All rights reserved.
+  Copyright 2007 Nintendo.  All rights reserved.
 
   These coded instructions, statements, and computer programs contain
   proprietary information of Nintendo of America Inc. and/or Nintendo
