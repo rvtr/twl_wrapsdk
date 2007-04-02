@@ -134,6 +134,7 @@ TWL_LIBS		?= \
 			   libos_sp$(TWL_LIBSUFFIX).a		\
 			   libmi_sp$(TWL_LIBSUFFIX).a		\
 			   libvlink_sp$(TWL_LIBSUFFIX).a \
+			   libnvram_sp$(TWL_LIBSUFFIX).a		\
 
 ifdef		TWL_PROFILE_TYPE
 TWL_LIBS		+= libos_sp.$(TWL_PROFILE_TYPE)$(TWL_LIBSUFFIX).a
@@ -148,6 +149,16 @@ include	$(NITROSDK_ROOT)/build/buildtools/commondefs
 
 #----------------------------------------------------------------------------
 
+ifeq	($(NITRO_PROVATE),TRUE)
+TWL_PROVATE		:= TRUE
+endif
+
+ifeq	($(NITRO_WITH_ARM7),TRUE)
+TWL_WITH_ARM7	:= TRUE
+endif
+
+#----------------------------------------------------------------------------
+
 ### Global Library resettings
 
 GINCLUDES		:= $(TWL_INCDIR) $(GINCLUDES)
@@ -155,6 +166,7 @@ GLIBRARY_DIRS	:= $(TWL_LIBDIR) $(GLIBRARY_DIRS)
 GLIBRARIES		:= $(TWL_LIBS) \
 					$(filter-out libos$(NITRO_LIBSUFFIX).a libos_sp$(NITRO_LIBSUFFIX).a \
 								libmi$(NITRO_LIBSUFFIX).a libmi_sp$(NITRO_LIBSUFFIX).a \
+								libnvram_sp$(NITRO_LIBSUFFIX).a \
 								,$(GLIBRARIES))
 
 

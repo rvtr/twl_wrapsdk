@@ -1,6 +1,6 @@
 #! make -f
 #----------------------------------------------------------------------------
-# Project:  TwlSDK - libraries
+# Project:  TwlSDK - libraries - spi
 # File:     Makefile
 #
 # Copyright 2007 Nintendo.  All rights reserved.
@@ -15,25 +15,38 @@
 # $NoKeywords: $
 #----------------------------------------------------------------------------
 
+SUBDIRS			= nvram # tp mic pm
+
+#----------------------------------------------------------------------------
+
+# build ARM & THUMB libraries
+TWL_CODEGEN_ALL 	?= True
+
+TWL_PROC		= ARM7
+
+# SRCS			= spi_sp.c
+
+# TARGET_LIB		= libspi_sp$(TWL_LIBSUFFIX).a
+INCDIR			= $(TWL_NITROSDK_ROOT)/build/libraries/spi/ARM7/include
+
+#----------------------------------------------------------------------------
+
+# DEBUG版ビルドの場合、RELEASE版でビルドして
+# DEBUG版のライブラリを装います。
+
+ifdef	NITRO_DEBUG
+NITRO_BUILD_TYPE	= RELEASE
+endif
+
 include	$(TWLSDK_ROOT)/build/buildtools/commondefs
 
+INSTALL_TARGETS		= $(TARGETS)
+INSTALL_DIR		= $(TWL_INSTALL_LIBDIR)
 
 #----------------------------------------------------------------------------
 
-SUBDIRS		= \
-		  init		\
-		  os		\
-		  mi		\
-		  vlink		\
-		  spi		\
-
-
-#----------------------------------------------------------------------------
-export	NITRO_BLXCHECKED = yes
-
-#----------------------------------------------------------------------------
+# do-build:		$(TARGETS)
 
 include	$(TWLSDK_ROOT)/build/buildtools/modulerules
-
 
 #===== End of Makefile =====
