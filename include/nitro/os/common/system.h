@@ -347,7 +347,11 @@ extern void OS_SpinWait(u32 cycle);
   Returns:      None
  *---------------------------------------------------------------------------*/
 #ifndef OSi_OSIRQMASK_DEFINED
+#ifdef SDK_ARM9
 typedef u32 OSIrqMask;
+#else // SDK_ARM7
+typedef u64 OSIrqMask;
+#endif
 #define OSi_OSIRQMASK_DEFINED
 #endif
 extern void OS_WaitInterrupt(BOOL clear, OSIrqMask irqFlags);

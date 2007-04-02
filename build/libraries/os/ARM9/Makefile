@@ -39,13 +39,13 @@ SRCDIR			+= $(TWL_NITROSDK_ROOT)/build/libraries/os/common/src \
 
 SRCS			= \
 			  os_init_twl.c		\
+			  os_interrupt_twl.c	\
+			  os_irqHandler_twl.c	\
+			  os_irqTable_twl.c		\
 			  os_spinLock_twl.c		\
 			  os_printf_twl.c		\
 			  os_system_twl.c		\
 			  os_entropy_twl.c		\
-			  os_irqHandler.c	\
-			  os_irqTable.c		\
-			  os_interrupt.c	\
 			  os_thread.c		\
 			  os_context.c		\
 			  os_emulator.c		\
