@@ -119,28 +119,30 @@ CRT0_O			?=  crt0.o
 
 ifeq	($(TWL_CODEGEN_PROC),ARM9)
 
-TWL_LIBS		?= \
-			   libos$(TWL_LIBSUFFIX).a \
-			   libmi$(TWL_LIBSUFFIX).a \
-			   libvlink$(TWL_LIBSUFFIX).a \
+TWL_LIBS_BASE	?= \
+			   libos \
+			   libmi \
+			   libvlink \
 
 ifdef		TWL_PROFILE_TYPE
-TWL_LIBS		+= libos.$(TWL_PROFILE_TYPE)$(TWL_LIBSUFFIX).a
+TWL_LIBS_BASE	+= libos.$(TWL_PROFILE_TYPE)
 endif
 
 else #	($(TWL_CODEGEN_PROC),ARM7)
 
-TWL_LIBS		?= \
-			   libos_sp$(TWL_LIBSUFFIX).a		\
-			   libmi_sp$(TWL_LIBSUFFIX).a		\
-			   libvlink_sp$(TWL_LIBSUFFIX).a \
-			   libnvram_sp$(TWL_LIBSUFFIX).a		\
+TWL_LIBS_BASE	?= \
+			   libos_sp \
+			   libmi_sp \
+			   libvlink_sp \
+			   libnvram_sp \
 
 ifdef		TWL_PROFILE_TYPE
-TWL_LIBS		+= libos_sp.$(TWL_PROFILE_TYPE)$(TWL_LIBSUFFIX).a
+TWL_LIBS_BASE	+= libos_sp.$(TWL_PROFILE_TYPE)
 endif
 
 endif
+
+TWL_LIBS ?= $(addsuffix $(TWL_LIBSUFFIX).a,$(TWL_LIBS_BASE))
 
 #----------------------------------------------------------------------------
 ### NITRO-commondefs
@@ -164,10 +166,7 @@ endif
 GINCLUDES		:= $(TWL_INCDIR) $(GINCLUDES)
 GLIBRARY_DIRS	:= $(TWL_LIBDIR) $(GLIBRARY_DIRS)
 GLIBRARIES		:= $(TWL_LIBS) \
-					$(filter-out libos$(NITRO_LIBSUFFIX).a libos_sp$(NITRO_LIBSUFFIX).a \
-								libmi$(NITRO_LIBSUFFIX).a libmi_sp$(NITRO_LIBSUFFIX).a \
-								libnvram_sp$(NITRO_LIBSUFFIX).a \
-								,$(GLIBRARIES))
+					$(filter-out $(addsuffix $(NITRO_LIBSUFFIX).a,$(TWL_LIBS_BASE)),$(GLIBRARIES))
 
 
 #----------------------------------------------------------------------------
