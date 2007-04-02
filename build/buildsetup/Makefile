@@ -1,6 +1,5 @@
 #! make -f
-#----------------------------------------------------------------------------
-# Project:  TwlSDK - build
+#-----------TwlSDK - buildsetup - create register map
 # File:     Makefile
 #
 # Copyright 2007 Nintendo.  All rights reserved.
@@ -12,22 +11,22 @@
 # in whole or in part, without the prior written consent of Nintendo.
 #
 # $Log: $
-# $NoKeywords: $
+# $NoKeywords:$
 #----------------------------------------------------------------------------
 
 include	$(TWLSDK_ROOT)/build/buildtools/commondefs
 
 
 #----------------------------------------------------------------------------
+ifdef	TWL_PRIVATE
+SUBDIRS		+= versions
+endif
 
-SUBDIRS =	\
-            buildsetup \
-            libraries \
-            tests \
+SUBDIRS		+= ioreg ioreg_sp # fx
 
 #----------------------------------------------------------------------------
 
 include	$(TWLSDK_ROOT)/build/buildtools/modulerules
 
 
-#===== End of Makefile =====
+#----- End of Makefile -----
