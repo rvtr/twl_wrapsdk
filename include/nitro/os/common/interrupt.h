@@ -137,18 +137,6 @@ void    OSi_EnterTimerCallback(u32 timerNo, void (*callback) (void *), void *arg
 #define OS_IRQ_MAIN_BUFFER_SIZE         (0x200)
 
 
-//---- interrupt handler type
-typedef void (*OSIrqFunction) (void);
-
-//---- for irq callback (internal use)
-typedef struct
-{
-    void    (*func) (void *);
-    u32     enable;
-    void   *arg;
-}
-OSIrqCallbackInfo;
-
 //---- irq factor type define
 #ifndef OSi_OSIRQMASK_DEFINED
 #ifdef SDK_ARM9
@@ -158,6 +146,18 @@ typedef u64 OSIrqMask;
 #endif
 #define OSi_OSIRQMASK_DEFINED
 #endif
+
+//---- interrupt handler type
+typedef void (*OSIrqFunction) (void);
+
+//---- for irq callback (internal use)
+typedef struct
+{
+    void    (*func) (void *);
+    void   *arg;
+    OSIrqMask     enable;
+}
+OSIrqCallbackInfo;
 
 //---- table of irq functions
 extern OSIrqFunction OS_IRQTable[];

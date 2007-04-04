@@ -206,12 +206,12 @@ OSIrqMask OS_SetIrqMask(OSIrqMask intr)
 {
     BOOL    ime = OS_DisableIrq();     // IME disable
     OSIrqMask prep = reg_OS_IE;
-    reg_OS_IE = intr;
+    reg_OS_IE = (u32)intr;
 #ifdef SDK_ARM7
     {
         OSIrqMask prep2 = reg_OS_IE2;
         prep |= prep2 << 32;
-        reg_OS_IE2 = intr >> 32;
+        reg_OS_IE2 = (u32)(intr >> 32);
     }
 #endif
     (void)OS_RestoreIrq(ime);
@@ -231,12 +231,12 @@ OSIrqMask OS_EnableIrqMask(OSIrqMask intr)
 {
     BOOL    ime = OS_DisableIrq();     // IME disable
     OSIrqMask prep = reg_OS_IE;
-    reg_OS_IE = prep | intr;
+    reg_OS_IE = (u32)(prep | intr);
 #ifdef SDK_ARM7
     {
         OSIrqMask prep2 = reg_OS_IE2;
         prep |= prep2 << 32;
-        reg_OS_IE2 = prep2 | intr >> 32;
+        reg_OS_IE2 = (u32)(prep2 | intr >> 32);
     }
 #endif
     (void)OS_RestoreIrq(ime);
@@ -256,12 +256,12 @@ OSIrqMask OS_DisableIrqMask(OSIrqMask intr)
 {
     BOOL    ime = OS_DisableIrq();     // IME disable
     OSIrqMask prep = reg_OS_IE;
-    reg_OS_IE = prep & ~intr;
+    reg_OS_IE = (u32)(prep & ~intr);
 #ifdef SDK_ARM7
     {
         OSIrqMask prep2 = reg_OS_IE2;
         prep |= prep2 << 32;
-        reg_OS_IE2 = prep2 & ~(intr >> 32);
+        reg_OS_IE2 = (u32)(prep2 & ~(intr >> 32));
     }
 #endif
     (void)OS_RestoreIrq(ime);
@@ -282,12 +282,12 @@ OSIrqMask OS_ResetRequestIrqMask(OSIrqMask intr)
 {
     BOOL    ime = OS_DisableIrq();     // IME disable
     OSIrqMask prep = reg_OS_IF;
-    reg_OS_IF = intr;
+    reg_OS_IF = (u32)intr;
 #ifdef SDK_ARM7
     {
         OSIrqMask prep2 = reg_OS_IF2;
         prep |= prep2 << 32;
-        reg_OS_IF2 = intr >> 32;
+        reg_OS_IF2 = (u32)(intr >> 32);
     }
 #endif
     (void)OS_RestoreIrq(ime);

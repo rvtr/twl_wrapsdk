@@ -1,6 +1,6 @@
 #! make -f
 #----------------------------------------------------------------------------
-# Project:  TwlSDK - OS - demos - _ARM7-alarm-2
+# Project:  TwlSDK - libraries - pxi
 # File:     Makefile
 #
 # Copyright 2007 Nintendo.  All rights reserved.
@@ -15,22 +15,37 @@
 # $NoKeywords: $
 #----------------------------------------------------------------------------
 
-SUBDIRS		=
+SUBDIRS			=
+
+#----------------------------------------------------------------------------
+
+# build ARM & THUMB libraries
+TWL_CODEGEN_ALL 	?= True
+
+TWL_PROC		= ARM7
+
+SRCDIR			= ../common .
+SRCDIR			+= $(TWL_NITROSDK_ROOT)/build/libraries/pxi/common/src \
+                   $(TWL_NITROSDK_ROOT)/build/libraries/pxi/ARM7/src \
+
+SRCS			= pxi_init.c pxi_fifo.c
+
+TARGET_LIB		= libpxi_sp$(TWL_LIBSUFFIX).a
 
 
 #----------------------------------------------------------------------------
 
-#TWL_CODEGEN   =       THUMB
-TWL_PROC      =       ARM7
+# DEBUG版ビルドの場合、RELEASE版でビルドして
+# DEBUG版のライブラリを装います。
 
-TARGET_BIN	=	main.axf
-
-SRCS		=	main.c
-
-#SRCDIR		=	# using default
-#LCFILE		=	# using default
+ifdef	NITRO_DEBUG
+NITRO_BUILD_TYPE	= RELEASE
+endif
 
 include	$(TWLSDK_ROOT)/build/buildtools/commondefs
+
+INSTALL_TARGETS		= $(TARGETS)
+INSTALL_DIR		= $(TWL_INSTALL_LIBDIR)
 
 
 #----------------------------------------------------------------------------

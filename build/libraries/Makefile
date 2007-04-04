@@ -23,9 +23,11 @@ include	$(TWLSDK_ROOT)/build/buildtools/commondefs
 SUBDIRS		= \
 		  init		\
 		  os		\
+		  pxi		\
 		  mi		\
 		  vlink		\
 		  spi		\
+		  ctrdg		\
 
 
 #----------------------------------------------------------------------------

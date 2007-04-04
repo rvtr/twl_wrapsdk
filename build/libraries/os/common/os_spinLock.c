@@ -269,7 +269,7 @@ void OS_InitLock(void)
         MIi_SetCartridgeProcessor(MI_PROCESSOR_ARM7);
 
 #ifndef SDK_FINALROM
-        _ISDbgLib_Initialize();
+//        _ISDbgLib_Initialize();
 #endif
 
         (void)OS_UnlockByWord(OS_MAINP_SYSTEM_LOCK_ID - 1, lockp, NULL);
@@ -289,7 +289,7 @@ void OS_InitLock(void)
         }
 
 #ifndef SDK_FINALROM
-        _ISDbgLib_Initialize();
+//        _ISDbgLib_Initialize();
 #endif
 
         // ロックIDカウンタ用フラグ 初期化

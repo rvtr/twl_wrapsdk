@@ -1,6 +1,6 @@
 #! make -f
 #----------------------------------------------------------------------------
-# Project:  TwlSDK - OS - demos - _ARM7-alarm-2
+# Project:  TwlSDK - libraries - pxi
 # File:     Makefile
 #
 # Copyright 2007 Nintendo.  All rights reserved.
@@ -15,28 +15,18 @@
 # $NoKeywords: $
 #----------------------------------------------------------------------------
 
-SUBDIRS		=
-
-
-#----------------------------------------------------------------------------
-
-#TWL_CODEGEN   =       THUMB
-TWL_PROC      =       ARM7
-
-TARGET_BIN	=	main.axf
-
-SRCS		=	main.c
-
-#SRCDIR		=	# using default
-#LCFILE		=	# using default
-
 include	$(TWLSDK_ROOT)/build/buildtools/commondefs
 
 
 #----------------------------------------------------------------------------
 
-do-build:		$(TARGETS)
+SUBDIRS =	ARM9
 
+#ifdef	TWL_WITH_ARM7
+SUBDIRS +=	ARM7
+#endif
+
+#----------------------------------------------------------------------------
 
 include	$(TWLSDK_ROOT)/build/buildtools/modulerules
 

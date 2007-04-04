@@ -421,12 +421,13 @@ static asm void init_cp15(void)
 /*
 ; Region G:    BACK_GROUND: Base = 0x0,        Size = 4GB,   I:NC NB    / D:NC NB,     I:NA / D:NA
 ; Region 0:    IO_VRAM:     Base = 0x04000000, Size = 64MB,  I:NC NB    / D:NC NB,     I:RW / D:RW
-; Region 1Rel: MAIN_MEM:    Base = 0x02000000, Size = 8MB*,  I:Cach Buf / D:Cach Buf,  I:RW / D:RW
-; Region 1Dbg: MAIN_MEM:    Base = 0x02000000, Size = 8MB,   I:Cach Buf / D:Cach Buf,  I:RW / D:RW
+; Region 1Rel: MAIN_MEM:    Base = 0x02000000, Size = 16MB*, I:Cach Buf / D:Cach Buf,  I:RW / D:RW
+; Region 1Dbg: MAIN_MEM:    Base = 0x02000000, Size = 16MB,  I:Cach Buf / D:Cach Buf,  I:RW / D:RW
 ;                                              (* Size will be arranged in OS_InitArena(). )
 ; Region 2Rel: SOUND_DATA:  Base = 0x02380000, Size = 512KB, I:NC NB    / D:NC NB,     I:NA / D:NA
 ; Region 2D4M: SOUND_DATA:  Base = 0x02300000, Size = 1MB,   I:NC NB    / D:NC NB,     I:NA / D:NA
 ; Region 2D8M: SOUND_DATA:  Base = 0x02600000, Size = 2MB,   I:NC NB    / D:NC NB,     I:NA / D:NA
+; Region 3:    MAIN_MEM_HI: Base = 0x08000000, Size = 256MB, I:Cach Buf / D:Cach Buf,  I:RW / D:RW
 ; Region 3:    CARTRIDGE:   Base = 0x08000000, Size = 128MB, I:NC NB    / D:NC NB,     I:NA / D:RW
 ; Region 4:    DTCM:        Base = SOUND_DATA, Size = 16KB,  I:NC NB    / D:NC NB,     I:NA / D:RW
 ; Region 5:    ITCM:        Base = 0x01000000, Size = 16MB,  I:NC NB    / D:NC NB,     I:RW / D:RW
@@ -452,8 +453,8 @@ static asm void init_cp15(void)
         SET_PROTECTION_B( c0, HW_IOREG, 64MB )
 
         //---- メインメモリ
-        SET_PROTECTION_A( c1, HW_MAIN_MEM_MAIN, 8MB )
-        SET_PROTECTION_B( c1, HW_MAIN_MEM_MAIN, 8MB )
+        SET_PROTECTION_A( c1, HW_MAIN_MEM_MAIN, 16MB )
+        SET_PROTECTION_B( c1, HW_MAIN_MEM_MAIN, 16MB )
 
         //---- サウンドデータ領域
 #if     HW_MAIN_MEM_SUB_SIZE+HW_MAIN_MEM_SHARED_SIZE == 0x1000
@@ -490,10 +491,10 @@ static asm void init_cp15(void)
 #pragma message(ERROR: Size unmatch HW_MAIN_MEM_SUB_SIZE)
 #endif
 
-        //---- カートリッジ又は他の用途
-        //      CPU 内部ワーク RAM 等
-        SET_PROTECTION_A( c3, HW_CTRDG_ROM, 128MB )
-        SET_PROTECTION_B( c3, HW_CTRDG_ROM, 128MB )
+        //---- メインメモリ上位イメージ 又は他の用途
+        //      カートリッジ、CPU 内部ワーク RAM 等
+        SET_PROTECTION_A( c3, HW_MAIN_MEM_HI, 32MB )
+        SET_PROTECTION_B( c3, HW_MAIN_MEM_HI, 32MB )
 
         //---- データ TCM
         //      + CPU 内部ワーク RAM の場合あり
@@ -542,7 +543,7 @@ static asm void init_cp15(void)
         //      1: MAIN_MEM
         //      6: BIOS
         //
-        mov     r0, #REGION_BIT(0,1,0,0,0,0,1,0)
+        mov     r0, #REGION_BIT(0,1,0,1,0,0,1,0)
         mcr     p15, 0, r0, c2, c0, 1
 
         //
@@ -550,14 +551,14 @@ static asm void init_cp15(void)
         //      1: MAIN_MEM
         //      6: BIOS
         //
-        mov     r0, #REGION_BIT(0,1,0,0,0,0,1,0)
+        mov     r0, #REGION_BIT(0,1,0,1,0,0,1,0)
         mcr     p15, 0, r0, c2, c0, 0
 
         //
         // ライトバッファ イネーブル(リージョン設定)
         //      1: MAIN_MEM
         //
-        mov     r0, #REGION_BIT(0,1,0,0,0,0,0,0)
+        mov     r0, #REGION_BIT(0,1,0,1,0,0,0,0)
         mcr     p15, 0, r0, c3, c0, 0
 
         //
@@ -571,7 +572,7 @@ static asm void init_cp15(void)
         //  BIOS          : RO
         //  SHARED        : NA
         //
-        ldr     r0, =REGION_ACC(RW,RW,NA,NA,NA,RW,RO,NA)
+        ldr     r0, =REGION_ACC(RW,RW,NA,RW,NA,RW,RO,NA)
         mcr     p15, 0, r0, c5, c0, 3
 
         //

@@ -55,7 +55,7 @@
 
 Static $(TARGET_NAME)
 {
-	Address		0x02380000
+	Address		0x02f80000
 	Library		crt0.o
 	StackSize	1024 512
 }

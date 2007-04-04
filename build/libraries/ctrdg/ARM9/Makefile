@@ -1,6 +1,6 @@
 #! make -f
 #----------------------------------------------------------------------------
-# Project:  TwlSDK - OS - demos - _ARM7-alarm-2
+# Project:  TwlSDK - libraries - ctrdg
 # File:     Makefile
 #
 # Copyright 2007 Nintendo.  All rights reserved.
@@ -15,23 +15,41 @@
 # $NoKeywords: $
 #----------------------------------------------------------------------------
 
-SUBDIRS		=
 
+SUBDIRS		=
 
 #----------------------------------------------------------------------------
 
-#TWL_CODEGEN   =       THUMB
-TWL_PROC      =       ARM7
+# build ARM & THUMB libraries
+TWL_CODEGEN_ALL =	True
 
-TARGET_BIN	=	main.axf
+TWL_PROC	=	ARM9
 
-SRCS		=	main.c
+SRCDIR		=	../common .
+SRCDIR			+= $(TWL_NITROSDK_ROOT)/build/libraries/ctrdg/common/src \
+                   $(TWL_NITROSDK_ROOT)/build/libraries/ctrdg/ARM9/src \
 
-#SRCDIR		=	# using default
-#LCFILE		=	# using default
+SRCS		=	\
+			ctrdg.c				\
+			ctrdg_proc.c			\
+			ctrdg_vib.c			\
+			ctrdg_backup.c			\
+			ctrdg_flash_common.c		\
+			ctrdg_flash_AT29LV512.c		\
+			ctrdg_flash_LE26FV10N1TS-10.c	\
+			ctrdg_flash_LE39FW512.c		\
+			ctrdg_flash_MX29L010.c		\
+			ctrdg_flash_MX29L512.c		\
+			ctrdg_sram.c		\
+			ctrdg_task.c
+
+
+TARGET_LIB	=	libctrdg$(TWL_LIBSUFFIX).a
 
 include	$(TWLSDK_ROOT)/build/buildtools/commondefs
 
+INSTALL_TARGETS	=	$(TARGETS)
+INSTALL_DIR	=	$(TWL_INSTALL_LIBDIR)
 
 #----------------------------------------------------------------------------
 
@@ -39,6 +57,5 @@ do-build:		$(TARGETS)
 
 
 include	$(TWLSDK_ROOT)/build/buildtools/modulerules
-
 
 #===== End of Makefile =====

@@ -121,8 +121,10 @@ ifeq	($(TWL_CODEGEN_PROC),ARM9)
 
 TWL_LIBS_BASE	?= \
 			   libos \
+			   libpxi \
 			   libmi \
 			   libvlink \
+			   libctrdg \
 
 ifdef		TWL_PROFILE_TYPE
 TWL_LIBS_BASE	+= libos.$(TWL_PROFILE_TYPE)
@@ -132,6 +134,7 @@ else #	($(TWL_CODEGEN_PROC),ARM7)
 
 TWL_LIBS_BASE	?= \
 			   libos_sp \
+			   libpxi_sp \
 			   libmi_sp \
 			   libvlink_sp \
 			   libnvram_sp \
