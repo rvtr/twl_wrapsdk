@@ -158,6 +158,8 @@ sub analyze {
     $mask_format = "0x%08x";
   } elsif ($bitwidth eq "64") {
     $mask_format = "0x%016x";
+  } elsif ($bitwidth eq "128") {
+    $mask_format = "0x%032x";
   } else {
     die "ERROR: Illegal bitwidth \'$bitwidth\' in line $line_no\n";
   }

@@ -41,75 +41,33 @@
 0x4061,,WRAM_B_LOCK,8,rw,CFG,volatile,B7,7,1,B6,6,1,B5,5,1,B4,4,1,B3,3,1,B2,2,1,B1,1,1,B0,0,1,,,,,,,,,,,,,,,,,,,,,,,,
 0x4062,,WRAM_C_LOCK,8,rw,CFG,volatile,C7,7,1,C6,6,1,C5,5,1,C4,4,1,C3,3,1,C2,2,1,C1,1,1,C0,0,1,,,,,,,,,,,,,,,,,,,,,,,,
 #AES twl p164 ～ p175,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
-0x4400,,AESCNT,32,rw,AES,volatile,E,31,1,I,30,1,MODE,28,2,KEY_SEL,26,2,KEY_BUSY,25,1,KEY_SET,24,1,MAC_BOOL,21,1,MAC_ISEL,20,1,ADATA_OE,19,1,MAC_LEN,16,3,OF_DREQ,14,2,IF_DREQ,12,2,OF_CLR,11,1,IF_CLR,10,1,OF_COUNT,5,5,IF_COUNT,0,5
-0x4404,,ASO_LEN,16,rw,AES,volatile,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
-0x4406,,PLD_LEN,16,rw,AES,volatile,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
-0x4408,,IFIFO,32,rw,AES,volatile,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
-0x440c,,OFIFO,32,rw,AES,volatile,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
-0x4420,,NNC_CTR0,32,rw,AES,volatile
-0x4424,,NNC_CTR1,32,rw,AES,volatile
-0x4428,,NNC_CTR2,32,rw,AES,volatile
-0x442c,,NNC_CTR3,32,rw,AES,volatile
-0x4430,,MAC0,32,rw,AES,volatile
-0x4434,,MAC1,32,rw,AES,volatile
-0x4438,,MAC2,32,rw,AES,volatile
-0x443c,,MAC3,32,rw,AES,volatile
-0x4440,,KEY00,32,rw,AES,volatile
-0x4444,,KEY01,32,rw,AES,volatile
-0x4448,,KEY02,32,rw,AES,volatile
-0x444c,,KEY03,32,rw,AES,volatile
-0x4450,,ID00,32,rw,AES,volatile
-0x4454,,ID01,32,rw,AES,volatile
-0x4458,,ID02,32,rw,AES,volatile
-0x445c,,ID03,32,rw,AES,volatile
-0x4460,,SEED00,32,rw,AES,volatile
-0x4464,,SEED01,32,rw,AES,volatile
-0x4468,,SEED02,32,rw,AES,volatile
-0x446c,,SEED03,32,rw,AES,volatile
-0x4470,,KEY10,32,rw,AES,volatile
-0x4474,,KEY11,32,rw,AES,volatile
-0x4478,,KEY12,32,rw,AES,volatile
-0x447c,,KEY13,32,rw,AES,volatile
-0x4480,,ID10,32,rw,AES,volatile
-0x4484,,ID11,32,rw,AES,volatile
-0x4488,,ID12,32,rw,AES,volatile
-0x448c,,ID13,32,rw,AES,volatile
-0x4490,,SEED10,32,rw,AES,volatile
-0x4494,,SEED11,32,rw,AES,volatile
-0x4498,,SEED12,32,rw,AES,volatile
-0x449c,,SEED13,32,rw,AES,volatile
-0x44a0,,KEY20,32,rw,AES,volatile
-0x44a4,,KEY21,32,rw,AES,volatile
-0x44a8,,KEY22,32,rw,AES,volatile
-0x44ac,,KEY23,32,rw,AES,volatile
-0x44b0,,ID20,32,rw,AES,volatile
-0x44b4,,ID21,32,rw,AES,volatile
-0x44b8,,ID22,32,rw,AES,volatile
-0x44bc,,ID23,32,rw,AES,volatile
-0x44c0,,SEED20,32,rw,AES,volatile
-0x44c4,,SEED21,32,rw,AES,volatile
-0x44c8,,SEED22,32,rw,AES,volatile
-0x44cc,,SEED23,32,rw,AES,volatile
-0x44d0,,KEY30,32,rw,AES,volatile
-0x44d4,,KEY31,32,rw,AES,volatile
-0x44d8,,KEY32,32,rw,AES,volatile
-0x44dc,,KEY33,32,rw,AES,volatile
-0x44e0,,ID30,32,rw,AES,volatile,,,,,,,,,,,,,,,,,,,,,
-0x44e4,,ID31,32,rw,AES,volatile,,,,,,,,,,,,,,,,,,,,,
-0x44e8,,ID32,32,rw,AES,volatile,,,,,,,,,,,,,,,,,,,,,
-0x44ec,,ID33,32,rw,AES,volatile,,,,,,,,,,,,,,,,,,,,,
-0x44f0,,SEED30,32,rw,AES,volatile,,,,,,,,,,,,,,,,,,,,,
-0x44f4,,SEED31,32,rw,AES,volatile,,,,,,,,,,,,,,,,,,,,,
-0x44f8,,SEED32,32,rw,AES,volatile,,,,,,,,,,,,,,,,,,,,,
-0x44fc,,SEED33,32,rw,AES,volatile,,,,,,,,,,,,,,,,,,,,,
-#FUSE twl p176 ～ p178,,,,,,,,,,,,,,,,,,,,,,,,,,,
-0x4D00,,FUSE_ID0,32,rw,MI,volatile,WAFER,24,8,X,12,12,Y,0,12,,,,,,,,,,,,
-0x4D04,,FUSE_ID1,32,rw,MI,volatile,FAB,20,9,LOT,0,20,,,,,,,,,,,,,,,
-#GPIO2 twl p214 ～ p218,,,,,,,,,,,,,,,,,,,,,,,,,,,
-0x4C00,,GPIO2DATA,8,rw,EXI,volatile,IO33_3,7,1,IO33_2,6,1,IO33_1,5,1,IO33_0,4,1,IO18_2,2,1,IO18_1,1,1,IO18_0,0,1
-0x4C01,,GPIO2DIR,8,rw,EXI,volatile,IO33_3,7,1,IO33_2,6,1,IO33_1,5,1,IO33_0,4,1,IO18_2,2,1,IO18_1,1,1,IO18_0,0,1
-0x4C02,,GPIO2EDGE,8,rw,EXI,volatile,IO33_3,7,1,IO33_2,6,1,IO33_1,5,1,IO33_0,4,1,IO18_2,2,1,IO18_1,1,1,IO18_0,0,1
-0x4C03,,GPIO2IE,8,rw,EXI,volatile,IO33_3,7,1,IO33_2,6,1,IO33_1,5,1,IO33_0,4,1,IO18_2,2,1,IO18_1,1,1,IO18_0,0,1
+0x4400,,AESCNT,32,rw,AES,volatile,E,31,1,I,30,1,MODE,28,2,KEY_SEL,26,2,KEY_BUSY,25,1,KEY_SET,24,1,MAC_RSLT,21,1,MAC_ISEL,20,1,ADATA_OE,19,1,MAC_LEN,16,3,OFIFO_DREQ,14,2,IFIFO_DREQ,12,2,OFIFO_CLR,11,1,IFIFO_CLR,10,1,OFIFO_COUNT,5,5,IFIFO_COUNT,0,5
+0x4404,,AES_ASO_LEN,16,rw,AES,volatile,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+0x4406,,AES_PLD_LEN,16,rw,AES,volatile,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+0x4408,,AES_IFIFO,32,rw,AES,volatile,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+0x440c,,AES_OFIFO,32,rw,AES,volatile,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+0x4420,,AES_NNC_CTR,128,rw,AES,volatile,,,,,,,,,
+0x4430,,AES_MAC,128,rw,AES,volatile,,,,,,,,,
+0x4440,,AES_KEY0,128,rw,AES,volatile,,,,,,,,,
+0x4450,,AES_ID0,128,rw,AES,volatile,,,,,,,,,
+0x4460,,AES_SEED0,128,rw,AES,volatile,,,,,,,,,
+0x4470,,AES_KEY1,128,rw,AES,volatile,,,,,,,,,
+0x4480,,AES_ID1,128,rw,AES,volatile,,,,,,,,,
+0x4490,,AES_SEED1,128,rw,AES,volatile,,,,,,,,,
+0x44a0,,AES_KEY2,128,rw,AES,volatile,,,,,,,,,
+0x44b0,,AES_ID2,128,rw,AES,volatile,,,,,,,,,
+0x44c0,,AES_SEED2,128,rw,AES,volatile,,,,,,,,,
+0x44d0,,AES_KEY3,128,rw,AES,volatile,,,,,,,,,
+0x44e0,,AES_ID3,128,rw,AES,volatile,,,,,,,,,
+0x44f0,,AES_SEED3,128,rw,AES,volatile,,,,,,,,,
+#FUSE twl p176 ～ p178,,,,,,,,,,,,,,,
+0x4D00,,FUSE_ID0,32,rw,MI,volatile,WAFER,24,8,X,12,12,Y,0,12
+0x4D04,,FUSE_ID1,32,rw,MI,volatile,FAB,20,9,LOT,0,20,,,,,,,,,,,,,,,,,,,,,,,,
+#GPIO2 twl p214 ～ p218,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+0x4C00,,GPIO2DATA,8,rw,EXI,volatile,IO33_3,7,1,IO33_2,6,1,IO33_1,5,1,IO33_0,4,1,IO18_2,2,1,IO18_1,1,1,IO18_0,0,1,,,,,,,,,
+0x4C01,,GPIO2DIR,8,rw,EXI,volatile,IO33_3,7,1,IO33_2,6,1,IO33_1,5,1,IO33_0,4,1,IO18_2,2,1,IO18_1,1,1,IO18_0,0,1,,,,,,,,,
+0x4C02,,GPIO2EDGE,8,rw,EXI,volatile,IO33_3,7,1,IO33_2,6,1,IO33_1,5,1,IO33_0,4,1,IO18_2,2,1,IO18_1,1,1,IO18_0,0,1,,,,,,,,,
+0x4C03,,GPIO2IE,8,rw,EXI,volatile,IO33_3,7,1,IO33_2,6,1,IO33_1,5,1,IO33_0,4,1,IO18_2,2,1,IO18_1,1,1,IO18_0,0,1,,,,,,,,,
 0x4C04,,GPIO2CNT2,8,rw,EXI,volatile,WLRST,0,1,,,,,,,,,,,,,,,,,,,,,,,,,,,
 0x4C05,,GPIO2CNT3,8,rw,EXI,volatile,VIBO,0,1,,,,,,,,,,,,,,,,,,,,,,,,,,,
 #I2C twl p193 ～ p199,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
@@ -120,12 +78,12 @@
 #MIC twl p200 ～ p203,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
 0x4600,,MICCNT,8,rw,SND,volatile,E,15,1,IM,13,2,FIFO_CLR,12,1,FIFO_ERR,11,1,FIFO_FUL,10,1,FIFO_HALF,9,1,FIFO_EMP,8,1,FIFO_SMP,2,2,NR,1,1,NL,0,1
 0x4604,,MIC_FIFO,32,rw,SND,volatile,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
-#表示ステータス nitro p215 / twl p222,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
-0x004,,DISPSTAT,16,rw,GX,volatile,VCOUNTER,7,9,LD_INI,6,1,VQI,5,1,HBI,4,1,VBI,3,1,LYC,2,1,HBLK,1,1,VBLK,0,1,,,,,,
-0x006,,VCOUNT,16,rw,GX,volatile,VCOUNTER,0,10,,,,,,,,,,,,,,,,,,,,,,,,,,,
-#DMA nitro p210 ～ p212,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
-0x0b0,,DMA0SAD,32,rw,MI,volatile,DMASRC,0,27,,,,,,,,,,,,,,,,,,,,,,,,,,,
-0x0b4,,DMA0DAD,32,rw,MI,volatile,DMADEST,0,27,,,,,,,,,,,,,,,,,,,,,,,,,,,
+#表示ステータス nitro p215 / twl p222,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+0x004,,DISPSTAT,16,rw,GX,volatile,VCOUNTER,7,9,LD_INI,6,1,VQI,5,1,HBI,4,1,VBI,3,1,LYC,2,1,HBLK,1,1,VBLK,0,1
+0x006,,VCOUNT,16,rw,GX,volatile,VCOUNTER,0,10,,,,,,,,,,,,,,,,,,,,,
+#DMA nitro p210 ～ p212,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+0x0b0,,DMA0SAD,32,rw,MI,volatile,DMASRC,0,27,,,,,,,,,,,,,,,,,,,,,
+0x0b4,,DMA0DAD,32,rw,MI,volatile,DMADEST,0,27,,,,,,,,,,,,,,,,,,,,,
 0x0b8,,DMA0CNT,32,rw,MI,volatile,E,31,1,I,30,1,TIMING,28,2,SB,26,1,CM,25,1,SAR,23,2,DAR,21,2,WORDCNT,0,16
 0x0bc,,DMA1SAD,32,rw,MI,volatile,DMASRC,0,28,,,,,,,,,,,,,,,,,,,,,
 0x0c0,,DMA1DAD,32,rw,MI,volatile,DMADEST,0,27,,,,,,,,,,,,,,,,,,,,,
@@ -136,12 +94,12 @@
 0x0d4,,DMA3SAD,32,rw,MI,volatile,DMASRC,0,28,,,,,,,,,,,,,,,,,,,,,
 0x0d8,,DMA3DAD,32,rw,MI,volatile,DMADEST,0,28,,,,,,,,,,,,,,,,,,,,,
 0x0dc,,DMA3CNT,32,rw,MI,volatile,E,31,1,I,30,1,TIMING,28,2,SB,26,1,CM,25,1,SAR,23,2,DAR,21,2,WORDCNT,0,16
-# twl p150 ～ p163,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
-0x4100,,DMAGBL,32,rw,MI,volatile,ARB,31,1,YLD,16,4,,,,,,,,,,,,,,,,,,
-0x4104,,DMA4SAD,32,rw,MI,volatile,DMASRC,2,30,,,,,,,,,,,,,,,,,,,,,
-0x4108,,DMA4DAD,32,rw,MI,volatile,DMADEST,2,30,,,,,,,,,,,,,,,,,,,,,
-0x410c,,DMA4TCNT,32,rw,MI,volatile,TW,0,28,,,,,,,,,,,,,,,,,,,,,
-0x4110,,DMA4WCNT,32,rw,MI,volatile,W,0,24,,,,,,,,,,,,,,,,,,,,,
+# twl p150 ～ p163,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+0x4100,,DMAGBL,32,rw,MI,volatile,ARB,31,1,YLD,16,4,,,,,,,,,,,,,,,,,,,,,
+0x4104,,DMA4SAD,32,rw,MI,volatile,DMASRC,2,30,,,,,,,,,,,,,,,,,,,,,,,,
+0x4108,,DMA4DAD,32,rw,MI,volatile,DMADEST,2,30,,,,,,,,,,,,,,,,,,,,,,,,
+0x410c,,DMA4TCNT,32,rw,MI,volatile,TW,0,28,,,,,,,,,,,,,,,,,,,,,,,,
+0x4110,,DMA4WCNT,32,rw,MI,volatile,W,0,24,,,,,,,,,,,,,,,,,,,,,,,,
 0x4114,,DMA4BCNT,32,rw,MI,volatile,PS,16,2,BI,0,16,,,,,,,,,,,,,,,,,,,,,
 0x4118,,DMA4FDATA,32,rw,MI,volatile,,,,,,,,,,,,,,,,,,,,,,,,,,,
 0x411c,,DMA4CNT,32,rw,MI,volatile,E,31,1,I,30,1,CM,29,1,TIMING,24,5,BSIZE,16,4,SRLD,15,1,SAR,13,2,DRLD,12,1,DAR,10,2
@@ -168,28 +126,28 @@
 0x4170,,DMA7CNT,32,rw,MI,volatile,E,31,1,I,30,1,CM,29,1,TIMING,24,5,BSIZE,16,4,SRLD,15,1,SAR,13,2,DRLD,12,1,DAR,10,2
 #タイマ nitro p213,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
 0x100,,TM0CNT_L,16,rw,OS,volatile,TIMER0CNT,0,16,,,,,,,,,,,,,,,,,,,,,,,,
-0x102,,TM0CNT_H,16,rw,OS,volatile,E,7,1,I,6,1,PS,0,2,,,,,,,,,,,,,,,,,,
-0x104,,TM1CNT_L,16,rw,OS,volatile,TIMER1CNT,0,16,,,,,,,,,,,,,,,,,,,,,,,,
-0x106,,TM1CNT_H,16,rw,OS,volatile,E,7,1,I,6,1,CH,2,1,PS,0,2,,,,,,,,,,,,,,,
-0x108,,TM2CNT_L,16,rw,OS,volatile,TIMER2CNT,0,16,,,,,,,,,,,,,,,,,,,,,,,,
-0x10a,,TM2CNT_H,16,rw,OS,volatile,E,7,1,I,6,1,CH,2,1,PS,0,2,,,,,,,,,,,,,,,
-0x10c,,TM3CNT_L,16,rw,OS,volatile,TIMER2CNT,0,16,,,,,,,,,,,,,,,,,,,,,,,,
-0x10e,,TM3CNT_H,16,rw,OS,volatile,E,7,1,I,6,1,CH,2,1,PS,0,2,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
-#SIO ,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
-"#レジスタ0x128,0x12aは状況でビットの意味が大きく変わるので多重に定義してあります。",,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
-0x120,,SIODATA32,32,rw,EXI,volatile,H,16,16,L,0,16,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
-0x120,,SIOMULTI0,16,rw,EXI,volatile,DATA,0,16,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
-0x122,,SIOMULTI1,16,rw,EXI,volatile,DATA,0,16,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
-0x124,,SIOMULTI2,16,rw,EXI,volatile,DATA,0,16,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
-0x126,,SIOMULTI3,16,rw,EXI,volatile,DATA,0,16,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
-0x128,,SIOCNT,16,rw,EXI,volatile,CKUP,15,1,I,14,1,MD1,13,1,BITLEN,12,1,START,7,1,TSEND,3,1,TRECV,2,1,SCLOCKHZ,1,1,SCLOCK,0,1,,,,,,,,,,,,,,,
-0x128,,SIOCNT_MULTI,16,rw,EXI,volatile,CKUP,15,1,I,14,1,MD1,13,1,MD0,12,1,START,7,1,ERROR,6,1,MULTIID,4,2,SDMON,3,1,SIMON,2,1,BAUD,0,2,,,,,,,,,,,,
-0x128,,SIOCNT_UART,16,rw,EXI,volatile,CKUP,15,1,MD1,13,1,MD0,12,1,RECVEF,11,1,SENDEF,10,1,PARITYEF,9,1,FIFOEF,8,1,DATALEN,7,1,ERROR,6,1,RECV,5,1,SEND,4,1,PARITYCNT,3,1,CTS,2,1,BAUD,0,2
-0x12a,,SIOCNT_H,16,rw,EXI,volatile,RFFUL,15,1,TFEMP,14,1,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
-0x12a,,SIOMLT_SEND,16,rw,EXI,volatile,DATA,0,16,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
-0x12a,,SIODATA8,16,rw,EXI,volatile,DATA,0,8,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
-0x12c,,SIOSEL,16,rw,EXI,volatile,SEL,0,1,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
-#キー  nitro p214,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+0x102,,TM0CNT_H,16,rw,OS,volatile,E,7,1,I,6,1,PS,0,2,,,,,,,,,,,,,,,,,,,,,
+0x104,,TM1CNT_L,16,rw,OS,volatile,TIMER1CNT,0,16,,,,,,,,,,,,,,,,,,,,,,,,,,,
+0x106,,TM1CNT_H,16,rw,OS,volatile,E,7,1,I,6,1,CH,2,1,PS,0,2,,,,,,,,,,,,,,,,,,
+0x108,,TM2CNT_L,16,rw,OS,volatile,TIMER2CNT,0,16,,,,,,,,,,,,,,,,,,,,,,,,,,,
+0x10a,,TM2CNT_H,16,rw,OS,volatile,E,7,1,I,6,1,CH,2,1,PS,0,2,,,,,,,,,,,,,,,,,,
+0x10c,,TM3CNT_L,16,rw,OS,volatile,TIMER2CNT,0,16,,,,,,,,,,,,,,,,,,,,,,,,,,,
+0x10e,,TM3CNT_H,16,rw,OS,volatile,E,7,1,I,6,1,CH,2,1,PS,0,2,,,,,,,,,,,,,,,,,,
+#SIO ,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+"#レジスタ0x128,0x12aは状況でビットの意味が大きく変わるので多重に定義してあります。",,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+0x120,,SIODATA32,32,rw,EXI,volatile,H,16,16,L,0,16,,,,,,,,,,,,,,,,,,,,,,,,
+0x120,,SIOMULTI0,16,rw,EXI,volatile,DATA,0,16,,,,,,,,,,,,,,,,,,,,,,,,,,,
+0x122,,SIOMULTI1,16,rw,EXI,volatile,DATA,0,16,,,,,,,,,,,,,,,,,,,,,,,,,,,
+0x124,,SIOMULTI2,16,rw,EXI,volatile,DATA,0,16,,,,,,,,,,,,,,,,,,,,,,,,,,,
+0x126,,SIOMULTI3,16,rw,EXI,volatile,DATA,0,16,,,,,,,,,,,,,,,,,,,,,,,,,,,
+0x128,,SIOCNT,16,rw,EXI,volatile,CKUP,15,1,I,14,1,MD1,13,1,BITLEN,12,1,START,7,1,TSEND,3,1,TRECV,2,1,SCLOCKHZ,1,1,SCLOCK,0,1,,,
+0x128,,SIOCNT_MULTI,16,rw,EXI,volatile,CKUP,15,1,I,14,1,MD1,13,1,MD0,12,1,START,7,1,ERROR,6,1,MULTIID,4,2,SDMON,3,1,SIMON,2,1,BAUD,0,2
+0x128,,SIOCNT_UART,16,rw,EXI,volatile,CKUP,15,1,MD1,13,1,MD0,12,1,RECVEF,11,1,SENDEF,10,1,PARITYEF,9,1,FIFOEF,8,1,DATALEN,7,1,ERROR,6,1,RECV,5,1,SEND,4,1,PARITYCNT,3,1,CTS,2,1,BAUD,0,2,,,,,,
+0x12a,,SIOCNT_H,16,rw,EXI,volatile,RFFUL,15,1,TFEMP,14,1,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+0x12a,,SIOMLT_SEND,16,rw,EXI,volatile,DATA,0,16,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+0x12a,,SIODATA8,16,rw,EXI,volatile,DATA,0,8,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+0x12c,,SIOSEL,16,rw,EXI,volatile,SEL,0,1,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+#キー  nitro p214,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
 0x130,,KEYINPUT,16,rw,PAD,volatile,L,9,1,R,8,1,DOWN,7,1,UP,6,1,LEFT,5,1,RIGHT,4,1,START,3,1,SEL,2,1,B,1,1,A,0,1,,,,,,,,,,,,,,,,,,
 0x132,,KEYCNT,16,rw,PAD,volatile,LOGIC,15,1,INTR,14,1,L,9,1,R,8,1,DOWN,7,1,UP,6,1,LEFT,5,1,RIGHT,4,1,START,3,1,SEL,2,1,B,1,1,A,0,1,,,,,,,,,,,,
 #シリアル通信　汎用端子,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
@@ -200,28 +158,28 @@
 0x138,defined(SDK_TS),RCNT1,16,rw,EXI,volatile,DIR_RF,15,1,DIR_RE,14,1,DIR_RD,13,1,DIR_RC,12,1,DATA_RF,11,1,DATA_RE,10,1,DATA_RD,9,1,DATA_RC,8,1,DIR_RB,7,1,DIR_RA,6,1,DIR_R9,5,1,DIR_R8,4,1,DATA_RB,3,1,DATA_RA,2,1,DATA_R9,1,1,DATA_R8,0,1
 #JOY,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
 0x140,,JOYCNT,16,rw,EXI,volatile,MOD,7,1,I,6,1,SEND,2,1,RECV,1,1,RESET,0,1,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
-0x150,,JOY_RECV,32,rw,EXI,volatile,RECVDATA,0,32,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
-0x154,,JOY_TRANS,32,rw,EXI,volatile,SENDDATA,0,32,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
-0x158,,JOY_STAT,16,rw,EXI,volatile,GEN,4,2,SSTATUS,3,1,RSTATUS,1,1,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
-# ARM9 とのインターフェイス nitro p191～ p192,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
-0x180,,MAINPINTF,16,rw,PXI,volatile,I,14,1,IREQ,13,1,A7STATUS,8,4,A9STATUS,0,4,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
-0x184,,MAINP_FIFO_CNT,16,rw,PXI,volatile,E,15,1,ERR,14,1,RECV_RI,10,1,RECV_FULL,9,1,RECV_EMP,8,1,SEND_CL,3,1,SEND_TI,2,1,SEND_FULL,1,1,SEND_EMP,0,1,,,,,,,,,,,,,,,,,,,,,
-0x188,,SEND_FIFO,32,rw,PXI,volatile,,,,,,,,,,,,,,,,,,,,,
-0x100000,,RECV_FIFO,32,rw,PXI,volatile,,,,,,,,,,,,,,,,,,,,,
-#メモリカード,,,,,,,,,,,,,,,,,,,,,,,,,,,
-0x1a0,,MCCNT0,16,rw,MI,volatile,E,15,1,I,14,1,SEL,13,1,BUSY,7,1,MODE,6,1,BAUDRATE,0,2,,,
-0x1a2,,MCD0,16,rw,MI,volatile,DATA,0,8,,,,,,,,,,,,,,,,,,
-0x100010,,MCD1,32,rw,MI,volatile,,,,,,,,,,,,,,,,,,,,,
-0x1a4,,MCCNT1,32,rw,MI,volatile,START,31,1,WR,30,1,CT,27,1,PC,24,3,RDY,23,1,L2,16,6,L1,0,13
-0x1a8,,MCCMD0,32,w,MI,volatile,CMD3,24,8,CMD2,16,8,CMD1,8,8,CMD0,0,8,,,,,,,,,
-0x1ac,,MCCMD1,32,w,MI,volatile,CMD7,24,8,CMD6,16,8,CMD5,8,8,CMD4,0,8,,,,,,,,,
-#,,,,,,,,,,,,,,,,,,,,,,,,,,,
-0x21a0,,MCCNT0_B,16,rw,MI,volatile,E,15,1,I,14,1,SEL,13,1,BUSY,7,1,MODE,6,1,BAUDRATE,0,2,,,
-0x21a2,,MCD0_B,16,rw,MI,volatile,DATA,0,8,,,,,,,,,,,,,,,,,,
-0x102010,,MCD1_B,32,rw,MI,volatile,,,,,,,,,,,,,,,,,,,,,
-0x21a4,,MCCNT1_B,32,rw,MI,volatile,START,31,1,WR,30,1,CT,27,1,PC,24,3,RDY,23,1,L2,16,6,L1,0,13
-0x21a8,,MCCMD0_B,32,w,MI,volatile,CMD3,24,8,CMD2,16,8,CMD1,8,8,CMD0,0,8,,,,,,,,,
-0x21ac,,MCCMD1_B,32,w,MI,volatile,CMD7,24,8,CMD6,16,8,CMD5,8,8,CMD4,0,8,,,,,,,,,
+0x150,,JOY_RECV,32,rw,EXI,volatile,RECVDATA,0,32,,,,,,,,,,,,,,,,,,,,,,,,
+0x154,,JOY_TRANS,32,rw,EXI,volatile,SENDDATA,0,32,,,,,,,,,,,,,,,,,,,,,,,,
+0x158,,JOY_STAT,16,rw,EXI,volatile,GEN,4,2,SSTATUS,3,1,RSTATUS,1,1,,,,,,,,,,,,,,,,,,
+# ARM9 とのインターフェイス nitro p191～ p192,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+0x180,,MAINPINTF,16,rw,PXI,volatile,I,14,1,IREQ,13,1,A7STATUS,8,4,A9STATUS,0,4,,,,,,,,,,,,,,,
+0x184,,MAINP_FIFO_CNT,16,rw,PXI,volatile,E,15,1,ERR,14,1,RECV_RI,10,1,RECV_FULL,9,1,RECV_EMP,8,1,SEND_CL,3,1,SEND_TI,2,1,SEND_FULL,1,1,SEND_EMP,0,1
+0x188,,SEND_FIFO,32,rw,PXI,volatile,,,,,,,,,,,,,,,,,,,,,,,,,,,
+0x100000,,RECV_FIFO,32,rw,PXI,volatile,,,,,,,,,,,,,,,,,,,,,,,,,,,
+#メモリカード,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+0x1a0,,MCCNT0,16,rw,MI,volatile,E,15,1,I,14,1,SEL,13,1,BUSY,7,1,MODE,6,1,BAUDRATE,0,2,,,,,,,,,
+0x1a2,,MCD0,16,rw,MI,volatile,DATA,0,8,,,,,,,,,,,,,,,,,,,,,,,,
+0x100010,,MCD1,32,rw,MI,volatile,,,,,,,,,,,,,,,,,,,,,,,,,,,
+0x1a4,,MCCNT1,32,rw,MI,volatile,START,31,1,WR,30,1,CT,27,1,PC,24,3,RDY,23,1,L2,16,6,L1,0,13,,,,,,
+0x1a8,,MCCMD0,32,w,MI,volatile,CMD3,24,8,CMD2,16,8,CMD1,8,8,CMD0,0,8,,,,,,,,,,,,,,,
+0x1ac,,MCCMD1,32,w,MI,volatile,CMD7,24,8,CMD6,16,8,CMD5,8,8,CMD4,0,8,,,,,,,,,,,,,,,
+#,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+0x21a0,,MCCNT0_B,16,rw,MI,volatile,E,15,1,I,14,1,SEL,13,1,BUSY,7,1,MODE,6,1,BAUDRATE,0,2,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+0x21a2,,MCD0_B,16,rw,MI,volatile,DATA,0,8,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+0x102010,,MCD1_B,32,rw,MI,volatile,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+0x21a4,,MCCNT1_B,32,rw,MI,volatile,START,31,1,WR,30,1,CT,27,1,PC,24,3,RDY,23,1,L2,16,6,L1,0,13,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+0x21a8,,MCCMD0_B,32,w,MI,volatile,CMD3,24,8,CMD2,16,8,CMD1,8,8,CMD0,0,8,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+0x21ac,,MCCMD1_B,32,w,MI,volatile,CMD7,24,8,CMD6,16,8,CMD5,8,8,CMD4,0,8,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
 # twl p220 ～ p221,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
 0x1c0,!defined(SDK_TS),SPICNT,16,rw,SPI,volatile,E,15,1,I,14,1,SEL,13,1,MODE,12,1,BUSY,7,1,BAUDRATE,0,3,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
 0x1c0,defined(SDK_TS),SPICNT,16,rw,SPI,volatile,E,15,1,I,14,1,MODE,11,1,CLKMODE,10,1,SEL,8,2,BUSY,7,1,BAUDRATE,0,2,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
@@ -232,28 +190,28 @@
 #割り込み twl p141 ～ 149,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
 0x208,,IME,16,rw,OS,volatile,IME,0,1,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
 0x210,,IE,32,rw,OS,volatile,D7,31,1,D6,30,1,D5,29,1,D4,28,1,MI_B,27,1,MC_B,26,1,J_TX,25,1,WL,24,1,SPI,23,1,PM,22,1,J_RX,21,1,MI,20,1,MC,19,1,IFN,18,1,IFE,17,1,A7,16,1,MC_B_DET,15,1,MC_DET,14,1,I_D,13,1,K,12,1,D3,11,1,D2,10,1,D1,9,1,D0,8,1,T3,6,1,T2,5,1,T1,4,1,T0,3,1,VE,2,1,HB,1,1,VB,0,1
-0x214,,IF,32,rw,OS,volatile,D7,31,1,D6,30,1,D5,29,1,D4,28,1,MI_B,27,1,MC_B,26,1,J_TX,25,1,SPI,23,1,PM,22,1,MI,20,1,J_RX,21,1,MC,19,1,IFN,18,1,IFE,17,1,A7,16,1,MC_B_DET,15,1,MC_DET,14,1,I_D,13,1,K,12,1,D3,11,1,D2,10,1,D1,9,1,D0,8,1,T3,6,1,T2,5,1,T1,4,1,T0,3,1,VE,2,1,HB,1,1,VB,0,1,,,
-0x218,,IE2,32,rw,OS,volatile,MIC,14,1,I2C,13,1,AES,12,1,WSDIO,11,1,WSD,10,1,SDIO,9,1,SD,8,1,IO33_3,7,1,IO33_2,6,1,IO33_1,5,1,IO33_0,4,1,IO18_2,2,1,IO18_1,1,1,IO18_0,0,1,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
-0x21c,,IF2,32,rw,OS,volatile,MIC,14,1,I2C,13,1,AES,12,1,WSDIO,11,1,WSD,10,1,SDIO,9,1,SD,8,1,IO33_3,7,1,IO33_2,6,1,IO33_1,5,1,IO33_0,4,1,IO18_2,2,1,IO18_1,1,1,IO18_0,0,1,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
-#本体内メモリ nitro p194,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
-0x240,,WVRAMSTAT,16,rw,MI,volatile,WRAM_1,9,1,WRAM_0,8,1,VRAM_D,1,1,VRAM_C,0,1,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
-#PAUSE page 19-43,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
-0x300,,PAUSE,16,rw,OS,volatile,MOD,14,2,CHK,0,1,,,,,,,,,,,,,,,,,,
-#パワーコントロール nitro p200,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
-0x304,,POWCNT,16,rw,SND,volatile,EWL,1,1,SPE,0,1,,,,,,,,,,,,,,,,,,
-#サウンド,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
-0x400,,SOUND0CNT,32,rw,SND,volatile,E,31,1,FORMAT,29,2,REPEAT,27,2,DUTY,24,3,PAN,16,7,HOLD,15,1,SHIFT,8,2,VOLUME,0,7
-0x400,,SOUND0CNT_VOL_16,16,rw,SND,volatile,HOLD,15,1,SHIFT,8,2,VOLUME,0,7,,,,,,,,,,,,,,,
-0x400,,SOUND0CNT_VOL,8,rw,SND,volatile,VOLUME,0,7,,,,,,,,,,,,,,,,,,,,,
-0x402,,SOUND0CNT_PAN,8,rw,SND,volatile,PAN,0,7,,,,,,,,,,,,,,,,,,,,,
-0x403,,SOUND0CNT_8,8,rw,SND,volatile,E,7,1,FORMAT,5,2,REPEAT,3,2,DUTY,0,3,,,,,,,,,,,,
-0x404,,SOUND0SAD,32,w,SND,volatile,SRC,0,27,,,,,,,,,,,,,,,,,,,,,
-0x408,,SOUND0TMR,16,w,SND,volatile,TIMER,0,16,,,,,,,,,,,,,,,,,,,,,
-0x40a,,SOUND0RPT_PT,16,w,SND,volatile,POINT,0,16,,,,,,,,,,,,,,,,,,,,,
-0x40c,,SOUND0RPT_LEN,32,w,SND,volatile,LEN,0,22,,,,,,,,,,,,,,,,,,,,,
-#サウンドマスターコントロール nitro p201,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
-0x500,,SOUNDCNT,16,rw,SND,volatile,E,15,1,MIX_CH3,13,1,MIX_CH1,12,1,ROUT,10,2,LOUT,8,2,VOLUME,0,7,,,,,,
-0x501,,SOUNDCNT_8,8,rw,SND,volatile,E,7,1,MIX_CH3,5,1,MIX_CH1,4,1,ROUT,2,2,LOUT,0,2,,,,,,,,,
+0x214,,IF,32,rw,OS,volatile,D7,31,1,D6,30,1,D5,29,1,D4,28,1,MI_B,27,1,MC_B,26,1,J_TX,25,1,SPI,23,1,PM,22,1,MI,20,1,J_RX,21,1,MC,19,1,IFN,18,1,IFE,17,1,A7,16,1,MC_B_DET,15,1,MC_DET,14,1,I_D,13,1,K,12,1,D3,11,1,D2,10,1,D1,9,1,D0,8,1,T3,6,1,T2,5,1,T1,4,1,T0,3,1,VE,2,1,HB,1,1,VB,0,1
+0x218,,IE2,32,rw,OS,volatile,MIC,14,1,I2C,13,1,AES,12,1,WSDIO,11,1,WSD,10,1,SDIO,9,1,SD,8,1,IO33_3,7,1,IO33_2,6,1,IO33_1,5,1,IO33_0,4,1,IO18_2,2,1,IO18_1,1,1,IO18_0,0,1,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+0x21c,,IF2,32,rw,OS,volatile,MIC,14,1,I2C,13,1,AES,12,1,WSDIO,11,1,WSD,10,1,SDIO,9,1,SD,8,1,IO33_3,7,1,IO33_2,6,1,IO33_1,5,1,IO33_0,4,1,IO18_2,2,1,IO18_1,1,1,IO18_0,0,1,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+#本体内メモリ nitro p194,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+0x240,,WVRAMSTAT,16,rw,MI,volatile,WRAM_1,9,1,WRAM_0,8,1,VRAM_D,1,1,VRAM_C,0,1,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+#PAUSE page 19-43,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+0x300,,PAUSE,16,rw,OS,volatile,MOD,14,2,CHK,0,1,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+#パワーコントロール nitro p200,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+0x304,,POWCNT,16,rw,SND,volatile,EWL,1,1,SPE,0,1,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+#サウンド,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+0x400,,SOUND0CNT,32,rw,SND,volatile,E,31,1,FORMAT,29,2,REPEAT,27,2,DUTY,24,3,PAN,16,7,HOLD,15,1,SHIFT,8,2,VOLUME,0,7,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+0x400,,SOUND0CNT_VOL_16,16,rw,SND,volatile,HOLD,15,1,SHIFT,8,2,VOLUME,0,7,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+0x400,,SOUND0CNT_VOL,8,rw,SND,volatile,VOLUME,0,7,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+0x402,,SOUND0CNT_PAN,8,rw,SND,volatile,PAN,0,7,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+0x403,,SOUND0CNT_8,8,rw,SND,volatile,E,7,1,FORMAT,5,2,REPEAT,3,2,DUTY,0,3,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+0x404,,SOUND0SAD,32,w,SND,volatile,SRC,0,27,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+0x408,,SOUND0TMR,16,w,SND,volatile,TIMER,0,16,,,,,,,,,,,,,,,,,,,,,,,,,,,
+0x40a,,SOUND0RPT_PT,16,w,SND,volatile,POINT,0,16,,,,,,,,,,,,,,,,,,,,,,,,,,,
+0x40c,,SOUND0RPT_LEN,32,w,SND,volatile,LEN,0,22,,,,,,,,,,,,,,,,,,,,,,,,,,,
+#サウンドマスターコントロール nitro p201,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+0x500,,SOUNDCNT,16,rw,SND,volatile,E,15,1,MIX_CH3,13,1,MIX_CH1,12,1,ROUT,10,2,LOUT,8,2,VOLUME,0,7,,,,,,,,,,,,
+0x501,,SOUNDCNT_8,8,rw,SND,volatile,E,7,1,MIX_CH3,5,1,MIX_CH1,4,1,ROUT,2,2,LOUT,0,2,,,,,,,,,,,,,,,
 0x500,,SOUNDCNT_VOL,8,rw,SND,volatile,VOLUME,0,7,,,,,,,,,,,,,,,,,,,,,,,,,,,
 #キャプチャ nitro p206,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
 0x508,,SNDCAPCNT,16,rw,SND,volatile,CAP1_E,15,1,CAP1_FORMAT,11,1,CAP1_REPEAT,10,1,CAP1_IN,9,1,CAP1_OUT,8,1,CAP0_E,7,1,CAP0_FORMAT,3,1,CAP0_REPEAT,2,1,CAP0_IN,1,1,CAP0_OUT,0,1
