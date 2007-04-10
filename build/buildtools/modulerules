@@ -21,6 +21,11 @@ ifndef TWLSDK_MODULERULES_
 #
 include	$(NITROSDK_ROOT)/build/buildtools/modulerules
 
+.PHONY: 	twllib
+
+twllib:
+	@$(MAKE) -C $(TWLSDK_ROOT)/build/libraries
+
 # .axf
 $(BINDIR)/$(TARGET_BIN_BASENAME).axf: $(OBJS) $(LCFILE) $(MAKEFILE) $(LDEPENDS_NEF) $(EDEPENDS_NEF) $(ALIBRARIES) $(LDRES_FILE) $(CW_LIBCXX)
 ifeq ($(NITRO_CCTYPE),RVCT)
