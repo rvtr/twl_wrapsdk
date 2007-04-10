@@ -1,8 +1,8 @@
 #---------------------------------------------------------------------------
-#  Project:  NitroSDK - tools - makelcf
-#  File:     ARM7-TS.lcf.template
+#  Project:  TwlSDK - tools - makelcf
+#  File:     ARM9-BB.lcf.template
 #
-#  Copyright 2003-2006 Nintendo.  All rights reserved.
+#  Copyright 2007 Nintendo.  All rights reserved.
 #
 #  These coded instructions, statements, and computer programs contain
 #  proprietary information of Nintendo of America Inc. and/or Nintendo
@@ -10,96 +10,41 @@
 #  not be disclosed to third parties or copied or duplicated in any form,
 #  in whole or in part, without the prior written consent of Nintendo.
 #
-#  $Log: ARM7-TS.lcf.template,v $
-#  Revision 1.24  2006/05/10 03:19:47  yasu
-#  CodeWarrior 2.x のオーバーレイ拡張への対応
-#
-#  Revision 1.23  2006/04/07 04:45:14  kitase_hirotake
-#  .wram.bss の追加
-#
-#  Revision 1.22  2006/03/30 00:43:20  yasu
-#  著作年度の変更
-#
-#  Revision 1.21  2006/03/29 13:19:14  yasu
-#  NUMBER_OVERLAYS -> NUMBER.OVERLAYS への修正
-#
-#  Revision 1.20  2005/09/02 04:14:22  yasu
-#  SDK2.2 でも使用可能のように古いシンボルを再定義した
-#
-#  Revision 1.19  2005/08/31 09:34:57  yasu
-#  section_BSS というようなセクション名を使ったときに正常に動作しない場合があるのを修正
-#
-#  Revision 1.18  2005/06/20 12:29:20  yasu
-#  Surffix -> Suffix 修正
-#
-#  Revision 1.17  2005/06/14 09:03:42  yada
-#  fix around minus value of SDK_STACKSIZE
-#
-#  Revision 1.16  2005/04/14 00:04:17  terui
-#  Update copyright.
-#
-#  Revision 1.15  2005/04/13 12:52:50  terui
-#  Change SDK_AUTOLOAD.MAIN.START 0x027c0000 -> 0x027e0000
-#
-#  Revision 1.14  2004/09/08 01:27:18  yasu
-#  Add * (.wram) on static segment
-#
-#  Revision 1.13  2004/08/18 01:50:40  yasu
-#  Support SDK_SUBPRIV_ARENA_LO
-#
-#  Revision 1.12  2004/08/02 10:38:53  yasu
-#  Add autoload-done callback address in overlaydefs
-#
-#  Revision 1.11  2004/07/26 00:08:27  yasu
-#  Fix label of exception table
-#
-#  Revision 1.10  2004/07/24 05:42:25  yasu
-#  Set default values for SDK_AUTOGEN_xTCM_START
-#
-#  Revision 1.9  2004/07/23 11:32:14  yasu
-#  Define labels for __exception_table_start__ and _end__
-#
-#  Revision 1.8  2004/07/12 12:24:12  yasu
-#  Fix checking WRAM
-#
-#  Revision 1.7  2004/07/10 04:10:26  yasu
-#  Support command 'Library'
-#
-#  Revision 1.6  2004/07/02 08:13:02  yasu
-#  Support OBJECT( )
-#
-#  Revision 1.5  2004/07/01 12:54:38  yasu
-#  support ITCM/DTCM/WRAM autoload
-#
-#  Revision 1.4  2004/07/01 10:41:46  yasu
-#  support autoload
-#
-#  Revision 1.3  2004/05/28 02:11:15  yasu
-#  set WRAM arena region correctly
-#
-#  Revision 1.2  2004/04/26 12:17:49  yasu
-#  add KEEP_SECTIONS
-#
-#  Revision 1.1  2004/04/06 01:59:54  yasu
-#  newly added
-#
+#  $Log: $
 #  $NoKeywords: $
 #---------------------------------------------------------------------------
 MEMORY
 {
-	<STATIC.NAME>           (RWX) : ORIGIN = <STATIC.ADDRESS>,   LENGTH = 0x0 # >  <STATIC.NAME><PROPERTY.SUFFIX>
+	<STATIC.NAME>		(RWX) : ORIGIN = <STATIC.ADDRESS>,   LENGTH = 0x0 # >  <STATIC.NAME><PROPERTY.SUFFIX>
 	<FOREACH.AUTOLOADS>
-	<AUTOLOAD.NAME>         (RWX) : ORIGIN = <AUTOLOAD.ADDRESS>, LENGTH = 0x0 # >> <STATIC.NAME><PROPERTY.SUFFIX>
+	<AUTOLOAD.NAME>		(RWX) : ORIGIN = <AUTOLOAD.ADDRESS>, LENGTH = 0x0 # >> <STATIC.NAME><PROPERTY.SUFFIX>
 	<END.AUTOLOADS>
 	binary.AUTOLOAD_INFO		(RWX) : ORIGIN = 0, LENGTH = 0x0 # >> <STATIC.NAME><PROPERTY.SUFFIX>
+	binary.STATIC_FOOTER		(RWX) : ORIGIN = 0, LENGTH = 0x0 # >> <STATIC.NAME><PROPERTY.SUFFIX>
 	
 	<PROPERTY.OVERLAYDEFS>	(RW)  : ORIGIN = AFTER(<STATIC.NAME>), LENGTH = 0x0 > <PROPERTY.OVERLAYDEFS><PROPERTY.SUFFIX>
 	<PROPERTY.OVERLAYTABLE>	(RW)  : ORIGIN = AFTER(<STATIC.NAME>), LENGTH = 0x0 > <PROPERTY.OVERLAYTABLE><PROPERTY.SUFFIX>
 	<FOREACH.OVERLAYS>
-	<OVERLAY.NAME>          (RWXO): ORIGIN = <OVERLAY.ADDRESS>, LENGTH = 0x0 > <OVERLAY.NAME><PROPERTY.SUFFIX>
+	<OVERLAY.NAME>		(RWXO): ORIGIN = <OVERLAY.ADDRESS>, LENGTH = 0x0 > <OVERLAY.NAME><PROPERTY.SUFFIX>
 	<END.OVERLAYS>
-	arena.MAIN                 (RW)  : ORIGIN = AFTER(<STATIC.NAME><FOREACH.OVERLAYS>,<OVERLAY.NAME><END.OVERLAYS>), LENGTH = 0x0
-	check.WORKRAM		(RWX) : ORIGIN = 0x037f8000, LENGTH = 0x18000 > workram.check
+	dummy.MAIN_EX		(RW)  : ORIGIN = 0x023e0000, LENGTH = 0x0
+	arena.MAIN			(RW)  : ORIGIN = AFTER(<STATIC.NAME><FOREACH.OVERLAYS=MAIN>,<OVERLAY.NAME><END.OVERLAYS>), LENGTH = 0x0
+	arena.MAIN_EX		(RW)  : ORIGIN = AFTER(dummy.MAIN_EX<FOREACH.OVERLAYS=MAINEX>,<OVERLAY.NAME><END.OVERLAYS>), LENGTH = 0x0
+	arena.ITCM		(RW)  : ORIGIN = AFTER(ITCM<FOREACH.OVERLAYS=ITCM>,<OVERLAY.NAME><END.OVERLAYS>), LENGTH = 0x0
+	arena.DTCM		(RW)  : ORIGIN = AFTER(DTCM<FOREACH.OVERLAYS=DTCM>,<OVERLAY.NAME><END.OVERLAYS>), LENGTH = 0x0
+	binary.MODULE_FILES		(RW)  : ORIGIN = 0x0, LENGTH = 0x0     > component.files
+	check.ITCM			(RWX) : ORIGIN = 0x0, LENGTH = 0x08000 > itcm.check
+	check.DTCM			(RW)  : ORIGIN = 0x0, LENGTH = 0x04000 > dtcm.check
+}
+
+FORCE_ACTIVE
+{
+	SVC_SoftReset
+}
+
+KEEP_SECTION
+{
+	.sinit
 }
 
 SECTIONS
@@ -107,7 +52,7 @@ SECTIONS
 	############################ STATIC #################################
 	.<STATIC.NAME>:
 	{
-	ALIGNALL(4);			. = ALIGN(4);	# Fit to cache line
+	ALIGNALL(4);			. = ALIGN(32);	# Fit to cache line
 					<IF.NITRO_LCFSPEC.GE.2>
 					<FOREACH.STATIC.SEARCHSYMBOLS>
 					SEARCH_SYMBOL <STATIC.SEARCHSYMBOL>;
@@ -119,8 +64,11 @@ SECTIONS
 	SDK_STATIC_START		=.;
 	SDK_STATIC_TEXT_START		=.;
 					#:::::::::: text/rodata
-					OBJECT(_start,*)
+					libsyscall.a (.text)
 					crt0.o (.text)
+					crt0.o (.rodata)
+					* (.version)
+					OBJECT(NitroMain,*)
 					<FOREACH.STATIC.OBJECTS=.text>
 					<STATIC.OBJECT=.text:t>
 					<END.STATIC.OBJECTS>
@@ -157,12 +105,18 @@ SECTIONS
 					<FOREACH.STATIC.LIBRARIES=.ctor>
 					<STATIC.LIBRARY=.ctor:t>
 					<END.STATIC.LIBRARIES>
+					<FOREACH.STATIC.OBJECTS=.sinit>
+					<STATIC.OBJECT=.sinit:t>
+					<END.STATIC.OBJECTS>
+					<FOREACH.STATIC.LIBRARIES=.sinit>
+					<STATIC.LIBRARY=.sinit:t>
+					<END.STATIC.LIBRARIES>
 					WRITEW	0;
 					#:::::::::: ctor
 	SDK_STATIC_SINIT_END		=.;
 
 					#:::::::::: text/rodata
-					. = ALIGN(4);
+					. = ALIGN(32);
 	SDK_STATIC_TEXT_END		=.;
 	
 	#
@@ -170,13 +124,6 @@ SECTIONS
 	#
 	SDK_STATIC_DATA_START		=.;
 					#:::::::::: data
-					<FOREACH.STATIC.OBJECTS=.wram>
-					<STATIC.OBJECT=.wram:t>
-					<END.STATIC.OBJECTS>
-					<FOREACH.STATIC.LIBRARIES=.wram>
-					<STATIC.LIBRARY=.wram:t>
-					<END.STATIC.LIBRARIES>
-					. = ALIGN(4);
 					<FOREACH.STATIC.OBJECTS=.sdata>
 					<STATIC.OBJECT=.sdata:t>
 					<END.STATIC.OBJECTS>
@@ -191,8 +138,11 @@ SECTIONS
 					<STATIC.LIBRARY=.data:t>
 					<END.STATIC.LIBRARIES>
 					. = ALIGN(4);
+	SDK_OVERLAY_DIGEST		=.;
+					# NO DIGEST
+	SDK_OVERLAY_DIGEST_END		=.;
 					#:::::::::: data
-					. = ALIGN(4);
+					. = ALIGN(32);
 	SDK_STATIC_DATA_END		=.;
 	SDK_STATIC_END			=.;
 
@@ -206,7 +156,7 @@ SECTIONS
 
 	.<STATIC.NAME>.bss:
 	{
-	ALIGNALL(4);			. = ALIGN(4);
+	ALIGNALL(4);			. = ALIGN(32);
 					<IF.NITRO_LCFSPEC.GE.2>
 					<FOREACH.STATIC.SEARCHSYMBOLS>
 					SEARCH_SYMBOL <STATIC.SEARCHSYMBOL>;
@@ -232,7 +182,7 @@ SECTIONS
 					<END.STATIC.LIBRARIES>
 					. = ALIGN(4);
 					#:::::::::: bss
-					. = ALIGN(4);
+					. = ALIGN(32);
 	SDK_STATIC_BSS_END		= .;
 	SDK_STATIC_BSS_SIZE		= SDK_STATIC_BSS_END - SDK_STATIC_BSS_START;
 
@@ -240,16 +190,16 @@ SECTIONS
 	
 	
 	############################ AUTOLOADS ##############################
-	SDK_AUTOLOAD.MAIN.START			= 0x027e0000;
-	SDK_AUTOLOAD.MAIN.END			= SDK_AUTOLOAD.MAIN.START;
-	SDK_AUTOLOAD.MAIN.BSS_END		= SDK_AUTOLOAD.MAIN.START;
-	SDK_AUTOLOAD.MAIN.SIZE			= 0;
-	SDK_AUTOLOAD.MAIN.BSS_SIZE		= 0;
-	SDK_AUTOLOAD.WRAM.START			= 0x037f8000;
-	SDK_AUTOLOAD.WRAM.END			= SDK_AUTOLOAD.WRAM.START;
-	SDK_AUTOLOAD.WRAM.BSS_END		= SDK_AUTOLOAD.WRAM.START;
-	SDK_AUTOLOAD.WRAM.SIZE			= 0;
-	SDK_AUTOLOAD.WRAM.BSS_SIZE		= 0;
+	SDK_AUTOLOAD.ITCM.START			= 0x01ff8000;
+	SDK_AUTOLOAD.ITCM.END			= SDK_AUTOLOAD.ITCM.START;
+	SDK_AUTOLOAD.ITCM.BSS_END		= SDK_AUTOLOAD.ITCM.START;
+	SDK_AUTOLOAD.ITCM.SIZE			= 0;
+	SDK_AUTOLOAD.ITCM.BSS_SIZE		= 0;
+	SDK_AUTOLOAD.DTCM.START			= 0x027e0000;
+	SDK_AUTOLOAD.DTCM.END			= SDK_AUTOLOAD.DTCM.START;
+	SDK_AUTOLOAD.DTCM.BSS_END		= SDK_AUTOLOAD.DTCM.START;
+	SDK_AUTOLOAD.DTCM.SIZE			= 0;
+	SDK_AUTOLOAD.DTCM.BSS_SIZE		= 0;
 	SDK_AUTOLOAD_START			= SDK_STATIC_END;
 	SDK_AUTOLOAD_SIZE			= 0;
 	SDK_AUTOLOAD_NUMBER			= <NUMBER.AUTOLOADS>;
@@ -257,7 +207,7 @@ SECTIONS
 <FOREACH.AUTOLOADS>
 	.<AUTOLOAD.NAME>:
 	{
-	ALIGNALL(4);				. = ALIGN(4);
+	ALIGNALL(4);				. = ALIGN(32);
 						<IF.NITRO_LCFSPEC.GE.2>
 						<FOREACH.AUTOLOAD.SEARCHSYMBOLS>
 						SEARCH_SYMBOL <AUTOLOAD.SEARCHSYMBOL>;
@@ -278,6 +228,13 @@ SECTIONS
 						<AUTOLOAD.LIBRARY=.text:t>
 						<END.AUTOLOAD.LIBRARIES>
 						. = ALIGN(4);
+						<FOREACH.AUTOLOAD.OBJECTS=.itcm>
+						<AUTOLOAD.OBJECT=.itcm:t>
+						<END.AUTOLOAD.OBJECTS>
+						<FOREACH.AUTOLOAD.LIBRARIES=.itcm>
+						<AUTOLOAD.LIBRARY=.itcm:t>
+						<END.AUTOLOAD.LIBRARIES>
+						. = ALIGN(4);
 						<FOREACH.AUTOLOAD.OBJECTS=.rodata>
 						<AUTOLOAD.OBJECT=.rodata:t>
 						<END.AUTOLOAD.OBJECTS>
@@ -293,13 +250,6 @@ SECTIONS
 	#
 	SDK_AUTOLOAD.<AUTOLOAD.NAME>.DATA_START	=.;
 						#:::::::::: data
-						<FOREACH.AUTOLOAD.OBJECTS=.wram>
-						<AUTOLOAD.OBJECT=.wram:t>
-						<END.AUTOLOAD.OBJECTS>
-						<FOREACH.AUTOLOAD.LIBRARIES=.wram>
-						<AUTOLOAD.LIBRARY=.wram:t>
-						<END.AUTOLOAD.LIBRARIES>
-						. = ALIGN(4);
 						<FOREACH.AUTOLOAD.OBJECTS=.sdata>
 						<AUTOLOAD.OBJECT=.sdata:t>
 						<END.AUTOLOAD.OBJECTS>
@@ -314,20 +264,28 @@ SECTIONS
 						<AUTOLOAD.LIBRARY=.data:t>
 						<END.AUTOLOAD.LIBRARIES>
 						. = ALIGN(4);
+						<FOREACH.AUTOLOAD.OBJECTS=.dtcm>
+						<AUTOLOAD.OBJECT=.dtcm:t>
+						<END.AUTOLOAD.OBJECTS>
+						<FOREACH.AUTOLOAD.LIBRARIES=.dtcm>
+						<AUTOLOAD.LIBRARY=.dtcm:t>
+						<END.AUTOLOAD.LIBRARIES>
+						. = ALIGN(4);
 						#:::::::::: data
+						. = ALIGN(32);
 	SDK_AUTOLOAD.<AUTOLOAD.NAME>.DATA_END	=.;
 	SDK_AUTOLOAD.<AUTOLOAD.NAME>.END	=.;
 	
 	SDK_AUTOLOAD.<AUTOLOAD.NAME>.TEXT_SIZE	= SDK_AUTOLOAD.<AUTOLOAD.NAME>.TEXT_END - SDK_AUTOLOAD.<AUTOLOAD.NAME>.TEXT_START;
 	SDK_AUTOLOAD.<AUTOLOAD.NAME>.DATA_SIZE	= SDK_AUTOLOAD.<AUTOLOAD.NAME>.DATA_END - SDK_AUTOLOAD.<AUTOLOAD.NAME>.DATA_START;
-	SDK_AUTOLOAD.<AUTOLOAD.NAME>.SIZE	= SDK_AUTOLOAD.<AUTOLOAD.NAME>.END      - SDK_AUTOLOAD.<AUTOLOAD.NAME>.START;
+	SDK_AUTOLOAD.<AUTOLOAD.NAME>.SIZE	= SDK_AUTOLOAD.<AUTOLOAD.NAME>.END	- SDK_AUTOLOAD.<AUTOLOAD.NAME>.START;
 	SDK_AUTOLOAD_SIZE			= SDK_AUTOLOAD_SIZE + SDK_AUTOLOAD.<AUTOLOAD.NAME>.SIZE;
 
 	} > <AUTOLOAD.NAME>
 
 	.<AUTOLOAD.NAME>.bss:
 	{
-	ALIGNALL(4);				. = ALIGN(4);
+	ALIGNALL(4);				. = ALIGN(32);
 						<IF.NITRO_LCFSPEC.GE.2>
 						<FOREACH.AUTOLOAD.SEARCHSYMBOLS>
 						SEARCH_SYMBOL <AUTOLOAD.SEARCHSYMBOL>;
@@ -352,15 +310,22 @@ SECTIONS
 						<AUTOLOAD.LIBRARY=.bss:t>
 						<END.AUTOLOAD.LIBRARIES>
 						. = ALIGN(4);
-						<FOREACH.AUTOLOAD.OBJECTS=.wram>
-						<AUTOLOAD.OBJECT=.wram.bss:t>
+						<FOREACH.AUTOLOAD.OBJECTS=.dtcm>
+						<AUTOLOAD.OBJECT=.dtcm.bss:t>
 						<END.AUTOLOAD.OBJECTS>
-						<FOREACH.AUTOLOAD.LIBRARIES=.wram>
-						<AUTOLOAD.LIBRARY=.wram.bss:t>
+						<FOREACH.AUTOLOAD.LIBRARIES=.dtcm>
+						<AUTOLOAD.LIBRARY=.dtcm.bss:t>
+						<END.AUTOLOAD.LIBRARIES>
+						. = ALIGN(4);
+						<FOREACH.AUTOLOAD.OBJECTS=.itcm>
+						<AUTOLOAD.OBJECT=.itcm.bss:t>
+						<END.AUTOLOAD.OBJECTS>
+						<FOREACH.AUTOLOAD.LIBRARIES=.itcm>
+						<AUTOLOAD.LIBRARY=.itcm.bss:t>
 						<END.AUTOLOAD.LIBRARIES>
 						. = ALIGN(4);
 						#:::::::::: bss
-						. = ALIGN(4);
+						. = ALIGN(32);
 	SDK_AUTOLOAD.<AUTOLOAD.NAME>.BSS_END	= .;
 
 	SDK_AUTOLOAD.<AUTOLOAD.NAME>.BSS_SIZE	= SDK_AUTOLOAD.<AUTOLOAD.NAME>.BSS_END - SDK_AUTOLOAD.<AUTOLOAD.NAME>.BSS_START;
@@ -369,16 +334,16 @@ SECTIONS
 
 <END.AUTOLOADS>
 
-	SDK_AUTOLOAD_MAIN_START			= SDK_AUTOLOAD.MAIN.START;
-	SDK_AUTOLOAD_MAIN_END			= SDK_AUTOLOAD.MAIN.END;
-	SDK_AUTOLOAD_MAIN_BSS_END		= SDK_AUTOLOAD.MAIN.BSS_END;
-	SDK_AUTOLOAD_MAIN_SIZE			= SDK_AUTOLOAD.MAIN.SIZE;
-	SDK_AUTOLOAD_MAIN_BSS_SIZE		= SDK_AUTOLOAD.MAIN.BSS_SIZE;
-	SDK_AUTOLOAD_WRAM_START			= SDK_AUTOLOAD.WRAM.START;
-	SDK_AUTOLOAD_WRAM_END			= SDK_AUTOLOAD.WRAM.END;
-	SDK_AUTOLOAD_WRAM_BSS_END		= SDK_AUTOLOAD.WRAM.BSS_END;
-	SDK_AUTOLOAD_WRAM_SIZE			= SDK_AUTOLOAD.WRAM.SIZE;
-	SDK_AUTOLOAD_WRAM_BSS_SIZE		= SDK_AUTOLOAD.WRAM.BSS_SIZE;
+	SDK_AUTOLOAD_ITCM_START			= SDK_AUTOLOAD.ITCM.START;
+	SDK_AUTOLOAD_ITCM_END			= SDK_AUTOLOAD.ITCM.END;
+	SDK_AUTOLOAD_ITCM_BSS_END		= SDK_AUTOLOAD.ITCM.BSS_END;
+	SDK_AUTOLOAD_ITCM_SIZE			= SDK_AUTOLOAD.ITCM.SIZE;
+	SDK_AUTOLOAD_ITCM_BSS_SIZE		= SDK_AUTOLOAD.ITCM.BSS_SIZE;
+	SDK_AUTOLOAD_DTCM_START			= SDK_AUTOLOAD.DTCM.START;
+	SDK_AUTOLOAD_DTCM_END			= SDK_AUTOLOAD.DTCM.END;
+	SDK_AUTOLOAD_DTCM_BSS_END		= SDK_AUTOLOAD.DTCM.BSS_END;
+	SDK_AUTOLOAD_DTCM_SIZE			= SDK_AUTOLOAD.DTCM.SIZE;
+	SDK_AUTOLOAD_DTCM_BSS_SIZE		= SDK_AUTOLOAD.DTCM.BSS_SIZE;
 
 	############################ AUTOLOAD_INFO ##########################
 	.binary.AUTOLOAD_INFO:
@@ -393,14 +358,22 @@ SECTIONS
 	SDK_AUTOLOAD_LIST			= SDK_AUTOLOAD_START + SDK_AUTOLOAD_SIZE;
 	SDK_AUTOLOAD_LIST_END			= SDK_AUTOLOAD_START + SDK_AUTOLOAD_SIZE + SIZEOF(.binary.AUTOLOAD_INFO);
 	SDK_AUTOLOAD_SIZE			= SDK_AUTOLOAD_SIZE  + SIZEOF(.binary.AUTOLOAD_INFO);
-
+	
+	############################ STATIC_FOOTER ##########################
+	.binary.STATIC_FOOTER:
+	{
+		WRITEW 0xdec00621;		# LE(0x2106C0DE) = NITRO CODE
+		WRITEW _start_ModuleParams - ADDR(.<STATIC.NAME>);
+		WRITEW 0;			# NO DIGEST
+	} > binary.STATIC_FOOTER
+	
 	############################ OVERLAYS ###############################
-	SDK_OVERLAY_NUMBER 			= <NUMBER.OVERLAYS>;
+	SDK_OVERLAY_NUMBER			= <NUMBER.OVERLAYS>;
 
 <FOREACH.OVERLAYS>
 	.<OVERLAY.NAME>:<IF.NITRO_LCFSPEC.GE.2><OVERLAY.NAME><ENDIF>
 	{
-	ALIGNALL(4);				. = ALIGN(4);
+	ALIGNALL(4);				. = ALIGN(32);
 						<IF.NITRO_LCFSPEC.GE.2>
 						<FOREACH.OVERLAY.SEARCHSYMBOLS>
 						SEARCH_SYMBOL <OVERLAY.SEARCHSYMBOL>;
@@ -443,12 +416,18 @@ SECTIONS
 						<FOREACH.OVERLAY.LIBRARIES=.ctor>
 						<OVERLAY.LIBRARY=.ctor:t>
 						<END.OVERLAY.LIBRARIES>
+						<FOREACH.OVERLAY.OBJECTS=.sinit>
+						<OVERLAY.OBJECT=.sinit:t>
+						<END.OVERLAY.OBJECTS>
+						<FOREACH.OVERLAY.LIBRARIES=.sinit>
+						<OVERLAY.LIBRARY=.sinit:t>
+						<END.OVERLAY.LIBRARIES>
 						WRITEW	0;
 						#:::::::::: ctor
 	SDK_OVERLAY.<OVERLAY.NAME>.SINIT_END	=.;
 
 						#:::::::::: text/rodata
-						. = ALIGN(4);
+						. = ALIGN(32);
 	SDK_OVERLAY.<OVERLAY.NAME>.TEXT_END	=.;
 
 	#
@@ -471,7 +450,7 @@ SECTIONS
 						<END.OVERLAY.LIBRARIES>
 						. = ALIGN(4);
 						#:::::::::: data
-						. = ALIGN(4);
+						. = ALIGN(32);
 	SDK_OVERLAY.<OVERLAY.NAME>.DATA_END	=.;
 	SDK_OVERLAY.<OVERLAY.NAME>.END		=.;
 
@@ -483,7 +462,7 @@ SECTIONS
 
 	.<OVERLAY.NAME>.bss:<IF.NITRO_LCFSPEC.GE.2><OVERLAY.NAME><ENDIF>
 	{
-	ALIGNALL(4);				. = ALIGN(4);
+	ALIGNALL(4);				. = ALIGN(32);
 						<IF.NITRO_LCFSPEC.GE.2>
 						<FOREACH.OVERLAY.SEARCHSYMBOLS>
 						SEARCH_SYMBOL <OVERLAY.SEARCHSYMBOL>;
@@ -509,7 +488,7 @@ SECTIONS
 						<END.OVERLAY.LIBRARIES>
 						. = ALIGN(4);
 						#:::::::::: bss
-						. = ALIGN(4);
+						. = ALIGN(32);
 	SDK_OVERLAY.<OVERLAY.NAME>.BSS_END	= .;
 
 	SDK_OVERLAY.<OVERLAY.NAME>.BSS_SIZE	= SDK_OVERLAY.<OVERLAY.NAME>.BSS_END - SDK_OVERLAY.<OVERLAY.NAME>.BSS_START;
@@ -518,14 +497,37 @@ SECTIONS
 
 <END.OVERLAYS>
 	
+	############################ MAIN EX ##################################
+	# MAIN EX Area
+	.dummy.MAIN_EX:
+	{
+		. = ALIGN(32);
+	} > dummy.MAIN_EX
 	
 	############################ ARENA ##################################
 	.arena.MAIN:
 	{
-						. = ALIGN(4);
+						. = ALIGN(32);
 		SDK_SECTION_ARENA_START		=.;
 	} > arena.MAIN
 	
+	.arena.MAIN_EX:
+	{
+						. = ALIGN(32);
+		SDK_SECTION_ARENA_EX_START	=.;
+	} > arena.MAIN_EX
+	
+	.arena.ITCM:
+	{
+						. = ALIGN(32);
+		SDK_SECTION_ARENA_ITCM_START	=.;
+	} > arena.ITCM
+
+	.arena.DTCM:
+	{
+						. = ALIGN(32);
+		SDK_SECTION_ARENA_DTCM_START	=.;
+	} > arena.DTCM
 	
 	############################ OVERLAYDEFS ############################
 	.<PROPERTY.OVERLAYDEFS>:
@@ -564,15 +566,35 @@ SECTIONS
 	
 	
 	############################ OTHERS #################################
-	SDK_WRAM_ARENA_LO    = SDK_AUTOLOAD.WRAM.BSS_END;
-	SDK_SUBPRIV_ARENA_LO = SDK_AUTOLOAD.MAIN.BSS_END;
-	SDK_IRQ_STACKSIZE = <STATIC.IRQSTACKSIZE>;	# allocated in WRAM
-	SDK_SYS_STACKSIZE = <STATIC.STACKSIZE>;		# allocated in WRAM
+	SDK_MAIN_ARENA_LO = SDK_SECTION_ARENA_START;
+	SDK_IRQ_STACKSIZE = <STATIC.IRQSTACKSIZE>;	# allocated in DTCM
+	SDK_SYS_STACKSIZE = <STATIC.STACKSIZE>;		# when 0 means all remains of DTCM
 	
-	# work ram size checker => check AUTOLOAD_WRAM
-	SDK_SYS_STACKSIZE_SIGN = (SDK_SYS_STACKSIZE < 0x80000000) * 2 - 1;
-	.check.WORKRAM:
+	# Module filelist
+	.binary.MODULE_FILES:
 	{
-		. = . + SDK_AUTOLOAD.WRAM.BSS_END - 0x037f8000 + SDK_IRQ_STACKSIZE + SDK_SYS_STACKSIZE * SDK_SYS_STACKSIZE_SIGN;
-	} > check.WORKRAM
+		WRITES ("<STATIC.NAME><PROPERTY.SUFFIX>");
+		WRITES ("<PROPERTY.OVERLAYDEFS><PROPERTY.SUFFIX>");
+		WRITES ("<PROPERTY.OVERLAYTABLE><PROPERTY.SUFFIX>");
+	} > binary.MODULE_FILES
+
+	# ITCM/DTCM size checker => check AUTOLOAD_ITCM/DTCM
+	.check.ITCM:
+	{
+		. = . + SDK_AUTOLOAD_ITCM_SIZE + SDK_AUTOLOAD_ITCM_BSS_SIZE;
+<FOREACH.OVERLAYS=ITCM>
+		. = . + SDK_OVERLAY.<OVERLAY.NAME>.SIZE + SDK_OVERLAY.<OVERLAY.NAME>.BSS_SIZE;
+<END.OVERLAYS>
+	} > check.ITCM
+	
+	SDK_SYS_STACKSIZE_SIGN = (SDK_SYS_STACKSIZE < 0x80000000) * 2 - 1;
+	.check.DTCM:
+	{
+		. = . + SDK_AUTOLOAD_DTCM_SIZE + SDK_AUTOLOAD_DTCM_BSS_SIZE;
+<FOREACH.OVERLAYS=DTCM>
+		. = . + SDK_OVERLAY.<OVERLAY.NAME>.SIZE + SDK_OVERLAY.<OVERLAY.NAME>.BSS_SIZE;
+<END.OVERLAYS>
+		. = . + SDK_IRQ_STACKSIZE + SDK_SYS_STACKSIZE * SDK_SYS_STACKSIZE_SIGN;
+	} > check.DTCM
+
 }

@@ -1,8 +1,8 @@
 #---------------------------------------------------------------------------
-#  Project:  NitroSDK - tools - makelcf
-#  File:     ARM7-TEG.lcf.template
+#  Project:  TwlSDK - tools - makelcf
+#  File:     ARM7-TS.lcf.template
 #
-#  Copyright 2003-2006 Nintendo.  All rights reserved.
+#  Copyright 2007 Nintendo.  All rights reserved.
 #
 #  These coded instructions, statements, and computer programs contain
 #  proprietary information of Nintendo of America Inc. and/or Nintendo
@@ -10,109 +10,7 @@
 #  not be disclosed to third parties or copied or duplicated in any form,
 #  in whole or in part, without the prior written consent of Nintendo.
 #
-#  $Log: ARM7-TEG.lcf.template,v $
-#  Revision 1.31  2006/05/10 03:19:47  yasu
-#  CodeWarrior 2.x のオーバーレイ拡張への対応
-#
-#  Revision 1.30  2006/03/30 00:43:20  yasu
-#  著作年度の変更
-#
-#  Revision 1.29  2006/03/29 13:19:14  yasu
-#  NUMBER_OVERLAYS -> NUMBER.OVERLAYS への修正
-#
-#  Revision 1.28  2005/09/02 04:14:22  yasu
-#  SDK2.2 でも使用可能のように古いシンボルを再定義した
-#
-#  Revision 1.27  2005/08/31 09:34:57  yasu
-#  section_BSS というようなセクション名を使ったときに正常に動作しない場合があるのを修正
-#
-#  Revision 1.26  2005/06/20 12:29:20  yasu
-#  Surffix -> Suffix 修正
-#
-#  Revision 1.25  2005/06/17 03:16:11  yasu
-#  fix copyright header
-#
-#  Revision 1.24  2005/06/14 09:03:42  yada
-#  fix around minus value of SDK_STACKSIZE
-#
-#  Revision 1.23  2004/09/08 01:27:18  yasu
-#  Add * (.wram) on static segment
-#
-#  Revision 1.22  2004/08/18 02:00:34  yasu
-#  Fix address of SDK_AUTOLOAD.MAIN.START
-#
-#  Revision 1.21  2004/08/18 01:50:40  yasu
-#  Support SDK_SUBPRIV_ARENA_LO
-#
-#  Revision 1.20  2004/08/02 10:38:53  yasu
-#  Add autoload-done callback address in overlaydefs
-#
-#  Revision 1.19  2004/07/26 00:08:27  yasu
-#  Fix label of exception table
-#
-#  Revision 1.18  2004/07/24 05:42:25  yasu
-#  Set default values for SDK_AUTOGEN_xTCM_START
-#
-#  Revision 1.17  2004/07/23 11:32:14  yasu
-#  Define labels for __exception_table_start__ and _end__
-#
-#  Revision 1.16  2004/07/10 04:10:26  yasu
-#  Support command 'Library'
-#
-#  Revision 1.15  2004/07/08 04:04:59  yasu
-#  fix small typo
-#
-#  Revision 1.14  2004/07/02 08:13:02  yasu
-#  Support OBJECT( )
-#
-#  Revision 1.13  2004/07/01 12:54:38  yasu
-#  support ITCM/DTCM/WRAM autoload
-#
-#  Revision 1.12  2004/07/01 10:41:46  yasu
-#  support autoload
-#
-#  Revision 1.11  2004/07/01 09:41:50  yasu
-#  support autoload
-#
-#  Revision 1.10  2004/06/14 11:28:15  yasu
-#  support section filter "FOREACH.STATIC.OBJECTS=.sectionName"
-#
-#  Revision 1.9  2004/05/27 04:06:42  yasu
-#  fix SDK_WRAM_ARENA_LO
-#
-#  Revision 1.8  2004/04/26 11:41:38  yasu
-#  add KEEP_SECTION { .ctor }
-#
-#  Revision 1.7  2004/04/19 06:39:41  yasu
-#  fix workram checker
-#
-#  Revision 1.6  2004/04/19 04:27:30  yasu
-#  support WRAM overflow check
-#
-#  Revision 1.5  2004/04/06 01:53:34  yasu
-#  move rodata section into text section
-#
-#  Revision 1.4  2004/04/06 01:39:24  miya
-#  modify overlay module size
-#
-#  Revision 1.3  2004/03/29 11:40:48  yasu
-#  delete ROM SIZE parameter on overlay table
-#
-#  Revision 1.2  2004/03/26 09:32:48  yasu
-#  delete useless ALIGN
-#
-#  Revision 1.1  2004/03/26 06:04:32  yasu
-#  move spec files
-#
-#  Revision 1.3  2004/03/23 00:15:35  yasu
-#  add WRITEW 0 for the termination of __OVERLAY_static_init__
-#
-#  Revision 1.2  2004/03/22 02:15:49  yasu
-#  set _start as entry address in rom header
-#
-#  Revision 1.1  2004/03/16 10:06:07  yasu
-#  copy ARM9s template file
-#
+#  $Log: $
 #  $NoKeywords: $
 #---------------------------------------------------------------------------
 MEMORY
@@ -121,20 +19,15 @@ MEMORY
 	<FOREACH.AUTOLOADS>
 	<AUTOLOAD.NAME>         (RWX) : ORIGIN = <AUTOLOAD.ADDRESS>, LENGTH = 0x0 # >> <STATIC.NAME><PROPERTY.SUFFIX>
 	<END.AUTOLOADS>
-	binary.AUTOLOAD_INFO    (RWX) : ORIGIN = 0, LENGTH = 0x0 # >> <STATIC.NAME><PROPERTY.SUFFIX>
+	binary.AUTOLOAD_INFO		(RWX) : ORIGIN = 0, LENGTH = 0x0 # >> <STATIC.NAME><PROPERTY.SUFFIX>
 	
-	<PROPERTY.OVERLAYDEFS>  (RW)  : ORIGIN = AFTER(<STATIC.NAME>), LENGTH = 0x0 # > <PROPERTY.OVERLAYDEFS><PROPERTY.SUFFIX>
-	<PROPERTY.OVERLAYTABLE> (RW)  : ORIGIN = AFTER(<STATIC.NAME>), LENGTH = 0x0 # > <PROPERTY.OVERLAYTABLE><PROPERTY.SUFFIX>
+	<PROPERTY.OVERLAYDEFS>	(RW)  : ORIGIN = AFTER(<STATIC.NAME>), LENGTH = 0x0 > <PROPERTY.OVERLAYDEFS><PROPERTY.SUFFIX>
+	<PROPERTY.OVERLAYTABLE>	(RW)  : ORIGIN = AFTER(<STATIC.NAME>), LENGTH = 0x0 > <PROPERTY.OVERLAYTABLE><PROPERTY.SUFFIX>
 	<FOREACH.OVERLAYS>
-	<OVERLAY.NAME>          (RWXO): ORIGIN = <OVERLAY.ADDRESS>, LENGTH = 0x0 # > <OVERLAY.NAME><PROPERTY.SUFFIX>
+	<OVERLAY.NAME>          (RWXO): ORIGIN = <OVERLAY.ADDRESS>, LENGTH = 0x0 > <OVERLAY.NAME><PROPERTY.SUFFIX>
 	<END.OVERLAYS>
-	arena.MAIN              (RW)  : ORIGIN = AFTER(<STATIC.NAME><FOREACH.OVERLAYS>,<OVERLAY.NAME><END.OVERLAYS>), LENGTH = 0x0
-	check.WORKRAM		(RWX) : ORIGIN = <STATIC.ADDRESS>, LENGTH = 0x10000 # > workram.check
-}
-
-KEEP_SECTION
-{
-	.ctor
+	arena.MAIN                 (RW)  : ORIGIN = AFTER(<STATIC.NAME><FOREACH.OVERLAYS>,<OVERLAY.NAME><END.OVERLAYS>), LENGTH = 0x0
+	check.WORKRAM		(RWX) : ORIGIN = 0x037f8000, LENGTH = 0x18000 > workram.check
 }
 
 SECTIONS
@@ -275,7 +168,7 @@ SECTIONS
 	
 	
 	############################ AUTOLOADS ##############################
-	SDK_AUTOLOAD.MAIN.START			= 0x02380000;
+	SDK_AUTOLOAD.MAIN.START			= 0x027e0000;
 	SDK_AUTOLOAD.MAIN.END			= SDK_AUTOLOAD.MAIN.START;
 	SDK_AUTOLOAD.MAIN.BSS_END		= SDK_AUTOLOAD.MAIN.START;
 	SDK_AUTOLOAD.MAIN.SIZE			= 0;
@@ -385,6 +278,13 @@ SECTIONS
 						<END.AUTOLOAD.OBJECTS>
 						<FOREACH.AUTOLOAD.LIBRARIES=.bss>
 						<AUTOLOAD.LIBRARY=.bss:t>
+						<END.AUTOLOAD.LIBRARIES>
+						. = ALIGN(4);
+						<FOREACH.AUTOLOAD.OBJECTS=.wram>
+						<AUTOLOAD.OBJECT=.wram.bss:t>
+						<END.AUTOLOAD.OBJECTS>
+						<FOREACH.AUTOLOAD.LIBRARIES=.wram>
+						<AUTOLOAD.LIBRARY=.wram.bss:t>
 						<END.AUTOLOAD.LIBRARIES>
 						. = ALIGN(4);
 						#:::::::::: bss
@@ -592,15 +492,15 @@ SECTIONS
 	
 	
 	############################ OTHERS #################################
+	SDK_WRAM_ARENA_LO    = SDK_AUTOLOAD.WRAM.BSS_END;
 	SDK_SUBPRIV_ARENA_LO = SDK_AUTOLOAD.MAIN.BSS_END;
-	SDK_WRAM_ARENA_LO    = SDK_SECTION_ARENA_START;
 	SDK_IRQ_STACKSIZE = <STATIC.IRQSTACKSIZE>;	# allocated in WRAM
 	SDK_SYS_STACKSIZE = <STATIC.STACKSIZE>;		# allocated in WRAM
 	
-	# work ram size checker
+	# work ram size checker => check AUTOLOAD_WRAM
 	SDK_SYS_STACKSIZE_SIGN = (SDK_SYS_STACKSIZE < 0x80000000) * 2 - 1;
 	.check.WORKRAM:
 	{
-		. = . + SDK_SECTION_ARENA_START - <STATIC.ADDRESS> + SDK_IRQ_STACKSIZE + SDK_SYS_STACKSIZE * SDK_SYS_STACKSIZE_SIGN;
+		. = . + SDK_AUTOLOAD.WRAM.BSS_END - 0x037f8000 + SDK_IRQ_STACKSIZE + SDK_SYS_STACKSIZE * SDK_SYS_STACKSIZE_SIGN;
 	} > check.WORKRAM
 }

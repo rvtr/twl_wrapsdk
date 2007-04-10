@@ -5,7 +5,7 @@
 0x4002,,ROM_DEV,8,rw,CFG,volatile,WE,0,1,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
 0x4004,,CLK,16,rw,CFG,volatile,SND,8,1,WRAM,7,1,AES,2,1,WSD,1,0,SD,0,1,,,,,,,,,,,,,,,,,,,,,,,,
 0x4006,,DSP_JTAG,8,rw,CFG,volatile,E,0,1,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
-0x4007,,CPU_JTAG,8,rw,CFG,volatile,E,1,1,A7,1,1,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+0x4007,,CPU_JTAG,8,rw,CFG,volatile,E,1,1,A7,0,1,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
 0x4008,,DS_MDY,8,rw,CFG,volatile,MC,7,1,SND,2,1,SDMA,1,1,DMA,0,1,,,,,,,,,,,,,,,,,,,,,,,,,,,
 0x4009,,DS_EX,8,rw,CFG,volatile,MAIM_MEM,6,2,VRAM,5,1,LCDC,4,1,SIO,3,1,SDMA2,2,1,SPI,1,1,INTC,0,1,,,,,,,,,,,,,,,,,,
 0x400a,,TWL_EX,16,rw,CFG,volatile,CFG_E,15,1,WSD_PU,13,1,SD_PU,12,1,WRAM,9,0,MC_B,8,1,GPIO,7,1,I2C,6,1,I2S,5,1,MIC,4,1,WSD,3,1,SD,2,1,AES,1,1,DMA4,0,1
