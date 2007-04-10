@@ -3,37 +3,38 @@
 0x4000,,A9ROM,8,rw,CFG,volatile,NTR,1,1,SEC,0,1,,,,,,,,,,,,
 0x4004,,CLK,16,rw,CFG,volatile,CAM_CKI,8,1,WRAM,7,1,CAM,2,1,DSP,1,0,ARM2X,0,1,,,
 0x4006,,DSP_RST,8,rw,CFG,volatile,OFF,0,1,,,,,,,,,,,,,,,
-0x4008,,DS_MDY,8,rw,CFG,volatile,MC,7,1,DIV,4,1,G2,3,1,REN,2,1,GEO,1,1,DMA,0,1
+0x4008,,DS_MDFY,8,rw,CFG,volatile,MC,7,1,DIV,4,1,G2,3,1,REN,2,1,GEO,1,1,DMA,0,1
 0x4009,,DS_EX,8,rw,CFG,volatile,MAIM_MEM,6,2,VRAM,5,1,LCDC,4,1,INTC,0,1,,,,,,
 0x400a,,TWL_EX,16,rw,CFG,volatile,CFG_E,15,1,WRAM,9,0,MC_B,8,1,DSP,2,1,CAM,1,1,DMA4,0,1
-0x4010,,MC_DET,8,rw,CFG,volatile,MODE2,6,2,DET2,4,1,MODE1,2,2,DET1,0,1,,,,,,
-0x4011,,MC_SWP,8,rw,CFG,volatile,SWP,7,1,,,,,,,,,,,,,,,
-0x4040,,WRAM_A0,8,rw,CFG,volatile,E,7,1,OFS,2,2,MST,0,1,,,,,,,,,
-0x4041,,WRAM_A1,8,rw,CFG,volatile,E,7,1,OFS,2,2,MST,0,1,,,,,,,,,
-0x4042,,WRAM_A2,8,rw,CFG,volatile,E,7,1,OFS,2,2,MST,0,1,,,,,,,,,
-0x4043,,WRAM_A3,8,rw,CFG,volatile,E,7,1,OFS,2,2,MST,0,1,,,,,,,,,
-0x4044,,WRAM_B0,8,rw,CFG,volatile,E,7,1,OFS,2,3,MST,0,2,,,,,,,,,
-0x4045,,WRAM_B1,8,rw,CFG,volatile,E,7,1,OFS,2,3,MST,0,2,,,,,,,,,
-0x4046,,WRAM_B2,8,rw,CFG,volatile,E,7,1,OFS,2,3,MST,0,2
-0x4047,,WRAM_B3,8,rw,CFG,volatile,E,7,1,OFS,2,3,MST,0,2
-0x4048,,WRAM_B4,8,rw,CFG,volatile,E,7,1,OFS,2,3,MST,0,2
-0x4049,,WRAM_B5,8,rw,CFG,volatile,E,7,1,OFS,2,3,MST,0,2
-0x404a,,WRAM_B6,8,rw,CFG,volatile,E,7,1,OFS,2,3,MST,0,2
-0x404b,,WRAM_B7,8,rw,CFG,volatile,E,7,1,OFS,2,3,MST,0,2
-0x404c,,WRAM_C0,8,rw,CFG,volatile,E,7,1,OFS,2,3,MST,0,2
-0x404d,,WRAM_C1,8,rw,CFG,volatile,E,7,1,OFS,2,3,MST,0,2
-0x404e,,WRAM_C2,8,rw,CFG,volatile,E,7,1,OFS,2,3,MST,0,2
-0x404f,,WRAM_C3,8,rw,CFG,volatile,E,7,1,OFS,2,3,MST,0,2
-0x4050,,WRAM_C4,8,rw,CFG,volatile,E,7,1,OFS,2,3,MST,0,2
-0x4051,,WRAM_C5,8,rw,CFG,volatile,E,7,1,OFS,2,3,MST,0,2
-0x4052,,WRAM_C6,8,rw,CFG,volatile,E,7,1,OFS,2,3,MST,0,2
-0x4053,,WRAM_C7,8,rw,CFG,volatile,E,7,1,OFS,2,3,MST,0,2
-0x4054,,WRAM_A_MAP,32,rw,CFG,volatile,END,20,9,IMG,12,2,START,4,8
-0x4058,,WRAM_B_MAP,32,rw,CFG,volatile,END,19,10,IMG,12,2,START,3,9
-0x405c,,WRAM_C_MAP,32,rw,CFG,volatile,END,19,10,IMG,12,2,START,3,9,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
-0x4060,,WRAM_A_LOCK,8,rw,CFG,volatile,A3,3,1,A2,2,1,A1,1,1,A0,0,1,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
-0x4061,,WRAM_B_LOCK,8,rw,CFG,volatile,B7,7,1,B6,6,1,B5,5,1,B4,4,1,B3,3,1,B2,2,1,B1,1,1,B0,0,1,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
-0x4062,,WRAM_C_LOCK,8,rw,CFG,volatile,C7,7,1,C6,6,1,C5,5,1,C4,4,1,C3,3,1,C2,2,1,C1,1,1,C0,0,1,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+#twl p39,,,,,,,,,,,,,,,,,,,,,,,,
+0x4010,,MC_DET,8,rw,MI,volatile,MODE2,6,2,DET2,4,1,MODE1,2,2,DET1,0,1,,,,,,
+0x4011,,MC_SWP,8,rw,MI,volatile,SWP,7,1,,,,,,,,,,,,,,,
+0x4040,,WRAM_A0,8,rw,MI,volatile,E,7,1,OFS,2,2,MST,0,1,,,,,,,,,
+0x4041,,WRAM_A1,8,rw,MI,volatile,E,7,1,OFS,2,2,MST,0,1,,,,,,,,,
+0x4042,,WRAM_A2,8,rw,MI,volatile,E,7,1,OFS,2,2,MST,0,1,,,,,,,,,
+0x4043,,WRAM_A3,8,rw,MI,volatile,E,7,1,OFS,2,2,MST,0,1,,,,,,,,,
+0x4044,,WRAM_B0,8,rw,MI,volatile,E,7,1,OFS,2,3,MST,0,2,,,,,,,,,
+0x4045,,WRAM_B1,8,rw,MI,volatile,E,7,1,OFS,2,3,MST,0,2
+0x4046,,WRAM_B2,8,rw,MI,volatile,E,7,1,OFS,2,3,MST,0,2
+0x4047,,WRAM_B3,8,rw,MI,volatile,E,7,1,OFS,2,3,MST,0,2
+0x4048,,WRAM_B4,8,rw,MI,volatile,E,7,1,OFS,2,3,MST,0,2
+0x4049,,WRAM_B5,8,rw,MI,volatile,E,7,1,OFS,2,3,MST,0,2
+0x404a,,WRAM_B6,8,rw,MI,volatile,E,7,1,OFS,2,3,MST,0,2
+0x404b,,WRAM_B7,8,rw,MI,volatile,E,7,1,OFS,2,3,MST,0,2
+0x404c,,WRAM_C0,8,rw,MI,volatile,E,7,1,OFS,2,3,MST,0,2
+0x404d,,WRAM_C1,8,rw,MI,volatile,E,7,1,OFS,2,3,MST,0,2
+0x404e,,WRAM_C2,8,rw,MI,volatile,E,7,1,OFS,2,3,MST,0,2
+0x404f,,WRAM_C3,8,rw,MI,volatile,E,7,1,OFS,2,3,MST,0,2
+0x4050,,WRAM_C4,8,rw,MI,volatile,E,7,1,OFS,2,3,MST,0,2
+0x4051,,WRAM_C5,8,rw,MI,volatile,E,7,1,OFS,2,3,MST,0,2
+0x4052,,WRAM_C6,8,rw,MI,volatile,E,7,1,OFS,2,3,MST,0,2
+0x4053,,WRAM_C7,8,rw,MI,volatile,E,7,1,OFS,2,3,MST,0,2
+0x4054,,WRAM_A_MAP,32,rw,MI,volatile,END,20,9,IMG,12,2,START,4,8
+0x4058,,WRAM_B_MAP,32,rw,MI,volatile,END,19,10,IMG,12,2,START,3,9,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+0x405c,,WRAM_C_MAP,32,rw,MI,volatile,END,19,10,IMG,12,2,START,3,9,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+0x4060,,WRAM_A_LOCK,8,rw,MI,volatile,A3,3,1,A2,2,1,A1,1,1,A0,0,1,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+0x4061,,WRAM_B_LOCK,8,rw,MI,volatile,B7,7,1,B6,6,1,B5,5,1,B4,4,1,B3,3,1,B2,2,1,B1,1,1,B0,0,1,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+0x4062,,WRAM_C_LOCK,8,rw,MI,volatile,C7,7,1,C6,6,1,C5,5,1,C4,4,1,C3,3,1,C2,2,1,C1,1,1,C0,0,1,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
 # 表示コントロールレジスタ nitro p40 p59 p92 …,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
 0x000,,DISPCNT,32,rw,GX,volatile,O,31,1,BG,30,1,BGSCREENOFFSET,27,3,BGCHAROFFSET,24,3,OH,23,1,EXOBJ,20,3,VRAM,18,2,MODE,16,2,OW,15,1,W1,14,1,W0,13,1,DISPLAY,8,5,BLANK,7,1,OBJMAP,4,3,BG02D3D,3,1,BGMODE,0,3,OBJMAP_CH,4,1,OBJMAP_BM,5,2,EXOBJ_CH,20,2,EXOBJ_BM,22,1
 #表示ステータス nitro p39 / twl p83,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
@@ -45,7 +46,7 @@
 0x00c,,BG2CNT,16,rw,G2,volatile,SCREENSIZE,14,2,AREAOVER,13,1,SCREENBASE,8,5,COLORMODE,7,1,MOSAIC,6,1,CHARBASE,2,4,PRIORITY,0,2,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
 0x00e,,BG3CNT,16,rw,G2,volatile,SCREENSIZE,14,2,AREAOVER,13,1,SCREENBASE,8,5,COLORMODE,7,1,MOSAIC,6,1,CHARBASE,2,4,PRIORITY,0,2,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
 # BGデータ参照開始点設定、参照方向設定 nitro p69～。 BG0OFSはp 175 でも登場,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
-0x010,,BG0OFS,32,w,G2,volatile,VOFFSET,16,9,HOFFSET,0,9,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+0x010,,BG0OFS,32,w,G2,volatile,VOFFSET,16,9,HOFFSET,0,9,,,
 0x010,,BG0HOFS,16,w,G2,volatile,OFFSET,0,9,,,,,,
 0x012,,BG0VOFS,16,w,G2,volatile,OFFSET,0,9,,,,,,
 0x014,,BG1OFS,32,w,G2,volatile,VOFFSET,16,9,HOFFSET,0,9,,,
@@ -62,22 +63,22 @@
 0x024,,BG2PC,16,w,G2,volatile,S,15,1,INTEGER_DY,8,7,DECIMAL_DY,0,8
 0x026,,BG2PD,16,w,G2,volatile,S,15,1,INTEGER_DMY,8,7,DECIMAL_DMY,0,8
 0x028,,BG2X,32,w,G2,volatile,S,27,1,INTEGER_SX,8,19,DECIMAL_SX,0,8
-0x02c,,BG2Y,32,w,G2,volatile,S,27,1,INTEGER_SY,8,19,DECIMAL_SY,0,8,,,
-0x030,,BG3PA,16,w,G2,volatile,S,15,1,INTEGER_DX,8,7,DECIMAL_DX,0,8,,,
-0x032,,BG3PB,16,w,G2,volatile,S,15,1,INTEGER_DMX,8,7,DECIMAL_DMX,0,8,,,
-0x034,,BG3PC,16,w,G2,volatile,S,15,1,INTEGER_DY,8,7,DECIMAL_DY,0,8,,,
-0x036,,BG3PD,16,w,G2,volatile,S,15,1,INTEGER_DMY,8,7,DECIMAL_DMY,0,8,,,
-0x038,,BG3X,32,w,G2,volatile,S,27,1,INTEGER_SX,8,19,DECIMAL_SX,0,8,,,
-0x03c,,BG3Y,32,w,G2,volatile,S,27,1,INTEGER_SY,8,19,DECIMAL_SY,0,8,,,
-#ウィンドウ nitro p95、p176,,,,,,,,,,,,,,,,,,
-0x040,,WIN0H,16,w,G2,volatile,LEFTX,8,8,RIGHTX,0,8,,,,,,
-0x042,,WIN1H,16,w,G2,volatile,LEFTX,8,8,RIGHTX,0,8,,,,,,
-0x044,,WIN0V,16,w,G2,volatile,UPY,8,8,DOWNY,0,8,,,,,,
-0x046,,WIN1V,16,w,G2,volatile,UPY,8,8,DOWNY,0,8,,,,,,
-0x048,,WININ,16,rw,G2,volatile,WIN1IN,8,6,WIN0IN,0,6,,,,,,
-0x04a,,WINOUT,16,rw,G2,volatile,OBJWININ,8,6,WINOUT,0,6,,,,,,
-#モザイク nitro p99,,,,,,,,,,,,,,,,,,
-0x04c,,MOSAIC,16,w,G2,volatile,OBJVSIZE,12,4,OBJHSIZE,8,4,BGVSIZE,4,4,BGHSIZE,0,4
+0x02c,,BG2Y,32,w,G2,volatile,S,27,1,INTEGER_SY,8,19,DECIMAL_SY,0,8
+0x030,,BG3PA,16,w,G2,volatile,S,15,1,INTEGER_DX,8,7,DECIMAL_DX,0,8
+0x032,,BG3PB,16,w,G2,volatile,S,15,1,INTEGER_DMX,8,7,DECIMAL_DMX,0,8
+0x034,,BG3PC,16,w,G2,volatile,S,15,1,INTEGER_DY,8,7,DECIMAL_DY,0,8
+0x036,,BG3PD,16,w,G2,volatile,S,15,1,INTEGER_DMY,8,7,DECIMAL_DMY,0,8
+0x038,,BG3X,32,w,G2,volatile,S,27,1,INTEGER_SX,8,19,DECIMAL_SX,0,8
+0x03c,,BG3Y,32,w,G2,volatile,S,27,1,INTEGER_SY,8,19,DECIMAL_SY,0,8
+#ウィンドウ nitro p95、p176,,,,,,,,,,,,,,,
+0x040,,WIN0H,16,w,G2,volatile,LEFTX,8,8,RIGHTX,0,8,,,
+0x042,,WIN1H,16,w,G2,volatile,LEFTX,8,8,RIGHTX,0,8,,,
+0x044,,WIN0V,16,w,G2,volatile,UPY,8,8,DOWNY,0,8,,,
+0x046,,WIN1V,16,w,G2,volatile,UPY,8,8,DOWNY,0,8,,,
+0x048,,WININ,16,rw,G2,volatile,WIN1IN,8,6,WIN0IN,0,6,,,
+0x04a,,WINOUT,16,rw,G2,volatile,OBJWININ,8,6,WINOUT,0,6,,,
+#モザイク nitro p99,,,,,,,,,,,,,,,
+0x04c,,MOSAIC,16,w,G2,volatile,OBJVSIZE,12,4,OBJHSIZE,8,4,BGVSIZE,4,4,BGHSIZE,0,4,,,,,,,,,,,,,,,,,,,,,,,,
 #カラー特殊効果 nitro p97、　p177～p178,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
 0x050,,BLDCNT,16,rw,G2,volatile,PLANE2,8,6,EFFECT,6,2,PLANE1,0,6,,,,,,,,,,,,,,,,,,,,,,,,,,,
 0x052,,BLDALPHA,16,rw,G2,volatile,EVB,8,5,EVA,0,5,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
@@ -93,7 +94,7 @@
 #マスター輝度 nitro p50,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
 0x06c,,MASTER_BRIGHT,16,rw,GX,volatile,E_MOD,14,2,E_VALUE,0,5,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
 #ビデオ出力 nitro p51,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
-0x070,,TVOUTCNT,16,w,GX,volatile,COMMAND3,8,4,COMMAND2,4,4,COMMAND,0,4,,,,,,,,,,,,,,,,,,,,,,,,,,,
+0x070,,TVOUTCNT,16,w,GX,volatile,COMMAND3,8,4,COMMAND2,4,4,COMMAND,0,4,,,,,,,,,,,,,,,
 #DMA nitro p179,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
 0x0b0,,DMA0SAD,32,rw,MI,volatile,DMASRC,0,28,,,,,,,,,,,,,,,,,,,,,
 0x0b4,,DMA0DAD,32,rw,MI,volatile,DMADEST,0,28,,,,,,,,,,,,,,,,,,,,,
@@ -109,7 +110,7 @@
 0x0dc,,DMA3CNT,32,rw,MI,volatile,E,31,1,I,30,1,MODE,27,3,SB,26,1,CM,25,1,SAR,23,2,DAR,21,2,WORDCNT,0,21
 0x0e0,,DMA0_CLR_DATA,32,rw,MI,volatile,,,,,,,,,,,,,,,,,,,,,,,,
 0x0e4,,DMA1_CLR_DATA,32,rw,MI,volatile,,,,,,,,,,,,,,,,,,,,,,,,
-0x0e8,,DMA2_CLR_DATA,32,rw,MI,volatile,,,,,,,,,,,,,,,,,,,,,,,,
+0x0e8,,DMA2_CLR_DATA,32,rw,MI,volatile,,,,,,,,,,,,,,,,,,,,,,,,,,,
 0x0ec,,DMA3_CLR_DATA,32,rw,MI,volatile,,,,,,,,,,,,,,,,,,,,,,,,,,,
 # twl p53 ～ p67,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
 0x4100,,DMAGBL,32,rw,MI,volatile,ARB,31,1,YLD,16,4,,,,,,,,,,,,,,,,,,,,,
@@ -141,7 +142,7 @@
 0x4168,,DMA7BCNT,32,rw,MI,volatile,PS,16,2,BI,0,16,,,,,,,,,,,,,,,,,,,,,
 0x416c,,DMA7FDATA,32,rw,MI,volatile,,,,,,,,,,,,,,,,,,,,,,,,,,,
 0x4170,,DMA7CNT,32,rw,MI,volatile,E,31,1,I,30,1,CM,29,1,TIMING,24,5,BSIZE,16,4,SRLD,15,1,SAR,13,2,DRLD,12,1,DAR,10,2
-#タイマ nitro p181,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+#タイマ nitro p181,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
 0x100,,TM0CNT_L,16,rw,OS,volatile,TIMER0CNT,0,16,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
 0x102,,TM0CNT_H,16,rw,OS,volatile,E,7,1,I,6,1,PS,0,2,,,,,,,,,,,,,,,,,,,,,,,,,,,
 0x104,,TM1CNT_L,16,rw,OS,volatile,TIMER1CNT,0,16,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
@@ -157,7 +158,7 @@
 #キー nitro p182,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
 0x130,,KEYINPUT,16,r,PAD,volatile,L,9,1,R,8,1,DOWN,7,1,UP,6,1,LEFT,5,1,RIGHT,4,1,START,3,1,SEL,2,1,B,1,1,A,0,1,,,,,,
 0x132,,KEYCNT,16,rw,PAD,volatile,LOGIC,15,1,INTR,14,1,L,9,1,R,8,1,DOWN,7,1,UP,6,1,LEFT,5,1,RIGHT,4,1,START,3,1,SEL,2,1,B,1,1,A,0,1
-#ARM7とのインタフェース nitro p187,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+#ARM7とのインタフェース nitro p187,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
 0x180,,SUBPINTF,16,rw,PXI,volatile,I,14,1,IREQ,13,1,A9STATUS,8,4,A7STATUS,0,4,,,,,,,,,,,,,,,
 0x184,,SUBP_FIFO_CNT,16,rw,PXI,volatile,E,15,1,ERR,14,1,RECV_RI,10,1,RECV_FULL,9,1,RECV_EMP,8,1,SEND_CL,3,1,SEND_TI,2,1,SEND_FULL,1,1,SEND_EMP,0,1
 0x188,,SEND_FIFO,32,rw,PXI,volatile,,,,,,,,,,,,,,,,,,,,,,,,,,,
@@ -173,7 +174,7 @@
 0x21a0,,MCCNT0_B,16,rw,MI,volatile,E,15,1,I,14,1,SEL,13,1,BUSY,7,1,MODE,6,1,BAUDRATE,0,2,,,,,,,,,
 0x21a2,,MCD0_B,16,rw,MI,volatile,DATA,0,8,,,,,,,,,,,,,,,,,,,,,,,,
 0x102010,,MCD1_B,32,rw,MI,volatile,,,,,,,,,,,,,,,,,,,,,,,,,,,
-0x21a4,,MCCNT1_B,32,rw,MI,volatile,START,31,1,WR,30,1,CT,27,1,PC,24,3,RDY,23,1,L2,16,6,L1,0,13,,,,,,
+0x21a4,,MCCNT1_B,32,rw,MI,volatile,START,31,1,WR,30,1,CT,27,1,PC,24,3,RDY,23,1,L2,16,6,L1,0,13,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
 0x21a8,,MCCMD0_B,32,w,MI,volatile,CMD3,24,8,CMD2,16,8,CMD1,8,8,CMD0,0,8,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
 0x21ac,,MCCMD1_B,32,w,MI,volatile,CMD7,24,8,CMD6,16,8,CMD5,8,8,CMD4,0,8,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
 #外部メモリ nitro p27 / twl p85,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
@@ -189,7 +190,7 @@
 0x242,,VRAMCNT_C,8,w,GX,volatile,E,7,1,OFS,3,2,MST,0,3,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
 0x243,,VRAMCNT_D,8,w,GX,volatile,E,7,1,OFS,3,2,MST,0,3,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
 0x244,,WVRAMCNT,32,w,GX,volatile,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
-0x244,,VRAMCNT_E,8,w,GX,volatile,E,7,1,MST,0,3,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+0x244,,VRAMCNT_E,8,w,GX,volatile,E,7,1,MST,0,3,,,
 0x245,,VRAMCNT_F,8,w,GX,volatile,E,7,1,OFS,3,2,MST,0,3
 0x246,,VRAMCNT_G,8,w,GX,volatile,E,7,1,OFS,3,2,MST,0,3
 0x247,,VRAMCNT_WRAM,8,w,GX,volatile,BANK,0,2,,,,,,
@@ -205,7 +206,7 @@
 0x298,,DIV_DENOM,64,rw,CP,volatile,,,,,,,,,
 0x298,,DIV_DENOM_L,32,rw,CP,volatile,,,,,,,,,
 0x29c,,DIV_DENOM_H,32,rw,CP,volatile,,,,,,,,,
-0x2a0,,DIV_RESULT,64,rw,CP,volatile,,,,,,,,,
+0x2a0,,DIV_RESULT,64,rw,CP,volatile,,,,,,,,,,,,,,,,,,,,,
 0x2a0,,DIV_RESULT_L,32,rw,CP,volatile,,,,,,,,,,,,,,,,,,,,,
 0x2a4,,DIV_RESULT_H,32,rw,CP,volatile,,,,,,,,,,,,,,,,,,,,,
 0x2a8,,DIVREM_RESULT,64,rw,CP,volatile,,,,,,,,,,,,,,,,,,,,,
@@ -221,7 +222,7 @@
 0x300,,PAUSE,16,rw,OS,volatile,MOD,14,2,CHK,0,1,,,,,,,,,,,,,,,
 #パワーコントロール nitro p35,,,,,,,,,,,,,,,,,,,,,,,,,,,
 0x304,,POWCNT,16,rw,GX,volatile,GE,3,1,RE,2,1,E2DG,1,1,LCD,0,1,LCDB,8,1,E2DGB,9,1,DSEL,15,1
-#レンダリング済みライン数カウントレジスタ p174,,,,,,,,,,,,,,,,,,,,,,,,,,,
+#レンダリング済みライン数カウントレジスタ p174,,,,,,,,,,,,,,,,,,,,,,,,
 0x320,,RDLINES_COUNT,16,r,G3X,volatile,RENDERED_LINES_MIN,0,6,,,,,,,,,,,,,,,
 #エッジカラーレジスタ nitro p170 (このフィールド名称考慮すべき),,,,,,,,,,,,,,,,,,,,,,,,
 #重複定義ありです。,,,,,,,,,,,,,,,,,,,,,,,,
@@ -253,7 +254,7 @@
 0x360,,FOG_TABLE_0_L,16,w,G3X,volatile,DENSITY1,8,7,DENSITY0,0,7,,,,,,,,,,,,
 0x362,,FOG_TABLE_0_H,16,w,G3X,volatile,DENSITY3,8,7,DENSITY2,0,7,,,,,,,,,,,,
 0x364,,FOG_TABLE_1,32,w,G3X,volatile,DENSITY7,24,7,DENSITY6,16,7,DENSITY5,8,7,DENSITY4,0,7,,,,,,
-0x364,,FOG_TABLE_1_L,16,w,G3X,volatile,DENSITY5,8,7,DENSITY4,0,7,,,,,,,,,,,,
+0x364,,FOG_TABLE_1_L,16,w,G3X,volatile,DENSITY5,8,7,DENSITY4,0,7,,,,,,
 0x366,,FOG_TABLE_1_H,16,w,G3X,volatile,DENSITY7,8,7,DENSITY6,0,7,,,,,,
 0x368,,FOG_TABLE_2,32,w,G3X,volatile,DENSITY11,24,7,DENSITY10,16,7,DENSITY9,8,7,DENSITY8,0,7
 0x368,,FOG_TABLE_2_L,16,w,G3X,volatile,DENSITY9,8,7,DENSITY8,0,7,,,,,,
@@ -269,7 +270,7 @@
 0x376,,FOG_TABLE_5_H,16,w,G3X,volatile,DENSITY23,8,7,DENSITY22,0,7,,,,,,
 0x378,,FOG_TABLE_6,32,w,G3X,volatile,DENSITY27,24,7,DENSITY26,16,7,DENSITY25,8,7,DENSITY24,0,7
 0x378,,FOG_TABLE_6_L,16,w,G3X,volatile,DENSITY25,8,7,DENSITY24,0,7,,,,,,
-0x37a,,FOG_TABLE_6_H,16,w,G3X,volatile,DENSITY27,8,7,DENSITY26,0,7,,,,,,
+0x37a,,FOG_TABLE_6_H,16,w,G3X,volatile,DENSITY27,8,7,DENSITY26,0,7,,,,,,,,,,,,
 0x37c,,FOG_TABLE_7,32,w,G3X,volatile,DENSITY31,24,7,DENSITY30,16,7,DENSITY29,8,7,DENSITY28,0,7,,,,,,
 0x37c,,FOG_TABLE_7_L,16,w,G3X,volatile,DENSITY29,8,7,DENSITY28,0,7,,,,,,,,,,,,
 0x37e,,FOG_TABLE_7_H,16,w,G3X,volatile,DENSITY31,8,7,DENSITY30,0,7,,,,,,,,,,,,
@@ -333,7 +334,7 @@
 0x450,,MTX_RESTORE,32,w,G3,volatile,INDEX,0,5,,,,,,,,,,,,,,,
 0x454,,MTX_IDENTITY,32,w,G3,volatile,,,,,,,,,,,,,,,,,,
 0x458,,MTX_LOAD_4x4,32,w,G3,volatile,S,31,1,INTEGER_M44,12,19,DECIMAL_M44,0,12,,,,,,,,,
-0x45c,,MTX_LOAD_4x3,32,w,G3,volatile,S,31,1,INTEGER_M43,12,19,DECIMAL_M43,0,12,,,,,,,,,
+0x45c,,MTX_LOAD_4x3,32,w,G3,volatile,S,31,1,INTEGER_M43,12,19,DECIMAL_M43,0,12,,,,,,,,,,,,,,,,,,
 0x460,,MTX_MULT_4x4,32,w,G3,volatile,S,31,1,INTEGER_M44,12,19,DECIMAL_M44,0,12,,,,,,,,,,,,,,,,,,
 0x464,,MTX_MULT_4x3,32,w,G3,volatile,S,31,1,INTEGER_M43,12,19,DECIMAL_M43,0,12,,,,,,,,,,,,,,,,,,
 0x468,,MTX_MULT_3x3,32,w,G3,volatile,S,31,1,INTEGER_M33,12,19,DECIMAL_M33,0,12,,,,,,,,,,,,,,,,,,
@@ -349,7 +350,7 @@
 0x490,,VTX_10,32,w,G3,volatile,SZ,29,1,INT_Z,26,3,DECIMAL_Z,20,6,SY,19,1,INT_Y,16,3,DECIMAL_Y,10,6,SX,9,1,INT_X,6,3,DECIMAL_X,0,6
 0x494,,VTX_XY,32,w,G3,volatile,SY,31,1,INT_Y,28,3,DECIMAL_Y,16,12,SX,15,1,INT_X,12,3,DECIMAL_X,0,12,,,,,,,,,
 0x498,,VTX_XZ,32,w,G3,volatile,SZ,31,1,INT_Z,28,3,DECIMAL_Z,16,12,SX,15,1,INT_X,12,3,DECIMAL_X,0,12,,,,,,,,,
-0x49c,,VTX_YZ,32,w,G3,volatile,SZ,31,1,INT_Z,28,3,DECIMAL_Z,16,12,SY,15,1,INT_Y,12,3,DECIMAL_Y,0,12,,,,,,,,,
+0x49c,,VTX_YZ,32,w,G3,volatile,SZ,31,1,INT_Z,28,3,DECIMAL_Z,16,12,SY,15,1,INT_Y,12,3,DECIMAL_Y,0,12,,,,,,,,,,,,,,,
 0x4a0,,VTX_DIFF,32,w,G3,volatile,SZ,29,1,DECIMAL_Z,20,9,SY,19,1,DECIMAL_Y,10,9,SX,9,1,DECIMAL_X,0,9,,,,,,,,,,,,,,,
 #ポリゴン属性 nitro p130,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
 0x4a4,,POLYGON_ATTR,32,w,G3,volatile,ID,24,6,ALPHA,16,5,FE,15,1,DT,14,1,D1,13,1,FC,12,1,XL,11,1,FR,7,1,BK,6,1,PM,4,2,LE,0,4
@@ -365,7 +366,7 @@
 #ポリゴン  頂点リストの開始と終了宣言 nitro p133,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
 0x500,,BEGIN_VTXS,32,w,G3,volatile,TYPE,0,2,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
 0x504,,END_VTXS,32,w,G3,volatile,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
-#レンダリングエンジン参照データスワップ nitro p115,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+#レンダリングエンジン参照データスワップ nitro p115,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
 0x540,,SWAP_BUFFERS,32,w,G3,volatile,DP,1,1,XS,0,1,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
 #ビューポート nitro p116,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
 0x580,,VIEWPORT,32,w,G3,volatile,INTEGER_Y2,24,8,INTEGER_X2,16,8,INTEGER_Y1,8,8,INTEGER_X1,0,8,,,,,,,,,,,,,,,,,,,,,,,,
@@ -381,7 +382,7 @@
 0x606,,VTXRAM_COUNT,16,r,G3X,volatile,VTXCNT,0,13,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
 #1ドットポリゴン表示境界デプス値レジスタ nitro p132,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
 0x610,,DISP_1DOT_DEPTH,16,w,G3X,volatile,INTEGER_W,3,12,DECIMAL_W,0,3,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
-#計算結果取得 nitro p145,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+#計算結果取得 nitro p145,,,,,,,,,,,,,,,
 0x620,,POS_RESULT_X,32,r,G3X,volatile,SX,31,1,INTEGER_X,12,19,DECIMAL_X,0,12
 0x624,,POS_RESULT_Y,32,r,G3X,volatile,SY,31,1,INTEGER_Y,12,19,DECIMAL_Y,0,12
 0x628,,POS_RESULT_Z,32,r,G3X,volatile,SZ,31,1,INTEGER_Z,12,19,DECIMAL_Z,0,12
@@ -413,7 +414,7 @@
 0x690,,VECMTX_RESULT_4,32,r,G3X,volatile,S,31,1,INTEGER_m4,12,19,DECIMAL_m4,0,12
 0x694,,VECMTX_RESULT_5,32,r,G3X,volatile,S,31,1,INTEGER_m5,12,19,DECIMAL_m5,0,12
 0x698,,VECMTX_RESULT_6,32,r,G3X,volatile,S,31,1,INTEGER_m6,12,19,DECIMAL_m6,0,12
-0x69c,,VECMTX_RESULT_7,32,r,G3X,volatile,S,31,1,INTEGER_m7,12,19,DECIMAL_m7,0,12
+0x69c,,VECMTX_RESULT_7,32,r,G3X,volatile,S,31,1,INTEGER_m7,12,19,DECIMAL_m7,0,12,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
 0x6a0,,VECMTX_RESULT_8,32,r,G3X,volatile,S,31,1,INTEGER_m8,12,19,DECIMAL_m8,0,12,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
 #２画面目関係レジスタ,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
 0x1000,,DB_DISPCNT,32,rw,GXS,volatile,O,31,1,BG,30,1,OH,23,1,EXOBJ,20,2,MODE,16,1,OW,15,1,W1,14,1,W0,13,1,DISPLAY,8,5,BLANK,7,1,OBJMAP,4,3,BGMODE,0,3,OBJMAP_CH,4,1,OBJMAP_BM,5,2,EXOBJ_CH,20,2
@@ -429,7 +430,7 @@
 0x1014,,DB_BG1HOFS,16,w,G2S,volatile,OFFSET,0,9,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
 0x1016,,DB_BG1VOFS,16,w,G2S,volatile,OFFSET,0,9,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
 0x1018,,DB_BG2OFS,32,w,G2S,volatile,VOFFSET,16,9,HOFFSET,0,9,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
-0x1018,,DB_BG2HOFS,16,w,G2S,volatile,OFFSET,0,9,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+0x1018,,DB_BG2HOFS,16,w,G2S,volatile,OFFSET,0,9,,,,,,
 0x101a,,DB_BG2VOFS,16,w,G2S,volatile,OFFSET,0,9,,,,,,
 0x101c,,DB_BG3OFS,32,w,G2S,volatile,VOFFSET,16,9,HOFFSET,0,9,,,
 0x101c,,DB_BG3HOFS,16,w,G2S,volatile,OFFSET,0,9,,,,,,
@@ -445,7 +446,7 @@
 0x1034,,DB_BG3PC,16,w,G2S,volatile,S,15,1,INTEGER_DY,8,7,DECIMAL_DY,0,8
 0x1036,,DB_BG3PD,16,w,G2S,volatile,S,15,1,INTEGER_DMY,8,7,DECIMAL_DMY,0,8
 0x1038,,DB_BG3X,32,w,G2S,volatile,S,27,1,INTEGER_SX,8,19,DECIMAL_SX,0,8
-0x103c,,DB_BG3Y,32,w,G2S,volatile,S,27,1,INTEGER_SY,8,19,DECIMAL_SY,0,8
+0x103c,,DB_BG3Y,32,w,G2S,volatile,S,27,1,INTEGER_SY,8,19,DECIMAL_SY,0,8,,,
 0x1040,,DB_WIN0H,16,w,G2S,volatile,LEFTX,8,8,RIGHTX,0,8,,,,,,
 0x1042,,DB_WIN1H,16,w,G2S,volatile,LEFTX,8,8,RIGHTX,0,8,,,,,,
 0x1044,,DB_WIN0V,16,w,G2S,volatile,UPY,8,8,DOWNY,0,8,,,,,,

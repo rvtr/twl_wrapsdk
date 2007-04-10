@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------*
-  Project:  TwlSDK
-  File:     twl.h
+  Project:  TwlSDK - include - MI
+  File:     mi.h
 
   Copyright 2007 Nintendo.  All rights reserved.
 
@@ -13,13 +13,23 @@
   $Log: $
   $NoKeywords: $
  *---------------------------------------------------------------------------*/
-#ifndef TWL_H_
-#define TWL_H_
 
-#include <nitro.h>
+#ifndef TWL_MI_H_
+#define TWL_MI_H_
 
-#include <twl/mi.h>
-#include <twl/vlink.h>
+#include <nitro/mi.h>
 
-/* TWL_H_ */
+#include <twl/mi/ex_dma.h>
+#include <twl/mi/ex_wram.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
+
+/* TWL_MI_H_ */
 #endif

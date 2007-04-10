@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------*
-  Project:  TwlSDK
-  File:     twl.h
+  Project:  TwlSDK - IO Register List - 
+  File:     twl/ioreg.h
 
   Copyright 2007 Nintendo.  All rights reserved.
 
@@ -10,16 +10,9 @@
   not be disclosed to third parties or copied or duplicated in any form,
   in whole or in part, without the prior written consent of Nintendo.
 
-  $Log: $
-  $NoKeywords: $
  *---------------------------------------------------------------------------*/
-#ifndef TWL_H_
-#define TWL_H_
-
-#include <nitro.h>
-
-#include <twl/mi.h>
-#include <twl/vlink.h>
-
-/* TWL_H_ */
+#ifdef	SDK_ARM9
+#include <nitro/hw/ARM9/ioreg.h>  // should be twl/...
+#else  //SDK_ARM7
+#include <nitro/hw/ARM7/ioreg.h>  // should be twl/...
 #endif

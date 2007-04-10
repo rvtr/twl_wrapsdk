@@ -381,7 +381,7 @@ sub output {
 #define $include_guard
 
 #ifndef SDK_ASM
-#include <nitro/types.h>
+#include <twl/types.h>
 #include <nitro/hw/ARM9/mmap_global.h>
 #endif
 
