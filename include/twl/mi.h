@@ -19,8 +19,8 @@
 
 #include <nitro/mi.h>
 
-#include <twl/mi/ex_dma.h>
-#include <twl/mi/ex_wram.h>
+#include <twl/mi/exDma.h>
+#include <twl/mi/wram_abc.h>
 
 #ifdef __cplusplus
 extern "C" {

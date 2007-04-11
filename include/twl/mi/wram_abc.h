@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------*
   Project:  TwlSDK - MI - include
-  File:     ex_wram.h
+  File:     wram_abc.h
 
   Copyright 2007 Nintendo.  All rights reserved.
 
@@ -14,8 +14,8 @@
   $NoKeywords: $
  *---------------------------------------------------------------------------*/
 
-#ifndef TWL_MI_EXWRAM_H_
-#define TWL_MI_EXWRAM_H_
+#ifndef TWL_MI_WRAM_ABC_H_
+#define TWL_MI_WRAM_ABC_H_
 
 #include <twl/ioreg.h>
 
@@ -26,6 +26,7 @@ extern "C" {
 //----------------------------------------------------------------
 //    enum definition
 //
+
 typedef enum
 {
     MI_WRAM_A_ARM9 = 0 << REG_MI_WRAM_A0_MST_SHIFT,
@@ -84,10 +85,41 @@ typedef enum
 }
 MIOfsWramC;
 
+typedef enum
+{
+    MI_WRAM_A_IMG_64KB  = 0 << REG_MI_WRAM_A_MAP_IMG_SHIFT,
+    MI_WRAM_A_IMG_128KB = 1 << REG_MI_WRAM_A_MAP_IMG_SHIFT,
+    MI_WRAM_A_IMG_256KB = 2 << REG_MI_WRAM_A_MAP_IMG_SHIFT
+}
+MIImageWramA;
+
+typedef enum
+{
+    MI_WRAM_B_IMG_32KB  = 0 << REG_MI_WRAM_B_MAP_IMG_SHIFT,
+    MI_WRAM_B_IMG_64KB  = 1 << REG_MI_WRAM_B_MAP_IMG_SHIFT,
+    MI_WRAM_B_IMG_128KB = 2 << REG_MI_WRAM_B_MAP_IMG_SHIFT,
+    MI_WRAM_B_IMG_256KB = 3 << REG_MI_WRAM_B_MAP_IMG_SHIFT
+}
+MIImageWramB;
+
+typedef enum
+{
+    MI_WRAM_C_IMG_32KB  = 0 << REG_MI_WRAM_C_MAP_IMG_SHIFT,
+    MI_WRAM_C_IMG_64KB  = 1 << REG_MI_WRAM_C_MAP_IMG_SHIFT,
+    MI_WRAM_C_IMG_128KB = 2 << REG_MI_WRAM_C_MAP_IMG_SHIFT,
+    MI_WRAM_C_IMG_256KB = 3 << REG_MI_WRAM_C_MAP_IMG_SHIFT
+}
+MIImageWramC;
+
+
+#define MI_WRAM_A_BLOCK_SIZE  0x00010000  // 64KB
+#define MI_WRAM_B_BLOCK_SIZE  0x00008000  // 32KB
+#define MI_WRAM_C_BLOCK_SIZE  0x00008000  // 32KB
+
 
 #ifdef __cplusplus
 } /* extern "C" */
 #endif
 
-/* TWL_MI_EXWRAM_H_ */
+/* TWL_MI_WRAM_ABC_H_ */
 #endif

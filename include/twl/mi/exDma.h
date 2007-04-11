@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------*
   Project:  TwlSDK - MI - include
-  File:     edma.h
+  File:     exDma.h
 
   Copyright 2007 Nintendo.  All rights reserved.
 
@@ -13,8 +13,8 @@
   $Log: $
   $NoKeywords: $
  *---------------------------------------------------------------------------*/
-#ifndef TWL_MI_DMA_H_
-#define TWL_MI_DMA_H_
+#ifndef TWL_MI_EXDMA_H_
+#define TWL_MI_EXDMA_H_
 
 #include <nitro/misc.h>
 #include <nitro/types.h>
@@ -523,7 +523,7 @@ void MIi_ExDmaBypassAsyncCore( MIExDmaNo dmaNo, const void *src, void *dest, u32
                 MIEDmaTiming timing );
 
 /*---------------------------------------------------------------------------*
-  Name:         MIi_SetDmaParams
+  Name:         MIi_SetExDmaParams
 
   Description:  copy memory with DMA
                 sync 32bit version
@@ -536,7 +536,7 @@ void MIi_ExDmaBypassAsyncCore( MIExDmaNo dmaNo, const void *src, void *dest, u32
 
   Returns:      None
  *---------------------------------------------------------------------------*/
-void MIi_SetDmaParams( MIExDmaNo dmaNo, const void *src, void *dest, u32 size, u32 oneShotSize,
+void MIi_SetExDmaParams( MIExDmaNo dmaNo, const void *src, void *dest, u32 size, u32 oneShotSize,
                 MIEDmaBlockSize blockSize, u32 interval, MIEDmaPrescaler prescale,
                 u32 continuous, u32 srcRld, u32 destRld,
                 MIEDmaTiming timing,
@@ -560,5 +560,5 @@ void MIi_SetExDmaArbiter( MIEDmaArbitration arb, MIEDmaYieldCycles yld );
 
 #endif
 
-/* TWL_MI_DMA_H_ */
+/* TWL_MI_EXDMA_H_ */
 #endif
