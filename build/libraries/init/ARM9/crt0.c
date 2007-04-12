@@ -11,6 +11,9 @@
   in whole or in part, without the prior written consent of Nintendo.
 
   $Log: $
+  Revision 1.50  2006/08/09 06:11:26  yosizaki
+  change to wait vcount.
+
   $NoKeywords: $
  *---------------------------------------------------------------------------*/
 #include        <nitro/code32.h>
@@ -62,6 +65,12 @@ SDK_WEAK_SYMBOL asm void _start( void )
         //     ( use that LSB of HW_REG_BASE equal to 0 )
         mov             r12, #HW_REG_BASE
         str             r12, [r12, #REG_IME_OFFSET]
+
+        //---- adjust VCOUNT.
+@wait_vcount_0:
+        ldrh            r0, [r12, #REG_VCOUNT_OFFSET]
+        cmp             r0, #0
+        bne             @wait_vcount_0
 
         //---- initialize cp15
         bl              init_cp15
@@ -203,7 +212,7 @@ void   *const _start_ModuleParams[] = {
     (void *)SDK_STATIC_BSS_START,
     (void *)SDK_STATIC_BSS_END,
     (void *)0,                         // CompressedStaticEnd
-    (void *)0, //SDK_VERSION_ID,            // SDK version info
+    (void *)SDK_VERSION_ID,            // SDK version info
     (void *)SDK_NITROCODE_BE,          // Checker 1
     (void *)SDK_NITROCODE_LE,          // Checker 2
 };

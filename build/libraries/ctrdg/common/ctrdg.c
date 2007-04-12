@@ -11,6 +11,9 @@
   in whole or in part, without the prior written consent of Nintendo.
 
   $Log: ctrdg.c,v $
+  Revision 1.24  2007/02/20 00:28:11  kitase_hirotake
+  indent source
+
   Revision 1.23  2006/04/24 00:05:09  okubata_ryoma
   CW2.0ÇÃåxçêÉåÉxÉãã≠âªÇ…î∫Ç¡ÇΩïœçX
 
@@ -418,7 +421,7 @@ BOOL CTRDG_IsExisting(void)
     }
 #if defined(SDK_ARM7)
     //---- get privilege for accessing cartridge
-    if(CTRDGi_LockByProcessor(CTRDGi_Work.lockID, &lockInfo) == FALSE)
+    if (CTRDGi_LockByProcessor(CTRDGi_Work.lockID, &lockInfo) == FALSE)
     {
         (void)OS_RestoreInterrupts(lockInfo.irq);
         return TRUE;

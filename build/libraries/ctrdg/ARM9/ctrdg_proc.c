@@ -2,7 +2,7 @@
   Project:  NitroSDK - CTRDG
   File:     ctrdg.c
 
-  Copyright 2003-2006 Nintendo.  All rights reserved.
+  Copyright 2003-2007 Nintendo.  All rights reserved.
 
   These coded instructions, statements, and computer programs contain
   proprietary information of Nintendo of America Inc. and/or Nintendo
@@ -11,6 +11,15 @@
   in whole or in part, without the prior written consent of Nintendo.
 
   $Log: ctrdg_proc.c,v $
+  Revision 1.31  2007/02/20 00:28:11  kitase_hirotake
+  indent source
+
+  Revision 1.30  2006/08/10 00:25:57  okubata_ryoma
+  small fix
+
+  Revision 1.29  2006/08/10 00:02:52  okubata_ryoma
+  カートリッジの活線挿抜に関する不具合修正
+
   Revision 1.28  2006/05/02 02:04:47  kitase_hirotake
   不必要なデバッグ出力の削除
 
@@ -170,7 +179,7 @@ void CTRDG_Init(void)
         CTRDGi_InitTaskThread(&CTRDGTaskList);
     }
 
-    PXI_SetFifoRecvCallback(PXI_FIFO_TAG_CTRDG_PHI, CTRDGi_CallbackForSetPhi );
+    PXI_SetFifoRecvCallback(PXI_FIFO_TAG_CTRDG_PHI, CTRDGi_CallbackForSetPhi);
 
     /*
      * ユーザが明示的に enable を指定しない限りアクセス無効.
@@ -208,8 +217,6 @@ void CTRDGi_InitModuleInfo(void)
     CTRDGLockByProc lockInfo;
     OSIrqMask lastIE;
     BOOL    lastIME;
-
-    CTRDGModuleInfo *cip = CTRDGi_GetModuleInfoAddr();
 
     if (isInitialized)
     {
@@ -254,10 +261,14 @@ void CTRDGi_InitModuleInfo(void)
     //---- release privilege for accessing cartridge
     CTRDGi_UnlockByProcessor(CTRDGi_Work.lockID, &lockInfo);
 
-    //---- copy the information of peripheral devices to system area
+    // 前回チェックでカートリッジが挿入されていた場合、または
+    // ソフトリセットが一度も実行されていない場合のみカートリッジデータを更新する
+    if ((*(u8 *)HW_IS_CTRDG_EXIST) || !(*(u8 *)HW_SET_CTRDG_MODULE_INFO_ONCE))
     {
+        //---- copy the information of peripheral devices to system area
         int     i;
         CTRDGHeader *chb = &headerBuf;
+        CTRDGModuleInfo *cip = CTRDGi_GetModuleInfoAddr();
 
         cip->moduleID.raw = chb->moduleID;
         for (i = 0; i < 3; i++)
@@ -266,6 +277,11 @@ void CTRDGi_InitModuleInfo(void)
         }
         cip->makerCode = chb->makerCode;
         cip->gameCode = chb->gameCode;
+
+        // カートリッジが挿入されているのかチェック
+        *(u8 *)HW_IS_CTRDG_EXIST = (u8)((CTRDG_IsExisting())? 1 : 0);
+        // カートリッジの情報が一回でも更新されればTRUE
+        (*(u8 *)HW_SET_CTRDG_MODULE_INFO_ONCE) = TRUE;
     }
 
     //---- copy NINTENDO logo data in the ARM9 system ROM to main memory
@@ -360,7 +376,7 @@ static void CTRDGi_PulledOutCallback(PXIFifoTag tag, u32 data, BOOL err)
     }
     else
     {
-OS_Printf(">>>tag[%x] data[%x] err[%x]\n", tag, data, err);
+        OS_Printf(">>>tag[%x] data[%x] err[%x]\n", tag, data, err);
 #ifndef SDK_FINALROM
         OS_Panic("illegal Cartridge pxi command.");
 #else
@@ -431,7 +447,7 @@ void CTRDG_CheckPulledOut(void)
     {
         return;
     }
-    
+
     //---------------- check cartridge pulled out
     //---- check cartridge
     isCartridgePullOut = CTRDG_IsPulledOut();
@@ -466,26 +482,26 @@ void CTRDG_CheckPulledOut(void)
  *---------------------------------------------------------------------------*/
 void CTRDG_SetPhiClock(CTRDGPhiClock clock)
 {
-	u32 data = ((u32)clock << CTRDG_PXI_COMMAND_PARAM_SHIFT)| CTRDG_PXI_COMMAND_SET_PHI;
+    u32     data = ((u32)clock << CTRDG_PXI_COMMAND_PARAM_SHIFT) | CTRDG_PXI_COMMAND_SET_PHI;
 
-	//---- check parameter range
-	SDK_ASSERT( (u32)clock <= CTRDG_PHI_CLOCK_16MHZ );
+    //---- check parameter range
+    SDK_ASSERT((u32)clock <= CTRDG_PHI_CLOCK_16MHZ);
 
-	//---- set ARM9 PHI output clock
-	MIi_SetPhiClock( (MIiPhiClock)clock );
+    //---- set ARM9 PHI output clock
+    MIi_SetPhiClock((MIiPhiClock) clock);
 
-	//---- send command to set ARM7 phi clock
-	CTRDGi_Lock = TRUE;
+    //---- send command to set ARM7 phi clock
+    CTRDGi_Lock = TRUE;
     while (PXI_SendWordByFifo(PXI_FIFO_TAG_CTRDG_PHI, data, FALSE) != PXI_FIFO_SUCCESS)
     {
         SVC_WaitByLoop(1);
     }
 
-	//---- wait response
-	while( CTRDGi_Lock )
-	{
-		SVC_WaitByLoop(1);
-	}
+    //---- wait response
+    while (CTRDGi_Lock)
+    {
+        SVC_WaitByLoop(1);
+    }
 }
 
 /*---------------------------------------------------------------------------*
@@ -502,5 +518,5 @@ void CTRDG_SetPhiClock(CTRDGPhiClock clock)
 static void CTRDGi_CallbackForSetPhi(PXIFifoTag tag, u32 data, BOOL err)
 {
 #pragma unused(tag, data, err)
-	CTRDGi_Lock = FALSE;
+    CTRDGi_Lock = FALSE;
 }

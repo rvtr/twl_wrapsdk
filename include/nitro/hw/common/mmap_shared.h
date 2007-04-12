@@ -282,6 +282,9 @@ extern "C" {
 #define HW_WM_CALLBACK_CONTROL          (HW_MAIN_MEM_SYSTEM + 0x396)    // WM コールバック同期用パラメータ
 #define HW_WM_RSSI_POOL                 (HW_MAIN_MEM_SYSTEM + 0x398)    // WM 受信強度による乱数源
 
+#define HW_SET_CTRDG_MODULE_INFO_ONCE   (HW_MAIN_MEM_SYSTEM + 0x39a)    // set ctrdg module info flag
+#define HW_IS_CTRDG_EXIST               (HW_MAIN_MEM_SYSTEM + 0x39b)    // ctrdg exist flag
+
 #define HW_COMPONENT_PARAM              (HW_MAIN_MEM_SYSTEM + 0x39c)    // Component 同期用パラメータ
 
 #define HW_THREADINFO_MAIN              (HW_MAIN_MEM_SYSTEM + 0x3a0)    // ThreadInfo for Main processor

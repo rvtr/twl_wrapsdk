@@ -11,6 +11,9 @@
   in whole or in part, without the prior written consent of Nintendo.
 
   $Log: os_terminate_sp.c,v $
+  Revision 1.3  2006/07/05 09:25:28  yosizaki
+  fix about include header.
+
   Revision 1.2  2006/01/18 02:11:30  kitase_hirotake
   do-indent
 
@@ -19,8 +22,8 @@
 
   $NoKeywords: $
  *---------------------------------------------------------------------------*/
-#include <nitro/os/common/system.h>
-#include <nitro/ctrdg/ARM7/ctrdg_sp.h>
+#include <nitro/os.h>
+#include <nitro/ctrdg.h>
 
 //============================================================================
 //          TERMINATE and HALT

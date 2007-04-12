@@ -11,6 +11,12 @@
   in whole or in part, without the prior written consent of Nintendo.
 
   $Log: os_init.c,v $
+  Revision 1.52  2006/11/14 04:33:19  okubata_ryoma
+  small fix
+
+  Revision 1.51  2006/11/14 01:36:26  okubata_ryoma
+  ARM9ÇÃOS_InitèIóπéûÇ…vcountÇ0Ç…ëµÇ¶ÇÈèàóùÇí«â¡
+
   Revision 1.50  2006/01/18 02:11:30  kitase_hirotake
   do-indent
 
@@ -173,6 +179,25 @@
 #include <nitro/ctrdg.h>
 #endif
 
+#include        <nitro/code32.h>
+static asm void OSi_WaitVCount0( void )
+{
+        //---- set IME = 0
+        //     ( use that LSB of HW_REG_BASE equal to 0 )
+        mov             r12, #HW_REG_BASE
+        ldr             r1,  [r12, #REG_IME_OFFSET]
+        str             r12, [r12, #REG_IME_OFFSET]
+
+        //---- adjust VCOUNT.
+@wait_vcount_0:
+        ldrh            r0, [r12, #REG_VCOUNT_OFFSET]
+        cmp             r0, #0
+        bne             @wait_vcount_0
+        str             r1, [r12, #REG_IME_OFFSET]
+        bx              lr
+}
+#include         <nitro/codereset.h>
+
 /*---------------------------------------------------------------------------*
   Name:         OS_Init
 
@@ -252,6 +277,9 @@ void OS_Init(void)
 #ifndef SDK_TEG
 //    PM_Init();
 #endif
+
+    //---- adjust VCOUNT
+    OSi_WaitVCount0();
 
 #else  // SDK_ARM9
     //----------------------------------------------------------------
