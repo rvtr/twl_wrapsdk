@@ -11,6 +11,9 @@
   in whole or in part, without the prior written consent of Nintendo.
 
   $Log: $
+  Revision 1.62  2006/07/05 09:13:49  yosizaki
+  fix about include header.
+
   $NoKeywords: $
  *---------------------------------------------------------------------------*/
 
@@ -25,6 +28,7 @@ extern "C" {
 #include <nitro/types.h>
 #include <nitro/memorymap.h>
 #include <nitro/ioreg.h>
+#include <nitro/os/common/thread.h>
 
 //---- for DMA, TIMER
 void    OSi_EnterDmaCallback(u32 dmaNo, void (*callback) (void *), void *arg);
