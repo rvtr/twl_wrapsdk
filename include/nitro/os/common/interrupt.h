@@ -442,7 +442,7 @@ void    OS_WaitAnyIrq(void);
 
   Returns:      VBlankCount
  *---------------------------------------------------------------------------*/
-static inline vu32 OS_GetVBlankCount(void)
+static inline u32 OS_GetVBlankCount(void)
 {
     return *(vu32 *)HW_VBLANK_COUNT_BUF;
 }

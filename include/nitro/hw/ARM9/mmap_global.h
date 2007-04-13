@@ -103,13 +103,18 @@ extern u32 SDK_AUTOLOAD_DTCM_START[];
 #define HW_MAIN_MEM_HI_EX_END   (HW_MAIN_MEM_HI + HW_MAIN_MEM_HI_EX_SIZE)
 //----------------------------- WRAM_AREA
 #define HW_WRAM_AREA            0x03000000
-#define HW_WRAM_AREA_HALF       0x03800000
 #define HW_WRAM_AREA_END        0x04000000
 #define HW_WRAM_AREA_SIZE       (HW_WRAM_AREA_END-HW_WRAM_AREA)
 //----------------------------- WRAMs
 #define HW_WRAM                 0x037f8000
 #define HW_WRAM_END             0x03800000
 #define HW_WRAM_SIZE            (HW_WRAM_END-HW_WRAM)
+#define HW_WRAM_0               0x037f8000
+#define HW_WRAM_0_END           0x037fc000
+#define HW_WRAM_0_SIZE          (HW_WRAM_0_END-HW_WRAM_0)
+#define HW_WRAM_1               0x037fc000
+#define HW_WRAM_1_END           0x03800000
+#define HW_WRAM_1_SIZE          (HW_WRAM_1_END-HW_WRAM_1)
 //----------------------------- IOs
 #define HW_IOREG                0x04000000
 #define HW_IOREG_END            0x05000000
