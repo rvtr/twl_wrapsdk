@@ -16,7 +16,7 @@
 #include        <nitro/code32.h>
 #include        <twl.h>
 
-extern void NitroSpMain(void);
+extern void TwlMain(void);
 extern void OS_IrqHandler(void);
 extern void *const _start_ModuleParams[];
 static void do_autoload(void);
@@ -131,12 +131,12 @@ SDK_WEAK_SYMBOL asm void _start( void )
 #ifndef SDK_NOINIT
         //---- for C++
         bl              _fp_init
-        bl              NitroSpStartUp
+        bl              TwlSpStartUp
         bl              __call_static_initializers
 #endif
 
         //---- start (to 16bit code)
-        ldr             r1, =NitroSpMain
+        ldr             r1, =TwlSpMain
         ldr             lr, =HW_RESET_VECTOR
 
         bx              r1
@@ -261,7 +261,7 @@ static asm void detect_main_memory_size( void )
 }
 
 /*---------------------------------------------------------------------------*
-  Name:         NitroSpStartUp
+  Name:         TwlSpStartUp
 
   Description:  hook for user start up
 
@@ -269,6 +269,6 @@ static asm void detect_main_memory_size( void )
 
   Returns:      None.
  *---------------------------------------------------------------------------*/
-SDK_WEAK_SYMBOL void NitroSpStartUp(void)
+SDK_WEAK_SYMBOL void TwlSpStartUp(void)
 {
 }

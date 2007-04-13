@@ -68,7 +68,7 @@ SECTIONS
 					crt0.o (.text)
 					crt0.o (.rodata)
 					* (.version)
-					OBJECT(NitroMain,*)
+					OBJECT(TwlMain,*)
 					<FOREACH.STATIC.OBJECTS=.text>
 					<STATIC.OBJECT=.text:t>
 					<END.STATIC.OBJECTS>

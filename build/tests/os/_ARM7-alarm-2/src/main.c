@@ -89,7 +89,7 @@ int     count;
 
 //================================================================================
 /*---------------------------------------------------------------------------*
-  Name:         NitroMain
+  Name:         TwlMain
 
   Description:  main
 
@@ -97,7 +97,7 @@ int     count;
 
   Returns:      None
  *---------------------------------------------------------------------------*/
-void NitroMain()
+void TwlMain()
 {
 #ifdef SDK_DEBUGGER_ARM
     OS_Printf("ARM7 before OS_Init.\n");

@@ -19,7 +19,7 @@
 #include        <nitro/code32.h>
 #include        <twl.h>
 
-extern void NitroMain(void);
+extern void TwlMain(void);
 extern void OS_IrqHandler(void);
 static void do_autoload(void);
 static void init_cp15(void);
@@ -160,11 +160,11 @@ SDK_WEAK_SYMBOL asm void _start( void )
 #ifndef SDK_NOINIT
         //---- for C++
         bl             _fp_init
-        bl             NitroStartUp
+        bl             TwlStartUp
         bl             __call_static_initializers
 #endif
         //---- start (to 16bit code)
-        ldr             r1, =NitroMain
+        ldr             r1, =TwlMain
         ldr             lr, =HW_RESET_VECTOR
 
         tst             sp, #4
@@ -614,7 +614,7 @@ static asm void init_cp15(void)
 
 
 /*---------------------------------------------------------------------------*
-  Name:         NitroStartUp
+  Name:         TwlStartUp
 
   Description:  hook for user start up
 
@@ -622,7 +622,7 @@ static asm void init_cp15(void)
 
   Returns:      None.
  *---------------------------------------------------------------------------*/
-SDK_WEAK_SYMBOL void NitroStartUp(void)
+SDK_WEAK_SYMBOL void TwlStartUp(void)
 {
 }
 
