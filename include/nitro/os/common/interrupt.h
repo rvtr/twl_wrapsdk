@@ -256,7 +256,11 @@ OSIrqMask OS_SetIrqMask(OSIrqMask intr);
  *---------------------------------------------------------------------------*/
 static inline OSIrqMask OS_GetIrqMask(void)
 {
+#ifdef SDK_ARM9
     return reg_OS_IE;
+#else // SDK_ARM7
+    return ((OSIrqMask)reg_OS_IE2 << 32) | reg_OS_IE;
+#endif // SDK_ARM7
 }
 
 /*---------------------------------------------------------------------------*
@@ -307,7 +311,11 @@ OSIrqMask OS_ResetRequestIrqMask(OSIrqMask intr);
  *---------------------------------------------------------------------------*/
 static inline OSIrqMask OS_GetRequestIrqMask(void)
 {
+#ifdef SDK_ARM9
     return reg_OS_IF;
+#else // SDK_ARM7
+    return ((OSIrqMask)reg_OS_IF2 << 32) | reg_OS_IF;
+#endif // SDK_ARM7
 }
 
 //================================================================================
@@ -363,7 +371,10 @@ OSIrqFunction OS_GetIrqFunction(OSIrqMask intrBit);
  *---------------------------------------------------------------------------*/
 static inline void OS_SetIrqCheckFlag(OSIrqMask intr)
 {
-    *(vu32 *)HW_INTR_CHECK_BUF |= (u32)intr;
+    *(vu32 *)HW_INTR_CHECK_BUF  |= (u32)intr;
+#ifdef SDK_ARM7
+    *(vu32 *)HW_INTR_CHECK2_BUF |= (u32)(intr >> 32);
+#endif // SDK_ARM7
 }
 
 /*---------------------------------------------------------------------------*
@@ -377,7 +388,10 @@ static inline void OS_SetIrqCheckFlag(OSIrqMask intr)
  *---------------------------------------------------------------------------*/
 static inline void OS_ClearIrqCheckFlag(OSIrqMask intr)
 {
-    *(vu32 *)HW_INTR_CHECK_BUF &= (u32)~intr;
+    *(vu32 *)HW_INTR_CHECK_BUF  &= ~(u32)intr;
+#ifdef SDK_ARM7
+    *(vu32 *)HW_INTR_CHECK2_BUF &= ~(u32)(intr >> 32);
+#endif // SDK_ARM7
 }
 
 /*---------------------------------------------------------------------------*
@@ -391,7 +405,13 @@ static inline void OS_ClearIrqCheckFlag(OSIrqMask intr)
  *---------------------------------------------------------------------------*/
 static inline OSIrqMask OS_GetIrqCheckFlag(void)
 {
-    return *(OSIrqMask *)HW_INTR_CHECK_BUF;
+    OSIrqMask intr = *(vu32 *)HW_INTR_CHECK_BUF;
+
+#ifdef SDK_ARM7
+    intr |= (OSIrqMask)(*(vu32 *)HW_INTR_CHECK2_BUF) << 32;
+#endif // SDK_ARM7
+
+    return intr;
 }
 
 
