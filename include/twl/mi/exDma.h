@@ -17,8 +17,8 @@
 #define TWL_MI_EXDMA_H_
 
 #include <nitro/misc.h>
-#include <nitro/types.h>
-#include <nitro/memorymap.h>
+#include <twl/types.h>
+#include <twl/memorymap.h>
 
 #ifdef __cplusplus
 extern "C" {

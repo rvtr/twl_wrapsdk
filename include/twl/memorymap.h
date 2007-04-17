@@ -26,15 +26,15 @@ extern "C" {
 #include	<nitro/hw/ARM9/mmap_tcm.h>
 #include	<nitro/hw/ARM9/mmap_vram.h>
 #include	<nitro/hw/common/mmap_shared.h>
-#include	<twl/hw/ARM9/ioreg.h>
 
 #else  //SDK_ARM7
 #include	<nitro/hw/ARM7/mmap_global.h>
 #include	<nitro/hw/ARM7/mmap_main.h>
 #include	<nitro/hw/ARM7/mmap_wram.h>
 #include	<nitro/hw/common/mmap_shared.h>
-#include	<twl/hw/ARM7/ioreg.h>
 #endif
+
+#include	<twl/ioreg.h>
 
 #ifdef __cplusplus
 } /* extern "C" */

@@ -113,11 +113,12 @@ void    OSi_EnterTimerCallback(u32 timerNo, void (*callback) (void *), void *arg
 #define OS_IE_FIFO_RECV         OS_IE_SPFIFO_RECV
 
 // Dummy irq check flag for user own use
+#if 0
 #define OS_IE_USER_FLAG0_SHIFT  31
 #define OS_IE_USER_FLAG1_SHIFT  30
 #define OS_IE_USER_FLAG0        (1UL << OS_IE_USER_FLAG0_SHIFT) // user 0
 #define OS_IE_USER_FLAG1        (1UL << OS_IE_USER_FLAG1_SHIFT) // user 1
-
+#endif
 
 //---- used for internal functions
 #define OSi_IRQCALLBACK_NO_DMA0    0

@@ -88,6 +88,8 @@ extern "C" {
 //---- offset in system reserved area
 #define HW_PRV_WRAM_SYSRV               (HW_PRV_WRAM + HW_PRV_WRAM_SIZE - HW_PRV_WRAM_SYSRV_SIZE)
 #define HW_PRV_WRAM_SYSRV_OFS_INTR_CHECK2    0x00
+#define HW_PRV_WRAM_SYSRV_OFS_EXCP_STACK     0x10
+#define HW_PRV_WRAM_SYSRV_OFS_EXCP_STACK_END 0x1c
 #define HW_PRV_WRAM_SYSRV_OFS_EXCP_VECTOR    0x1c
 #define HW_PRV_WRAM_SYSRV_OFS_DMA_CLEAR_BUF  0x20       // 16bytes
 #define HW_PRV_WRAM_SYSRV_OFS_WM_RESERVED_0  0x30
