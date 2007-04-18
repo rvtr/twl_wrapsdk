@@ -1,3 +1,17 @@
+[Breakpoints\1]
+Processor=ARM946E_S_0
+dwTarget Count=1
+dwAction=0
+dwState=0
+Parent Image=C:\twl\bootrom\build\bootrom\ts\ARM9\bin\ARM9-BB.thumb\Release\brom9_ts.axf
+dwSet By Source Pos=0
+Image=C:\twl\bootrom\build\bootrom\ts\ARM9\bin\ARM9-BB.thumb\Release\brom9_ts.axf
+File=C:\twl\bootrom\build\bootrom\ts\ARM9\bin\ARM9-BB.thumb\Release\main.c
+dwLine=20
+dwColumn=1
+dwAddressLo=-59312
+dwAddressHi=0
+dwBreakpoint Size=0
 [CLI]
 dwParse=1
 dwEcho=1
@@ -24,7 +38,7 @@ biBarID_0=AMAAAAAABJAAAAAAAMAAAAAAIEAAAAAAAMAAAAAAHLBAAAAAOPPPPPPPMEAAAAAAAAAAAA
 biBarID_4=AMAAAAAABJAAAAAAILDAAAAABJAAAAAAMGAAAAAAAIAAAAAAOPPPPPPPJACAAAAAAAAAAAAAAAPIAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
 biBarID_65539=LCCAAAAAKJBAAAAAILDAAAAABJAAAAAAMGAAAAAAAIAAAAAAOHCAAAAAPFCAAAAACAAAAAAABAPCAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
 biBarID_1114115=AMAAAAAABJAAAAAAILDAAAAABJAAAAAAMGAAAAAAAIAAAAAAOPPPPPPPJACAAAAAAAAAAAAAAAPIAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-biBarID_65538=BEBAAAAAIGBAAAAAAMAAAAAAIEAAAAAAAMAAAAAAICAAAAAAJDAAAAAAGKBAAAAACAAAAAAABAPCAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+biBarID_65538=BEBAAAAAIGBAAAAAAMAAAAAAIEAAAAAAAMAAAAAAICAAAAAABCAAAAAACPBAAAAACAAAAAAABAPCAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
 biBarID_1=AMAAAAAABJAAAAAAILDAAAAABJAAAAAAMGAAAAAAAIAAAAAAOPPPPPPPCHBAAAAAAAAAAAAAAAPIAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
 biBarID_65540=JCBAAAAAEKBAAAAAAMAAAAAAIEAAAAAAAMAAAAAAMGAAAAAALEDAAAAADHBAAAAACAAAAAAABAPCAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
 biBarID_7=MFBAAAAAIKAAAAAAILDAAAAABJAAAAAAMGAAAAAAAIAAAAAADFDAAAAAEGCAAAAACAAAAAAABAPCAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
@@ -38,7 +52,7 @@ biBarID_65538=BAAAAAAA
 biBarID_65539=BAAAAAAA
 biBarID_65540=BAAAAAAA
 [Images\Image_0]
-Filename=C:\twl\twlsdk_bak\build\tests\os\alarm-1\bin\ARM9-TS\Release\alerm.axf
+Filename=C:\twl\bootrom\build\bootrom\ts\ARM9\bin\ARM9-BB.thumb\Release\brom9_ts.axf
 Processor=ARM946E_S_0
 dwProfileState=0
 [Interface\AutoRefresh]
@@ -68,6 +82,8 @@ dwReselect Target=1
 dwReload Images=0
 dwRun Config Script=0
 Config Script Name=C:\Iris\geometry\geometry.ses
+[Interface\SourcePaths]
+Paths=C:\twl\bootrom\build\libraries\init\ARM9\
 [Interface\Toolbars]
 dwTBFile=1
 dwTBSearch=1
@@ -100,7 +116,7 @@ dwListSize=4
 dwTargetAccessSize=0
 dwAutoRefresh=1
 [Memory\Tab_1]
-dwStartAddress=41940992
+dwStartAddress=50329600
 Format=hex_noprefix_32
 dwFormatID=-1
 dwListBigEndian=0
@@ -110,7 +126,7 @@ dwListSize=4
 dwTargetAccessSize=0
 dwAutoRefresh=1
 [Memory\Tab_2]
-dwStartAddress=41942016
+dwStartAddress=50330624
 Format=hex_noprefix_32
 dwFormatID=-1
 dwListBigEndian=0
@@ -130,7 +146,7 @@ dwListSize=4
 dwTargetAccessSize=0
 dwAutoRefresh=1
 [Output]
-dwActiveTab=0
+dwActiveTab=1
 [ProcessorRegisters\ARM946E_S_0]
 dwFormatID=-1
 dwRefresh=0
@@ -140,10 +156,10 @@ dwRefresh=1
 [RecentFileList]
 dwFileCount=4
 [RecentImageList]
-File_1=C:\twl\twlsdk_bak\build\tests\os\alarm-1\bin\ARM9-TS\Release\alerm.axf
-File_2=C:\Iris\IrisMon\IrisMon_Data\ThumbRelease\IrisMon.axf
-File_3=C:\Iris\ipl2_test\ipl2_test_Data\ThumbDebugRel\ipl2_test.axf
-File_4=C:\Iris\two_quads\two_quads_Data\ThumbDebugRel\two_quads.axf
+File_1=C:\twl\bootrom\build\bootrom\ts\ARM9\bin\ARM9-BB.thumb\Release\brom9_ts.axf
+File_2=C:\twl\twlsdk_bak\build\tests\os\alarm-1\bin\ARM9-TS\Release\alerm.axf
+File_3=C:\Iris\IrisMon\IrisMon_Data\ThumbRelease\IrisMon.axf
+File_4=C:\Iris\ipl2_test\ipl2_test_Data\ThumbDebugRel\ipl2_test.axf
 dwFileCount=4
 [RecentSymbolsList]
 File_1=C:\IrisSubp\IrisSubpMon\IrisSubpMon_Data\ThumbRelease\IrisSubpMon.axf
@@ -199,8 +215,8 @@ dwBar#2=0
 dwBarID=59423
 dwHorz=1
 dwFloating=1
-dwXPos=61
-dwYPos=442
+dwXPos=37
+dwYPos=518
 dwBars=3
 dwBar#0=0
 dwBar#1=2
@@ -244,9 +260,9 @@ dwRefresh=1
 dwLastView=0
 [Views\View_0]
 UnitName=ARM946E_S_0
-ImageName=C:\twl\twlsdk_bak\build\tests\os\alarm-1\bin\ARM9-TS\Release\alerm.axf
+ImageName=C:\twl\bootrom\build\bootrom\ts\ARM9\bin\ARM9-BB.thumb\Release\brom9_ts.axf
 dwDisassembly=0
-FileName=C:\twl\twlsdk_bak\build\libraries\init\ARM9\crt0.c
+FileName=C:\twl\bootrom\build\libraries\init\ARM9\crt0.c
 dwMixedView=0
 dwShowMargin=1
 dwShowLineNumbers=1

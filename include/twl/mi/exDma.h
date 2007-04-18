@@ -25,19 +25,6 @@ extern "C" {
 #endif
 
 //----------------------------------------------------------------------
-//---- DMA channel
-typedef enum
-{
-    MI_EDMA_NONE = -1,
-    MI_EDMA_0 = 0,
-    MI_EDMA_1 = 1,
-    MI_EDMA_2 = 2,
-    MI_EDMA_3 = 3,
-    MI_EDMA_NO_MIN = MI_EDMA_0,
-    MI_EDMA_NO_MAX = MI_EDMA_3
-}
-MIExDmaNo;
-
 //---- timing
 typedef enum
 {
@@ -136,8 +123,11 @@ typedef volatile t_MIEDmaChanRegs MIEDmaChanRegs;
 //================================================================================
 //                    DMA control definition
 //================================================================================
-//---- maximum DMA channel No.
-#define MI_EDMA_MAX_NUM             3
+//---- DMA channel No.
+#define MI_EDMA_CH_MIN              4
+#define MI_EDMA_CH_MAX              7
+
+#define MI_EDMA_CH_NUM              4
 
 //---- enable
 #define MI_EDMA_ENABLE              (1UL << REG_MI_DMA4CNT_E_SHIFT)      // DMA enable
@@ -202,7 +192,7 @@ typedef volatile t_MIEDmaChanRegs MIEDmaChanRegs;
 
   Returns:      TRUE if extended DMA is busy, FALSE if not
  *---------------------------------------------------------------------------*/
-BOOL    MIi_IsExDmaBusy( MIExDmaNo dmaNo );
+BOOL    MIi_IsExDmaBusy( u32 dmaNo );
 
 /*---------------------------------------------------------------------------*
   Name:         MIi_WaitExDma
@@ -213,7 +203,7 @@ BOOL    MIi_IsExDmaBusy( MIExDmaNo dmaNo );
 
   Returns:      None
  *---------------------------------------------------------------------------*/
-void    MIi_WaitExDma( MIExDmaNo dmaNo );
+void    MIi_WaitExDma( u32 dmaNo );
 
 /*---------------------------------------------------------------------------*
   Name:         MIi_StopExDma
@@ -224,7 +214,7 @@ void    MIi_WaitExDma( MIExDmaNo dmaNo );
 
   Returns:      None
  *---------------------------------------------------------------------------*/
-void    MIi_StopExDma( MIExDmaNo dmaNo );
+void    MIi_StopExDma( u32 dmaNo );
 
 //================================================================================
 //            memory operation using DMA
@@ -242,7 +232,7 @@ void    MIi_StopExDma( MIExDmaNo dmaNo );
 
   Returns:      None
  *---------------------------------------------------------------------------*/
-void    MIi_ExDmaFill( MIExDmaNo dmaNo, void *dest, u32 data, u32 size );
+void    MIi_ExDmaFill( u32 dmaNo, void *dest, u32 data, u32 size );
 
 /*---------------------------------------------------------------------------*
   Name:         MIi_ExDmaCopy
@@ -257,7 +247,7 @@ void    MIi_ExDmaFill( MIExDmaNo dmaNo, void *dest, u32 data, u32 size );
 
   Returns:      None
  *---------------------------------------------------------------------------*/
-void MIi_ExDmaCopy( MIExDmaNo dmaNo, const void *src, void *dest, u32 size );
+void MIi_ExDmaCopy( u32 dmaNo, const void *src, void *dest, u32 size );
 
 /*---------------------------------------------------------------------------*
   Name:         MIi_ExDmaSend
@@ -272,7 +262,7 @@ void MIi_ExDmaCopy( MIExDmaNo dmaNo, const void *src, void *dest, u32 size );
 
   Returns:      None
  *---------------------------------------------------------------------------*/
-void MIi_ExDmaSend( MIExDmaNo dmaNo, const void *src, void *dest, u32 size );
+void MIi_ExDmaSend( u32 dmaNo, const void *src, void *dest, u32 size );
 
 /*---------------------------------------------------------------------------*
   Name:         MIi_ExDmaRecv
@@ -287,7 +277,7 @@ void MIi_ExDmaSend( MIExDmaNo dmaNo, const void *src, void *dest, u32 size );
 
   Returns:      None
  *---------------------------------------------------------------------------*/
-void MIi_ExDmaRecv( MIExDmaNo dmaNo, const void *src, void *dest, u32 size );
+void MIi_ExDmaRecv( u32 dmaNo, const void *src, void *dest, u32 size );
 
 /*---------------------------------------------------------------------------*
   Name:         MIi_ExDmaFillAsync
@@ -302,7 +292,7 @@ void MIi_ExDmaRecv( MIExDmaNo dmaNo, const void *src, void *dest, u32 size );
 
   Returns:      None
  *---------------------------------------------------------------------------*/
-void MIi_ExDmaFillAsync( MIExDmaNo dmaNo, void *dest, u32 data, u32 size );
+void MIi_ExDmaFillAsync( u32 dmaNo, void *dest, u32 data, u32 size );
 
 /*---------------------------------------------------------------------------*
   Name:         MIi_ExDmaCopyAsync
@@ -317,7 +307,7 @@ void MIi_ExDmaFillAsync( MIExDmaNo dmaNo, void *dest, u32 data, u32 size );
 
   Returns:      None
  *---------------------------------------------------------------------------*/
-void MIi_ExDmaCopyAsync( MIExDmaNo dmaNo, const void *src, void *dest, u32 size );
+void MIi_ExDmaCopyAsync( u32 dmaNo, const void *src, void *dest, u32 size );
 
 /*---------------------------------------------------------------------------*
   Name:         MIi_ExDmaSendAsync
@@ -332,7 +322,7 @@ void MIi_ExDmaCopyAsync( MIExDmaNo dmaNo, const void *src, void *dest, u32 size 
 
   Returns:      None
  *---------------------------------------------------------------------------*/
-void MIi_ExDmaSendAsync( MIExDmaNo dmaNo, const void *src, void *dest, u32 size );
+void MIi_ExDmaSendAsync( u32 dmaNo, const void *src, void *dest, u32 size );
 
 /*---------------------------------------------------------------------------*
   Name:         MIi_ExDmaRecvAsync
@@ -347,7 +337,7 @@ void MIi_ExDmaSendAsync( MIExDmaNo dmaNo, const void *src, void *dest, u32 size 
 
   Returns:      None
  *---------------------------------------------------------------------------*/
-void MIi_ExDmaRecvAsync( MIExDmaNo dmaNo, const void *src, void *dest, u32 size );
+void MIi_ExDmaRecvAsync( u32 dmaNo, const void *src, void *dest, u32 size );
 
 //----------------- internel functions -------------------
 
@@ -365,7 +355,7 @@ void MIi_ExDmaRecvAsync( MIExDmaNo dmaNo, const void *src, void *dest, u32 size 
 
   Returns:      None
  *---------------------------------------------------------------------------*/
-void MIi_ExDmaFillCore( MIExDmaNo dmaNo, void *dest, u32 data, u32 size, u32 oneShotSize,
+void MIi_ExDmaFillCore( u32 dmaNo, void *dest, u32 data, u32 size, u32 oneShotSize,
                 MIEDmaBlockSize blockSize, u32 interval, MIEDmaPrescaler prescale,
                 u32 continuous, u32 srcRld, u32 destRld,
                 MIEDmaTiming timing );
@@ -384,7 +374,7 @@ void MIi_ExDmaFillCore( MIExDmaNo dmaNo, void *dest, u32 data, u32 size, u32 one
 
   Returns:      None
  *---------------------------------------------------------------------------*/
-void MIi_ExDmaCopyCore( MIExDmaNo dmaNo, const void *src, void *dest, u32 size, u32 oneShotSize,
+void MIi_ExDmaCopyCore( u32 dmaNo, const void *src, void *dest, u32 size, u32 oneShotSize,
                 MIEDmaBlockSize blockSize, u32 interval, MIEDmaPrescaler prescale,
                 u32 continuous, u32 srcRld, u32 destRld,
                 MIEDmaTiming timing );
@@ -403,7 +393,7 @@ void MIi_ExDmaCopyCore( MIExDmaNo dmaNo, const void *src, void *dest, u32 size, 
 
   Returns:      None
  *---------------------------------------------------------------------------*/
-void MIi_ExDmaSendCore( MIExDmaNo dmaNo, const void *src, void *dest, u32 size, u32 oneShotSize,
+void MIi_ExDmaSendCore( u32 dmaNo, const void *src, void *dest, u32 size, u32 oneShotSize,
                 MIEDmaBlockSize blockSize, u32 interval, MIEDmaPrescaler prescale,
                 u32 continuous, u32 srcRld, u32 destRld,
                 MIEDmaTiming timing );
@@ -422,7 +412,7 @@ void MIi_ExDmaSendCore( MIExDmaNo dmaNo, const void *src, void *dest, u32 size, 
 
   Returns:      None
  *---------------------------------------------------------------------------*/
-void MIi_ExDmaRecvCore( MIExDmaNo dmaNo, const void *src, void *dest, u32 size, u32 oneShotSize,
+void MIi_ExDmaRecvCore( u32 dmaNo, const void *src, void *dest, u32 size, u32 oneShotSize,
                 MIEDmaBlockSize blockSize, u32 interval, MIEDmaPrescaler prescale,
                 u32 continuous, u32 srcRld, u32 destRld,
                 MIEDmaTiming timing );
@@ -441,7 +431,7 @@ void MIi_ExDmaRecvCore( MIExDmaNo dmaNo, const void *src, void *dest, u32 size, 
 
   Returns:      None
  *---------------------------------------------------------------------------*/
-void MIi_ExDmaFillAsyncCore( MIExDmaNo dmaNo, void *dest, u32 data, u32 size, u32 oneShotSize,
+void MIi_ExDmaFillAsyncCore( u32 dmaNo, void *dest, u32 data, u32 size, u32 oneShotSize,
                 MIEDmaBlockSize blockSize, u32 interval, MIEDmaPrescaler prescale,
                 u32 continuous, u32 srcRld, u32 destRld,
                 MIEDmaTiming timing );
@@ -460,7 +450,7 @@ void MIi_ExDmaFillAsyncCore( MIExDmaNo dmaNo, void *dest, u32 data, u32 size, u3
 
   Returns:      None
  *---------------------------------------------------------------------------*/
-void MIi_ExDmaCopyAsyncCore( MIExDmaNo dmaNo, const void *src, void *dest, u32 size, u32 oneShotSize,
+void MIi_ExDmaCopyAsyncCore( u32 dmaNo, const void *src, void *dest, u32 size, u32 oneShotSize,
                 MIEDmaBlockSize blockSize, u32 interval, MIEDmaPrescaler prescale,
                 u32 continuous, u32 srcRld, u32 destRld,
                 MIEDmaTiming timing );
@@ -479,7 +469,7 @@ void MIi_ExDmaCopyAsyncCore( MIExDmaNo dmaNo, const void *src, void *dest, u32 s
 
   Returns:      None
  *---------------------------------------------------------------------------*/
-void MIi_ExDmaSendAsyncCore( MIExDmaNo dmaNo, const void *src, void *dest, u32 size, u32 oneShotSize,
+void MIi_ExDmaSendAsyncCore( u32 dmaNo, const void *src, void *dest, u32 size, u32 oneShotSize,
                 MIEDmaBlockSize blockSize, u32 interval, MIEDmaPrescaler prescale,
                 u32 continuous, u32 srcRld, u32 destRld,
                 MIEDmaTiming timing );
@@ -498,7 +488,7 @@ void MIi_ExDmaSendAsyncCore( MIExDmaNo dmaNo, const void *src, void *dest, u32 s
 
   Returns:      None
  *---------------------------------------------------------------------------*/
-void MIi_ExDmaRecvAsyncCore( MIExDmaNo dmaNo, const void *src, void *dest, u32 size, u32 oneShotSize,
+void MIi_ExDmaRecvAsyncCore( u32 dmaNo, const void *src, void *dest, u32 size, u32 oneShotSize,
                 MIEDmaBlockSize blockSize, u32 interval, MIEDmaPrescaler prescale,
                 u32 continuous, u32 srcRld, u32 destRld,
                 MIEDmaTiming timing );
@@ -517,7 +507,7 @@ void MIi_ExDmaRecvAsyncCore( MIExDmaNo dmaNo, const void *src, void *dest, u32 s
 
   Returns:      None
  *---------------------------------------------------------------------------*/
-void MIi_ExDmaBypassAsyncCore( MIExDmaNo dmaNo, const void *src, void *dest, u32 size, u32 oneShotSize,
+void MIi_ExDmaBypassAsyncCore( u32 dmaNo, const void *src, void *dest, u32 size, u32 oneShotSize,
                 MIEDmaBlockSize blockSize, u32 interval, MIEDmaPrescaler prescale,
                 u32 continuous, u32 srcRld, u32 destRld,
                 MIEDmaTiming timing );
@@ -536,7 +526,7 @@ void MIi_ExDmaBypassAsyncCore( MIExDmaNo dmaNo, const void *src, void *dest, u32
 
   Returns:      None
  *---------------------------------------------------------------------------*/
-void MIi_SetExDmaParams( MIExDmaNo dmaNo, const void *src, void *dest, u32 size, u32 oneShotSize,
+void MIi_SetExDmaParams( u32 dmaNo, const void *src, void *dest, u32 size, u32 oneShotSize,
                 MIEDmaBlockSize blockSize, u32 interval, MIEDmaPrescaler prescale,
                 u32 continuous, u32 srcRld, u32 destRld,
                 MIEDmaTiming timing,
