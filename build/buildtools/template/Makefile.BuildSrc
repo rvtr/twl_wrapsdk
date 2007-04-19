@@ -21,7 +21,7 @@ SUBDIRS		=
 #----------------------------------------------------------------------------
 
 SRCS		=	main.c
-TARGET_BIN	=	main.srl
+TARGET_BIN	=	main.axf
 
 #SRCDIR		=	# using default
 #LCFILE		=	# using default

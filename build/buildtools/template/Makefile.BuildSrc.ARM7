@@ -24,7 +24,7 @@ CODEGEN_PROC	=	ARM7
 
 
 SRCS		=	main.c
-TARGET_BIN	=	main.srl
+TARGET_BIN	=	main.axf
 
 
 #SRCDIR		=
