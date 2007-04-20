@@ -181,6 +181,12 @@ endif
 TWL_LIBS ?= $(addsuffix $(TWL_LIBSUFFIX).a,$(TWL_LIBS_BASE))
 
 #----------------------------------------------------------------------------
+#  CYGWIN TOOLS
+#
+
+CAT		:= cat
+
+#----------------------------------------------------------------------------
 ### NITRO-commondefs
 #
 include	$(NITROSDK_ROOT)/build/buildtools/commondefs

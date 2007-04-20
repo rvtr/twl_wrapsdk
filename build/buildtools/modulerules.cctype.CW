@@ -269,10 +269,14 @@ endif
 #
 # Generate dependency files
 #
-DEPEND_RULE	= $(QUOTE)/ARM_EABI_Support/d;s/\\x0D//g;s/\\\\\\([^ ]\\)/\\/\\1/g;$(QUOTE)
+DEPEND_RULE		= $(QUOTE)/ARM_EABI_Support/d;s/\\x0D//g;s/\\\\\\([^ ]\\)/\\/\\1/g;$(QUOTE)
+DEPEND_RULE2	= $(QUOTE)s/^[^\\t].*: //;s/^\\t//;s/ \\\\$$//;s/\\([^ ].*\\)/\\1:/;1s/^./\\n&/;$(QUOTE)
 
 define MOVE_SRC_DEPEND
-	$(SED) -e $(DEPEND_RULE) $(*F).d > $(DEPENDDIR)/$(*F).d && $(RM) $(*F).d
+	$(SED) -e $(DEPEND_RULE)  $(*F).d   > $(*F).2.d && \
+	$(SED) -e $(DEPEND_RULE2) $(*F).2.d > $(*F).3.d && \
+	$(CAT) $(*F).2.d $(*F).3.d > $(DEPENDDIR)/$(*F).d && \
+	$(RM) $(*F).d $(*F).2.d $(*F).3.d
 endef
 
 
