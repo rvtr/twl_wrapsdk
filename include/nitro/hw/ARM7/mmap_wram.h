@@ -81,12 +81,12 @@ extern "C" {
 #define HW_PRV_WRAM_SVC_STACK           (HW_PRV_WRAM_SVC_STACK_END - HW_SVC_STACK_SIZE)
 #define HW_PRV_WRAM_SVC_STACK_END       (HW_PRV_WRAM_SYSRV)
 
-//---- RED reserved
-#define HW_PRV_WRAM_RED_RESERVED        (HW_PRV_WRAM + 0xfc00)  // 64byte
-#define HW_PRV_WRAM_RED_RESERVED_END    (HW_PRV_WRAM + 0xfc40)
+//---- RED reserved for DS-IPL
+//#define HW_PRV_WRAM_RED_RESERVED        (HW_PRV_WRAM + 0xfc00)  // 64byte
+//#define HW_PRV_WRAM_RED_RESERVED_END    (HW_PRV_WRAM + 0xfc40)
 
-//---- offset in system reserved area
-#define HW_PRV_WRAM_SYSRV               (HW_PRV_WRAM + HW_PRV_WRAM_SIZE - HW_PRV_WRAM_SYSRV_SIZE)
+//---- offset in system reserved area (tentatively)
+#define HW_PRV_WRAM_SYSRV               (HW_WRAM_AREA_END - HW_PRV_WRAM_SYSRV_SIZE) // (HW_PRV_WRAM + HW_PRV_WRAM_SIZE - HW_PRV_WRAM_SYSRV_SIZE)
 #define HW_PRV_WRAM_SYSRV_OFS_INTR_CHECK2    0x00
 #define HW_PRV_WRAM_SYSRV_OFS_EXCP_STACK     0x10
 #define HW_PRV_WRAM_SYSRV_OFS_EXCP_STACK_END 0x1c

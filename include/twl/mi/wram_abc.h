@@ -151,6 +151,25 @@ MIImageWramC;
 #define MI_WRAM_B_BLOCK_SIZE_MAX  (MI_WRAM_B_BLOCK_SIZE * MI_WRAM_B_BLOCK_NUM)
 #define MI_WRAM_C_BLOCK_SIZE_MAX  (MI_WRAM_C_BLOCK_SIZE * MI_WRAM_C_BLOCK_NUM)
 
+#define REG_WRAM_A_MAP_PACK( start, end, img_size )  REG_WRAM_MAP_PACK( A, (start), (end), (img_size) )
+#define REG_WRAM_B_MAP_PACK( start, end, img_size )  REG_WRAM_MAP_PACK( B, (start), (end), (img_size) )
+#define REG_WRAM_C_MAP_PACK( start, end, img_size )  REG_WRAM_MAP_PACK( C, (start), (end), (img_size) )
+#define REG_WRAM_MAP_PACK( abc, start, end, img_size ) \
+( \
+    (((((start) - HW_WRAM_AREA) / MI_WRAM_##abc##_BLOCK_SIZE) << REG_MI_WRAM_##abc##_MAP_START_SHIFT) & REG_MI_WRAM_##abc##_MAP_START_MASK) \
+  | (((((end)   - HW_WRAM_AREA) / MI_WRAM_##abc##_BLOCK_SIZE) << REG_MI_WRAM_##abc##_MAP_END_SHIFT)   & REG_MI_WRAM_##abc##_MAP_END_MASK) \
+  | (img_size) \
+)
+
+#define REG_WRAM_A_MAP_OFS_PACK( start_ofs, end_ofs )  REG_WRAM_MAP_OFS_PACK( A, (start_ofs), (end_ofs) )
+#define REG_WRAM_B_MAP_OFS_PACK( start_ofs, end_ofs )  REG_WRAM_MAP_OFS_PACK( B, (start_ofs), (end_ofs) )
+#define REG_WRAM_C_MAP_OFS_PACK( start_ofs, end_ofs )  REG_WRAM_MAP_OFS_PACK( C, (start_ofs), (end_ofs) )
+#define REG_WRAM_MAP_OFS_PACK( abc, start_ofs, end_ofs ) \
+( \
+    ((((start_ofs) / MI_WRAM_##abc##_BLOCK_SIZE) << REG_MI_WRAM_##abc##_MAP_START_SHIFT) & REG_MI_WRAM_##abc##_MAP_START_MASK) \
+  | ((((end_ofs)   / MI_WRAM_##abc##_BLOCK_SIZE) << REG_MI_WRAM_##abc##_MAP_END_SHIFT)   & REG_MI_WRAM_##abc##_MAP_END_MASK) \
+)
+
 
 #ifdef __cplusplus
 } /* extern "C" */

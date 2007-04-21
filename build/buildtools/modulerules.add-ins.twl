@@ -20,6 +20,7 @@ ifndef TWLSDK_MODULERULES_
 .PHONY: 	twllib
 
 twllib:
+	@$(MAKE) -C $(TWLSDK_ROOT)/build/buildsetup
 	@$(MAKE) -C $(TWLSDK_ROOT)/build/libraries
 
 # .axf
