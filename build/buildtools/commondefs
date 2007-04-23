@@ -31,7 +31,7 @@ TWLSDK_VERSION_MAJOR	?= 0
 #
 # CodeGen Target
 #
-#	TWL_PLATFORM  = [BB/TEG/TS]
+#	TWL_PLATFORM  = [DSTEG/BB/TEG/TS]
 #	TWL_MEMSIZE   = [4M/8M]
 #	TWL_CODEGEN	= [ARM/THUMB]
 #	TWL_PROC      = [ARM9/ARM7]
@@ -240,8 +240,10 @@ MACRO_FLAGS += -DSDK_DEBUGGER_$(TWL_DEBUGGER)
 #----------------------------------------------------------------------------
 ### Work-around
 #
-# TEGではバイトアクセス不可のため
+# DS-TEGではバイトアクセス不可のため
+ifeq	($(TWL_PLATFORM),DSTEG)
 CCFLAGS_PROC	+= $(CW_AVOID_STRB)
+endif
 
 
 #----------------------------------------------------------------------------

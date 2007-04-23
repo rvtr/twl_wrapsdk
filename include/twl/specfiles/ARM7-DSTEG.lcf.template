@@ -1,6 +1,6 @@
 #---------------------------------------------------------------------------
 #  Project:  TwlSDK - tools - makelcf
-#  File:     ARM7-BB.lcf.template
+#  File:     ARM7-DSTEG.lcf.template
 #
 #  Copyright 2007 Nintendo.  All rights reserved.
 #
@@ -27,7 +27,7 @@ MEMORY
 	<OVERLAY.NAME>          (RWXO): ORIGIN = <OVERLAY.ADDRESS>, LENGTH = 0x0 > <OVERLAY.NAME><PROPERTY.SUFFIX>
 	<END.OVERLAYS>
 	arena.MAIN                 (RW)  : ORIGIN = AFTER(<STATIC.NAME><FOREACH.OVERLAYS>,<OVERLAY.NAME><END.OVERLAYS>), LENGTH = 0x0
-	check.WORKRAM		(RWX) : ORIGIN = 0x037f8000, LENGTH = 0x18000 > workram.check
+	check.WORKRAM		(RWX) : ORIGIN = 0x037f8000, LENGTH = 0x10000 > workram.check
 }
 
 SECTIONS
