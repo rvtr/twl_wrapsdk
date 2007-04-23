@@ -43,7 +43,7 @@ biBarID_65539=BAAAAAAA
 biBarID_65540=BAAAAAAA
 biBarID_65543=BAAAAAAA
 [Images\Image_0]
-Filename=C:\twl\bootrom\build\bootrom\ts\ARM9\bin\ARM9-BB.thumb\Release\brom9_ts.axf
+Filename=C:\twl\twl_wrapsdk_bak\build\tests\os\alarm-1\bin\ARM9-BB\Release\alerm.axf
 Processor=ARM946E_S_0
 dwProfileState=0
 [Interface\AutoRefresh]
@@ -147,10 +147,10 @@ dwRefresh=1
 [RecentFileList]
 dwFileCount=4
 [RecentImageList]
-File_1=C:\twl\bootrom\build\bootrom\ts\ARM9\bin\ARM9-BB.thumb\Release\brom9_ts.axf
-File_2=C:\twl\twlsdk_bak\build\tests\os\alarm-1\bin\ARM9-TS\Release\alerm.axf
-File_3=C:\Iris\IrisMon\IrisMon_Data\ThumbRelease\IrisMon.axf
-File_4=C:\Iris\ipl2_test\ipl2_test_Data\ThumbDebugRel\ipl2_test.axf
+File_1=C:\twl\twl_wrapsdk_bak\build\tests\os\alarm-1\bin\ARM9-BB\Release\alerm.axf
+File_2=C:\twl\bootrom\build\bootrom\ts\ARM9\bin\ARM9-BB.thumb\Release\brom9_ts.axf
+File_3=C:\twl\twlsdk_bak\build\tests\os\alarm-1\bin\ARM9-TS\Release\alerm.axf
+File_4=C:\Iris\IrisMon\IrisMon_Data\ThumbRelease\IrisMon.axf
 dwFileCount=4
 [RecentSymbolsList]
 File_1=C:\IrisSubp\IrisSubpMon\IrisSubpMon_Data\ThumbRelease\IrisSubpMon.axf
@@ -160,7 +160,7 @@ dwMode=1
 dwCommsChannel=0
 dwArmSWI=1193046
 dwThumbSWI=171
-dwSHVector=-65528
+dwSHVector=-65220
 dwDCCSHVector=458752
 dwECVector=27
 dwTopOfMemory=524288
@@ -252,10 +252,10 @@ dwRefresh=1
 dwLastView=0
 [Views\View_0]
 UnitName=ARM946E_S_0
-ImageName=C:\twl\bootrom\build\bootrom\ts\ARM9\bin\ARM9-BB.thumb\Release\brom9_ts.axf
+ImageName=C:\twl\twl_wrapsdk_bak\build\tests\os\alarm-1\bin\ARM9-BB\Release\alerm.axf
 dwDisassembly=0
-FileName=C:\twl\bootrom\build\libraries\init\ARM9\crt0.c
+FileName=C:\twl\twl_wrapsdk_bak\build\libraries\init\ARM9\crt0.c
 dwMixedView=0
 dwShowMargin=1
 dwShowLineNumbers=1
-biWndPlacement=MCAAAAAAAAAAAAAABAAAAAAAPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPAAAAAAAAAAAAAAAAGFCAAAAAJEBAAAAA
+biWndPlacement=MCAAAAAAAAAAAAAABAAAAAAAPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPAAAAAAAAAAAAAAAACICAAAAAONAAAAAA

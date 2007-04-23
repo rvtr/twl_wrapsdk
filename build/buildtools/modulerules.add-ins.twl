@@ -17,10 +17,14 @@
 ifndef TWLSDK_MODULERULES_
 
 #----------------------------------------------------------------------------
-.PHONY: 	twllib
+.PHONY: 	twllib twldbg
 
 twllib:
 	@$(MAKE) -C $(TWLSDK_ROOT)/build/buildsetup
+	@$(MAKE) -C $(TWLSDK_ROOT)/build/libraries
+
+twldbg:
+	@$(TOUCH) $(TWLSDK_ROOT)/build/libraries/os/common/os_printf.c
 	@$(MAKE) -C $(TWLSDK_ROOT)/build/libraries
 
 # .axf

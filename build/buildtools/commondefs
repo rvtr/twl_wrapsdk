@@ -185,6 +185,8 @@ TWL_LIBS ?= $(addsuffix $(TWL_LIBSUFFIX).a,$(TWL_LIBS_BASE))
 #
 
 CAT		:= cat
+OBJCOPY	:= objcopy
+TOUCH	:= touch
 
 #----------------------------------------------------------------------------
 ### NITRO-commondefs
