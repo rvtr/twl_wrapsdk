@@ -293,7 +293,7 @@ extern void OS_Terminate(void);
 
   Returns:      None
  *---------------------------------------------------------------------------*/
-#if defined(SDK_ARM9) || defined(SDK_DEBUGGER_ARM)
+#if defined(SDK_ARM9)
 extern void OS_Halt(void);
 #else
 static inline void OS_Halt(void)

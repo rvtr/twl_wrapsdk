@@ -180,6 +180,8 @@ endif
 
 TWL_LIBS ?= $(addsuffix $(TWL_LIBSUFFIX).a,$(TWL_LIBS_BASE))
 
+TWL_LDEPENDS_DBG ?= $(TWLSDK_ROOT)/build/libraries/os/common/os_printf.c \
+
 #----------------------------------------------------------------------------
 #  CYGWIN TOOLS
 #

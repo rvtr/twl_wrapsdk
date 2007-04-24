@@ -182,7 +182,7 @@
 
   $NoKeywords: $
  *---------------------------------------------------------------------------*/
-#include        <nitro.h>
+#include        <twl.h>
 #include        <twl/vlink.h>
 
 #ifdef          SDK_LINK_ISD
@@ -345,7 +345,10 @@ static void OS_PutStringISD(const char *str)
 #ifndef SDK_FINALROM
 static void OS_PutStringKMC(const char *str)
 {
-    vlink_dos_putstring_console((char *)str, STD_GetStringLength(str));
+    if ( OSi_IsRunOnDebuggerTWL() )
+    {
+        vlink_dos_putstring_console((char *)str, STD_GetStringLength(str));
+    }
 }
 #endif
 
@@ -358,9 +361,11 @@ static void OS_PutStringKMC(const char *str)
 #include <nitro/code32.h>
 asm void OS_PutStringARM(const char *str)
 {
-    	mov     r1, r0
-    	mov     r0, #0x04
-    	swi     0x123456
+        // SWIハンドラで対処しているためデバッガ識別不要
+        mov     r1, r0
+        mov     r0, #0x04
+        swi     0x123456
+
         bx      lr
 }
 #include <nitro/codereset.h>

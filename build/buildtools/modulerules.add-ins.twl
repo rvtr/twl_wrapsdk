@@ -17,15 +17,19 @@
 ifndef TWLSDK_MODULERULES_
 
 #----------------------------------------------------------------------------
-.PHONY: 	twllib twldbg
+.PHONY: 	twltop twllib twldbg
+
+twltop:
+	@$(MAKE) -C $(TWLSDK_ROOT)
 
 twllib:
 	@$(MAKE) -C $(TWLSDK_ROOT)/build/buildsetup
 	@$(MAKE) -C $(TWLSDK_ROOT)/build/libraries
 
 twldbg:
-	@$(TOUCH) $(TWLSDK_ROOT)/build/libraries/os/common/os_printf.c
-	@$(MAKE) -C $(TWLSDK_ROOT)/build/libraries
+	@$(TOUCH) $(TWL_LDEPENDS_DBG)
+	@$(MAKE) -C $(TWLSDK_ROOT)/build/libraries/os
+	@+$(REMAKE)
 
 # .axf
 $(BINDIR)/$(TARGET_BIN_BASENAME).axf: $(OBJS) $(LCFILE) $(MAKEFILE) $(LDEPENDS_NEF) $(EDEPENDS_NEF) $(ALIBRARIES) $(LDRES_FILE) $(CW_LIBCXX)

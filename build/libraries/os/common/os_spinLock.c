@@ -206,11 +206,8 @@ static void OSi_WaitByLoop(void);
  *---------------------------------------------------------------------------*/
 static inline void OSi_WaitByLoop(void)
 {
-#ifdef SDK_DEBUGGER_ARM
-    OS_SpinWait(0x1000);
-#else
     SVC_WaitByLoop(0x1000 / 4);
-#endif
+    // OS_SpinWait(0x1000);
 }
 
 //======================================================================

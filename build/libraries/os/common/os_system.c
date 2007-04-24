@@ -295,7 +295,7 @@ asm OSProcMode OS_GetProcMode( void )
 
   Returns:      None
  *---------------------------------------------------------------------------*/
-#if defined(SDK_ARM9) || defined(SDK_DEBUGGER_ARM)
+#if defined(SDK_ARM9)
 #include <nitro/code32.h>
 asm void  OS_SpinWait( u32 cycle )
 {
@@ -366,11 +366,7 @@ void OS_WaitInterrupt(BOOL clear, OSIrqMask irqFlags)
  *---------------------------------------------------------------------------*/
 void OS_WaitVBlankIntr(void)
 {
-#ifdef SDK_DEBUGGER_ARM
-    OS_SpinWait(4);
-#else
     SVC_WaitByLoop(1);
-#endif
 #if defined(SDK_ENABLE_ARM7_PRINT) && defined(SDK_ARM9)
     // PrintServer for ARM7 (if specified)
     OS_PrintServer();

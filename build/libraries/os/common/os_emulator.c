@@ -283,9 +283,11 @@ BOOL OSi_IsRunOnDebugger(void)
   Returns:      TRUE  : debugger
                 FALSE : not debugger
  *---------------------------------------------------------------------------*/
-#ifdef SDK_ARM7
 BOOL OSi_IsRunOnDebuggerTWL(void)
 {
+#ifdef SDK_ARM9
+    BOOL retval = TRUE;
+#else // SDK_ARM7
     // デバッガの対応により、JTAG-DEBUG通信割り込みによる検出の可能性もある（NANDファームにてJTAGイネーブル）。
     // DEBUGボタンによる検出などはセキュリティ上の問題がある（デバッガへのなりすましが容易）。
     OSChipType type = (OSChipType)(reg_CFG_BONDING & REG_CFG_BONDING_CHIP_TYPE_MASK);
@@ -295,7 +297,7 @@ BOOL OSi_IsRunOnDebuggerTWL(void)
     {
         retval = TRUE;
     }
+#endif // SDK_ARM7
 
     return retval;
 }
-#endif // SDK_ARM7
