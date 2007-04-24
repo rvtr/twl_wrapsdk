@@ -22,6 +22,10 @@
 #include <twl/os/common/system.h>
 #include <twl/os/common/emulator.h>
 
+#ifdef SDK_DEBUGGER_KMC
+#include <twl/vlink.h>
+#endif // SDK_DEBUGGER_KMC
+
 #ifdef __cplusplus
 extern "C" {
 #endif

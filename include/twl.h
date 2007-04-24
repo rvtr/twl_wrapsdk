@@ -20,7 +20,10 @@
 
 #include <twl/os.h>
 #include <twl/mi.h>
+
+#ifdef SDK_DEBUGGER_KMC
 #include <twl/vlink.h>
+#endif // SDK_DEBUGGER_KMC
 
 /* TWL_H_ */
 #endif

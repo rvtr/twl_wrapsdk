@@ -57,7 +57,6 @@
   $NoKeywords: $
  *---------------------------------------------------------------------------*/
 #include <twl.h>
-#include <twl/vlink.h>
 
 void    VBlankIntr(void);
 void    alarmCallback(void *arg);

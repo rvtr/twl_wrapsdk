@@ -56,7 +56,7 @@
 
   $NoKeywords: $
  *---------------------------------------------------------------------------*/
-#include <nitro.h>
+#include <twl.h>
 
 void    alarmCallback(void *arg);
 void    alarmDisp(u32 arg);
@@ -99,10 +99,6 @@ int     count;
  *---------------------------------------------------------------------------*/
 void TwlMain()
 {
-#ifdef SDK_DEBUGGER_ARM
-    OS_Printf("ARM7 before OS_Init.\n");
-#endif
-
     OS_Init();
 
     // ‚±‚Ì‚Q‚Â‚Í ARM7‚Å‚Í os_init() ‚Å‚â‚é
