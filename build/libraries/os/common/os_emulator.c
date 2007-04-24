@@ -83,7 +83,7 @@
 
   $NoKeywords: $
  *---------------------------------------------------------------------------*/
-#include <nitro.h>
+#include <twl.h>
 
 //---- current processor lock flag
 #ifdef SDK_ARM9
@@ -271,3 +271,31 @@ BOOL OSi_IsRunOnDebugger(void)
 
     return (*checkAddress == 1) ? TRUE : FALSE;
 }
+
+/*---------------------------------------------------------------------------*
+  Name:         OSi_IsRunOnDebuggerTWL
+
+  Description:  Detect TWL-Debugger
+                (subroutine of OS_GetConsoleType)
+
+  Arguments:    None
+
+  Returns:      TRUE  : debugger
+                FALSE : not debugger
+ *---------------------------------------------------------------------------*/
+#ifdef SDK_ARM7
+BOOL OSi_IsRunOnDebuggerTWL(void)
+{
+    // デバッガの対応により、JTAG-DEBUG通信割り込みによる検出の可能性もある（NANDファームにてJTAGイネーブル）。
+    // DEBUGボタンによる検出などはセキュリティ上の問題がある（デバッガへのなりすましが容易）。
+    OSChipType type = (OSChipType)(reg_CFG_BONDING & REG_CFG_BONDING_CHIP_TYPE_MASK);
+    BOOL retval = FALSE;
+
+//    if ( type == OS_CHIPTYPE_DEBUGGER || type == OS_CHIPTYPE_EVALUATE )
+    {
+        retval = TRUE;
+    }
+
+    return retval;
+}
+#endif // SDK_ARM7

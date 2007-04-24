@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------*
-  Project:  TwlSDK
-  File:     twl.h
+  Project:  TwlSDK - - misc
+  File:     misc.h
 
   Copyright 2007 Nintendo.  All rights reserved.
 
@@ -13,14 +13,12 @@
   $Log: $
   $NoKeywords: $
  *---------------------------------------------------------------------------*/
-#ifndef TWL_H_
-#define TWL_H_
+#ifndef TWL_MISC_H_
+#define TWL_MISC_H_
 
-#include <nitro.h>
+#include <twl/types.h>
 
-#include <twl/os.h>
-#include <twl/mi.h>
-#include <twl/vlink.h>
+#include <nitro/misc.h>
 
-/* TWL_H_ */
+/* TWL_MISC_H_ */
 #endif

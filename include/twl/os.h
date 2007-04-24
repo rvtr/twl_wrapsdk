@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------*
-  Project:  TwlSDK
-  File:     twl.h
+  Project:  TwlSDK - include - OS
+  File:     os.h
 
   Copyright 2007 Nintendo.  All rights reserved.
 
@@ -13,14 +13,22 @@
   $Log: $
   $NoKeywords: $
  *---------------------------------------------------------------------------*/
-#ifndef TWL_H_
-#define TWL_H_
 
-#include <nitro.h>
+#ifndef TWL_OS_H_
+#define TWL_OS_H_
 
-#include <twl/os.h>
-#include <twl/mi.h>
-#include <twl/vlink.h>
+#include <nitro/os.h>
 
-/* TWL_H_ */
+#include <twl/os/common/system.h>
+#include <twl/os/common/emulator.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
+
+/* TWL_OS_H_ */
 #endif

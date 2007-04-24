@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------*
   Project:  TwlSDK - OS - include
-  File:     system.h
+  File:     emulator.h
 
   Copyright 2007 Nintendo.  All rights reserved.
 
@@ -13,32 +13,35 @@
   $Log: $
   $NoKeywords: $
  *---------------------------------------------------------------------------*/
-#ifndef TWL_OS_SYSTEM_H_
-#define TWL_OS_SYSTEM_H_
+#ifndef TWL_OS_EMULATOR_H_
+#define TWL_OS_EMULATOR_H_
 
 #include <twl/misc.h>
 #include <twl/types.h>
 
-#include <nitro/os/common/system.h>
+#include <nitro/os/common/emulator.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-//----------------------------------------------------------------------------
+/*---------------------------------------------------------------------------*
+  Name:         OSi_IsRunOnDebuggerTWL
 
-typedef enum
-{
-    OS_CHIPTYPE_TWL = 0,
-    OS_CHIPTYPE_DEBUGGER = 1,
-    OS_CHIPTYPE_EVALUATE = 3
-}
-OSChipType;
+  Description:  Detect Debugger
+                (subroutine of OS_GetConsoleType)
+
+  Arguments:    None
+
+  Returns:      TRUE  : debugger
+                FALSE : not debugger
+ *---------------------------------------------------------------------------*/
+BOOL OSi_IsRunOnDebuggerTWL(void);
 
 
 #ifdef __cplusplus
 } /* extern "C" */
 #endif
 
-/* TWL_OS_SYSTEM_H_ */
+/* TWL_OS_EMULATOR_H_ */
 #endif

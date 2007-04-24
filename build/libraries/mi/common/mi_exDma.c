@@ -36,7 +36,7 @@ static u32 intervalTable[] =
 
   Returns:      None
  *---------------------------------------------------------------------------*/
-void MIi_SetExDmaArbiter( MIEDmaArbitration arb, MIEDmaYieldCycles yld )
+void MIi_SetExDmaArbiter( MIExDmaArbitration arb, MIExDmaYieldCycles yld )
 {
     OSIntrMode enabled = OS_DisableInterrupts();
 
@@ -62,17 +62,17 @@ void MIi_SetExDmaArbiter( MIEDmaArbitration arb, MIEDmaYieldCycles yld )
  *---------------------------------------------------------------------------*/
 void MIi_ExDmaFill( u32 dmaNo, void *dest, u32 data, u32 size )
 {
-    u32 idx = dmaNo - MI_EDMA_CH_MIN;
+    u32 idx = dmaNo - MI_EXDMA_CH_MIN;
 
     {
-        MIEDmaBlockSize blockSize = MI_EDMA_BLOCK_32B;
+        MIExDmaBlockSize blockSize = MI_EXDMA_BLOCK_32B;
         u32 interval = intervalTable[idx];
-        MIEDmaPrescaler prescale = MI_EDMA_PRESCALER_1;
+        MIExDmaPrescaler prescale = MI_EXDMA_PRESCALER_1;
 
         MIi_ExDmaFillCore( dmaNo, dest, data, size, size,
                 blockSize, interval, prescale,
-                MI_EDMA_CONTINUOUS_OFF, MI_EDMA_SRC_RLD_OFF, MI_EDMA_DEST_RLD_OFF,
-                MI_EDMA_TIMING_IMM );
+                MI_EXDMA_CONTINUOUS_OFF, MI_EXDMA_SRC_RLD_OFF, MI_EXDMA_DEST_RLD_OFF,
+                MI_EXDMA_TIMING_IMM );
     }
 }
 
@@ -91,17 +91,17 @@ void MIi_ExDmaFill( u32 dmaNo, void *dest, u32 data, u32 size )
  *---------------------------------------------------------------------------*/
 void MIi_ExDmaCopy( u32 dmaNo, const void *src, void *dest, u32 size )
 {
-    u32 idx = dmaNo - MI_EDMA_CH_MIN;
+    u32 idx = dmaNo - MI_EXDMA_CH_MIN;
 
     {
-        MIEDmaBlockSize blockSize = MI_EDMA_BLOCK_32B;
+        MIExDmaBlockSize blockSize = MI_EXDMA_BLOCK_32B;
         u32 interval = intervalTable[idx];
-        MIEDmaPrescaler prescale = MI_EDMA_PRESCALER_1;
+        MIExDmaPrescaler prescale = MI_EXDMA_PRESCALER_1;
 
         MIi_ExDmaCopyCore( dmaNo, src, dest, size, size,
                 blockSize, interval, prescale,
-                MI_EDMA_CONTINUOUS_OFF, MI_EDMA_SRC_RLD_OFF, MI_EDMA_DEST_RLD_OFF,
-                MI_EDMA_TIMING_IMM );
+                MI_EXDMA_CONTINUOUS_OFF, MI_EXDMA_SRC_RLD_OFF, MI_EXDMA_DEST_RLD_OFF,
+                MI_EXDMA_TIMING_IMM );
     }
 }
 
@@ -120,17 +120,17 @@ void MIi_ExDmaCopy( u32 dmaNo, const void *src, void *dest, u32 size )
  *---------------------------------------------------------------------------*/
 void MIi_ExDmaSend( u32 dmaNo, const void *src, void *dest, u32 size )
 {
-    u32 idx = dmaNo - MI_EDMA_CH_MIN;
+    u32 idx = dmaNo - MI_EXDMA_CH_MIN;
 
     {
-        MIEDmaBlockSize blockSize = MI_EDMA_BLOCK_32B;
+        MIExDmaBlockSize blockSize = MI_EXDMA_BLOCK_32B;
         u32 interval = intervalTable[idx];
-        MIEDmaPrescaler prescale = MI_EDMA_PRESCALER_1;
+        MIExDmaPrescaler prescale = MI_EXDMA_PRESCALER_1;
 
         MIi_ExDmaSendCore( dmaNo, src, dest, size, size,
                 blockSize, interval, prescale,
-                MI_EDMA_CONTINUOUS_OFF, MI_EDMA_SRC_RLD_OFF, MI_EDMA_DEST_RLD_OFF,
-                MI_EDMA_TIMING_IMM );
+                MI_EXDMA_CONTINUOUS_OFF, MI_EXDMA_SRC_RLD_OFF, MI_EXDMA_DEST_RLD_OFF,
+                MI_EXDMA_TIMING_IMM );
     }
 }
 
@@ -149,17 +149,17 @@ void MIi_ExDmaSend( u32 dmaNo, const void *src, void *dest, u32 size )
  *---------------------------------------------------------------------------*/
 void MIi_ExDmaRecv( u32 dmaNo, const void *src, void *dest, u32 size )
 {
-    u32 idx = dmaNo - MI_EDMA_CH_MIN;
+    u32 idx = dmaNo - MI_EXDMA_CH_MIN;
 
     {
-        MIEDmaBlockSize blockSize = MI_EDMA_BLOCK_32B;
+        MIExDmaBlockSize blockSize = MI_EXDMA_BLOCK_32B;
         u32 interval = intervalTable[idx];
-        MIEDmaPrescaler prescale = MI_EDMA_PRESCALER_1;
+        MIExDmaPrescaler prescale = MI_EXDMA_PRESCALER_1;
 
         MIi_ExDmaRecvCore( dmaNo, src, dest, size, size,
                 blockSize, interval, prescale,
-                MI_EDMA_CONTINUOUS_OFF, MI_EDMA_SRC_RLD_OFF, MI_EDMA_DEST_RLD_OFF,
-                MI_EDMA_TIMING_IMM );
+                MI_EXDMA_CONTINUOUS_OFF, MI_EXDMA_SRC_RLD_OFF, MI_EXDMA_DEST_RLD_OFF,
+                MI_EXDMA_TIMING_IMM );
     }
 }
 
@@ -178,17 +178,17 @@ void MIi_ExDmaRecv( u32 dmaNo, const void *src, void *dest, u32 size )
  *---------------------------------------------------------------------------*/
 void MIi_ExDmaFillAsync( u32 dmaNo, void *dest, u32 data, u32 size )
 {
-    u32 idx = dmaNo - MI_EDMA_CH_MIN;
+    u32 idx = dmaNo - MI_EXDMA_CH_MIN;
 
     {
-        MIEDmaBlockSize blockSize = MI_EDMA_BLOCK_32B;
+        MIExDmaBlockSize blockSize = MI_EXDMA_BLOCK_32B;
         u32 interval = intervalTable[idx];
-        MIEDmaPrescaler prescale = MI_EDMA_PRESCALER_1;
+        MIExDmaPrescaler prescale = MI_EXDMA_PRESCALER_1;
 
         MIi_ExDmaFillAsyncCore( dmaNo, dest, data, size, size,
                 blockSize, interval, prescale,
-                MI_EDMA_CONTINUOUS_OFF, MI_EDMA_SRC_RLD_OFF, MI_EDMA_DEST_RLD_OFF,
-                MI_EDMA_TIMING_IMM );
+                MI_EXDMA_CONTINUOUS_OFF, MI_EXDMA_SRC_RLD_OFF, MI_EXDMA_DEST_RLD_OFF,
+                MI_EXDMA_TIMING_IMM );
     }
 }
 
@@ -207,17 +207,17 @@ void MIi_ExDmaFillAsync( u32 dmaNo, void *dest, u32 data, u32 size )
  *---------------------------------------------------------------------------*/
 void MIi_ExDmaCopyAsync( u32 dmaNo, const void *src, void *dest, u32 size )
 {
-    u32 idx = dmaNo - MI_EDMA_CH_MIN;
+    u32 idx = dmaNo - MI_EXDMA_CH_MIN;
 
     {
-        MIEDmaBlockSize blockSize = MI_EDMA_BLOCK_32B;
+        MIExDmaBlockSize blockSize = MI_EXDMA_BLOCK_32B;
         u32 interval = intervalTable[idx];
-        MIEDmaPrescaler prescale = MI_EDMA_PRESCALER_1;
+        MIExDmaPrescaler prescale = MI_EXDMA_PRESCALER_1;
 
         MIi_ExDmaCopyAsyncCore( dmaNo, src, dest, size, size,
                 blockSize, interval, prescale,
-                MI_EDMA_CONTINUOUS_OFF, MI_EDMA_SRC_RLD_OFF, MI_EDMA_DEST_RLD_OFF,
-                MI_EDMA_TIMING_IMM);
+                MI_EXDMA_CONTINUOUS_OFF, MI_EXDMA_SRC_RLD_OFF, MI_EXDMA_DEST_RLD_OFF,
+                MI_EXDMA_TIMING_IMM);
     }
 }
 
@@ -236,17 +236,17 @@ void MIi_ExDmaCopyAsync( u32 dmaNo, const void *src, void *dest, u32 size )
  *---------------------------------------------------------------------------*/
 void MIi_ExDmaSendAsync( u32 dmaNo, const void *src, void *dest, u32 size )
 {
-    u32 idx = dmaNo - MI_EDMA_CH_MIN;
+    u32 idx = dmaNo - MI_EXDMA_CH_MIN;
 
     {
-        MIEDmaBlockSize blockSize = MI_EDMA_BLOCK_32B;
+        MIExDmaBlockSize blockSize = MI_EXDMA_BLOCK_32B;
         u32 interval = intervalTable[idx];
-        MIEDmaPrescaler prescale = MI_EDMA_PRESCALER_1;
+        MIExDmaPrescaler prescale = MI_EXDMA_PRESCALER_1;
 
         MIi_ExDmaSendAsyncCore( dmaNo, src, dest, size, size,
                 blockSize, interval, prescale,
-                MI_EDMA_CONTINUOUS_OFF, MI_EDMA_SRC_RLD_OFF, MI_EDMA_DEST_RLD_OFF,
-                MI_EDMA_TIMING_IMM );
+                MI_EXDMA_CONTINUOUS_OFF, MI_EXDMA_SRC_RLD_OFF, MI_EXDMA_DEST_RLD_OFF,
+                MI_EXDMA_TIMING_IMM );
     }
 }
 
@@ -265,17 +265,17 @@ void MIi_ExDmaSendAsync( u32 dmaNo, const void *src, void *dest, u32 size )
  *---------------------------------------------------------------------------*/
 void MIi_ExDmaRecvAsync( u32 dmaNo, const void *src, void *dest, u32 size )
 {
-    u32 idx = dmaNo - MI_EDMA_CH_MIN;
+    u32 idx = dmaNo - MI_EXDMA_CH_MIN;
 
     {
-        MIEDmaBlockSize blockSize = MI_EDMA_BLOCK_32B;
+        MIExDmaBlockSize blockSize = MI_EXDMA_BLOCK_32B;
         u32 interval = intervalTable[idx];
-        MIEDmaPrescaler prescale = MI_EDMA_PRESCALER_1;
+        MIExDmaPrescaler prescale = MI_EXDMA_PRESCALER_1;
 
         MIi_ExDmaRecvAsyncCore( dmaNo, src, dest, size, size,
                 blockSize, interval, prescale,
-                MI_EDMA_CONTINUOUS_OFF, MI_EDMA_SRC_RLD_OFF, MI_EDMA_DEST_RLD_OFF,
-                MI_EDMA_TIMING_IMM );
+                MI_EXDMA_CONTINUOUS_OFF, MI_EXDMA_SRC_RLD_OFF, MI_EXDMA_DEST_RLD_OFF,
+                MI_EXDMA_TIMING_IMM );
     }
 }
 
@@ -296,9 +296,9 @@ void MIi_ExDmaRecvAsync( u32 dmaNo, const void *src, void *dest, u32 size )
   Returns:      None
  *---------------------------------------------------------------------------*/
 void MIi_ExDmaFillCore( u32 dmaNo, void *dest, u32 data, u32 size, u32 oneShotSize,
-                MIEDmaBlockSize blockSize, u32 interval, MIEDmaPrescaler prescale,
+                MIExDmaBlockSize blockSize, u32 interval, MIExDmaPrescaler prescale,
                 u32 continuous, u32 srcRld, u32 destRld,
-                MIEDmaTiming timing )
+                MIExDmaTiming timing )
 {
     MIi_ExDmaFillAsyncCore( dmaNo, dest, data, size, oneShotSize,
                 blockSize, interval, prescale,
@@ -323,9 +323,9 @@ void MIi_ExDmaFillCore( u32 dmaNo, void *dest, u32 data, u32 size, u32 oneShotSi
   Returns:      None
  *---------------------------------------------------------------------------*/
 void MIi_ExDmaCopyCore( u32 dmaNo, const void *src, void *dest, u32 size, u32 oneShotSize,
-                MIEDmaBlockSize blockSize, u32 interval, MIEDmaPrescaler prescale,
+                MIExDmaBlockSize blockSize, u32 interval, MIExDmaPrescaler prescale,
                 u32 continuous, u32 srcRld, u32 destRld,
-                MIEDmaTiming timing )
+                MIExDmaTiming timing )
 {
     MIi_ExDmaCopyAsyncCore( dmaNo, src, dest, size, oneShotSize,
                 blockSize, interval, prescale,
@@ -350,9 +350,9 @@ void MIi_ExDmaCopyCore( u32 dmaNo, const void *src, void *dest, u32 size, u32 on
   Returns:      None
  *---------------------------------------------------------------------------*/
 void MIi_ExDmaSendCore( u32 dmaNo, const void *src, void *dest, u32 size, u32 oneShotSize,
-                MIEDmaBlockSize blockSize, u32 interval, MIEDmaPrescaler prescale,
+                MIExDmaBlockSize blockSize, u32 interval, MIExDmaPrescaler prescale,
                 u32 continuous, u32 srcRld, u32 destRld,
-                MIEDmaTiming timing )
+                MIExDmaTiming timing )
 {
     MIi_ExDmaSendAsyncCore( dmaNo, src, dest, size, oneShotSize,
                 blockSize, interval, prescale,
@@ -377,9 +377,9 @@ void MIi_ExDmaSendCore( u32 dmaNo, const void *src, void *dest, u32 size, u32 on
   Returns:      None
  *---------------------------------------------------------------------------*/
 void MIi_ExDmaRecvCore( u32 dmaNo, const void *src, void *dest, u32 size, u32 oneShotSize,
-                MIEDmaBlockSize blockSize, u32 interval, MIEDmaPrescaler prescale,
+                MIExDmaBlockSize blockSize, u32 interval, MIExDmaPrescaler prescale,
                 u32 continuous, u32 srcRld, u32 destRld,
-                MIEDmaTiming timing )
+                MIExDmaTiming timing )
 {
     MIi_ExDmaRecvAsyncCore( dmaNo, src, dest, size, oneShotSize,
                 blockSize, interval, prescale,
@@ -404,12 +404,12 @@ void MIi_ExDmaRecvCore( u32 dmaNo, const void *src, void *dest, u32 size, u32 on
   Returns:      None
  *---------------------------------------------------------------------------*/
 void MIi_ExDmaFillAsyncCore( u32 dmaNo, void *dest, u32 data, u32 size, u32 oneShotSize,
-                MIEDmaBlockSize blockSize, u32 interval, MIEDmaPrescaler prescale,
+                MIExDmaBlockSize blockSize, u32 interval, MIExDmaPrescaler prescale,
                 u32 continuous, u32 srcRld, u32 destRld,
-                MIEDmaTiming timing )
+                MIExDmaTiming timing )
 {
     const void *src = NULL;
-    u32 srcDir = MI_EDMA_SRC_FILLREG;
+    u32 srcDir = MI_EXDMA_SRC_FILLREG;
 
     MIi_WaitExDma( dmaNo );
 
@@ -417,7 +417,7 @@ void MIi_ExDmaFillAsyncCore( u32 dmaNo, void *dest, u32 data, u32 size, u32 oneS
                 blockSize, interval, prescale,
                 continuous, srcRld, destRld,
                 timing,
-                data, srcDir, MI_EDMA_DEST_INC );
+                data, srcDir, MI_EXDMA_DEST_INC );
 }
 
 /*---------------------------------------------------------------------------*
@@ -435,9 +435,9 @@ void MIi_ExDmaFillAsyncCore( u32 dmaNo, void *dest, u32 data, u32 size, u32 oneS
   Returns:      None
  *---------------------------------------------------------------------------*/
 void MIi_ExDmaCopyAsyncCore( u32 dmaNo, const void *src, void *dest, u32 size, u32 oneShotSize,
-                MIEDmaBlockSize blockSize, u32 interval, MIEDmaPrescaler prescale,
+                MIExDmaBlockSize blockSize, u32 interval, MIExDmaPrescaler prescale,
                 u32 continuous, u32 srcRld, u32 destRld,
-                MIEDmaTiming timing )
+                MIExDmaTiming timing )
 {
     MIi_WaitExDma( dmaNo );
 
@@ -445,7 +445,7 @@ void MIi_ExDmaCopyAsyncCore( u32 dmaNo, const void *src, void *dest, u32 size, u
                 blockSize, interval, prescale,
                 continuous, srcRld, destRld,
                 timing,
-                0, MI_EDMA_SRC_INC, MI_EDMA_DEST_INC );
+                0, MI_EXDMA_SRC_INC, MI_EXDMA_DEST_INC );
 }
 
 /*---------------------------------------------------------------------------*
@@ -463,9 +463,9 @@ void MIi_ExDmaCopyAsyncCore( u32 dmaNo, const void *src, void *dest, u32 size, u
   Returns:      None
  *---------------------------------------------------------------------------*/
 void MIi_ExDmaSendAsyncCore( u32 dmaNo, const void *src, void *dest, u32 size, u32 oneShotSize,
-                MIEDmaBlockSize blockSize, u32 interval, MIEDmaPrescaler prescale,
+                MIExDmaBlockSize blockSize, u32 interval, MIExDmaPrescaler prescale,
                 u32 continuous, u32 srcRld, u32 destRld,
-                MIEDmaTiming timing )
+                MIExDmaTiming timing )
 {
     MIi_WaitExDma( dmaNo );
 
@@ -473,7 +473,7 @@ void MIi_ExDmaSendAsyncCore( u32 dmaNo, const void *src, void *dest, u32 size, u
                 blockSize, interval, prescale,
                 continuous, srcRld, destRld,
                 timing,
-                0, MI_EDMA_SRC_INC, MI_EDMA_DEST_FIX );
+                0, MI_EXDMA_SRC_INC, MI_EXDMA_DEST_FIX );
 }
 
 /*---------------------------------------------------------------------------*
@@ -491,9 +491,9 @@ void MIi_ExDmaSendAsyncCore( u32 dmaNo, const void *src, void *dest, u32 size, u
   Returns:      None
  *---------------------------------------------------------------------------*/
 void MIi_ExDmaRecvAsyncCore( u32 dmaNo, const void *src, void *dest, u32 size, u32 oneShotSize,
-                MIEDmaBlockSize blockSize, u32 interval, MIEDmaPrescaler prescale,
+                MIExDmaBlockSize blockSize, u32 interval, MIExDmaPrescaler prescale,
                 u32 continuous, u32 srcRld, u32 destRld,
-                MIEDmaTiming timing )
+                MIExDmaTiming timing )
 {
     MIi_WaitExDma( dmaNo );
 
@@ -501,7 +501,7 @@ void MIi_ExDmaRecvAsyncCore( u32 dmaNo, const void *src, void *dest, u32 size, u
                 blockSize, interval, prescale,
                 continuous, srcRld, destRld,
                 timing,
-                0, MI_EDMA_SRC_FIX, MI_EDMA_DEST_INC );
+                0, MI_EXDMA_SRC_FIX, MI_EXDMA_DEST_INC );
 }
 
 /*---------------------------------------------------------------------------*
@@ -519,9 +519,9 @@ void MIi_ExDmaRecvAsyncCore( u32 dmaNo, const void *src, void *dest, u32 size, u
   Returns:      None
  *---------------------------------------------------------------------------*/
 void MIi_ExDmaBypassAsyncCore( u32 dmaNo, const void *src, void *dest, u32 size, u32 oneShotSize,
-                MIEDmaBlockSize blockSize, u32 interval, MIEDmaPrescaler prescale,
+                MIExDmaBlockSize blockSize, u32 interval, MIExDmaPrescaler prescale,
                 u32 continuous, u32 srcRld, u32 destRld,
-                MIEDmaTiming timing )
+                MIExDmaTiming timing )
 {
     MIi_WaitExDma( dmaNo );
 
@@ -529,7 +529,7 @@ void MIi_ExDmaBypassAsyncCore( u32 dmaNo, const void *src, void *dest, u32 size,
                 blockSize, interval, prescale,
                 continuous, srcRld, destRld,
                 timing,
-                0, MI_EDMA_SRC_FIX, MI_EDMA_DEST_FIX );
+                0, MI_EXDMA_SRC_FIX, MI_EXDMA_DEST_FIX );
 }
 
 /*---------------------------------------------------------------------------*
@@ -547,31 +547,31 @@ void MIi_ExDmaBypassAsyncCore( u32 dmaNo, const void *src, void *dest, u32 size,
   Returns:      None
  *---------------------------------------------------------------------------*/
 void MIi_SetExDmaParams( u32 dmaNo, const void *src, void *dest, u32 size, u32 oneShotSize,
-                MIEDmaBlockSize blockSize, u32 interval, MIEDmaPrescaler prescale,
+                MIExDmaBlockSize blockSize, u32 interval, MIExDmaPrescaler prescale,
                 u32 continuous, u32 srcRld, u32 destRld,
-                MIEDmaTiming timing,
+                MIExDmaTiming timing,
                 u32 fillData, u32 srcDir, u32 destDir )
 {
-    u32 idx = dmaNo - MI_EDMA_CH_MIN;
+    u32 idx = dmaNo - MI_EXDMA_CH_MIN;
 
-    if ( idx < MI_EDMA_CH_NUM )
+    if ( idx < MI_EXDMA_CH_NUM )
     {
         OSIntrMode enabled = OS_DisableInterrupts();
 
-        MIEDmaChanRegs *reg = &((MIEDmaChanRegs*)REG_DMA4SAD_ADDR)[idx];
+        MIExDmaChanRegs *reg = &((MIExDmaChanRegs*)REG_DMA4SAD_ADDR)[idx];
 
         reg->src = src;
         reg->dest = dest;
         reg->fillData = fillData;
         reg->totalCount = size / 4;
         reg->wordCount = oneShotSize / 4;
-        reg->blockInterval = (interval << MI_EDMABCNT_INTERVAL_SHIFT) | prescale;
+        reg->blockInterval = (interval << MI_EXDMABCNT_INTERVAL_SHIFT) | prescale;
         reg->ctrl = blockSize
                   | srcDir | destDir
                   | srcRld | destRld
                   | continuous
                   | timing
-                  | MI_EDMA_ENABLE | MI_EDMA_IF_ENABLE;
+                  | MI_EXDMA_ENABLE | MI_EXDMA_IF_ENABLE;
 
         (void)OS_RestoreInterrupts(enabled);
     }
@@ -591,10 +591,10 @@ void MIi_SetExDmaParams( u32 dmaNo, const void *src, void *dest, u32 size, u32 o
  *---------------------------------------------------------------------------*/
 BOOL MIi_IsExDmaBusy( u32 dmaNo )
 {
-    u32 idx = dmaNo - MI_EDMA_CH_MIN;
+    u32 idx = dmaNo - MI_EXDMA_CH_MIN;
 
     {
-        MIEDmaChanRegs *reg = &((MIEDmaChanRegs*)REG_DMA4SAD_ADDR)[idx];
+        MIExDmaChanRegs *reg = &((MIExDmaChanRegs*)REG_DMA4SAD_ADDR)[idx];
 
         return (BOOL)((reg->ctrl & REG_MI_DMA4CNT_E_MASK) >> REG_MI_DMA4CNT_E_SHIFT);
     }
@@ -611,10 +611,10 @@ BOOL MIi_IsExDmaBusy( u32 dmaNo )
  *---------------------------------------------------------------------------*/
 void MIi_WaitExDma( u32 dmaNo )
 {
-    u32 idx = dmaNo - MI_EDMA_CH_MIN;
+    u32 idx = dmaNo - MI_EXDMA_CH_MIN;
 
     {
-        MIEDmaChanRegs *reg = &((MIEDmaChanRegs*)REG_DMA4SAD_ADDR)[idx];
+        MIExDmaChanRegs *reg = &((MIExDmaChanRegs*)REG_DMA4SAD_ADDR)[idx];
 
         while (reg->ctrl & REG_MI_DMA4CNT_E_MASK)
         {
@@ -635,13 +635,13 @@ void MIi_StopExDma( u32 dmaNo )
 {
     OSIntrMode enabled = OS_DisableInterrupts();
 
-    u32 idx = dmaNo - MI_EDMA_CH_MIN;
+    u32 idx = dmaNo - MI_EXDMA_CH_MIN;
 
-    if ( idx < MI_EDMA_CH_NUM )
+    if ( idx < MI_EXDMA_CH_NUM )
     {
-        MIEDmaChanRegs *reg = &((MIEDmaChanRegs*)REG_DMA4SAD_ADDR)[idx];
+        MIExDmaChanRegs *reg = &((MIExDmaChanRegs*)REG_DMA4SAD_ADDR)[idx];
 
-        reg->ctrl &= ~MI_EDMA_ENABLE;
+        reg->ctrl &= ~MI_EXDMA_ENABLE;
     }
 
     (void)OS_RestoreInterrupts(enabled);
