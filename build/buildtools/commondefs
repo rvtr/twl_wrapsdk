@@ -37,7 +37,7 @@ TWLSDK_VERSION_MAJOR	?= 0
 #	TWL_PROC      = [ARM9/ARM7]
 #
 
-TWL_PLATFORM		?= BB
+TWL_PLATFORM		?= DSTEG
 TWL_MEMSIZE			?= 8M
 TWL_CODEGEN			?= ARM
 TWL_PROC			?= ARM9
@@ -97,7 +97,7 @@ NITRO_BUILD_DIR		?= $(TWL_BUILD_DIR)
 #	one of [ISD/KMC/ARM]
 #
 
-TWL_DEBUGGER	?= KMC
+TWL_DEBUGGER	?= ARM
 
 
 #----------------------------------------------------------------------------
