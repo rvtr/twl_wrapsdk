@@ -23,7 +23,7 @@
   $NoKeywords: $
  *---------------------------------------------------------------------------*/
 
-#include <twl.h>
+#include <twl/mi.h>
 
 /*---------------------------------------------------------------------------*
   Name:         MI_Init
@@ -47,6 +47,5 @@ void MI_Init(void)
     //---- add for TWL
 
     //---- DMA arbitration
-    //     this value depends on that the cache line read from the main memory is 20 cycles.
-    MIi_SetExDmaArbiter( MI_EXDMAGBL_ARB_ROUND_ROBIN, MI_EXDMAGBL_YLD_CYCLE_32 );
+    MIi_SetExDmaArbiter( MI_EXDMAGBL_ARB_ROUND_ROBIN, MI_EXDMAGBL_YLD_CYCLE_DEFAULT );
 }

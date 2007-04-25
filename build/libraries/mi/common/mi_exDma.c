@@ -14,13 +14,13 @@
   $NoKeywords: $
  *---------------------------------------------------------------------------*/
 
-#include <twl.h>
+#include <twl/mi.h>
 
 static BOOL isArbitrated = FALSE;
 
 static u32 intervalTable[] =
 {
-    8, 8, 8, 8,
+    1, 1, 1, 1,
 };
 
 //================================================================================
@@ -632,6 +632,22 @@ void MIi_WaitExDma( u32 dmaNo )
   Returns:      None
  *---------------------------------------------------------------------------*/
 void MIi_StopExDma( u32 dmaNo )
+{
+    MIi_StopExDmaAsync( dmaNo );
+    MIi_WaitExDma( dmaNo );
+}
+
+/*---------------------------------------------------------------------------*
+  Name:         MIi_StopDmaAsync
+
+  Description:  stop extended DMA
+                async version
+
+  Arguments:    dmaNo : DMA channel No.
+
+  Returns:      None
+ *---------------------------------------------------------------------------*/
+void MIi_StopExDmaAsync( u32 dmaNo )
 {
     OSIntrMode enabled = OS_DisableInterrupts();
 

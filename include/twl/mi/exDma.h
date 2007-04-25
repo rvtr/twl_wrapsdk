@@ -28,18 +28,18 @@ extern "C" {
 //---- timing
 typedef enum
 {
-    MI_EXDMA_TIMING_IMM        = (0x10UL << REG_MI_DMA4CNT_TIMING_SHIFT),  // start immediately
-    MI_EXDMA_TIMING_TM0        = (0x0UL << REG_MI_DMA4CNT_TIMING_SHIFT),   // timer 0
-    MI_EXDMA_TIMING_TM1        = (0x1UL << REG_MI_DMA4CNT_TIMING_SHIFT),   // timer 1
-    MI_EXDMA_TIMING_TM2        = (0x2UL << REG_MI_DMA4CNT_TIMING_SHIFT),   // timer 2
-    MI_EXDMA_TIMING_TM3        = (0x3UL << REG_MI_DMA4CNT_TIMING_SHIFT),   // timer 3
-    MI_EXDMA_TIMING_V_BLANK    = (0x4UL << REG_MI_DMA4CNT_TIMING_SHIFT),   // VBlank
-    MI_EXDMA_TIMING_GCD        = (0x7UL << REG_MI_DMA4CNT_TIMING_SHIFT),   // card
-    MI_EXDMA_TIMING_SD         = (0x8UL << REG_MI_DMA4CNT_TIMING_SHIFT),   // SD
-    MI_EXDMA_TIMING_CAMERA     = (0x9UL << REG_MI_DMA4CNT_TIMING_SHIFT),   // camera
-    MI_EXDMA_TIMING_AES_IN     = (0xAUL << REG_MI_DMA4CNT_TIMING_SHIFT),   // AES input
-    MI_EXDMA_TIMING_AES_OUT    = (0xBUL << REG_MI_DMA4CNT_TIMING_SHIFT),   // AES output
-    MI_EXDMA_TIMING_MIC        = (0xCUL << REG_MI_DMA4CNT_TIMING_SHIFT)    // MIC
+    MI_EXDMA_TIMING_IMM         = (0x10UL << REG_MI_DMA4CNT_TIMING_SHIFT),  // start immediately
+    MI_EXDMA_TIMING_TM0         = (0x0UL << REG_MI_DMA4CNT_TIMING_SHIFT),   // timer 0
+    MI_EXDMA_TIMING_TM1         = (0x1UL << REG_MI_DMA4CNT_TIMING_SHIFT),   // timer 1
+    MI_EXDMA_TIMING_TM2         = (0x2UL << REG_MI_DMA4CNT_TIMING_SHIFT),   // timer 2
+    MI_EXDMA_TIMING_TM3         = (0x3UL << REG_MI_DMA4CNT_TIMING_SHIFT),   // timer 3
+    MI_EXDMA_TIMING_V_BLANK     = (0x4UL << REG_MI_DMA4CNT_TIMING_SHIFT),   // VBlank
+    MI_EXDMA_TIMING_GCD         = (0x7UL << REG_MI_DMA4CNT_TIMING_SHIFT),   // card
+    MI_EXDMA_TIMING_SD          = (0x8UL << REG_MI_DMA4CNT_TIMING_SHIFT),   // SD
+    MI_EXDMA_TIMING_CAMERA      = (0x9UL << REG_MI_DMA4CNT_TIMING_SHIFT),   // camera
+    MI_EXDMA_TIMING_AES_IN      = (0xAUL << REG_MI_DMA4CNT_TIMING_SHIFT),   // AES input
+    MI_EXDMA_TIMING_AES_OUT     = (0xBUL << REG_MI_DMA4CNT_TIMING_SHIFT),   // AES output
+    MI_EXDMA_TIMING_MIC         = (0xCUL << REG_MI_DMA4CNT_TIMING_SHIFT)    // MIC
 }
 MIExDmaTiming;
 
@@ -78,22 +78,29 @@ MIExDmaPrescaler;
 //---- yield cycle
 typedef enum
 {
-    MI_EXDMAGBL_YLD_CYCLE_0      = (0x0UL << REG_MI_DMAGBL_YLD_SHIFT),
-    MI_EXDMAGBL_YLD_CYCLE_1      = (0x1UL << REG_MI_DMAGBL_YLD_SHIFT),
-    MI_EXDMAGBL_YLD_CYCLE_2      = (0x2UL << REG_MI_DMAGBL_YLD_SHIFT),
-    MI_EXDMAGBL_YLD_CYCLE_4      = (0x3UL << REG_MI_DMAGBL_YLD_SHIFT),
-    MI_EXDMAGBL_YLD_CYCLE_8      = (0x4UL << REG_MI_DMAGBL_YLD_SHIFT),
-    MI_EXDMAGBL_YLD_CYCLE_16     = (0x5UL << REG_MI_DMAGBL_YLD_SHIFT),
-    MI_EXDMAGBL_YLD_CYCLE_32     = (0x6UL << REG_MI_DMAGBL_YLD_SHIFT),
-    MI_EXDMAGBL_YLD_CYCLE_64     = (0x7UL << REG_MI_DMAGBL_YLD_SHIFT),
-    MI_EXDMAGBL_YLD_CYCLE_128    = (0x8UL << REG_MI_DMAGBL_YLD_SHIFT),
-    MI_EXDMAGBL_YLD_CYCLE_256    = (0x9UL << REG_MI_DMAGBL_YLD_SHIFT),
-    MI_EXDMAGBL_YLD_CYCLE_512    = (0xAUL << REG_MI_DMAGBL_YLD_SHIFT),
-    MI_EXDMAGBL_YLD_CYCLE_1K     = (0xBUL << REG_MI_DMAGBL_YLD_SHIFT),
-    MI_EXDMAGBL_YLD_CYCLE_2K     = (0xCUL << REG_MI_DMAGBL_YLD_SHIFT),
-    MI_EXDMAGBL_YLD_CYCLE_4K     = (0xDUL << REG_MI_DMAGBL_YLD_SHIFT),
-    MI_EXDMAGBL_YLD_CYCLE_8K     = (0xEUL << REG_MI_DMAGBL_YLD_SHIFT),
-    MI_EXDMAGBL_YLD_CYCLE_16K    = (0xFUL << REG_MI_DMAGBL_YLD_SHIFT)
+    MI_EXDMAGBL_YLD_CYCLE_0         = (0x0UL << REG_MI_DMAGBL_YLD_SHIFT),
+    MI_EXDMAGBL_YLD_CYCLE_1         = (0x1UL << REG_MI_DMAGBL_YLD_SHIFT),
+    MI_EXDMAGBL_YLD_CYCLE_2         = (0x2UL << REG_MI_DMAGBL_YLD_SHIFT),
+    MI_EXDMAGBL_YLD_CYCLE_4         = (0x3UL << REG_MI_DMAGBL_YLD_SHIFT),
+    MI_EXDMAGBL_YLD_CYCLE_8         = (0x4UL << REG_MI_DMAGBL_YLD_SHIFT),
+    MI_EXDMAGBL_YLD_CYCLE_16        = (0x5UL << REG_MI_DMAGBL_YLD_SHIFT),
+    MI_EXDMAGBL_YLD_CYCLE_32        = (0x6UL << REG_MI_DMAGBL_YLD_SHIFT),
+    MI_EXDMAGBL_YLD_CYCLE_64        = (0x7UL << REG_MI_DMAGBL_YLD_SHIFT),
+    MI_EXDMAGBL_YLD_CYCLE_128       = (0x8UL << REG_MI_DMAGBL_YLD_SHIFT),
+    MI_EXDMAGBL_YLD_CYCLE_256       = (0x9UL << REG_MI_DMAGBL_YLD_SHIFT),
+    MI_EXDMAGBL_YLD_CYCLE_512       = (0xAUL << REG_MI_DMAGBL_YLD_SHIFT),
+    MI_EXDMAGBL_YLD_CYCLE_1K        = (0xBUL << REG_MI_DMAGBL_YLD_SHIFT),
+    MI_EXDMAGBL_YLD_CYCLE_2K        = (0xCUL << REG_MI_DMAGBL_YLD_SHIFT),
+    MI_EXDMAGBL_YLD_CYCLE_4K        = (0xDUL << REG_MI_DMAGBL_YLD_SHIFT),
+    MI_EXDMAGBL_YLD_CYCLE_8K        = (0xEUL << REG_MI_DMAGBL_YLD_SHIFT),
+    MI_EXDMAGBL_YLD_CYCLE_16K       = (0xFUL << REG_MI_DMAGBL_YLD_SHIFT),
+
+#ifdef SDK_ARM9
+    // the cache line read from the main memory is 20 cycles and the DSP access is added.
+    MI_EXDMAGBL_YLD_CYCLE_DEFAULT   = MI_EXDMAGBL_YLD_CYCLE_32
+#else // SDK_ARM7
+    MI_EXDMAGBL_YLD_CYCLE_DEFAULT   = MI_EXDMAGBL_YLD_CYCLE_16
+#endif // SDK_ARM7
 }
 MIExDmaYieldCycles;
 
@@ -215,6 +222,18 @@ void    MIi_WaitExDma( u32 dmaNo );
   Returns:      None
  *---------------------------------------------------------------------------*/
 void    MIi_StopExDma( u32 dmaNo );
+
+/*---------------------------------------------------------------------------*
+  Name:         MIi_StopDmaAsync
+
+  Description:  stop extended DMA
+                async version
+
+  Arguments:    dmaNo : DMA channel No.
+
+  Returns:      None
+ *---------------------------------------------------------------------------*/
+void MIi_StopExDmaAsync( u32 dmaNo );
 
 //================================================================================
 //            memory operation using DMA

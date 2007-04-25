@@ -66,6 +66,8 @@ void    OSi_EnterTimerCallback(u32 timerNo, void (*callback) (void *), void *arg
 #define OS_IE_CARD_B_DATA   (1UL << REG_OS_IE_MC_B_SHIFT) // card B data transfer finish
 #define OS_IE_CARD_B_IREQ   (1UL << REG_OS_IE_MI_B_SHIFT) // card B IREQ
 #define OS_IE_CARD_B_DET    (1UL << REG_OS_IE_MC_B_DET_SHIFT) // card B detect
+#define OS_IE_JTAG_TX       (1UL << REG_OS_IE_J_TX_MASK)// JTAG comm send
+#define OS_IE_JTAG_RX       (1UL << REG_OS_IE_J_RX_MASK)// JTAG comm receive
 #define OS_IE_DMA4          (1UL << REG_OS_IE_D4_SHIFT) // DMA4
 #define OS_IE_DMA5          (1UL << REG_OS_IE_D5_SHIFT) // DMA5
 #define OS_IE_DMA6          (1UL << REG_OS_IE_D6_SHIFT) // DMA6

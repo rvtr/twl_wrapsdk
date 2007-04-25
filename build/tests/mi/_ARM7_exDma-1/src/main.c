@@ -41,17 +41,17 @@ t_TestBuf testBuf __attribute__ ((aligned (32)));
 
 t_CommonArg copyfillArg[] =
 {
-    { testBuf.src,                   testBuf.dest,                   "DmaCopy success.\n", "DmaFill success on MAIN_MEM.\n", },
+    { testBuf.src,                   testBuf.dest,                   "DmaCopy success.\n", "DmaFill success on WRAM.\n", },
 };
 
 t_CommonArg stopArg[] =
 {
-    { testBuf.src,                   testBuf.dest,                   "Stopping DmaCopy success.\n", "Stopping DmaFill success on MAIN_MEM.\n", },
+    { testBuf.src,                   testBuf.dest,                   "Stopping DmaCopy success.\n", "Stopping DmaFill success on WRAM.\n", },
 };
 
 t_CommonArg copyfillAsyncArg[] =
 {
-    { testBuf.src,                   testBuf.dest,                   "DmaCopyAsync success.\n", "DmaFillAsync success on MAIN_MEM.\n", },
+    { testBuf.src,                   testBuf.dest,                   "DmaCopyAsync success.\n", "DmaFillAsync success on WRAM.\n", },
 };
 
 u32 exDmaIntrCount[MI_EXDMA_CH_NUM];
@@ -137,8 +137,6 @@ static BOOL CheckDmaCopyAndFill( t_CommonArg *arg, u32 data )
         u16 *d = dest[i];
         char *str = NULL;
 
-        DC_FlushAll();
-        IC_InvalidateAll();
         MIi_ExDmaCopy( ch, s, d, ONE_BUF_SIZE );
         if ( i == 3 )
         {
@@ -153,8 +151,6 @@ static BOOL CheckDmaCopyAndFill( t_CommonArg *arg, u32 data )
         u16 *d = dest[i];
         char *str = NULL;
 
-        DC_FlushAll();
-        IC_InvalidateAll();
         MIi_ExDmaFill( ch, d, data+i, ONE_BUF_SIZE );
         if ( i == 3 )
         {
@@ -182,7 +178,6 @@ static BOOL CheckDmaCopyAndFillAsync( t_CommonArg *arg, u32 data )
             src[i][ii] = (u16)(ii+i-data);
         }
     }
-    DC_FlushAll();
     for (i=0; i<4; i++)
     {
         u32 ch = i + MI_EXDMA_CH_MIN;
@@ -218,7 +213,6 @@ static BOOL CheckDmaCopyAndFillAsync( t_CommonArg *arg, u32 data )
         c_ercd |= CheckDmaCopy( ch, s, d, str );
     }
 
-    DC_FlushAll();
     for (i=0; i<4; i++)
     {
         u32 ch = i + MI_EXDMA_CH_MIN;
@@ -346,7 +340,6 @@ static void TestDmaFuncs( void )
     PrintIntrCount();
 }
 
-
 //================================================================================
 /*---------------------------------------------------------------------------*
   Name:         TwlMain
@@ -363,9 +356,7 @@ void TwlMain()
 
     InitExDmaIntr();
 
-    OS_TPrintf("\nARM9 starts.\n");
-
-//    OS_DisableProtectionUnit();
+    OS_TPrintf("\nARM7 starts.\n");
 
     // priority dma test
     OS_TPrintf( "\nTurn into Priority Mode.\n" );
@@ -381,7 +372,7 @@ void TwlMain()
 
     TestDmaFuncs();
 
-    OS_TPrintf("\nARM9 ends.\n");
+    OS_TPrintf("\nARM7 ends.\n");
     OS_Terminate();
 }
 
