@@ -31,13 +31,13 @@ TWLSDK_VERSION_MAJOR	?= 0
 #
 # CodeGen Target
 #
-#	TWL_PLATFORM  = [DSTEG/BB/TEG/TS]
+#	TWL_PLATFORM  = [DSTEG/BB/EVA/TS]
 #	TWL_MEMSIZE   = [4M/8M]
 #	TWL_CODEGEN	= [ARM/THUMB]
 #	TWL_PROC      = [ARM9/ARM7]
 #
 
-TWL_PLATFORM		?= DSTEG
+TWL_PLATFORM		?= BB
 TWL_MEMSIZE			?= 8M
 TWL_CODEGEN			?= ARM
 TWL_PROC			?= ARM9
@@ -97,7 +97,7 @@ NITRO_BUILD_DIR		?= $(TWL_BUILD_DIR)
 #	one of [ISD/KMC/ARM]
 #
 
-TWL_DEBUGGER	?= ARM
+TWL_DEBUGGER	?= KMC
 
 
 #----------------------------------------------------------------------------
