@@ -16,7 +16,7 @@
 #ifndef TWL_MI_EXDMA_H_
 #define TWL_MI_EXDMA_H_
 
-#include <nitro/misc.h>
+#include <twl/misc.h>
 #include <twl/types.h>
 #include <twl/memorymap.h>
 

@@ -428,22 +428,22 @@ static asm void init_cp15(void)
         mcr     p15, 0, r0, c7, c10, 4
 
 /*
-; Region G:    BACK_GROUND: Base = 0x0,        Size = 4GB,   I:NC NB    / D:NC NB,     I:NA / D:NA
-; Region 0:    IO_VRAM:     Base = 0x04000000, Size = 64MB,  I:NC NB    / D:NC NB,     I:RW / D:RW
-; Region 1Rel: MAIN_MEM:    Base = 0x02000000, Size = 16MB*, I:Cach Buf / D:Cach Buf,  I:RW / D:RW
-; Region 1Dbg: MAIN_MEM:    Base = 0x02000000, Size = 16MB,  I:Cach Buf / D:Cach Buf,  I:RW / D:RW
+; Region G:    BACK_GROUND:   Base = 0x0,        Size = 4GB,   I:NC NB    / D:NC NB,     I:NA / D:NA
+; Region 0:    IO_VRAM:       Base = 0x04000000, Size = 64MB,  I:NC NB    / D:NC NB,     I:RW / D:RW
+; Region 1Rel: MAIN_MEM+WRAM: Base = 0x02000000, Size = 32MB*, I:Cach Buf / D:Cach Buf,  I:RW / D:RW
+; Region 1Dbg: MAIN_MEM+WRAM: Base = 0x02000000, Size = 32MB,  I:Cach Buf / D:Cach Buf,  I:RW / D:RW
 ;                                              (* Size will be arranged in OS_InitArena(). )
-; Region 2Rel: SOUND_DATA:  Base = 0x02380000, Size = 512KB, I:NC NB    / D:NC NB,     I:NA / D:NA
-; Region 2D4M: SOUND_DATA:  Base = 0x02300000, Size = 1MB,   I:NC NB    / D:NC NB,     I:NA / D:NA
-; Region 2D8M: SOUND_DATA:  Base = 0x02600000, Size = 2MB,   I:NC NB    / D:NC NB,     I:NA / D:NA
-; Region 3:    MAIN_MEM_HI: Base = 0x08000000, Size = 256MB, I:Cach Buf / D:Cach Buf,  I:RW / D:RW
-; Region 3:    CARTRIDGE:   Base = 0x08000000, Size = 128MB, I:NC NB    / D:NC NB,     I:NA / D:RW
-; Region 4:    DTCM:        Base = SOUND_DATA, Size = 16KB,  I:NC NB    / D:NC NB,     I:NA / D:RW
-; Region 5:    ITCM:        Base = 0x01000000, Size = 16MB,  I:NC NB    / D:NC NB,     I:RW / D:RW
+; Region 2Rel: SOUND_DATA:    Base = 0x02380000, Size = 512KB, I:NC NB    / D:NC NB,     I:NA / D:NA
+; Region 2D4M: SOUND_DATA:    Base = 0x02300000, Size = 1MB,   I:NC NB    / D:NC NB,     I:NA / D:NA
+; Region 2D8M: SOUND_DATA:    Base = 0x02600000, Size = 2MB,   I:NC NB    / D:NC NB,     I:NA / D:NA
+; Region 3:    MAIN_MEM_HI:   Base = 0x08000000, Size = 256MB, I:Cach Buf / D:Cach Buf,  I:RW / D:RW
+; Region 3:    CARTRIDGE:     Base = 0x08000000, Size = 128MB, I:NC NB    / D:NC NB,     I:NA / D:RW
+; Region 4:    DTCM:          Base = SOUND_DATA, Size = 16KB,  I:NC NB    / D:NC NB,     I:NA / D:RW
+; Region 5:    ITCM:          Base = 0x01000000, Size = 16MB,  I:NC NB    / D:NC NB,     I:RW / D:RW
 
-; Region 6:    BIOS:        Base = 0xffff0000, Size = 32KB,  I:Cach NB  / D:Cach NB,   I:RO / D:RO
-; Region 7:    SHARE_WORK:  Base = 0x027ff000, Size = 4KB,   I:NC NB    / D:NC NB,     I:NA / D:RW
-;(Region 7:    DBG_RESERVE: Base = 0x02700000, Size = 1MB,   I:NC NB    / D:NC NB,     I:RW / D:RW)
+; Region 6:    BIOS:          Base = 0xffff0000, Size = 32KB,  I:Cach NB  / D:Cach NB,   I:RO / D:RO
+; Region 7:    SHARE_WORK:    Base = 0x027ff000, Size = 4KB,   I:NC NB    / D:NC NB,     I:NA / D:RW
+;(Region 7:    DBG_RESERVE:   Base = 0x02700000, Size = 1MB,   I:NC NB    / D:NC NB,     I:RW / D:RW)
 */
 #define SET_PROTECTION_A( id, adr, siz )        ldr r0, =(adr|HW_C6_PR_##siz|HW_C6_PR_ENABLE)
 #define SET_PROTECTION_B( id, adr, siz )        mcr     p15, 0, r0, c6, id, 0
@@ -462,8 +462,8 @@ static asm void init_cp15(void)
         SET_PROTECTION_B( c0, HW_IOREG, 64MB )
 
         //---- メインメモリ
-        SET_PROTECTION_A( c1, HW_MAIN_MEM_MAIN, 16MB )
-        SET_PROTECTION_B( c1, HW_MAIN_MEM_MAIN, 16MB )
+        SET_PROTECTION_A( c1, HW_MAIN_MEM_MAIN, 32MB )
+        SET_PROTECTION_B( c1, HW_MAIN_MEM_MAIN, 32MB )
 
         //---- サウンドデータ領域
 #if     HW_MAIN_MEM_SUB_SIZE+HW_MAIN_MEM_SHARED_SIZE == 0x1000

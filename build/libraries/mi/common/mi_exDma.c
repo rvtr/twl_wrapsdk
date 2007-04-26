@@ -16,8 +16,6 @@
 
 #include <twl/mi.h>
 
-static BOOL isArbitrated = FALSE;
-
 static u32 intervalTable[] =
 {
     1, 1, 1, 1,
@@ -41,8 +39,6 @@ void MIi_SetExDmaArbiter( MIExDmaArbitration arb, MIExDmaYieldCycles yld )
     OSIntrMode enabled = OS_DisableInterrupts();
 
     reg_MI_DMAGBL = (u32)(arb | yld);
-
-    isArbitrated = TRUE;
 
     (void)OS_RestoreInterrupts(enabled);
 }
