@@ -151,6 +151,9 @@ MIImageWramC;
 #define MI_WRAM_B_BLOCK_SIZE_MAX  (MI_WRAM_B_BLOCK_SIZE * MI_WRAM_B_BLOCK_NUM)
 #define MI_WRAM_C_BLOCK_SIZE_MAX  (MI_WRAM_C_BLOCK_SIZE * MI_WRAM_C_BLOCK_NUM)
 
+
+#define MI_WRAM_MAP_NULL      (HW_WRAM_AREA + HW_WRAM_AREA_SIZE/4)
+
 #define REG_WRAM_A_MAP_PACK( start, end, img_size )  REG_WRAM_MAP_PACK( A, (start), (end), (img_size) )
 #define REG_WRAM_B_MAP_PACK( start, end, img_size )  REG_WRAM_MAP_PACK( B, (start), (end), (img_size) )
 #define REG_WRAM_C_MAP_PACK( start, end, img_size )  REG_WRAM_MAP_PACK( C, (start), (end), (img_size) )
