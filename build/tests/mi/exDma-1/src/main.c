@@ -16,6 +16,8 @@
 #include <twl.h>
 
 
+#define MY_DMA_WRAM   ((t_TestBuf *)HW_WRAM_1_END)
+#define MY_TEST_LOOPS (sizeof(copyfillArg)/sizeof(t_CommonArg))
 #define ONE_BUF_SIZE  0x2004
 
 typedef struct
@@ -41,17 +43,20 @@ t_TestBuf testBuf __attribute__ ((aligned (32)));
 
 t_CommonArg copyfillArg[] =
 {
-    { testBuf.src,                   testBuf.dest,                   "DmaCopy success.\n", "DmaFill success on MAIN_MEM.\n", },
+    { testBuf.src,      testBuf.dest,      "DmaCopy success.\n", "DmaFill success on MAIN_MEM.\n", },
+    { MY_DMA_WRAM->src, MY_DMA_WRAM->dest, "DmaCopy success.\n", "DmaFill success on WRAM.\n", },
 };
 
 t_CommonArg stopArg[] =
 {
-    { testBuf.src,                   testBuf.dest,                   "Stopping DmaCopy success.\n", "Stopping DmaFill success on MAIN_MEM.\n", },
+    { testBuf.src,      testBuf.dest,      "Stopping DmaCopy success.\n", "Stopping DmaFill success on MAIN_MEM.\n", },
+    { MY_DMA_WRAM->src, MY_DMA_WRAM->dest, "Stopping DmaCopy success.\n", "Stopping DmaFill success on WRAM.\n", },
 };
 
 t_CommonArg copyfillAsyncArg[] =
 {
-    { testBuf.src,                   testBuf.dest,                   "DmaCopyAsync success.\n", "DmaFillAsync success on MAIN_MEM.\n", },
+    { testBuf.src,      testBuf.dest,      "DmaCopyAsync success.\n", "DmaFillAsync success on MAIN_MEM.\n", },
+    { MY_DMA_WRAM->src, MY_DMA_WRAM->dest, "DmaCopyAsync success.\n", "DmaFillAsync success on WRAM.\n", },
 };
 
 u32 exDmaIntrCount[MI_EXDMA_CH_NUM];
@@ -324,21 +329,21 @@ static void TestDmaFuncs( void )
 
     // sync copy and fill test
     OS_TPrintf( "\nChecking DmaCopy and DmaFill ....\n" );
-    for (i=0; i<1; i++)
+    for (i=0; i<MY_TEST_LOOPS; i++)
     {
         (void)CheckDmaCopyAndFill( &copyfillArg[i], i );
     }
 
     // async copy and fill test
     OS_TPrintf( "\nChecking DmaCopyAsync and DmaFillAsync ....\n" );
-    for (i=0; i<1; i++)
+    for (i=0; i<MY_TEST_LOOPS; i++)
     {
         (void)CheckDmaCopyAndFillAsync( &copyfillAsyncArg[i], i );
     }
 
     // stop test
     OS_TPrintf( "\nChecking DmaStop ....\n" );
-    for (i=0; i<1; i++)
+    for (i=0; i<MY_TEST_LOOPS; i++)
     {
         (void)CheckDmaStop( &stopArg[i] );
     }

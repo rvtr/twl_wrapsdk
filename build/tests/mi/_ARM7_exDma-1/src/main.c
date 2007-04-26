@@ -41,17 +41,17 @@ t_TestBuf testBuf __attribute__ ((aligned (32)));
 
 t_CommonArg copyfillArg[] =
 {
-    { testBuf.src,                   testBuf.dest,                   "DmaCopy success.\n", "DmaFill success on WRAM.\n", },
+    { testBuf.src,      testBuf.dest,      "DmaCopy success.\n", "DmaFill success on WRAM.\n", },
 };
 
 t_CommonArg stopArg[] =
 {
-    { testBuf.src,                   testBuf.dest,                   "Stopping DmaCopy success.\n", "Stopping DmaFill success on WRAM.\n", },
+    { testBuf.src,      testBuf.dest,      "Stopping DmaCopy success.\n", "Stopping DmaFill success on WRAM.\n", },
 };
 
 t_CommonArg copyfillAsyncArg[] =
 {
-    { testBuf.src,                   testBuf.dest,                   "DmaCopyAsync success.\n", "DmaFillAsync success on WRAM.\n", },
+    { testBuf.src,      testBuf.dest,      "DmaCopyAsync success.\n", "DmaFillAsync success on WRAM.\n", },
 };
 
 u32 exDmaIntrCount[MI_EXDMA_CH_NUM];
