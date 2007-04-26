@@ -33,7 +33,6 @@ SRCDIR			+= $(TWL_NITROSDK_ROOT)/build/libraries/os/common/src \
 
 SRCS			= \
 			  osemu.c		\
-			  osemu2.c		\
 
 TARGET_LIB		= libvlink_sp$(TWL_LIBSUFFIX).a
 

@@ -338,7 +338,7 @@ void MIi_ExDmaCopyCore( u32 dmaNo, const void *src, void *dest, u32 size, u32 on
 /*---------------------------------------------------------------------------*
   Name:         MIi_ExDmaSendCore
 
-  Description:  copy memory with DMA
+  Description:  send data with DMA
                 sync version
 
   Arguments:    dmaNo : DMA channel No.
@@ -365,7 +365,7 @@ void MIi_ExDmaSendCore( u32 dmaNo, const void *src, void *dest, u32 size, u32 on
 /*---------------------------------------------------------------------------*
   Name:         MIi_ExDmaRecvCore
 
-  Description:  copy memory with DMA
+  Description:  receive data with DMA
                 sync version
 
   Arguments:    dmaNo : DMA channel No.
@@ -451,7 +451,7 @@ void MIi_ExDmaCopyAsyncCore( u32 dmaNo, const void *src, void *dest, u32 size, u
 /*---------------------------------------------------------------------------*
   Name:         MIi_ExDmaSendAsyncCore
 
-  Description:  copy memory with DMA
+  Description:  send data with DMA
                 async version
 
   Arguments:    dmaNo : DMA channel No.
@@ -479,7 +479,7 @@ void MIi_ExDmaSendAsyncCore( u32 dmaNo, const void *src, void *dest, u32 size, u
 /*---------------------------------------------------------------------------*
   Name:         MIi_ExDmaRecvAsyncCore
 
-  Description:  copy memory with DMA
+  Description:  receive data with DMA
                 async version
 
   Arguments:    dmaNo : DMA channel No.
@@ -505,9 +505,9 @@ void MIi_ExDmaRecvAsyncCore( u32 dmaNo, const void *src, void *dest, u32 size, u
 }
 
 /*---------------------------------------------------------------------------*
-  Name:         MIi_ExDmaBypassAsyncCore
+  Name:         MIi_ExDmaPipeAsyncCore
 
-  Description:  copy memory with DMA
+  Description:  pipe register to register with DMA
                 async version
 
   Arguments:    dmaNo : DMA channel No.
@@ -518,7 +518,7 @@ void MIi_ExDmaRecvAsyncCore( u32 dmaNo, const void *src, void *dest, u32 size, u
 
   Returns:      None
  *---------------------------------------------------------------------------*/
-void MIi_ExDmaBypassAsyncCore( u32 dmaNo, const void *src, void *dest, u32 size, u32 oneShotSize,
+void MIi_ExDmaPipeAsyncCore( u32 dmaNo, const void *src, void *dest, u32 size, u32 oneShotSize,
                 MIExDmaBlockSize blockSize, u32 interval, MIExDmaPrescaler prescale,
                 u32 continuous, u32 srcRld, u32 destRld,
                 MIExDmaTiming timing )
@@ -535,8 +535,7 @@ void MIi_ExDmaBypassAsyncCore( u32 dmaNo, const void *src, void *dest, u32 size,
 /*---------------------------------------------------------------------------*
   Name:         MIi_SetExDmaParams
 
-  Description:  copy memory with DMA
-                sync 32bit version
+  Description:  set DMA
 
   Arguments:    dmaNo : DMA channel No.
                 dest  : destination address
