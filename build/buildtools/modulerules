@@ -315,7 +315,9 @@ ifneq	($(NITRO_FORCE_BUILD),)
 
 # yutaka
 #VPATH		= $(SRCDIR)
-vpath %c $(foreach dir,$(SRCDIR),$(shell cygpath -u $(dir)))
+vpath %.c $(foreach dir,$(SRCDIR),$(shell cygpath -u $(dir)))
+vpath %.cpp $(foreach dir,$(SRCDIR),$(shell cygpath -u $(dir)))
+vpath %.s $(foreach dir,$(SRCDIR),$(shell cygpath -u $(dir)))
 
 # ...CW style
 #CYGDRV			?= $(shell cygpath -u c:)/..
