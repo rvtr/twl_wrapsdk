@@ -72,7 +72,6 @@ dwReport Exceptions=1
 dwReselect Target=1
 dwReload Images=0
 dwRun Config Script=0
-Config Script Name=C:\Iris\geometry\geometry.ses
 [Interface\SourcePaths]
 Paths=C:\twl\bootrom\build\libraries\init\ARM9\
 [Interface\Toolbars]
@@ -150,8 +149,7 @@ dwFileCount=4
 File_1=C:\twl\twl_wrapsdk_bak\build\tests\os\alarm-1\bin\ARM9-BB\Release\alerm.axf
 File_2=C:\twl\bootrom\build\bootrom\ts\ARM9\bin\ARM9-BB.thumb\Release\brom9_ts.axf
 File_3=C:\twl\twlsdk_bak\build\tests\os\alarm-1\bin\ARM9-TS\Release\alerm.axf
-File_4=C:\Iris\IrisMon\IrisMon_Data\ThumbRelease\IrisMon.axf
-dwFileCount=4
+dwFileCount=3
 [RecentSymbolsList]
 File_1=C:\IrisSubp\IrisSubpMon\IrisSubpMon_Data\ThumbRelease\IrisSubpMon.axf
 dwFileCount=4

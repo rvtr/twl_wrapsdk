@@ -71,7 +71,6 @@ dwReport Exceptions=1
 dwReselect Target=1
 dwReload Images=0
 dwRun Config Script=0
-Config Script Name=D:\Iris\geometry\geometry.ses
 [Interface\Toolbars]
 dwTBFile=1
 dwTBSearch=1
@@ -192,9 +191,7 @@ dwFileCount=4
 [RecentImageList]
 File_1=C:\twl\twl_wrapsdk_bak\build\tests\os\_ARM7-alarm-2\bin\ARM7-BB\Release\main.axf
 File_2=C:\twl\twlsdk_bak\build\tests\os\_ARM7-alarm-2\bin\ARM7-TS\Release\main.axf
-File_3=D:\IrisSubp\IrisSubpMon\IrisSubpMon_Data\ThumbRelease\IrisSubpMon.axf
-File_4=D:\Iris\IrisMon\IrisMon_Data\ThumbRelease\IrisMon.axf
-dwFileCount=4
+dwFileCount=3
 [RecentSymbolsList]
 dwFileCount=4
 [Target\ARM7TDMI_1]
