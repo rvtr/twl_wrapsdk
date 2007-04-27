@@ -1,6 +1,6 @@
 #! make -f
 #----------------------------------------------------------------------------
-# Project:  TwlSDK - OS - demos - alarm-1
+# Project:  TwlSDK - build
 # File:     Makefile
 #
 # Copyright 2007 Nintendo.  All rights reserved.
@@ -15,26 +15,16 @@
 # $NoKeywords: $
 #----------------------------------------------------------------------------
 
-
-SUBDIRS		=
-
-
-#----------------------------------------------------------------------------
-
-TARGET_BIN	=	alerm.axf
-
-SRCS		=	main.c
-
-#SRCDIR		=	# using default
-#LCFILE		=	# using default
-
 include	$(TWLSDK_ROOT)/build/buildtools/commondefs
 
 
 #----------------------------------------------------------------------------
 
-do-build:		$(TARGETS)
+SUBDIRS =	\
+            ARM7 \
+            ARM9 \
 
+#----------------------------------------------------------------------------
 
 include	$(TWLSDK_ROOT)/build/buildtools/modulerules
 

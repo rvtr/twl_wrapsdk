@@ -1,6 +1,6 @@
 #! make -f
 #----------------------------------------------------------------------------
-# Project:  TwlSDK - build
+# Project:  TwlSDK - OS - demos - exDma-1
 # File:     Makefile
 #
 # Copyright 2007 Nintendo.  All rights reserved.
@@ -15,16 +15,26 @@
 # $NoKeywords: $
 #----------------------------------------------------------------------------
 
+
+SUBDIRS		=
+
+
+#----------------------------------------------------------------------------
+
+TARGET_BIN	=	exDma.axf
+
+SRCS		=	main.c
+
+#SRCDIR		=	# using default
+#LCFILE		=	# using default
+
 include	$(TWLSDK_ROOT)/build/buildtools/commondefs
 
 
 #----------------------------------------------------------------------------
 
-SUBDIRS =	\
-            ARM7 \
-            ARM9 \
+do-build:		$(TARGETS)
 
-#----------------------------------------------------------------------------
 
 include	$(TWLSDK_ROOT)/build/buildtools/modulerules
 
