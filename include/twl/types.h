@@ -27,11 +27,18 @@ extern "C" {
 
 typedef struct
 {
-	u32 e[4];
+    u32 e[4];
 }
 u128;
 
+typedef struct
+{
+    u32 e[3];
+}
+u96;
+
 typedef volatile u128 vu128;
+typedef volatile u96 vu96;
 
 /*
     io_register_list_XX.hで使用するマクロと型
@@ -39,6 +46,8 @@ typedef volatile u128 vu128;
 
 typedef u128 REGType128;
 typedef vu128 REGType128v;
+typedef u96 REGType96;
+typedef vu96 REGType96v;
 
 #ifdef __cplusplus
 } /* extern "C" */

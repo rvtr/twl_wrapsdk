@@ -158,6 +158,7 @@ TWL_LIBS_BASE	?= \
 			   libmi \
 			   libvlink \
 			   libctrdg \
+			   libaes \
 
 ifdef		TWL_PROFILE_TYPE
 TWL_LIBS_BASE	+= libos.$(TWL_PROFILE_TYPE)
@@ -171,6 +172,7 @@ TWL_LIBS_BASE	?= \
 			   libmi_sp \
 			   libvlink_sp \
 			   libnvram_sp \
+			   libaes_sp \
 
 ifdef		TWL_PROFILE_TYPE
 TWL_LIBS_BASE	+= libos_sp.$(TWL_PROFILE_TYPE)

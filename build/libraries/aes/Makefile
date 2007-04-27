@@ -1,6 +1,6 @@
 #! make -f
 #----------------------------------------------------------------------------
-# Project:  TwlDK - tests
+# Project:  TwlSDK - libraries - aes
 # File:     Makefile
 #
 # Copyright 2007 Nintendo.  All rights reserved.
@@ -20,9 +20,11 @@ include	$(TWLSDK_ROOT)/build/buildtools/commondefs
 
 #----------------------------------------------------------------------------
 
-SUBDIRS =	os mi \
-		aes
+SUBDIRS = ARM9
 
+ifdef	TWL_WITH_ARM7
+SUBDIRS +=	ARM7
+endif
 
 #----------------------------------------------------------------------------
 
