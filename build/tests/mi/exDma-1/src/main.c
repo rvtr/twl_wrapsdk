@@ -43,20 +43,26 @@ t_TestBuf testBuf __attribute__ ((aligned (32)));
 
 t_CommonArg copyfillArg[] =
 {
-    { testBuf.src,      testBuf.dest,      "DmaCopy success.\n", "DmaFill success on MAIN_MEM.\n", },
-    { MY_DMA_WRAM->src, MY_DMA_WRAM->dest, "DmaCopy success.\n", "DmaFill success on WRAM.\n", },
+    { testBuf.src,      testBuf.dest,      "DmaCopy success on MAIN_MEM -> MAIN_MEM.\n", NULL, },
+    { MY_DMA_WRAM->src, testBuf.dest,      "DmaCopy success on WRAM -> MAIN_MEM.\n",     "DmaFill success on MAIN_MEM.\n", },
+    { testBuf.src,      MY_DMA_WRAM->dest, "DmaCopy success on MAIN_MEM -> WRAM.\n",     NULL, },
+    { MY_DMA_WRAM->src, MY_DMA_WRAM->dest, "DmaCopy success on WRAM -> WRAM.\n",         "DmaFill success on WRAM.\n", },
 };
 
 t_CommonArg stopArg[] =
 {
-    { testBuf.src,      testBuf.dest,      "Stopping DmaCopy success.\n", "Stopping DmaFill success on MAIN_MEM.\n", },
-    { MY_DMA_WRAM->src, MY_DMA_WRAM->dest, "Stopping DmaCopy success.\n", "Stopping DmaFill success on WRAM.\n", },
+    { testBuf.src,      testBuf.dest,      "Stopping DmaCopy success on MAIN_MEM -> MAIN_MEM.\n", NULL, },
+    { MY_DMA_WRAM->src, testBuf.dest,      "Stopping DmaCopy success on WRAM -> MAIN_MEM.\n",     "Stopping DmaFill success on MAIN_MEM.\n", },
+    { testBuf.src,      MY_DMA_WRAM->dest, "Stopping DmaCopy success on MAIN_MEM -> WRAM.\n",     NULL, },
+    { MY_DMA_WRAM->src, MY_DMA_WRAM->dest, "Stopping DmaCopy success on WRAM -> WRAM.\n",         "Stopping DmaFill success on WRAM.\n", },
 };
 
 t_CommonArg copyfillAsyncArg[] =
 {
-    { testBuf.src,      testBuf.dest,      "DmaCopyAsync success.\n", "DmaFillAsync success on MAIN_MEM.\n", },
-    { MY_DMA_WRAM->src, MY_DMA_WRAM->dest, "DmaCopyAsync success.\n", "DmaFillAsync success on WRAM.\n", },
+    { testBuf.src,      testBuf.dest,      "DmaCopyAsync success on MAIN_MEM -> MAIN_MEM.\n", NULL, },
+    { MY_DMA_WRAM->src, testBuf.dest,      "DmaCopyAsync success on WRAM -> MAIN_MEM.\n",     "DmaFillAsync success on MAIN_MEM.\n", },
+    { testBuf.src,      MY_DMA_WRAM->dest, "DmaCopyAsync success on MAIN_MEM -> WRAM.\n",     NULL, },
+    { MY_DMA_WRAM->src, MY_DMA_WRAM->dest, "DmaCopyAsync success on WRAM -> WRAM.\n",         "DmaFillAsync success on WRAM.\n", },
 };
 
 u32 exDmaIntrCount[MI_EXDMA_CH_NUM];
@@ -135,37 +141,44 @@ static BOOL CheckDmaCopyAndFill( t_CommonArg *arg, u32 data )
             src[i][ii] = (u16)(ii+i-data);
         }
     }
-    for (i=0; i<4; i++)
-    {
-        u32 ch = i + MI_EXDMA_CH_MIN;
-        u16 *s = src[i];
-        u16 *d = dest[i];
-        char *str = NULL;
 
-        DC_FlushAll();
-        IC_InvalidateAll();
-        MIi_ExDmaCopy( ch, s, d, ONE_BUF_SIZE );
-        if ( i == 3 )
+    if ( copyStr )
+    {
+        for (i=0; i<4; i++)
         {
-            str = copyStr;
+            u32 ch = i + MI_EXDMA_CH_MIN;
+            u16 *s = src[i];
+            u16 *d = dest[i];
+            char *str = NULL;
+
+            DC_FlushAll();
+            IC_InvalidateAll();
+            MIi_ExDmaCopy( ch, s, d, ONE_BUF_SIZE );
+            if ( i == 3 )
+            {
+                str = copyStr;
+            }
+            c_ercd |= CheckDmaCopy( ch, s, d, str );
         }
-        c_ercd |= CheckDmaCopy( ch, s, d, str );
     }
 
-    for (i=0; i<4; i++)
+    if ( fillStr )
     {
-        u32 ch = i + MI_EXDMA_CH_MIN;
-        u16 *d = dest[i];
-        char *str = NULL;
-
-        DC_FlushAll();
-        IC_InvalidateAll();
-        MIi_ExDmaFill( ch, d, data+i, ONE_BUF_SIZE );
-        if ( i == 3 )
+        for (i=0; i<4; i++)
         {
-            str = fillStr;
+            u32 ch = i + MI_EXDMA_CH_MIN;
+            u16 *d = dest[i];
+            char *str = NULL;
+
+            DC_FlushAll();
+            IC_InvalidateAll();
+            MIi_ExDmaFill( ch, d, data+i, ONE_BUF_SIZE );
+            if ( i == 3 )
+            {
+                str = fillStr;
+            }
+            f_ercd |= CheckDmaFill( ch, d, data+i, str );
         }
-        f_ercd |= CheckDmaFill( ch, d, data+i, str );
     }
 
     return c_ercd | f_ercd;
@@ -187,74 +200,81 @@ static BOOL CheckDmaCopyAndFillAsync( t_CommonArg *arg, u32 data )
             src[i][ii] = (u16)(ii+i-data);
         }
     }
-    DC_FlushAll();
-    for (i=0; i<4; i++)
-    {
-        u32 ch = i + MI_EXDMA_CH_MIN;
-        u16 *s = src[i];
-        u16 *d = dest[i];
 
-        MIi_ExDmaCopyAsync( ch, s, d, ONE_BUF_SIZE );
-    }
-    for (i=0; i<4; i++)
+    if ( copyStr )
     {
-        u32 ch = i + MI_EXDMA_CH_MIN;
-        if ( MIi_IsExDmaBusy( ch ) == FALSE )
+        DC_FlushAll();
+        for (i=0; i<4; i++)
         {
-            OS_TPrintf( "warning: DmaCopyAsync isn't busy dmaNo = %d.\n", ch );
+            u32 ch = i + MI_EXDMA_CH_MIN;
+            u16 *s = src[i];
+            u16 *d = dest[i];
+
+            MIi_ExDmaCopyAsync( ch, s, d, ONE_BUF_SIZE );
+        }
+        for (i=0; i<4; i++)
+        {
+            u32 ch = i + MI_EXDMA_CH_MIN;
+            if ( MIi_IsExDmaBusy( ch ) == FALSE )
+            {
+                OS_TPrintf( "warning: DmaCopyAsync isn't busy dmaNo = %d.\n", ch );
+            }
+        }
+        for (i=0; i<4; i++)
+        {
+            u32 ch = i + MI_EXDMA_CH_MIN;
+            MIi_WaitExDma( ch );
+        }
+        for (i=0; i<4; i++)
+        {
+            u32 ch = i + MI_EXDMA_CH_MIN;
+            u16 *s = src[i];
+            u16 *d = dest[i];
+            char *str = NULL;
+
+            if ( i == 3 )
+            {
+                str = copyStr;
+            }
+            c_ercd |= CheckDmaCopy( ch, s, d, str );
         }
     }
-    for (i=0; i<4; i++)
-    {
-        u32 ch = i + MI_EXDMA_CH_MIN;
-        MIi_WaitExDma( ch );
-    }
-    for (i=0; i<4; i++)
-    {
-        u32 ch = i + MI_EXDMA_CH_MIN;
-        u16 *s = src[i];
-        u16 *d = dest[i];
-        char *str = NULL;
 
-        if ( i == 3 )
+    if ( fillStr )
+    {
+        DC_FlushAll();
+        for (i=0; i<4; i++)
         {
-            str = copyStr;
+            u32 ch = i + MI_EXDMA_CH_MIN;
+            u16 *d = dest[i];
+
+            MIi_ExDmaFillAsync( ch, d, data+i, ONE_BUF_SIZE );
         }
-        c_ercd |= CheckDmaCopy( ch, s, d, str );
-    }
-
-    DC_FlushAll();
-    for (i=0; i<4; i++)
-    {
-        u32 ch = i + MI_EXDMA_CH_MIN;
-        u16 *d = dest[i];
-
-        MIi_ExDmaFillAsync( ch, d, data+i, ONE_BUF_SIZE );
-    }
-    for (i=0; i<4; i++)
-    {
-        u32 ch = i + MI_EXDMA_CH_MIN;
-        if ( MIi_IsExDmaBusy( ch ) == FALSE )
+        for (i=0; i<4; i++)
         {
-            OS_TPrintf( "warning: DmaFillAsync isn't busy dmaNo = %d.\n", ch );
+            u32 ch = i + MI_EXDMA_CH_MIN;
+            if ( MIi_IsExDmaBusy( ch ) == FALSE )
+            {
+                OS_TPrintf( "warning: DmaFillAsync isn't busy dmaNo = %d.\n", ch );
+            }
         }
-    }
-    for (i=0; i<4; i++)
-    {
-        u32 ch = i + MI_EXDMA_CH_MIN;
-        MIi_WaitExDma( ch );
-    }
-    for (i=0; i<4; i++)
-    {
-        u32 ch = i + MI_EXDMA_CH_MIN;
-        u16 *d = dest[i];
-        char *str = NULL;
-
-        if ( i == 3 )
+        for (i=0; i<4; i++)
         {
-            str = fillStr;
+            u32 ch = i + MI_EXDMA_CH_MIN;
+            MIi_WaitExDma( ch );
         }
-        f_ercd |= CheckDmaFill( ch, d, data+i, str );
+        for (i=0; i<4; i++)
+        {
+            u32 ch = i + MI_EXDMA_CH_MIN;
+            u16 *d = dest[i];
+            char *str = NULL;
+
+            if ( i == 3 )
+            {
+                str = fillStr;
+            }
+            f_ercd |= CheckDmaFill( ch, d, data+i, str );
+        }
     }
 
     return c_ercd | f_ercd;
@@ -269,53 +289,59 @@ static BOOL CheckDmaStop( t_CommonArg *arg )
     BOOL c_ercd = TRUE, f_ercd = TRUE;
     u32 i;
 
-    for (i=0; i<4; i++)
+    if ( copyStr )
     {
-        u32 ch = i + MI_EXDMA_CH_MIN;
-        u16 *s = src[i];
-        u16 *d = dest[i];
-
-        MIi_ExDmaCopyAsync( ch, s, d, ONE_BUF_SIZE );
-        if ( MIi_IsExDmaBusy( ch ) == FALSE )
+        for (i=0; i<4; i++)
         {
-            OS_TPrintf( "warning: DmaCopyAsync isn't busy dmaNo = %d.\n", ch );
+            u32 ch = i + MI_EXDMA_CH_MIN;
+            u16 *s = src[i];
+            u16 *d = dest[i];
+
+            MIi_ExDmaCopyAsync( ch, s, d, ONE_BUF_SIZE );
+            if ( MIi_IsExDmaBusy( ch ) == FALSE )
+            {
+                OS_TPrintf( "warning: DmaCopyAsync isn't busy dmaNo = %d.\n", ch );
+            }
+            MIi_StopExDma( ch );
+
+            if ( MIi_IsExDmaBusy( ch ) == TRUE )
+            {
+                OS_TPrintf( "error: Stopping DmaCopy failed dmaNo = %d.\n", ch );
+                c_ercd = FALSE;
+//                break;
+            }
         }
-        MIi_StopExDma( ch );
-
-        if ( MIi_IsExDmaBusy( ch ) == TRUE )
+        if ( c_ercd == TRUE && copyStr )
         {
-            OS_TPrintf( "error: Stopping DmaCopy failed dmaNo = %d.\n", ch );
-            c_ercd = FALSE;
-//            break;
-        }
-    }
-    if ( c_ercd == TRUE )
-    {
-        OS_TPrintf( copyStr );
-    }
-
-    for (i=0; i<4; i++)
-    {
-        u32 ch = i + MI_EXDMA_CH_MIN;
-        u16 *d = dest[i];
-
-        MIi_ExDmaFillAsync( ch, d, i, ONE_BUF_SIZE );
-        if ( MIi_IsExDmaBusy( ch ) == FALSE )
-        {
-            OS_TPrintf( "warning: DmaFillAsync isn't busy dmaNo = %d.\n", ch );
-        }
-        MIi_StopExDma( ch );
-
-        if ( MIi_IsExDmaBusy( ch ) == TRUE )
-        {
-            OS_TPrintf( "error: Stopping DmaFill failed dmaNo = %d.\n", ch );
-            f_ercd = FALSE;
-//            break;
+            OS_TPrintf( copyStr );
         }
     }
-    if ( f_ercd == TRUE )
+
+    if ( copyStr )
     {
-        OS_TPrintf( fillStr );
+        for (i=0; i<4; i++)
+        {
+            u32 ch = i + MI_EXDMA_CH_MIN;
+            u16 *d = dest[i];
+
+            MIi_ExDmaFillAsync( ch, d, i, ONE_BUF_SIZE );
+            if ( MIi_IsExDmaBusy( ch ) == FALSE )
+            {
+                OS_TPrintf( "warning: DmaFillAsync isn't busy dmaNo = %d.\n", ch );
+            }
+            MIi_StopExDma( ch );
+
+            if ( MIi_IsExDmaBusy( ch ) == TRUE )
+            {
+                OS_TPrintf( "error: Stopping DmaFill failed dmaNo = %d.\n", ch );
+                f_ercd = FALSE;
+//                break;
+            }
+        }
+        if ( f_ercd == TRUE && fillStr )
+        {
+            OS_TPrintf( fillStr );
+        }
     }
 
     return c_ercd | f_ercd;
