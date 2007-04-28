@@ -15,6 +15,8 @@
  *---------------------------------------------------------------------------*/
 #include <twl.h>
 
+#define ENABLE_INTERRUPT_TEST
+
 #define PRIORITY    5
 
 #define INPUT_DMA   4
@@ -197,6 +199,72 @@ static void test2(void)
     OS_TPrintf("Result: %s\n", AES_IsValid() ? "Success" : "Failed");
 }
 
+static u32 intrCounter[3];
+static u8  aesID;
+static u8  inputDmaID;
+static u8  outputDmaID;
+
+static void AesIntr(void)
+{
+    intrCounter[aesID]++;
+
+    //---- check interrupt flag
+    OS_SetIrqCheckFlag( OS_IE_AES );
+}
+
+static void InputDmaIntr(void)
+{
+    u32 ofs = INPUT_DMA - MI_EXDMA_CH_MIN;
+    OSIrqMask mask = OS_IE_DMA4 << ofs;
+
+    intrCounter[inputDmaID]++;
+
+    //---- check interrupt flag
+    OS_SetIrqCheckFlag( mask );
+}
+
+static void OutputDmaIntr(void)
+{
+    u32 ofs = OUTPUT_DMA - MI_EXDMA_CH_MIN;
+    OSIrqMask mask = OS_IE_DMA4 << ofs;
+
+    intrCounter[outputDmaID]++;
+
+    //---- check interrupt flag
+    OS_SetIrqCheckFlag( mask );
+}
+
+static void InitAesDmaIntr(void)
+{
+    u32 i_ofs = INPUT_DMA - MI_EXDMA_CH_MIN;
+    u32 o_ofs = OUTPUT_DMA - MI_EXDMA_CH_MIN;
+    OSIrqMask i_mask = OS_IE_DMA4 << i_ofs;
+    OSIrqMask o_mask = OS_IE_DMA4 << o_ofs;
+    u8 id_alloc = 0;
+
+    BOOL ime = OS_DisableIrq();
+
+    aesID       = id_alloc++;
+    inputDmaID  = id_alloc++;
+    outputDmaID = id_alloc++;
+
+    (void)OS_DisableIrqMask( OS_IE_AES | i_mask | o_mask );
+    (void)OS_ResetRequestIrqMask( OS_IE_AES | i_mask | o_mask );
+
+    (void)OS_SetIrqFunction( OS_IE_AES, AesIntr );
+    (void)OS_SetIrqFunction( i_mask, InputDmaIntr );
+    (void)OS_SetIrqFunction( o_mask, OutputDmaIntr );
+    (void)OS_EnableIrqMask( OS_IE_AES | i_mask | o_mask );
+
+    (void)OS_RestoreIrq( ime );
+}
+
+static void PrintIntrCount(void)
+{
+    OS_TPrintf( "\ninterrupt count: aes = %d, input_dma = %d, output_dma = %d.\n", 
+                intrCounter[aesID], intrCounter[inputDmaID], intrCounter[outputDmaID]);
+}
+
 
 /*---------------------------------------------------------------------------*
   Name:         TwlMain
@@ -215,6 +283,10 @@ void TwlMain()
 
     OS_InitTick();
 
+#ifdef ENABLE_INTERRUPT_TEST
+    InitAesDmaIntr();
+#endif
+
     OS_TPrintf("Debug Info:\n");
     OS_TPrintf("\tdataA = 0x%08X\n", dataA);
     OS_TPrintf("\tdataB = 0x%08X\n", dataB);
@@ -232,6 +304,10 @@ void TwlMain()
     test2();
 
     AES_Unlock();           // ARM9‘¤‚©‚ç‚à—˜—p‚·‚é‚Æ‚«‚Ì‚Ý•K—v
+
+#ifdef ENABLE_INTERRUPT_TEST
+    PrintIntrCount();
+#endif
 
     // done
     OS_TPrintf("\nARM7 ends.\n");
