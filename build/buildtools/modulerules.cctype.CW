@@ -438,7 +438,7 @@ endif
 
 # .a
 ifndef	USE_MY_RULE_A
-$(LIBDIR)/$(TARGET_LIB): $(OBJS)
+$(LIBDIR)/$(TARGET_LIB): $(OBJS) $(MAKEFILE)
 	$(AR) $(ARFLAGS) $(OBJS) -o $@
 endif
 
