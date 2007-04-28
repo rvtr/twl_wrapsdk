@@ -265,7 +265,7 @@ void OS_Init(void)
 
     //---- Init Cartridge
 #ifndef SDK_TEG
-//    CTRDG_Init();
+    CTRDG_Init();
 #endif
 
     //---- Init Card
@@ -319,7 +319,7 @@ void OS_Init(void)
 
     //---- Init Cartridge
 #ifndef SDK_TEG
-//    CTRDG_Init();
+    CTRDG_Init();
 #endif
 
 #endif // SDK_ARM9
