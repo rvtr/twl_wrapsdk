@@ -17,7 +17,13 @@
 ifndef TWLSDK_MODULERULES_
 
 #----------------------------------------------------------------------------
-.PHONY: 	twltop twllib twldbg
+.PHONY: 	twltop twllib twldbg link
+
+link:
+	@$(MAKE_SUBDIR)
+	@$(ECHO_CURDIR)
+	-rm $(BINDIR)/$(TARGET_BIN_BASENAME).axf $(BINDIR)/$(TARGET_BIN_BASENAME).nef
+	@+$(REMAKE)
 
 twltop:
 	@$(MAKE) -C $(TWLSDK_ROOT)
