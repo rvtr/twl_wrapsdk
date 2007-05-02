@@ -199,8 +199,8 @@ include	$(NITROSDK_ROOT)/build/buildtools/commondefs
 
 #----------------------------------------------------------------------------
 
-ifeq	($(NITRO_PROVATE),TRUE)
-TWL_PROVATE		:= TRUE
+ifeq	($(NITRO_PRIVATE),TRUE)
+TWL_PRIVATE		:= TRUE
 endif
 
 ifeq	($(NITRO_WITH_ARM7),TRUE)
@@ -239,6 +239,7 @@ TWL_INSTALL_ADDINS	:= $(TWL_INSTALL_ROOT)/add-ins
 #  Compiler flags
 #
 MACRO_FLAGS += -DSDK_DEBUGGER_$(TWL_DEBUGGER)
+MACRO_FLAGS += -DTWL_PLATFORM_$(TWL_PLATFORM)
 
 
 #----------------------------------------------------------------------------

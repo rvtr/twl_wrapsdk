@@ -115,6 +115,13 @@ extern u32 SDK_AUTOLOAD_DTCM_START[];
 #define HW_WRAM_1               0x037fc000
 #define HW_WRAM_1_END           0x03800000
 #define HW_WRAM_1_SIZE          (HW_WRAM_1_END-HW_WRAM_1)
+#ifdef TWL_PLATFORM_BB
+#define HW_WRAM_A_SIZE_MAX      0x00020000
+#else // TWL_PLATFORM_BB
+#define HW_WRAM_A_SIZE_MAX      0x00040000
+#endif // TWL_PLATFORM_BB
+#define HW_WRAM_B_SIZE_MAX      HW_WRAM_A_SIZE_MAX
+#define HW_WRAM_C_SIZE_MAX      HW_WRAM_B_SIZE_MAX
 //----------------------------- IOs
 #define HW_IOREG                0x04000000
 #define HW_IOREG_END            0x05000000

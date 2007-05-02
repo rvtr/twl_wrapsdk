@@ -19,7 +19,7 @@ include	$(TWLSDK_ROOT)/build/buildtools/commondefs
 
 #----------------------------------------------------------------------------
 ifdef	TWL_PRIVATE
-SUBDIRS		+= versions
+SUBDIRS		+= # versions
 endif
 
 SUBDIRS		+= ioreg ioreg_sp # fx
