@@ -6,8 +6,7 @@
 
 */
 
-//#include <kernel.h>
-#include <twl.h>
+#include <twl/os.h>
 #include <twl/vlink.h>
 
 void (*i_vlink_start_fnc)(void);
