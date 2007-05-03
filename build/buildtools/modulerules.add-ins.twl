@@ -42,7 +42,12 @@ $(BINDIR)/$(TARGET_BIN_BASENAME).axf: $(OBJS) $(LCFILE) $(MAKEFILE) $(LDEPENDS_N
 ifeq ($(NITRO_CCTYPE),RVCT)
 	$(LD) $(LDFLAGS) $(LIBRARY_DIRS) -o $@ $(GLIBRARIES) $(OBJS)
 else
+ifeq ($(FIRM_TARGET),NORFIRM)
 	$(LD) $(LDFLAGS) $(LIBRARY_DIRS) @$(LDRES_FILE) $(LCFILE) -o $@
+	$(OBJCOPY) $@ $(BINDIR)/$(TARGET_BIN_BASENAME).sbin
+else
+	$(LD) $(LDFLAGS) $(LIBRARY_DIRS) @$(LDRES_FILE) $(LCFILE) -o $@
+endif
 endif
 
 #----------------------------------------------------------------------------
