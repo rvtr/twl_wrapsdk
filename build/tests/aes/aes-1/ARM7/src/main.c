@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*
-  Project:  NitroSDK - AES - demos - _ARM7-aes-1
+  Project:  NitroSDK - AES - demos - aes-1
   File:     main.c
 
   Copyright 2007 Nintendo.  All rights reserved.
@@ -65,15 +65,15 @@ static const u32 gs_data[] ATTRIBUTE_ALIGN(32) = {
     0x89abcdef, 0x01234567, 0x89abcdef, 0x01234567, 0x89abcdef, 0x01234567, 0x89abcdef, 0x01234567
 };
 
-static u32 dataA[(sizeof(gs_data) + sizeof(u128)) / sizeof(u32)] ATTRIBUTE_ALIGN(32);
-static u32 dataB[(sizeof(gs_data) + sizeof(u128)) / sizeof(u32)] ATTRIBUTE_ALIGN(32);
+static u8 dataA[sizeof(gs_data) + sizeof(u128)] ATTRIBUTE_ALIGN(32);
+static u8 dataB[sizeof(gs_data) + sizeof(u128)] ATTRIBUTE_ALIGN(32);
 
 //================================================================================
 static void dump(const char *str, void *ptr, u32 length)
 {
     u8 *data = (u8*)ptr;
     int i;
-    OS_TPrintf("\n[%s]:\n\t", str);
+    OS_TPrintf("\n[%s] (%d bytes):\n\t", str, length);
     for (i = 0; i < length; i++) {
         OS_TPrintf("%02X", *data++);
         if ((i & 0xF) == 0xF) OS_TPrintf("\n\t");
@@ -131,7 +131,7 @@ static void test0(void)
     OS_TPrintf("%s: %d usec.\n", __func__, (u32)OS_TicksToMicroSeconds(OS_GetTick()-begin));
 
     // o—ÍŒ‹‰Ê‚Ì•\Ž¦
-    dump(__func__, dataA, sizeof(gs_data));
+    dump(__func__, dataA, sizeof(gs_data) + sizeof(u128));
 }
 
 static void test1(void)
