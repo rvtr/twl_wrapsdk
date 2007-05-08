@@ -87,9 +87,9 @@ MIOfsWramC;
 
 typedef enum
 {
-    MI_WRAM_A_IMG_64KB  = 0 << REG_MI_WRAM_A_MAP_IMG_SHIFT,
-    MI_WRAM_A_IMG_128KB = 1 << REG_MI_WRAM_A_MAP_IMG_SHIFT,
-    MI_WRAM_A_IMG_256KB = 2 << REG_MI_WRAM_A_MAP_IMG_SHIFT,
+    MI_WRAM_A_IMG_64KB  = 1 << REG_MI_WRAM_A_MAP_IMG_SHIFT,
+    MI_WRAM_A_IMG_128KB = 2 << REG_MI_WRAM_A_MAP_IMG_SHIFT,
+    MI_WRAM_A_IMG_256KB = 3 << REG_MI_WRAM_A_MAP_IMG_SHIFT,
 
     MI_WRAM_A_IMG_MIN   = MI_WRAM_A_IMG_64KB,
 #ifdef BROM_PLATFORM_BB
@@ -148,7 +148,7 @@ MIImageWramC;
 #endif // BROM_PLATFORM_TS
 
 
-#define MI_WRAM_MAP_NULL      (HW_WRAM_AREA + HW_WRAM_AREA_SIZE/4)
+#define MI_WRAM_MAP_NULL      HW_WRAM_AREA
 
 #define REG_WRAM_A_MAP_PACK( start, end, img_size )  REG_WRAM_MAP_PACK( A, (start), (end), (img_size) )
 #define REG_WRAM_B_MAP_PACK( start, end, img_size )  REG_WRAM_MAP_PACK( B, (start), (end), (img_size) )

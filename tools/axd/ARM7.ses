@@ -1,3 +1,17 @@
+[Breakpoints\1]
+Processor=ARM7TDMI_1
+dwTarget Count=1
+dwAction=0
+dwState=0
+Parent Image=c:\twl\twl_firmware_bak\bootrom\build\bootrom\ts\ARM7\bin\ARM7-BB.thumb\Release\brom7_ts.axf
+dwSet By Source Pos=0
+Image=c:\twl\twl_firmware_bak\bootrom\build\bootrom\ts\ARM7\bin\ARM7-BB.thumb\Release\brom7_ts.axf
+File=c:\twl\twl_firmware_bak\bootrom\build\bootrom\ts\ARM7\bin\ARM7-BB.thumb\Release\crt0_scat.c
+dwLine=45
+dwColumn=1
+dwAddressLo=4292
+dwAddressHi=0
+dwBreakpoint Size=0
 [CLI]
 dwParse=1
 dwEcho=1
@@ -42,7 +56,7 @@ biBarID_65539=BAAAAAAA
 biBarID_65540=BAAAAAAA
 biBarID_65543=BAAAAAAA
 [Images\Image_0]
-Filename=C:\twl\twl_wrapsdk_bak\build\tests\os\_ARM7-alarm-2\bin\ARM7-BB\Release\main.axf
+Filename=c:\twl\twl_firmware_bak\bootrom\build\bootrom\ts\ARM7\bin\ARM7-BB.thumb\Release\brom7_ts.axf
 Processor=ARM7TDMI_1
 dwProfileState=0
 [Interface\AutoRefresh]
@@ -71,6 +85,8 @@ dwReport Exceptions=1
 dwReselect Target=1
 dwReload Images=0
 dwRun Config Script=0
+[Interface\SourcePaths]
+Paths=C:\twl\twl_firmware_bak\bootrom\build\libraries\nvram\
 [Interface\Toolbars]
 dwTBFile=1
 dwTBSearch=1
@@ -88,12 +104,12 @@ dwShow Margin=1
 dwShow Tooltips=1
 dwInitViewState=0
 [MainWnd]
-biWndPlacement=MCAAAAAAAAAAAAAABAAAAAAAPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPMBCAAAAAMCAAAAAANNFAAAAAFADAAAAA
+biWndPlacement=MCAAAAAAAAAAAAAABAAAAAAAPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPMACAAAAAECAAAAAANMFAAAAANPCAAAAA
 [Memory]
 dwActiveTab=0
 dwApplyToAllTabs=0
 [Memory\Tab_0]
-dwStartAddress=58687488
+dwStartAddress=58687232
 Format=hex_noprefix_32
 dwFormatID=-1
 dwListBigEndian=0
@@ -103,7 +119,7 @@ dwListSize=4
 dwTargetAccessSize=0
 dwAutoRefresh=1
 [Memory\Tab_1]
-dwStartAddress=58720256
+dwStartAddress=58785536
 Format=hex_noprefix_32
 dwFormatID=-1
 dwListBigEndian=0
@@ -113,7 +129,7 @@ dwListSize=4
 dwTargetAccessSize=0
 dwAutoRefresh=1
 [Memory\Tab_2]
-dwStartAddress=41811968
+dwStartAddress=67108672
 Format=hex_noprefix_32
 dwFormatID=-1
 dwListBigEndian=0
@@ -123,7 +139,7 @@ dwListSize=4
 dwTargetAccessSize=0
 dwAutoRefresh=1
 [Memory\Tab_3]
-dwStartAddress=67108864
+dwStartAddress=67125248
 Format=hex_noprefix_32
 dwFormatID=-1
 dwListBigEndian=0
@@ -189,8 +205,9 @@ dwRefresh=1
 [RecentFileList]
 dwFileCount=4
 [RecentImageList]
-File_1=C:\twl\twl_wrapsdk_bak\build\tests\os\_ARM7-alarm-2\bin\ARM7-BB\Release\main.axf
-File_2=C:\twl\twlsdk_bak\build\tests\os\_ARM7-alarm-2\bin\ARM7-TS\Release\main.axf
+File_1=c:\twl\twl_firmware_bak\bootrom\build\bootrom\ts\ARM7\bin\ARM7-BB.thumb\Release\brom7_ts.axf
+File_2=C:\twl\twl_wrapsdk_bak\build\tests\os\_ARM7-alarm-2\bin\ARM7-BB\Release\main.axf
+File_3=C:\twl\twlsdk_bak\build\tests\os\_ARM7-alarm-2\bin\ARM7-TS\Release\main.axf
 dwFileCount=3
 [RecentSymbolsList]
 dwFileCount=4
@@ -267,7 +284,7 @@ dwBars=6
 dwScreenCX=1600
 dwScreenCY=1200
 [Variables]
-dwActiveTab=2
+dwActiveTab=1
 [Variables\Tab_0]
 dwFormatID=-1
 dwRefresh=1
@@ -278,31 +295,13 @@ dwRefresh=1
 dwFormatID=-1
 dwRefresh=1
 [Views]
-dwLastView=2
+dwLastView=0
 [Views\View_0]
 UnitName=ARM7TDMI_1
-ImageName=C:\twl\twl_wrapsdk_bak\build\tests\os\_ARM7-alarm-2\bin\ARM7-BB\Release\main.axf
-dwDisassembly=0
-FileName=C:\twl\twl_wrapsdk_bak\build\libraries\init\ARM7\crt0.c
-dwMixedView=0
-dwShowMargin=1
-dwShowLineNumbers=1
-biWndPlacement=MCAAAAAAAAAAAAAABAAAAAAAPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPAAAAAAAAAAAAAAAADICAAAAAONAAAAAA
-[Views\View_1]
-UnitName=ARM7TDMI_1
-ImageName=C:\twl\twl_wrapsdk_bak\build\tests\os\_ARM7-alarm-2\bin\ARM7-BB\Release\main.axf
+ImageName=c:\twl\twl_firmware_bak\bootrom\build\bootrom\ts\ARM7\bin\ARM7-BB.thumb\Release\brom7_ts.axf
 dwDisassembly=1
 FileName=none
 dwMixedView=0
 dwShowMargin=1
 dwShowLineNumbers=1
-biWndPlacement=MCAAAAAAAAAAAAAABAAAAAAAPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPGBAAAAAAGBAAAAAAJJCAAAAAEPAAAAAA
-[Views\View_2]
-UnitName=ARM7TDMI_1
-ImageName=C:\twl\twl_wrapsdk_bak\build\tests\os\_ARM7-alarm-2\bin\ARM7-BB\Release\main.axf
-dwDisassembly=0
-FileName=C:\nitro-sdk\NitroSDK\build\libraries\os\common\src\os_thread.c
-dwMixedView=0
-dwShowMargin=1
-dwShowLineNumbers=1
-biWndPlacement=MCAAAAAAAAAAAAAABAAAAAAAPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPMCAAAAAAMCAAAAAAPKCAAAAAKABAAAAA
+biWndPlacement=MCAAAAAAAAAAAAAABAAAAAAAPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPAAAAAAAAAAAAAAAADICAAAAAONAAAAAA
