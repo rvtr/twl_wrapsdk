@@ -79,7 +79,7 @@ static void dump(const char *str, void *ptr, u32 length)
 }
 
 #define TEST0_USE_DMA_INPUT
-//#define TEST0_USE_DMA_OUTPUT
+#define TEST0_USE_DMA_OUTPUT
 static void test0(void)
 {
     OSTick begin;
@@ -251,6 +251,7 @@ static void test2(void)
 
     // AES-CCMデコードを開始する (MACはFIFOから入力する(pdata長に含めないこと))
     result = AES_StartCcmDec(&nonce, NULL, ADATA_LENGTH, PDATA_LENGTH, TRUE);
+    if (AES_RESULT_SUCCESS != result)
     {
         OS_TPrintf("%s: Failed to call AES_StartCcmDec (%d).\n", __func__, result);
     }

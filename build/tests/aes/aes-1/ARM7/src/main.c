@@ -83,7 +83,7 @@ static void dump(const char *str, void *ptr, u32 length)
 }
 
 #define TEST0_USE_DMA_INPUT
-//#define TEST0_USE_DMA_OUTPUT
+#define TEST0_USE_DMA_OUTPUT
 static void test0(void)
 {
     OSTick begin;
@@ -261,7 +261,7 @@ static void InitAesDmaIntr(void)
 
 static void PrintIntrCount(void)
 {
-    OS_TPrintf( "\ninterrupt count: aes = %d, input_dma = %d, output_dma = %d.\n", 
+    OS_TPrintf( "\ninterrupt count: aes = %d, input_dma = %d, output_dma = %d.\n",
                 intrCounter[aesID], intrCounter[inputDmaID], intrCounter[outputDmaID]);
 }
 
@@ -311,5 +311,5 @@ void TwlMain()
 
     // done
     OS_TPrintf("\nARM7 ends.\n");
-    OS_Terminate();
+    //OS_Terminate();
 }
