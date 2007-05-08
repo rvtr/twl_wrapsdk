@@ -300,17 +300,19 @@ void TwlMain()
 
     OS_EnableIrq();
 
-    do
+    while (1)
     {
         result = AES_TryLock();
-#if 0
-        if (AES_RESULT_SUCCESS_TRUE != result)
+        if (AES_RESULT_SUCCESS_TRUE == result)
+        {
+            break;
+        }
+        if (AES_RESULT_SUCCESS_FALSE != result)
         {
             OS_TPrintf("%s: Failed to call AES_TryLock (%d).\n", __func__, result);
         }
-#endif
+        OS_Sleep(1);
     }
-    while (AES_RESULT_SUCCESS_TRUE != result);
     OS_TPrintf("AES_TryLock wad done.\n");
 
     // åÆÇê›íËÇµÇƒÇ®Ç≠
