@@ -75,21 +75,20 @@ asm void OS_IrqHandler( void )
 #endif
 
         // get IE&IF
-        ldmia   r12, { r1-r2 }                  // r1: IE, r2: IF, r3: IE2, r4: IF2
+        ldmia   r12, { r1-r2 }                  // r1: IE, r2: IF
         ands    r1, r1, r2                      // r1: IE & IF
 
+       // add for TWL-ARM7
+#ifdef  SDK_ARM7
+        beq     @irq_hi
+#else // SDK_ARM9
         // if IE&IF==0 then return (without changing IF)
 #ifdef  SDK_NO_THREAD
         bxeq    lr
 #else
         ldmeqfd sp!, { pc }
 #endif
-
-       // add for TWL-ARM7
-#ifdef  SDK_ARM7
-        cmp     r1, #0
-        beq     @irq_hi
-#endif
+#endif // SDK_ARM9
 
 #if     defined(SDK_ARM9) && !defined(SDK_CWBUG_PROC_OPT)
         //--------------------------------------------------
@@ -126,6 +125,12 @@ asm void OS_IrqHandler( void )
         ldmia   r12, { r1-r2 }                  // r1: IE2, r2: IF2
         ands    r1, r1, r2                      // r1: IE2 & IF2
 
+        // if IE&IF==0 then return (without changing IF)
+#ifdef  SDK_NO_THREAD
+        bxeq    lr
+#else
+        ldmeqfd sp!, { pc }
+#endif
         //--------------------------------------------------
         // IRQ HANDLING CODE for ARCHITECTURE VERSION 4
         //--------------------------------------------------

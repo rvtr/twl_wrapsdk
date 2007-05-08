@@ -17,7 +17,7 @@
 
 
 #define MY_DMA_MMEM   ((t_TestBuf *)HW_MAIN_MEM_SUB)
-#define MY_TEST_LOOPS 2 // (sizeof(copyfillArg)/sizeof(t_CommonArg))
+#define MY_TEST_LOOPS (sizeof(copyfillArg)/sizeof(t_CommonArg))
 #define ONE_BUF_SIZE  0x2004
 
 typedef struct
