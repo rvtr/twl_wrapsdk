@@ -549,7 +549,8 @@ static asm void init_cp15(void)
 
         //
         // 命令キャッシュ イネーブル (リージョン設定)
-        //      1: MAIN_MEM
+        //      1: MAIN_MEM + WRAM
+        //      3: MAIN_MEM_HI (or CTRDG)
         //      6: BIOS
         //
         mov     r0, #REGION_BIT(0,1,0,1,0,0,1,0)
@@ -557,7 +558,8 @@ static asm void init_cp15(void)
 
         //
         // データキャッシュ イネーブル (リージョン設定)
-        //      1: MAIN_MEM
+        //      1: MAIN_MEM + WRAM
+        //      3: MAIN_MEM_HI (or CTRDG)
         //      6: BIOS
         //
         mov     r0, #REGION_BIT(0,1,0,1,0,0,1,0)
@@ -565,7 +567,8 @@ static asm void init_cp15(void)
 
         //
         // ライトバッファ イネーブル(リージョン設定)
-        //      1: MAIN_MEM
+        //      1: MAIN_MEM + WRAM
+        //      3: MAIN_MEM_HI (or CTRDG)
         //
         mov     r0, #REGION_BIT(0,1,0,1,0,0,0,0)
         mcr     p15, 0, r0, c3, c0, 0
@@ -575,7 +578,7 @@ static asm void init_cp15(void)
         //  IO_VRAM       : RW
         //  MAIN_MEM_MAIN : RW
         //  MAIN_MEM_SUB  : NA
-        //  CTRDG         : NA
+        //  MAIN_MEM_HI   : RW
         //  DTCM          : NA
         //  ITCM          : RW
         //  BIOS          : RO
@@ -589,7 +592,7 @@ static asm void init_cp15(void)
         //  IO_VRAM       : RW
         //  MAIN_MEM_MAIN : RW
         //  MAIN_MEM_SUB  : NA
-        //  CTRDG         : RW
+        //  MAIN_MEM_HI   : RW
         //  DTCM          : RW
         //  ITCM          : RW
         //  BIOS          : RO
