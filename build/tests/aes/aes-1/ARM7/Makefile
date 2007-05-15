@@ -1,6 +1,6 @@
 #! make -f
 #----------------------------------------------------------------------------
-# Project:  TwlSDK - OS - demos - _ARM7-aes-1
+# Project:  TwlSDK - AES - demos - aes-1
 # File:     Makefile
 #
 # Copyright 2007 Nintendo.  All rights reserved.

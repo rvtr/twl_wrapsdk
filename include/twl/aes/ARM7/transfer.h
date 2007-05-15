@@ -19,6 +19,7 @@
 
 #include <twl/types.h>
 #include <twl/mi/exDma.h>
+#include <twl/aes/common/assert.h>
 
 #define AES_DMA_ONESHOT_SIZE    16
 #define AES_DMA_BLOCK_SIZE      MI_EXDMA_BLOCK_16B

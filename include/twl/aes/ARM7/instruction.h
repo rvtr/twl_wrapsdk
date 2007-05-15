@@ -18,6 +18,7 @@
 #define TWL_AES_COMMON_H_
 
 #include <twl/types.h>
+#include <nitro/hw/ARM7/ioreg_AES.h>
 
 #ifdef __cplusplus
 extern "C" {

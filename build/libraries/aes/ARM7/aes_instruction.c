@@ -13,7 +13,26 @@
   $Log: $
   $NoKeywords: $
  *---------------------------------------------------------------------------*/
-#include <twl.h>
+#include <twl/aes/ARM7/instruction.h>
+#include <twl/aes/common/assert.h>
+#include <nitro/os/common/interrupt.h>
+
+// for OLD AES registers
+#ifndef AES_DOES_NOT_SUPPORT_MULTIPLE_KEYS
+#define AES_DOES_NOT_SUPPORT_MULTIPLE_KEYS
+#endif
+
+#ifdef AES_DOES_NOT_SUPPORT_MULTIPLE_KEYS
+#define REG_AES_KEY_OFFSET                                 0x4410
+#define REG_AES_KEY_ADDR                                   (HW_REG_BASE + REG_AES_KEY_OFFSET)
+#define reg_AES_AES_KEY                                    (*( REGType128v *) REG_AES_KEY_ADDR)
+#define REG_AES_ID_OFFSET                                  0x4440
+#define REG_AES_ID_ADDR                                    (HW_REG_BASE + REG_AES_ID_OFFSET)
+#define reg_AES_AES_ID                                     (*( REGType128v *) REG_AES_ID_ADDR)
+#define REG_AES_SEED_OFFSET                                0x4450
+#define REG_AES_SEED_ADDR                                  (HW_REG_BASE + REG_AES_SEED_OFFSET)
+#define reg_AES_AES_SEED                                   (*( REGType128v *) REG_AES_SEED_ADDR)
+#endif
 
 /*---------------------------------------------------------------------------*
     定数定義
@@ -35,7 +54,7 @@ AESKey;
 /*---------------------------------------------------------------------------*
     静的変数定義
  *---------------------------------------------------------------------------*/
-static volatile AESKey *const aesKeyArray = REG_AES_KEY0_ADDR;
+static volatile AESKey *const aesKeyArray = (AESKey*)REG_AES_KEY0_ADDR;
 
 /*---------------------------------------------------------------------------*
     内部関数定義
@@ -184,9 +203,13 @@ void AES_SelectKey(u32 keyNo)
     while (reg_AES_AESCNT & REG_AES_AESCNT_KEY_BUSY_MASK)
     {
     }
+#ifdef AES_DOES_NOT_SUPPORT_MULTIPLE_KEYS
+    reg_AES_AESCNT |= REG_AES_AESCNT_KEY_SET_MASK;
+#else
     reg_AES_AESCNT = (reg_AES_AESCNT & ~REG_AES_AESCNT_KEY_SEL_MASK) |
                   (keyNo << REG_AES_AESCNT_KEY_SEL_SHIFT) |
                   REG_AES_AESCNT_KEY_SET_MASK;
+#endif
     (void)OS_RestoreInterrupts(enabled);
 }
 
@@ -206,7 +229,11 @@ void AES_SetKey(u32 keyNo, const u128 *pKey)
     vu128 *p = &aesKeyArray[keyNo].key;
     AES_ASSERT_KEYNO(keyNo);
     SDK_NULL_ASSERT(pKey);
+#ifdef AES_DOES_NOT_SUPPORT_MULTIPLE_KEYS
+    reg_AES_AES_KEY = *pKey;
+#else
     *p = *pKey;
+#endif
     (void)OS_RestoreInterrupts(enabled);
 }
 /*---------------------------------------------------------------------------*
@@ -226,7 +253,11 @@ void AES_SetId(u32 keyNo, const u128 *pId)
     vu128 *p = &aesKeyArray[keyNo].id;
     AES_ASSERT_KEYNO(keyNo);
     SDK_NULL_ASSERT(pId);
+#ifdef AES_DOES_NOT_SUPPORT_MULTIPLE_KEYS
+    reg_AES_AES_ID = *pId;
+#else
     *p = *pId;
+#endif
     (void)OS_RestoreInterrupts(enabled);
 }
 /*---------------------------------------------------------------------------*
@@ -246,7 +277,11 @@ void AES_SetSeed(u32 keyNo, const u128 *pSeed)
     vu128 *p = &aesKeyArray[keyNo].seed;
     AES_ASSERT_KEYNO(keyNo);
     SDK_NULL_ASSERT(pSeed);
+#ifdef AES_DOES_NOT_SUPPORT_MULTIPLE_KEYS
+    reg_AES_AES_SEED = *pSeed;
+#else
     *p = *pSeed;
+#endif
     (void)OS_RestoreInterrupts(enabled);
 }
 /*---------------------------------------------------------------------------*
@@ -269,8 +304,13 @@ void AES_SetKey2(u32 keyNo, const u128 *pId, const u128 *pSeed)
     AES_ASSERT_KEYNO(keyNo);
     SDK_NULL_ASSERT(pId);
     SDK_NULL_ASSERT(pSeed);
+#ifdef AES_DOES_NOT_SUPPORT_MULTIPLE_KEYS
+    reg_AES_AES_ID   = *pId;
+    reg_AES_AES_SEED = *pSeed;
+#else
     *pI = *pId;
     *pS = *pSeed;
+#endif
     (void)OS_RestoreInterrupts(enabled);
 }
 
