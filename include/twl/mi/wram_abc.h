@@ -19,6 +19,13 @@
 
 #include <twl/ioreg.h>
 
+#ifdef	SDK_ARM9
+#include	<nitro/hw/ARM9/mmap_global.h>
+#else  //SDK_ARM7
+#include	<nitro/hw/ARM7/mmap_global.h>
+#endif
+
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -55,7 +62,7 @@ typedef enum
     MI_WRAM_A_OFS_0KB   = 0 << REG_MI_WRAM_A0_OFS_SHIFT,
     MI_WRAM_A_OFS_64KB  = 1 << REG_MI_WRAM_A0_OFS_SHIFT,
     MI_WRAM_A_OFS_128KB = 2 << REG_MI_WRAM_A0_OFS_SHIFT,
-    MI_WRAM_A_OFS_192KB = 1 << REG_MI_WRAM_A0_OFS_SHIFT
+    MI_WRAM_A_OFS_192KB = 3 << REG_MI_WRAM_A0_OFS_SHIFT
 }
 MIOfsWramA;
 
@@ -148,7 +155,22 @@ MIImageWramC;
 #endif // BROM_PLATFORM_TS
 
 
-#define MI_WRAM_MAP_NULL      HW_WRAM_AREA
+#define REG_WRAM_A_BNK_PACK( b_no, master, ofs, enable )  REG_WRAM_BNK_PACK( A, b_no, (master), (ofs), (enable) )
+#define REG_WRAM_B_BNK_PACK( b_no, master, ofs, enable )  REG_WRAM_BNK_PACK( B, b_no, (master), (ofs), (enable) )
+#define REG_WRAM_C_BNK_PACK( b_no, master, ofs, enable )  REG_WRAM_BNK_PACK( C, b_no, (master), (ofs), (enable) )
+#define REG_WRAM_BNK_PACK( abc, b_no, master, ofs, enable ) \
+( \
+    (((enable) != FALSE) * REG_MI_WRAM_##abc##b_no##_E_MASK) \
+  | (ofs) \
+  | (master) \
+)
+
+
+#define MI_WRAM_MAP_NULL        HW_WRAM_AREA
+
+#define REG_MI_WRAM_A_MAP_MAX   0x10000000
+#define REG_MI_WRAM_B_MAP_MAX   REG_MI_WRAM_A_MAP_MAX
+#define REG_MI_WRAM_C_MAP_MAX   REG_MI_WRAM_A_MAP_MAX
 
 #define REG_WRAM_A_MAP_PACK( start, end, img_size )  REG_WRAM_MAP_PACK( A, (start), (end), (img_size) )
 #define REG_WRAM_B_MAP_PACK( start, end, img_size )  REG_WRAM_MAP_PACK( B, (start), (end), (img_size) )

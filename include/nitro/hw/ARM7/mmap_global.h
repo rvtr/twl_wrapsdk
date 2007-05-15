@@ -91,6 +91,7 @@ extern "C" {
 
 //----------------------------- WRAM_AREA
 #define HW_WRAM_AREA            0x03000000
+#define HW_WRAM_AREA_HALF       (HW_WRAM_AREA+(HW_WRAM_AREA_SIZE/2))
 #define HW_WRAM_AREA_END        0x04000000
 #define HW_WRAM_AREA_SIZE       (HW_WRAM_AREA_END-HW_WRAM_AREA)
 

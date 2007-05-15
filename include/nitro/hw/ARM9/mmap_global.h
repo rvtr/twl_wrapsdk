@@ -103,6 +103,7 @@ extern u32 SDK_AUTOLOAD_DTCM_START[];
 #define HW_MAIN_MEM_HI_EX_END   (HW_MAIN_MEM_HI + HW_MAIN_MEM_HI_EX_SIZE)
 //----------------------------- WRAM_AREA
 #define HW_WRAM_AREA            0x03000000
+#define HW_WRAM_AREA_HALF       (HW_WRAM_AREA+(HW_WRAM_AREA_SIZE/2))
 #define HW_WRAM_AREA_END        0x04000000
 #define HW_WRAM_AREA_SIZE       (HW_WRAM_AREA_END-HW_WRAM_AREA)
 //----------------------------- WRAMs

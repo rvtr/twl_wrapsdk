@@ -125,7 +125,7 @@ asm void OS_IrqHandler( void )
         ldmia   r12, { r1-r2 }                  // r1: IE2, r2: IF2
         ands    r1, r1, r2                      // r1: IE2 & IF2
 
-        // if IE&IF==0 then return (without changing IF)
+        // if IE2&IF2==0 then return (without changing IF2)
 #ifdef  SDK_NO_THREAD
         bxeq    lr
 #else
