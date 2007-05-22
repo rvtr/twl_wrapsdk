@@ -69,6 +69,21 @@ typedef enum
 }
 AESMacLength;
 
+// make sense of the purpose
+typedef enum
+{
+    AES_KEYSEL_GAME         = 0,
+    AES_KEYSEL_SPECIAL      = 1,
+    AES_KEYSEL_ALTERNATIVE  = 2,
+    AES_KEYSEL_SYSTEM       = 3,
+
+    AES_KEYSEL_IPL          = AES_KEYSEL_ALTERNATIVE,
+
+    AES_KEYSEL_GENERAL      = 0 // for key register
+}
+AESKeySel;
+
+
 /*---------------------------------------------------------------------------*
     ç\ë¢ëÃíËã`
  *---------------------------------------------------------------------------*/
@@ -228,6 +243,88 @@ void AES_SetSeed(u32 keyNo, const u128 *pSeed);
   Returns:      None.
  *---------------------------------------------------------------------------*/
 void AES_SetKey2(u32 keyNo, const u128 *pId, const u128 *pSeed);
+
+// APIs for constract with ARM9
+/*---------------------------------------------------------------------------*
+  Name:         AES_SetGeneralKey
+
+  Description:  set AES key normally
+
+  Arguments:    pKey    - pointer to key data
+
+  Returns:      None.
+ *---------------------------------------------------------------------------*/
+static inline void AES_SetGeneralKey(const u128 *pKey)
+{
+    AES_SetKey(AES_KEYSEL_GENERAL, pKey);
+    AES_SelectKey(AES_KEYSEL_GENERAL);
+}
+/*---------------------------------------------------------------------------*
+  Name:         AES_SetSystemKey
+
+  Description:  set AES key to be restricted to the system (device)
+                NOTE: if data encrypted this key, other system cannot
+                decrypt with this key. but another key can decrypt it if
+                another key was found for another system.
+
+  Arguments:    pKey    - pointer to key data
+
+  Returns:      None.
+ *---------------------------------------------------------------------------*/
+static inline void AES_SetSystemKey(const u128 *pKey)
+{
+    AES_SetSeed(AES_KEYSEL_SYSTEM, pKey);
+    AES_SelectKey(AES_KEYSEL_SYSTEM);
+}
+/*---------------------------------------------------------------------------*
+  Name:         AES_SetGameKey
+
+  Description:  set AES key to be restricted to the application (initial code).
+                NOTE: if data encrypted this key, other application cannot
+                decrypt with this key. but another key can decrypt it if
+                another key was found for another application.
+
+  Arguments:    pKey    - pointer to key data
+
+  Returns:      None.
+ *---------------------------------------------------------------------------*/
+static inline void AES_SetGameKey(const u128 *pKey)
+{
+    AES_SetSeed(AES_KEYSEL_GAME, pKey);
+    AES_SelectKey(AES_KEYSEL_GAME);
+}
+/*---------------------------------------------------------------------------*
+  Name:         AES_SetSpecialKey
+
+  Description:  set AES key to be restricted to the application and the system.
+                NOTE: if data encrypted this key, other application or other
+                system cannot decrypt with this key. but another key can
+                decrypt it if another key was found for another application
+                and/or another system.
+
+  Arguments:    pKey    - pointer to key data
+
+  Returns:      None.
+ *---------------------------------------------------------------------------*/
+static inline void AES_SetSpecialKey(const u128 *pKey)
+{
+    AES_SetSeed(AES_KEYSEL_SPECIAL, pKey);
+    AES_SelectKey(AES_KEYSEL_SPECIAL);
+}
+/*---------------------------------------------------------------------------*
+  Name:         AESi_SetAlternativeKey
+
+  Description:  set mangled AES key
+
+  Arguments:    pKey    - pointer to key data
+
+  Returns:      None.
+ *---------------------------------------------------------------------------*/
+static inline void AESi_SetAlternativeKey(const u128 *pKey)
+{
+    AES_SetSeed(AES_KEYSEL_ALTERNATIVE, pKey);
+    AES_SelectKey(AES_KEYSEL_ALTERNATIVE);
+}
 
 /*---------------------------------------------------------------------------*
   Name:         AES_StartCcmDec

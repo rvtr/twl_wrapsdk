@@ -55,19 +55,28 @@ typedef enum AESPxiCommand
     AES_PXI_COMMAND_WAIT_INPUT_FIFO_NOT_FULL        = 0x05,
     AES_PXI_COMMAND_WAIT_OUTPUT_FIFO_NOT_EMPTY      = 0x06,
     AES_PXI_COMMAND_IS_VALID                        = 0x07,
+#if 0
     AES_PXI_COMMAND_SELECT_KEY                      = 0x10,
     AES_PXI_COMMAND_SET_KEY                         = 0x11,
     AES_PXI_COMMAND_SET_ID                          = 0x12,
     AES_PXI_COMMAND_SET_SEED                        = 0x13,
     AES_PXI_COMMAND_SET_KEY2                        = 0x14,
+#else
+    AES_PXI_COMMAND_SET_GENERAL_KEY                 = 0x10,
+    AES_PXI_COMMAND_SET_SYSTEM_KEY                  = 0x11,
+    AES_PXI_COMMAND_SET_GAME_KEY                    = 0x12,
+    AES_PXI_COMMAND_SET_SPECIAL_KEY                 = 0x13,
+    AES_PXI_COMMAND_SET_ALTERNATIVE_KEY             = 0x14,
+#endif
     AES_PXI_COMMAND_START_CCM_DEC                   = 0x20,
     AES_PXI_COMMAND_START_CCM_DEC_NOMAC             = 0x21,
     AES_PXI_COMMAND_START_CCM_ENC                   = 0x22,
     AES_PXI_COMMAND_START_CTR                       = 0x23,
     AES_PXI_COMMAND_START_DMA_SEND                  = 0x30,
     AES_PXI_COMMAND_START_DMA_RECV                  = 0x31,
-    AES_PXI_COMMAND_CPU_SEND                        = 0x32,
-    AES_PXI_COMMAND_CPU_RECV                        = 0x33,
+    AES_PXI_COMMAND_WAIT_DMA                        = 0x32,
+    AES_PXI_COMMAND_CPU_SEND                        = 0x33,
+    AES_PXI_COMMAND_CPU_RECV                        = 0x34,
 
     AES_PXI_COMMAND_TRY_LOCK                        = 0x40,
     AES_PXI_COMMAND_UNLOCK                          = 0x41
@@ -85,17 +94,26 @@ typedef enum AESPxiSize
     AES_PXI_SIZE_WAIT_INPUT_FIFO_NOT_FULL       = 0,
     AES_PXI_SIZE_WAIT_OUTPUT_FIFO_NOT_EMPTY     = 0,
     AES_PXI_SIZE_IS_VALID                       = 0,
+#if 0
     AES_PXI_SIZE_SELECT_KEY                     = 1,    // keyNo
     AES_PXI_SIZE_SET_KEY                        = 17,   // keyNo, pKey(16)
     AES_PXI_SIZE_SET_ID                         = 17,   // keyNo, pId(16)
     AES_PXI_SIZE_SET_SEED                       = 17,   // keyNo, pSeed(16)
     AES_PXI_SIZE_SET_KEY2                       = 33,   // keyNo, pId(16), pSeed(16)
+#else
+    AES_PXI_SIZE_SET_GENERAL_KEY                = 16,   // pKey(16)
+    AES_PXI_SIZE_SET_SYSTEM_KEY                 = 16,   // pKey(16)
+    AES_PXI_SIZE_SET_GAME_KEY                   = 16,   // pKey(16)
+    AES_PXI_SIZE_SET_SPECIAL_KEY                = 16,   // pKey(16)
+    AES_PXI_SIZE_SET_ALTERNATIVE_KEY            = 16,   // pKey(16)
+#endif
     AES_PXI_SIZE_START_CCM_DEC                  = 37,   // nonce(12), mac(16), alen(4), plen(4), isA
     AES_PXI_SIZE_START_CCM_DEC_NOMAC            = 21,   // nonce(12), alen(4), plen(4), isA
     AES_PXI_SIZE_START_CCM_ENC                  = 21,   // nonce(12), alen(4), plen(4), isA
     AES_PXI_SIZE_START_CTR                      = 20,   // iv(16), len(4)
     AES_PXI_SIZE_START_DMA_SEND                 = 9,    // no, src(4), size(4)
     AES_PXI_SIZE_START_DMA_RECV                 = 9,    // no, dest(4), size(4)
+    AES_PXI_SIZE_WAIT_DMA                       = 1,    // no
     AES_PXI_SIZE_CPU_SEND                       = 8,    // src(4), size(4)
     AES_PXI_SIZE_CPU_RECV                       = 8,    // dest(4), size(4)
 

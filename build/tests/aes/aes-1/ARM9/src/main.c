@@ -27,12 +27,6 @@ static const u128 key = {
     0x01234567,
     0x89abcdef
 };
-static const u128 key2 = {
-    0x00112233,
-    0x44556677,
-    0x8899aabb,
-    0xccddeeff
-};
 static const u96 nonce = {
     0x01234567,
     0x89abcdef,
@@ -61,8 +55,8 @@ static const u32 gs_data[] ATTRIBUTE_ALIGN(32) = {
     0x89abcdef, 0x01234567, 0x89abcdef, 0x01234567, 0x89abcdef, 0x01234567, 0x89abcdef, 0x01234567
 };
 
-static u8 dataA[sizeof(gs_data) + sizeof(u128)] ATTRIBUTE_ALIGN(32);
-static u8 dataB[sizeof(gs_data) + sizeof(u128)] ATTRIBUTE_ALIGN(32);
+static u8 dataA[sizeof(gs_data) + sizeof(u128) + 32] ATTRIBUTE_ALIGN(32);
+static u8 dataB[sizeof(gs_data) + sizeof(u128) + 32] ATTRIBUTE_ALIGN(32);
 
 //================================================================================
 static void dump(const char *str, void *ptr, u32 length)
@@ -94,11 +88,11 @@ static void test0(void)
         OS_TPrintf("%s: Failed to call AES_Reset (%d).\n", __func__, result);
     }
 
-    // 鍵は0番目を使う
-    result = AES_SelectKey(0);
+    // 鍵を設定する
+    result = AES_SetGeneralKey(&key);
     if (AES_RESULT_SUCCESS != result)
     {
-        OS_TPrintf("%s: Failed to call AES_SelectKey (%d).\n", __func__, result);
+        OS_TPrintf("%s: Failed to call AES_SetGeneralKey (%d).\n", __func__, result);
     }
 
 #ifdef TEST0_USE_DMA_INPUT
@@ -132,11 +126,11 @@ static void test0(void)
 
 #ifdef TEST0_USE_DMA_INPUT
 #ifdef TEST0_USE_DMA_OUTPUT
-    // AES完了待ち
-    result = AES_Wait();
+    // AES出力DMA完了待ち
+    result = AES_WaitDma(OUTPUT_DMA);
     if (AES_RESULT_SUCCESS != result)
     {
-        OS_TPrintf("%s: Failed to call AES_Wait (%d).\n", __func__, result);
+        OS_TPrintf("%s: Failed to call AES_WaitDma (%d).\n", __func__, result);
     }
 #else
     // CPUで出力してみる
@@ -240,10 +234,10 @@ static void test2(void)
     }
 
     // 鍵を設定する
-    result = AES_SelectKey(1);
+    result = AES_SetSpecialKey(&key);
     if (AES_RESULT_SUCCESS != result)
     {
-        OS_TPrintf("%s: Failed to call AES_SelectKey (%d).\n", __func__, result);
+        OS_TPrintf("%s: Failed to call AES_SetSpecialKey (%d).\n", __func__, result);
     }
 
     // 出力DMA設定
@@ -330,18 +324,6 @@ void TwlMain()
         OS_Sleep(1);
     }
     OS_TPrintf("AES_TryLock wad done.\n");
-
-    // 鍵を設定しておく
-    result = AES_SetKey(0, &key);
-    if (AES_RESULT_SUCCESS != result)
-    {
-        OS_TPrintf("%s: Failed to call AES_SetKey (%d).\n", __func__, result);
-    }
-    result = AES_SetKey2(1, &key, &key2);
-    if (AES_RESULT_SUCCESS != result)
-    {
-        OS_TPrintf("%s: Failed to call AES_SetKey2 (%d).\n", __func__, result);
-    }
 
     test0();
     test1();

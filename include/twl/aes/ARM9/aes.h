@@ -258,6 +258,7 @@ AESResult AES_IsValidAsync(AESCallback callback, void *arg);
  *---------------------------------------------------------------------------*/
 AESResult AES_IsValid(void);
 
+#if 0
 /*---------------------------------------------------------------------------*
   Name:         AES_SelectKeyAsync
 
@@ -406,6 +407,154 @@ AESResult AES_SetKey2Async(u32 keyNo, const u128 *pId, const u128 *pSeed, AESCal
  *---------------------------------------------------------------------------*/
 AESResult AES_SetKey2(u32 keyNo, const u128 *pId, const u128 *pSeed);
 
+#else
+/*---------------------------------------------------------------------------*
+  Name:         AES_SetGeneralKeyAsync
+
+  Description:  set AES key normally
+
+  Arguments:    pKey        - pointer to key data
+                callback    - 非同期処理が完了した再に呼び出す関数を指定
+                arg         - コールバック関数の呼び出し時の引数を指定。
+
+  Returns:      AESResult
+ *---------------------------------------------------------------------------*/
+AESResult AES_SetGeneralKeyAsync(const u128 *pKey, AESCallback callback, void *arg);
+
+/*---------------------------------------------------------------------------*
+  Name:         AES_SetGeneralKey
+
+  Description:  set AES key normally
+                sync version.
+
+  Arguments:    pKey        - pointer to key data
+
+  Returns:      AESResult
+ *---------------------------------------------------------------------------*/
+AESResult AES_SetGeneralKey(const u128 *pKey);
+
+/*---------------------------------------------------------------------------*
+  Name:         AES_SetSystemKeyAsync
+
+  Description:  set AES key to be restricted to the system (device)
+                NOTE: if data encrypted this key, other system cannot
+                decrypt with this key. but another key can decrypt it if
+                another key was found for another system.
+
+  Arguments:    pKey        - pointer to key data
+                callback    - 非同期処理が完了した再に呼び出す関数を指定
+                arg         - コールバック関数の呼び出し時の引数を指定。
+
+  Returns:      AESResult
+ *---------------------------------------------------------------------------*/
+AESResult AES_SetSystemKeyAsync(const u128 *pKey, AESCallback callback, void *arg);
+
+/*---------------------------------------------------------------------------*
+  Name:         AES_SetSystemKey
+
+  Description:  set AES key to be restricted to the system (device)
+                NOTE: if data encrypted this key, other system cannot
+                decrypt with this key. but another key can decrypt it if
+                another key was found for another system.
+                sync version.
+
+  Arguments:    pKey        - pointer to key data
+
+  Returns:      AESResult
+ *---------------------------------------------------------------------------*/
+AESResult AES_SetSystemKey(const u128 *pKey);
+
+/*---------------------------------------------------------------------------*
+  Name:         AES_SetGameKeyAsync
+
+  Description:  set AES key to be restricted to the application (initial code).
+                NOTE: if data encrypted this key, other application cannot
+                decrypt with this key. but another key can decrypt it if
+                another key was found for another application.
+
+  Arguments:    pKey        - pointer to key data
+                callback    - 非同期処理が完了した再に呼び出す関数を指定
+                arg         - コールバック関数の呼び出し時の引数を指定。
+
+  Returns:      AESResult
+ *---------------------------------------------------------------------------*/
+AESResult AES_SetGameKeyAsync(const u128 *pKey, AESCallback callback, void *arg);
+
+/*---------------------------------------------------------------------------*
+  Name:         AES_SetGameKey
+
+  Description:  set AES key to be restricted to the application (initial code).
+                NOTE: if data encrypted this key, other application cannot
+                decrypt with this key. but another key can decrypt it if
+                another key was found for another application.
+                sync version.
+
+  Arguments:    pKey        - pointer to key data
+
+  Returns:      AESResult
+ *---------------------------------------------------------------------------*/
+AESResult AES_SetGameKey(const u128 *pKey);
+
+/*---------------------------------------------------------------------------*
+  Name:         AES_SetSpecialKeyAsync
+
+  Description:  set AES key to be restricted to the application and the system.
+                NOTE: if data encrypted this key, other application or other
+                system cannot decrypt with this key. but another key can
+                decrypt it if another key was found for another application
+                and/or another system.
+
+  Arguments:    pKey        - pointer to key data
+                callback    - 非同期処理が完了した再に呼び出す関数を指定
+                arg         - コールバック関数の呼び出し時の引数を指定。
+
+  Returns:      AESResult
+ *---------------------------------------------------------------------------*/
+AESResult AES_SetSpecialKeyAsync(const u128 *pKey, AESCallback callback, void *arg);
+
+/*---------------------------------------------------------------------------*
+  Name:         AES_SetSpecialKey
+
+  Description:  set AES key to be restricted to the application and the system.
+                NOTE: if data encrypted this key, other application or other
+                system cannot decrypt with this key. but another key can
+                decrypt it if another key was found for another application
+                and/or another system.
+                sync version.
+
+  Arguments:    pKey        - pointer to key data
+
+  Returns:      AESResult
+ *---------------------------------------------------------------------------*/
+AESResult AES_SetSpecialKey(const u128 *pKey);
+
+#if 0   // for loader
+/*---------------------------------------------------------------------------*
+  Name:         AESi_SetAlternativeKeyAsync
+
+  Description:  set mangled AES key
+
+  Arguments:    pKey        - pointer to key data
+                callback    - 非同期処理が完了した再に呼び出す関数を指定
+                arg         - コールバック関数の呼び出し時の引数を指定。
+
+  Returns:      AESResult
+ *---------------------------------------------------------------------------*/
+AESResult AESi_SetAlternativeKeyAsync(const u128 *pKey, AESCallback callback, void *arg);
+
+/*---------------------------------------------------------------------------*
+  Name:         AESi_SetAlternativeKey
+
+  Description:  set mangled AES key
+                sync version.
+
+  Arguments:    pKey        - pointer to key data
+
+  Returns:      AESResult
+ *---------------------------------------------------------------------------*/
+AESResult AESi_SetAlternativeKey(const u128 *pKey);
+#endif
+#endif
 /*---------------------------------------------------------------------------*
   Name:         AES_StartCcmDecAsync
 
@@ -631,6 +780,34 @@ AESResult AES_StartDmaRecvAsync(u32 dmaNo, const void *dest, u32 size, AESCallba
   Returns:      AESResult
  *---------------------------------------------------------------------------*/
 AESResult AES_StartDmaRecv(u32 dmaNo, const void *dest, u32 size);
+
+/*---------------------------------------------------------------------------*
+  Name:         AES_WaitDmaAsync
+
+  Description:  Waiting ARM7 side DMA is done.
+                It may move to MI.
+                async version.
+
+  Arguments:    dmaNo   : DMA channel No. (4 - 7)
+                callback    - 非同期処理が完了した再に呼び出す関数を指定
+                arg         - コールバック関数の呼び出し時の引数を指定。
+
+  Returns:      AESResult
+ *---------------------------------------------------------------------------*/
+AESResult AES_WaitDmaAsync(u32 dmaNo, AESCallback callback, void *arg);
+
+/*---------------------------------------------------------------------------*
+  Name:         AES_WaitDma
+
+  Description:  Waiting ARM7 side DMA is done.
+                It may move to MI.
+                sync version.
+
+  Arguments:    dmaNo   : DMA channel No. (4 - 7)
+
+  Returns:      AESResult
+ *---------------------------------------------------------------------------*/
+AESResult AES_WaitDma(u32 dmaNo);
 
 /*---------------------------------------------------------------------------*
   Name:         AES_CpuSendAsync

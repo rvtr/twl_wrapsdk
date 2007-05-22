@@ -532,6 +532,7 @@ AESResult AES_IsValid(void)
     return aesWork.result;
 }
 
+#if 0
 /*---------------------------------------------------------------------------*
   Name:         AES_SelectKeyAsync
 
@@ -907,6 +908,389 @@ AESResult AES_SetKey2(u32 keyNo, const u128 *pId, const u128 *pSeed)
     }
     return aesWork.result;
 }
+#else
+/*---------------------------------------------------------------------------*
+  Name:         AES_SetGeneralKeyAsync
+
+  Description:  set AES key normally
+
+  Arguments:    pKey        - pointer to key data
+                callback    - 非同期処理が完了した再に呼び出す関数を指定
+                arg         - コールバック関数の呼び出し時の引数を指定。
+
+  Returns:      AESResult
+ *---------------------------------------------------------------------------*/
+AESResult AES_SetGeneralKeyAsync(const u128 *pKey, AESCallback callback, void *arg)
+{
+    const AESPxiCommand command = AES_PXI_COMMAND_SET_GENERAL_KEY;
+    const u8            size    = AES_PXI_SIZE_SET_GENERAL_KEY;
+    OSIntrMode enabled;
+    u8  data[size];
+    int i;
+
+    SDK_NULL_ASSERT(pKey);
+    SDK_NULL_ASSERT(callback);
+
+    enabled = OS_DisableInterrupts();
+    if (aesWork.lock)
+    {
+        (void)OS_RestoreInterrupts(enabled);
+        return AES_RESULT_BUSY;
+    }
+    aesWork.lock = TRUE;
+    (void)OS_RestoreInterrupts(enabled);
+    // コールバック設定
+    aesWork.callback = callback;
+    aesWork.callbackArg = arg;
+
+    // データ作成
+    AES_PACK_U128(&data[0], pKey);
+
+    // コマンド送信
+    if (AesSendPxiCommand(command, size, data[0]) == FALSE)
+    {
+        return AES_RESULT_SEND_ERROR;
+    }
+    for (i = 1; i < size; i+=3) {
+        if (AesSendPxiData(&data[i]) == FALSE)
+        {
+            return AES_RESULT_SEND_ERROR;
+        }
+    }
+
+    return AES_RESULT_SUCCESS;
+}
+
+/*---------------------------------------------------------------------------*
+  Name:         AES_SetGeneralKey
+
+  Description:  set AES key normally
+                sync version.
+
+  Arguments:    pKey        - pointer to key data
+
+  Returns:      AESResult
+ *---------------------------------------------------------------------------*/
+AESResult AES_SetGeneralKey(const u128 *pKey)
+{
+    aesWork.result = AES_SetGeneralKeyAsync(pKey, AesSyncCallback, 0);
+    if (aesWork.result == AES_RESULT_SUCCESS)
+    {
+        AesWaitBusy();
+    }
+    return aesWork.result;
+}
+
+/*---------------------------------------------------------------------------*
+  Name:         AES_SetSystemKeyAsync
+
+  Description:  set AES key to be restricted to the system (device)
+                NOTE: if data encrypted this key, other system cannot
+                decrypt with this key. but another key can decrypt it if
+                another key was found for another system.
+
+  Arguments:    pKey        - pointer to key data
+                callback    - 非同期処理が完了した再に呼び出す関数を指定
+                arg         - コールバック関数の呼び出し時の引数を指定。
+
+  Returns:      AESResult
+ *---------------------------------------------------------------------------*/
+AESResult AES_SetSystemKeyAsync(const u128 *pKey, AESCallback callback, void *arg)
+{
+    const AESPxiCommand command = AES_PXI_COMMAND_SET_SYSTEM_KEY;
+    const u8            size    = AES_PXI_SIZE_SET_SYSTEM_KEY;
+    OSIntrMode enabled;
+    u8  data[size];
+    int i;
+
+    SDK_NULL_ASSERT(pKey);
+    SDK_NULL_ASSERT(callback);
+
+    enabled = OS_DisableInterrupts();
+    if (aesWork.lock)
+    {
+        (void)OS_RestoreInterrupts(enabled);
+        return AES_RESULT_BUSY;
+    }
+    aesWork.lock = TRUE;
+    (void)OS_RestoreInterrupts(enabled);
+    // コールバック設定
+    aesWork.callback = callback;
+    aesWork.callbackArg = arg;
+
+    // データ作成
+    AES_PACK_U128(&data[0], pKey);
+
+    // コマンド送信
+    if (AesSendPxiCommand(command, size, data[0]) == FALSE)
+    {
+        return AES_RESULT_SEND_ERROR;
+    }
+    for (i = 1; i < size; i+=3) {
+        if (AesSendPxiData(&data[i]) == FALSE)
+        {
+            return AES_RESULT_SEND_ERROR;
+        }
+    }
+
+    return AES_RESULT_SUCCESS;
+}
+
+/*---------------------------------------------------------------------------*
+  Name:         AES_SetSystemKey
+
+  Description:  set AES key to be restricted to the system (device)
+                NOTE: if data encrypted this key, other system cannot
+                decrypt with this key. but another key can decrypt it if
+                another key was found for another system.
+                sync version.
+
+  Arguments:    pKey        - pointer to key data
+
+  Returns:      AESResult
+ *---------------------------------------------------------------------------*/
+AESResult AES_SetSystemKey(const u128 *pKey)
+{
+    aesWork.result = AES_SetSystemKeyAsync(pKey, AesSyncCallback, 0);
+    if (aesWork.result == AES_RESULT_SUCCESS)
+    {
+        AesWaitBusy();
+    }
+    return aesWork.result;
+}
+
+/*---------------------------------------------------------------------------*
+  Name:         AES_SetGameKeyAsync
+
+  Description:  set AES key to be restricted to the application (initial code).
+                NOTE: if data encrypted this key, other application cannot
+                decrypt with this key. but another key can decrypt it if
+                another key was found for another application.
+
+  Arguments:    pKey        - pointer to key data
+                callback    - 非同期処理が完了した再に呼び出す関数を指定
+                arg         - コールバック関数の呼び出し時の引数を指定。
+
+  Returns:      AESResult
+ *---------------------------------------------------------------------------*/
+AESResult AES_SetGameKeyAsync(const u128 *pKey, AESCallback callback, void *arg)
+{
+    const AESPxiCommand command = AES_PXI_COMMAND_SET_GAME_KEY;
+    const u8            size    = AES_PXI_SIZE_SET_GAME_KEY;
+    OSIntrMode enabled;
+    u8  data[size];
+    int i;
+
+    SDK_NULL_ASSERT(pKey);
+    SDK_NULL_ASSERT(callback);
+
+    enabled = OS_DisableInterrupts();
+    if (aesWork.lock)
+    {
+        (void)OS_RestoreInterrupts(enabled);
+        return AES_RESULT_BUSY;
+    }
+    aesWork.lock = TRUE;
+    (void)OS_RestoreInterrupts(enabled);
+    // コールバック設定
+    aesWork.callback = callback;
+    aesWork.callbackArg = arg;
+
+    // データ作成
+    AES_PACK_U128(&data[0], pKey);
+
+    // コマンド送信
+    if (AesSendPxiCommand(command, size, data[0]) == FALSE)
+    {
+        return AES_RESULT_SEND_ERROR;
+    }
+    for (i = 1; i < size; i+=3) {
+        if (AesSendPxiData(&data[i]) == FALSE)
+        {
+            return AES_RESULT_SEND_ERROR;
+        }
+    }
+
+    return AES_RESULT_SUCCESS;
+}
+
+/*---------------------------------------------------------------------------*
+  Name:         AES_SetGameKey
+
+  Description:  set AES key to be restricted to the application (initial code).
+                NOTE: if data encrypted this key, other application cannot
+                decrypt with this key. but another key can decrypt it if
+                another key was found for another application.
+                sync version.
+
+  Arguments:    pKey        - pointer to key data
+
+  Returns:      AESResult
+ *---------------------------------------------------------------------------*/
+AESResult AES_SetGameKey(const u128 *pKey)
+{
+    aesWork.result = AES_SetGameKeyAsync(pKey, AesSyncCallback, 0);
+    if (aesWork.result == AES_RESULT_SUCCESS)
+    {
+        AesWaitBusy();
+    }
+    return aesWork.result;
+}
+
+/*---------------------------------------------------------------------------*
+  Name:         AES_SetSpecialKeyAsync
+
+  Description:  set AES key to be restricted to the application and the system.
+                NOTE: if data encrypted this key, other application or other
+                system cannot decrypt with this key. but another key can
+                decrypt it if another key was found for another application
+                and/or another system.
+
+  Arguments:    pKey        - pointer to key data
+                callback    - 非同期処理が完了した再に呼び出す関数を指定
+                arg         - コールバック関数の呼び出し時の引数を指定。
+
+  Returns:      AESResult
+ *---------------------------------------------------------------------------*/
+AESResult AES_SetSpecialKeyAsync(const u128 *pKey, AESCallback callback, void *arg)
+{
+    const AESPxiCommand command = AES_PXI_COMMAND_SET_SPECIAL_KEY;
+    const u8            size    = AES_PXI_SIZE_SET_SPECIAL_KEY;
+    OSIntrMode enabled;
+    u8  data[size];
+    int i;
+
+    SDK_NULL_ASSERT(pKey);
+    SDK_NULL_ASSERT(callback);
+
+    enabled = OS_DisableInterrupts();
+    if (aesWork.lock)
+    {
+        (void)OS_RestoreInterrupts(enabled);
+        return AES_RESULT_BUSY;
+    }
+    aesWork.lock = TRUE;
+    (void)OS_RestoreInterrupts(enabled);
+    // コールバック設定
+    aesWork.callback = callback;
+    aesWork.callbackArg = arg;
+
+    // データ作成
+    AES_PACK_U128(&data[0], pKey);
+
+    // コマンド送信
+    if (AesSendPxiCommand(command, size, data[0]) == FALSE)
+    {
+        return AES_RESULT_SEND_ERROR;
+    }
+    for (i = 1; i < size; i+=3) {
+        if (AesSendPxiData(&data[i]) == FALSE)
+        {
+            return AES_RESULT_SEND_ERROR;
+        }
+    }
+
+    return AES_RESULT_SUCCESS;
+}
+
+/*---------------------------------------------------------------------------*
+  Name:         AES_SetSpecialKey
+
+  Description:  set AES key to be restricted to the application and the system.
+                NOTE: if data encrypted this key, other application or other
+                system cannot decrypt with this key. but another key can
+                decrypt it if another key was found for another application
+                and/or another system.
+                sync version.
+
+  Arguments:    pKey        - pointer to key data
+
+  Returns:      AESResult
+ *---------------------------------------------------------------------------*/
+AESResult AES_SetSpecialKey(const u128 *pKey)
+{
+    aesWork.result = AES_SetSpecialKeyAsync(pKey, AesSyncCallback, 0);
+    if (aesWork.result == AES_RESULT_SUCCESS)
+    {
+        AesWaitBusy();
+    }
+    return aesWork.result;
+}
+
+#if 0   // for loader
+/*---------------------------------------------------------------------------*
+  Name:         AESi_SetAlternativeKeyAsync
+
+  Description:  set mangled AES key
+
+  Arguments:    pKey        - pointer to key data
+                callback    - 非同期処理が完了した再に呼び出す関数を指定
+                arg         - コールバック関数の呼び出し時の引数を指定。
+
+  Returns:      AESResult
+ *---------------------------------------------------------------------------*/
+AESResult AESi_SetAlternativeKeyAsync(const u128 *pKey, AESCallback callback, void *arg)
+{
+    const AESPxiCommand command = AES_PXI_COMMAND_SET_ALTERNATIVE_KEY;
+    const u8            size    = AES_PXI_SIZE_SET_ALTERNATIVE_KEY;
+    OSIntrMode enabled;
+    u8  data[size];
+    int i;
+
+    SDK_NULL_ASSERT(pKey);
+    SDK_NULL_ASSERT(callback);
+
+    enabled = OS_DisableInterrupts();
+    if (aesWork.lock)
+    {
+        (void)OS_RestoreInterrupts(enabled);
+        return AES_RESULT_BUSY;
+    }
+    aesWork.lock = TRUE;
+    (void)OS_RestoreInterrupts(enabled);
+    // コールバック設定
+    aesWork.callback = callback;
+    aesWork.callbackArg = arg;
+
+    // データ作成
+    AES_PACK_U128(&data[0], pKey);
+
+    // コマンド送信
+    if (AesSendPxiCommand(command, size, data[0]) == FALSE)
+    {
+        return AES_RESULT_SEND_ERROR;
+    }
+    for (i = 1; i < size; i+=3) {
+        if (AesSendPxiData(&data[i]) == FALSE)
+        {
+            return AES_RESULT_SEND_ERROR;
+        }
+    }
+
+    return AES_RESULT_SUCCESS;
+}
+
+/*---------------------------------------------------------------------------*
+  Name:         AES_SetAlternativeKey
+
+  Description:  set mangled AES key
+                sync version.
+
+  Arguments:    pKey        - pointer to key data
+
+  Returns:      AESResult
+ *---------------------------------------------------------------------------*/
+AESResult AES_SetAlternativeKey(const u128 *pKey)
+{
+    aesWork.result = AES_SetAlternativeKeyAsync(pKey, AesSyncCallback, 0);
+    if (aesWork.result == AES_RESULT_SUCCESS)
+    {
+        AesWaitBusy();
+    }
+    return aesWork.result;
+}
+#endif
+#endif
 
 /*---------------------------------------------------------------------------*
   Name:         AES_StartCcmDecAsync
@@ -1223,7 +1607,7 @@ AESResult AES_StartDmaSendAsync(u32 dmaNo, const void *src, u32 length, AESCallb
     u8  data[size];
     int i;
 
-    SDK_NULL_ASSERT(iv);
+    SDK_NULL_ASSERT(src);
     AES_ASSERT_DATA_LENGTH(length);
     SDK_NULL_ASSERT(callback);
 
@@ -1306,7 +1690,7 @@ AESResult AES_StartDmaRecvAsync(u32 dmaNo, const void *dest, u32 length, AESCall
     u8  data[size];
     int i;
 
-    SDK_NULL_ASSERT(iv);
+    SDK_NULL_ASSERT(dest);
     AES_ASSERT_DATA_LENGTH(length);
     SDK_NULL_ASSERT(callback);
 
@@ -1365,6 +1749,62 @@ AESResult AES_StartDmaRecv(u32 dmaNo, const void *dest, u32 length)
     }
     return aesWork.result;
 }
+/*---------------------------------------------------------------------------*
+  Name:         AES_WaitDmaAsync
+
+  Description:  Waiting ARM7 side DMA is done.
+                It may move to MI.
+                async version.
+
+  Arguments:    dmaNo   : DMA channel No. (4 - 7)
+                callback    - 非同期処理が完了した再に呼び出す関数を指定
+                arg         - コールバック関数の呼び出し時の引数を指定。
+
+  Returns:      AESResult
+ *---------------------------------------------------------------------------*/
+AESResult AES_WaitDmaAsync(u32 dmaNo, AESCallback callback, void *arg)
+{
+    const AESPxiCommand command = AES_PXI_COMMAND_WAIT_DMA;
+    const u8            size    = AES_PXI_SIZE_WAIT_DMA;
+    OSIntrMode enabled;
+
+    SDK_NULL_ASSERT(callback);
+
+    enabled = OS_DisableInterrupts();
+    if (aesWork.lock)
+    {
+        (void)OS_RestoreInterrupts(enabled);
+        return AES_RESULT_BUSY;
+    }
+    aesWork.lock = TRUE;
+    (void)OS_RestoreInterrupts(enabled);
+    // コールバック設定
+    aesWork.callback = callback;
+    aesWork.callbackArg = arg;
+
+    return AesSendPxiCommand(command, size, (u8)dmaNo) ? AES_RESULT_SUCCESS : AES_RESULT_SEND_ERROR;
+}
+
+/*---------------------------------------------------------------------------*
+  Name:         AES_WaitDma
+
+  Description:  Waiting ARM7 side DMA is done.
+                It may move to MI.
+                sync version.
+
+  Arguments:    dmaNo   : DMA channel No. (4 - 7)
+
+  Returns:      AESResult
+ *---------------------------------------------------------------------------*/
+AESResult AES_WaitDma(u32 dmaNo)
+{
+    aesWork.result = AES_WaitDmaAsync(dmaNo, AesSyncCallback, 0);
+    if (aesWork.result == AES_RESULT_SUCCESS)
+    {
+        AesWaitBusy();
+    }
+    return aesWork.result;
+}
 
 /*---------------------------------------------------------------------------*
   Name:         AES_CpuSendAsync
@@ -1390,7 +1830,7 @@ AESResult AES_CpuSendAsync(const void *src, u32 length, AESCallback callback, vo
     u8  data[size];
     int i;
 
-    SDK_NULL_ASSERT(iv);
+    SDK_NULL_ASSERT(src);
     AES_ASSERT_DATA_LENGTH(length);
     SDK_NULL_ASSERT(callback);
 
@@ -1472,7 +1912,7 @@ AESResult AES_CpuRecvAsync(const void *dest, u32 length, AESCallback callback, v
     u8  data[size];
     int i;
 
-    SDK_NULL_ASSERT(iv);
+    SDK_NULL_ASSERT(dest);
     AES_ASSERT_DATA_LENGTH(length);
     SDK_NULL_ASSERT(callback);
 

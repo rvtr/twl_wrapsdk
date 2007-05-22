@@ -31,12 +31,6 @@ static const u128 key = {
     0x01234567,
     0x89abcdef
 };
-static const u128 key2 = {
-    0x00112233,
-    0x44556677,
-    0x8899aabb,
-    0xccddeeff
-};
 static const u96 nonce = {
     0x01234567,
     0x89abcdef,
@@ -297,7 +291,7 @@ void TwlMain()
 
     // Œ®‚ğİ’è‚µ‚Ä‚¨‚­
     AES_SetKey(0, &key);
-    AES_SetKey2(1, &key, &key2);
+    AES_SetSeed(1, &key);
 
     test0();
     test1();

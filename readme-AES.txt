@@ -45,25 +45,52 @@ IDとSEEDは任天堂依存のやりとりで使うことになるが、
 また、アプリケーション依存とは、ROMヘッダ辺りを反映するということ。
 
 上記の内容を反映するように、IDを設定することになる。
-0と1はブートローダーが、2と3はIPL ROMが設定する。
-(いつでも上書きできるので、IPL ROMで0と1も設定しておく)
 
 
-●アプリケーション解放
+●アプリケーションが触ることのできる部分
 
 アプリケーションには、KEY[0]、SEED[0]～SEED[3]を使えるようにする。
 場合によっては、SEED[2]とSEED[3]は解放させない(2つしかない)
 
 
-●ARM9側API案
+●ARM7側初期化
 
-鍵の種類を、DEVICE_DEPEND、APPLICATION_DEPENDの
-ビットORで設定できるようにするだけ。
+ROMコードで全レジスタの初期値を設定している。
+大半はダミーだが、ID関係の固定値はここでのみの設定となる。
 
-複数レジスタがあることも見せずに、値をほおり込むと
-AESコアに送るところまで処理する。
+アプリケーションローダー用に、TwlFirm内にIDのgame_code依存
+部分のみを再設定するコードを用意している。
 
-・AES_SetNormalKey(u128 pKey)
-・AES_SetSpecialKey(u128 pKey, u32 types)
+アプリケーション起動後はIDを触ることは無い。
 
 
+●ARM9側API
+
+次のような個別のAPIを用意して見た。
+
+AES_SetGeneralKey()	KEY[0]に鍵を設定する
+AES_SetSystemKey()	SEED[3]に鍵を設定する
+AES_SetGameKey()	SEED[0]に鍵を設定する
+AES_SetSpecialKey()	SEED[1]に鍵を設定する
+//AESi_SetAlternativeKey()	SEED[2]に鍵を設定する (非公開)
+
+それぞれ引数をすぐに有効にするもので、「以前の鍵」という使い方は
+できないようにしている。
+
+
+●ARM7側API
+
+個別に指定することも上記APIを使用することもできる。
+個別設定用に、次のenumを用意している。
+typedef enum
+{
+    AES_KEYSEL_GAME         = 0,
+    AES_KEYSEL_SPECIAL      = 1,
+    AES_KEYSEL_ALTERNATIVE  = 2,
+    AES_KEYSEL_SYSTEM       = 3,
+
+    AES_KEYSEL_IPL          = AES_KEYSEL_ALTERNATIVE,
+
+    AES_KEYSEL_GENERAL      = 0 // for key register
+}
+AESKeySel;

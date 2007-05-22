@@ -212,17 +212,26 @@ static void AesPxiCallback(PXIFifoTag tag, u32 data, BOOL err)
         case AES_PXI_COMMAND_WAIT_INPUT_FIFO_NOT_FULL:
         case AES_PXI_COMMAND_WAIT_OUTPUT_FIFO_NOT_EMPTY:
         case AES_PXI_COMMAND_IS_VALID:
+#if 0
         case AES_PXI_COMMAND_SELECT_KEY:
         case AES_PXI_COMMAND_SET_KEY:
         case AES_PXI_COMMAND_SET_ID:
         case AES_PXI_COMMAND_SET_SEED:
         case AES_PXI_COMMAND_SET_KEY2:
+#else
+        case AES_PXI_COMMAND_SET_GENERAL_KEY:
+        case AES_PXI_COMMAND_SET_SYSTEM_KEY:
+        case AES_PXI_COMMAND_SET_GAME_KEY:
+        case AES_PXI_COMMAND_SET_SPECIAL_KEY:
+        case AES_PXI_COMMAND_SET_ALTERNATIVE_KEY:
+#endif
         case AES_PXI_COMMAND_START_CCM_DEC:
         case AES_PXI_COMMAND_START_CCM_DEC_NOMAC:
         case AES_PXI_COMMAND_START_CCM_ENC:
         case AES_PXI_COMMAND_START_CTR:
         case AES_PXI_COMMAND_START_DMA_SEND:
         case AES_PXI_COMMAND_START_DMA_RECV:
+        case AES_PXI_COMMAND_WAIT_DMA:
         case AES_PXI_COMMAND_CPU_SEND:
         case AES_PXI_COMMAND_CPU_RECV:
             // スレッドを再開
@@ -304,8 +313,10 @@ static void AesThread(void *arg)
 
     OSMessage msg;
     BOOL result;
-    u128 data128a;
+    u128 data128;
+#if 0
     u128 data128b;
+#endif
     u96 data96;
     u32 data32a;
     u32 data32b;
@@ -371,7 +382,7 @@ static void AesThread(void *arg)
             AesReturnResult(aesWork.command, result ?
                 AES_PXI_RESULT_SUCCESS_TRUE : AES_PXI_RESULT_SUCCESS_FALSE);     // ARM9に処理の成功を通達
             break;
-
+#if 0
         case AES_PXI_COMMAND_SELECT_KEY:
             AES_PXI_SIZE_CHECK(AES_PXI_SIZE_SELECT_KEY);
             AES_SelectKey(aesWork.data[0]);
@@ -380,40 +391,76 @@ static void AesThread(void *arg)
 
         case AES_PXI_COMMAND_SET_KEY:
             AES_PXI_SIZE_CHECK(AES_PXI_SIZE_SET_KEY);
-            AES_UNPACK_U128(&data128a, &aesWork.data[1]);
-            AES_SetKey(aesWork.data[0], &data128a);
+            AES_UNPACK_U128(&data128, &aesWork.data[1]);
+            AES_SetKey(aesWork.data[0], &data128);
             AesReturnResult(aesWork.command, AES_PXI_RESULT_SUCCESS);     // ARM9に処理の成功を通達
             break;
 
         case AES_PXI_COMMAND_SET_ID:
             AES_PXI_SIZE_CHECK(AES_PXI_SIZE_SET_ID);
-            AES_UNPACK_U128(&data128a, &aesWork.data[1]);
-            AES_SetId(aesWork.data[0], &data128a);
+            AES_UNPACK_U128(&data128, &aesWork.data[1]);
+            AES_SetId(aesWork.data[0], &data128);
             AesReturnResult(aesWork.command, AES_PXI_RESULT_SUCCESS);     // ARM9に処理の成功を通達
             break;
 
         case AES_PXI_COMMAND_SET_SEED:
             AES_PXI_SIZE_CHECK(AES_PXI_SIZE_SET_SEED);
-            AES_UNPACK_U128(&data128a, &aesWork.data[1]);
-            AES_SetSeed(aesWork.data[0], &data128a);
+            AES_UNPACK_U128(&data128, &aesWork.data[1]);
+            AES_SetSeed(aesWork.data[0], &data128);
             AesReturnResult(aesWork.command, AES_PXI_RESULT_SUCCESS);     // ARM9に処理の成功を通達
             break;
 
         case AES_PXI_COMMAND_SET_KEY2:
             AES_PXI_SIZE_CHECK(AES_PXI_SIZE_SET_KEY2);
-            AES_UNPACK_U128(&data128a, &aesWork.data[1]);
+            AES_UNPACK_U128(&data128, &aesWork.data[1]);
             AES_UNPACK_U128(&data128b, &aesWork.data[17]);
-            AES_SetKey2(aesWork.data[1], &data128a, &data128b);
+            AES_SetKey2(aesWork.data[1], &data128, &data128b);
+            AesReturnResult(aesWork.command, AES_PXI_RESULT_SUCCESS);     // ARM9に処理の成功を通達
+            break;
+#else
+        case AES_PXI_COMMAND_SET_GENERAL_KEY:
+            AES_PXI_SIZE_CHECK(AES_PXI_SIZE_SET_GENERAL_KEY);
+            AES_UNPACK_U128(&data128, &aesWork.data[0]);
+            AES_SetGeneralKey(&data128);
             AesReturnResult(aesWork.command, AES_PXI_RESULT_SUCCESS);     // ARM9に処理の成功を通達
             break;
 
+        case AES_PXI_COMMAND_SET_SYSTEM_KEY:
+            AES_PXI_SIZE_CHECK(AES_PXI_SIZE_SET_SYSTEM_KEY);
+            AES_UNPACK_U128(&data128, &aesWork.data[0]);
+            AES_SetSystemKey(&data128);
+            AesReturnResult(aesWork.command, AES_PXI_RESULT_SUCCESS);     // ARM9に処理の成功を通達
+            break;
+
+        case AES_PXI_COMMAND_SET_GAME_KEY:
+            AES_PXI_SIZE_CHECK(AES_PXI_SIZE_SET_GAME_KEY);
+            AES_UNPACK_U128(&data128, &aesWork.data[0]);
+            AES_SetGameKey(&data128);
+            AesReturnResult(aesWork.command, AES_PXI_RESULT_SUCCESS);     // ARM9に処理の成功を通達
+            break;
+
+        case AES_PXI_COMMAND_SET_SPECIAL_KEY:
+            AES_PXI_SIZE_CHECK(AES_PXI_SIZE_SET_SPECIAL_KEY);
+            AES_UNPACK_U128(&data128, &aesWork.data[0]);
+            AES_SetSpecialKey(&data128);
+            AesReturnResult(aesWork.command, AES_PXI_RESULT_SUCCESS);     // ARM9に処理の成功を通達
+            break;
+
+        case AES_PXI_COMMAND_SET_ALTERNATIVE_KEY:
+            AES_PXI_SIZE_CHECK(AES_PXI_SIZE_SET_ALTERNATIVE_KEY);
+            AES_UNPACK_U128(&data128, &aesWork.data[0]);
+            AESi_SetAlternativeKey(&data128);
+            AesReturnResult(aesWork.command, AES_PXI_RESULT_SUCCESS);     // ARM9に処理の成功を通達
+            break;
+
+#endif
         case AES_PXI_COMMAND_START_CCM_DEC:
             AES_PXI_SIZE_CHECK(AES_PXI_SIZE_START_CCM_DEC);
             AES_UNPACK_U96(&data96, &aesWork.data[0]);
-            AES_UNPACK_U128(&data128a, &aesWork.data[12]);
+            AES_UNPACK_U128(&data128, &aesWork.data[12]);
             AES_UNPACK_U32(&data32a, &aesWork.data[28]);
             AES_UNPACK_U32(&data32b, &aesWork.data[32]);
-            AES_StartCcmDec(&data96, &data128a, data32a, data32b, (BOOL)aesWork.data[36]);
+            AES_StartCcmDec(&data96, &data128, data32a, data32b, (BOOL)aesWork.data[36]);
             AesReturnResult(aesWork.command, AES_PXI_RESULT_SUCCESS);     // ARM9に処理の成功を通達
             break;
 
@@ -437,9 +484,9 @@ static void AesThread(void *arg)
 
         case AES_PXI_COMMAND_START_CTR:
             AES_PXI_SIZE_CHECK(AES_PXI_SIZE_START_CTR);
-            AES_UNPACK_U128(&data128a, &aesWork.data[0]);
+            AES_UNPACK_U128(&data128, &aesWork.data[0]);
             AES_UNPACK_U32(&data32a, &aesWork.data[16]);
-            AES_StartCtrDec(&data128a, data32a);
+            AES_StartCtrDec(&data128, data32a);
             AesReturnResult(aesWork.command, AES_PXI_RESULT_SUCCESS);     // ARM9に処理の成功を通達
             break;
 
@@ -456,6 +503,12 @@ static void AesThread(void *arg)
             AES_UNPACK_U32(&data32a, &aesWork.data[1]);
             AES_UNPACK_U32(&data32b, &aesWork.data[5]);
             AES_DmaRecvAsync(aesWork.data[0], (void*)data32a, data32b);
+            AesReturnResult(aesWork.command, AES_PXI_RESULT_SUCCESS);     // ARM9に処理の成功を通達
+            break;
+
+        case AES_PXI_COMMAND_WAIT_DMA:
+            AES_PXI_SIZE_CHECK(AES_PXI_SIZE_WAIT_DMA);
+            MIi_WaitExDma(aesWork.data[0]);
             AesReturnResult(aesWork.command, AES_PXI_RESULT_SUCCESS);     // ARM9に処理の成功を通達
             break;
 
