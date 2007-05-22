@@ -17,11 +17,6 @@
 #include <twl/aes/common/assert.h>
 #include <nitro/os/common/interrupt.h>
 
-// for OLD AES registers
-#ifndef AES_DOES_NOT_SUPPORT_MULTIPLE_KEYS
-#define AES_DOES_NOT_SUPPORT_MULTIPLE_KEYS
-#endif
-
 #ifdef AES_DOES_NOT_SUPPORT_MULTIPLE_KEYS
 #define REG_AES_KEY_OFFSET                                 0x4410
 #define REG_AES_KEY_ADDR                                   (HW_REG_BASE + REG_AES_KEY_OFFSET)

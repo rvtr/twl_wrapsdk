@@ -283,7 +283,7 @@ static void test2(void)
     }
     else
     {
-        OS_TPrintf("Result: %s\n", AES_RESULT_SUCCESS_TRUE == result ? "Success" : "Failed");
+        OS_TPrintf("Result: %s\n", AES_RESULT_SUCCESS_TRUE == result ? "Success" : "Failed (OK!)");
     }
 }
 

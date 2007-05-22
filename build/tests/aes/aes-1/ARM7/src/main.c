@@ -196,7 +196,7 @@ static void test2(void)
     // o—ÍŒ‹‰Ê‚Ì•\¦
     dump(__func__, dataB, sizeof(gs_data));
 
-    OS_TPrintf("Result: %s\n", AES_IsValid() ? "Success" : "Failed");
+    OS_TPrintf("Result: %s\n", AES_IsValid() ? "Success" : "Failed (OK!)");
 }
 
 static u32 intrCounter[3];
