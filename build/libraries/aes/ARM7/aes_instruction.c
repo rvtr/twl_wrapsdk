@@ -224,6 +224,9 @@ void AES_SetKey(u32 keyNo, const u128 *pKey)
     vu128 *p = &aesKeyArray[keyNo].key;
     AES_ASSERT_KEYNO(keyNo);
     SDK_NULL_ASSERT(pKey);
+    while (reg_AES_AESCNT & REG_AES_AESCNT_KEY_BUSY_MASK)
+    {
+    }
 #ifdef AES_DOES_NOT_SUPPORT_MULTIPLE_KEYS
     reg_AES_AES_KEY = *pKey;
 #else
@@ -248,6 +251,9 @@ void AES_SetId(u32 keyNo, const u128 *pId)
     vu128 *p = &aesKeyArray[keyNo].id;
     AES_ASSERT_KEYNO(keyNo);
     SDK_NULL_ASSERT(pId);
+    while (reg_AES_AESCNT & REG_AES_AESCNT_KEY_BUSY_MASK)
+    {
+    }
 #ifdef AES_DOES_NOT_SUPPORT_MULTIPLE_KEYS
     reg_AES_AES_ID = *pId;
 #else
@@ -272,6 +278,9 @@ void AES_SetSeed(u32 keyNo, const u128 *pSeed)
     vu128 *p = &aesKeyArray[keyNo].seed;
     AES_ASSERT_KEYNO(keyNo);
     SDK_NULL_ASSERT(pSeed);
+    while (reg_AES_AESCNT & REG_AES_AESCNT_KEY_BUSY_MASK)
+    {
+    }
 #ifdef AES_DOES_NOT_SUPPORT_MULTIPLE_KEYS
     reg_AES_AES_SEED = *pSeed;
 #else
@@ -299,6 +308,9 @@ void AES_SetKey2(u32 keyNo, const u128 *pId, const u128 *pSeed)
     AES_ASSERT_KEYNO(keyNo);
     SDK_NULL_ASSERT(pId);
     SDK_NULL_ASSERT(pSeed);
+    while (reg_AES_AESCNT & REG_AES_AESCNT_KEY_BUSY_MASK)
+    {
+    }
 #ifdef AES_DOES_NOT_SUPPORT_MULTIPLE_KEYS
     reg_AES_AES_ID   = *pId;
     reg_AES_AES_SEED = *pSeed;
