@@ -551,16 +551,39 @@ void MIi_SetExDmaParams( u32 dmaNo, const void *src, void *dest, u32 size, u32 o
                 u32 fillData, u32 srcDir, u32 destDir);
 
 /*---------------------------------------------------------------------------*
-  Name:         MIi_SetExDmaArbiter
+  Name:         MIi_SetExDmaInterval
+
+  Description:  set DMA interval
+
+  Arguments:    dmaNo : DMA channel No.
+                count : count
+                prescale  : prescale
+
+  Returns:      None
+ *---------------------------------------------------------------------------*/
+void MIi_SetExDmaInterval( u32 dmaNo, u16 count, MIExDmaPrescaler prescale );
+
+/*---------------------------------------------------------------------------*
+  Name:         MIi_SetExDmaArbitration
 
   Description:  set DMA arbitration
 
   Arguments:    arb : arbitration algorism
-                yld : yield cycles for round robin
 
   Returns:      None
  *---------------------------------------------------------------------------*/
-void MIi_SetExDmaArbiter( MIExDmaArbitration arb, MIExDmaYieldCycles yld );
+void MIi_SetExDmaArbitration( MIExDmaArbitration arb );
+
+/*---------------------------------------------------------------------------*
+  Name:         MIi_SetExDmaYieldCycles
+
+  Description:  set DMA yield cycles
+
+  Arguments:    yld : yield cycles for round robin
+
+  Returns:      None
+ *---------------------------------------------------------------------------*/
+void MIi_SetExDmaYieldCycles( MIExDmaYieldCycles yld );
 
 
 #ifdef __cplusplus

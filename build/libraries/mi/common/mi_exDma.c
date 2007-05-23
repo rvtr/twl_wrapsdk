@@ -16,31 +16,78 @@
 
 #include <twl/mi.h>
 
-static u32 intervalTable[] =
+static u16 intervalTable[] =
 {
     1, 1, 1, 1,
+};
+
+static MIExDmaPrescaler prescaleTable[] =
+{
+    MI_EXDMA_PRESCALER_1,
+    MI_EXDMA_PRESCALER_1,
+    MI_EXDMA_PRESCALER_1,
+    MI_EXDMA_PRESCALER_1,
 };
 
 //================================================================================
 //            memory oparation using DMA (sync)
 //================================================================================
 /*---------------------------------------------------------------------------*
-  Name:         MIi_SetExDmaArbiter
+  Name:         MIi_SetExDmaArbitration
 
   Description:  set DMA arbitration
 
   Arguments:    arb : arbitration algorism
-                yld : yield cycles for round robin
 
   Returns:      None
  *---------------------------------------------------------------------------*/
-void MIi_SetExDmaArbiter( MIExDmaArbitration arb, MIExDmaYieldCycles yld )
+void MIi_SetExDmaArbitration( MIExDmaArbitration arb )
 {
     OSIntrMode enabled = OS_DisableInterrupts();
 
-    reg_MI_DMAGBL = (u32)(arb | yld);
+    reg_MI_DMAGBL = (u32)arb | (reg_MI_DMAGBL & ~REG_MI_DMAGBL_ARB_MASK);
 
     (void)OS_RestoreInterrupts(enabled);
+}
+
+/*---------------------------------------------------------------------------*
+  Name:         MIi_SetExDmaYieldCycles
+
+  Description:  set DMA yield cycles
+
+  Arguments:    yld : yield cycles for round robin
+
+  Returns:      None
+ *---------------------------------------------------------------------------*/
+void MIi_SetExDmaYieldCycles( MIExDmaYieldCycles yld )
+{
+    OSIntrMode enabled = OS_DisableInterrupts();
+
+    reg_MI_DMAGBL = (u32)yld | (reg_MI_DMAGBL & ~REG_MI_DMAGBL_YLD_MASK);
+
+    (void)OS_RestoreInterrupts(enabled);
+}
+
+/*---------------------------------------------------------------------------*
+  Name:         MIi_SetExDmaInterval
+
+  Description:  set DMA interval
+
+  Arguments:    dmaNo : DMA channel No.
+                count : count
+                prescale  : prescale
+
+  Returns:      None
+ *---------------------------------------------------------------------------*/
+void MIi_SetExDmaInterval( u32 dmaNo, u16 count, MIExDmaPrescaler prescale )
+{
+    u32 idx = dmaNo - MI_EXDMA_CH_MIN;
+
+    if ( idx < MI_EXDMA_CH_NUM )
+    {
+        intervalTable[idx] = count;
+        prescaleTable[idx] = prescale;
+    }
 }
 
 /*---------------------------------------------------------------------------*
@@ -63,7 +110,7 @@ void MIi_ExDmaFill( u32 dmaNo, void *dest, u32 data, u32 size )
     {
         MIExDmaBlockSize blockSize = MI_EXDMA_BLOCK_32B;
         u32 interval = intervalTable[idx];
-        MIExDmaPrescaler prescale = MI_EXDMA_PRESCALER_1;
+        MIExDmaPrescaler prescale = prescaleTable[idx];
 
         MIi_ExDmaFillCore( dmaNo, dest, data, size, size,
                 blockSize, interval, prescale,
@@ -92,7 +139,7 @@ void MIi_ExDmaCopy( u32 dmaNo, const void *src, void *dest, u32 size )
     {
         MIExDmaBlockSize blockSize = MI_EXDMA_BLOCK_32B;
         u32 interval = intervalTable[idx];
-        MIExDmaPrescaler prescale = MI_EXDMA_PRESCALER_1;
+        MIExDmaPrescaler prescale = prescaleTable[idx];
 
         MIi_ExDmaCopyCore( dmaNo, src, dest, size, size,
                 blockSize, interval, prescale,
@@ -121,7 +168,7 @@ void MIi_ExDmaSend( u32 dmaNo, const void *src, void *dest, u32 size )
     {
         MIExDmaBlockSize blockSize = MI_EXDMA_BLOCK_32B;
         u32 interval = intervalTable[idx];
-        MIExDmaPrescaler prescale = MI_EXDMA_PRESCALER_1;
+        MIExDmaPrescaler prescale = prescaleTable[idx];
 
         MIi_ExDmaSendCore( dmaNo, src, dest, size, size,
                 blockSize, interval, prescale,
@@ -150,7 +197,7 @@ void MIi_ExDmaRecv( u32 dmaNo, const void *src, void *dest, u32 size )
     {
         MIExDmaBlockSize blockSize = MI_EXDMA_BLOCK_32B;
         u32 interval = intervalTable[idx];
-        MIExDmaPrescaler prescale = MI_EXDMA_PRESCALER_1;
+        MIExDmaPrescaler prescale = prescaleTable[idx];
 
         MIi_ExDmaRecvCore( dmaNo, src, dest, size, size,
                 blockSize, interval, prescale,
@@ -179,7 +226,7 @@ void MIi_ExDmaFillAsync( u32 dmaNo, void *dest, u32 data, u32 size )
     {
         MIExDmaBlockSize blockSize = MI_EXDMA_BLOCK_32B;
         u32 interval = intervalTable[idx];
-        MIExDmaPrescaler prescale = MI_EXDMA_PRESCALER_1;
+        MIExDmaPrescaler prescale = prescaleTable[idx];
 
         MIi_ExDmaFillAsyncCore( dmaNo, dest, data, size, size,
                 blockSize, interval, prescale,
@@ -208,7 +255,7 @@ void MIi_ExDmaCopyAsync( u32 dmaNo, const void *src, void *dest, u32 size )
     {
         MIExDmaBlockSize blockSize = MI_EXDMA_BLOCK_32B;
         u32 interval = intervalTable[idx];
-        MIExDmaPrescaler prescale = MI_EXDMA_PRESCALER_1;
+        MIExDmaPrescaler prescale = prescaleTable[idx];
 
         MIi_ExDmaCopyAsyncCore( dmaNo, src, dest, size, size,
                 blockSize, interval, prescale,
@@ -237,7 +284,7 @@ void MIi_ExDmaSendAsync( u32 dmaNo, const void *src, void *dest, u32 size )
     {
         MIExDmaBlockSize blockSize = MI_EXDMA_BLOCK_32B;
         u32 interval = intervalTable[idx];
-        MIExDmaPrescaler prescale = MI_EXDMA_PRESCALER_1;
+        MIExDmaPrescaler prescale = prescaleTable[idx];
 
         MIi_ExDmaSendAsyncCore( dmaNo, src, dest, size, size,
                 blockSize, interval, prescale,
@@ -266,7 +313,7 @@ void MIi_ExDmaRecvAsync( u32 dmaNo, const void *src, void *dest, u32 size )
     {
         MIExDmaBlockSize blockSize = MI_EXDMA_BLOCK_32B;
         u32 interval = intervalTable[idx];
-        MIExDmaPrescaler prescale = MI_EXDMA_PRESCALER_1;
+        MIExDmaPrescaler prescale = prescaleTable[idx];
 
         MIi_ExDmaRecvAsyncCore( dmaNo, src, dest, size, size,
                 blockSize, interval, prescale,
@@ -588,11 +635,14 @@ BOOL MIi_IsExDmaBusy( u32 dmaNo )
 {
     u32 idx = dmaNo - MI_EXDMA_CH_MIN;
 
+    if ( idx < MI_EXDMA_CH_NUM )
     {
         MIExDmaChanRegs *reg = &((MIExDmaChanRegs*)REG_DMA4SAD_ADDR)[idx];
 
         return (BOOL)((reg->ctrl & REG_MI_DMA4CNT_E_MASK) >> REG_MI_DMA4CNT_E_SHIFT);
     }
+
+    return FALSE;
 }
 
 /*---------------------------------------------------------------------------*
@@ -608,6 +658,7 @@ void MIi_WaitExDma( u32 dmaNo )
 {
     u32 idx = dmaNo - MI_EXDMA_CH_MIN;
 
+    if ( idx < MI_EXDMA_CH_NUM )
     {
         MIExDmaChanRegs *reg = &((MIExDmaChanRegs*)REG_DMA4SAD_ADDR)[idx];
 

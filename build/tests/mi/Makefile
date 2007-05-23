@@ -25,6 +25,7 @@ SUBDIRS =	\
 ifneq	($(TWL_PLATFORM),DSTEG)
 SUBDIRS +=	\
 			exDma-1 \
+			allDma-1 \
 
 endif
 

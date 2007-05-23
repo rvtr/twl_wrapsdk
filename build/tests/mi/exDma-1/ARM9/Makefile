@@ -21,7 +21,7 @@ SUBDIRS		=
 
 #----------------------------------------------------------------------------
 
-TARGET_BIN	=	exDma.axf
+TARGET_BIN	=	exDma9_1.axf
 
 SRCS		=	main.c
 

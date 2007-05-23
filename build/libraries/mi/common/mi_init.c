@@ -37,6 +37,9 @@
 void MI_Init(void)
 {
 #ifdef SDK_ARM9
+    //---- Init Main Memory Priority
+    MI_SetMainMemoryPriority(MI_PROCESSOR_ARM7);
+
     //---- Init Work RAM (allocate both wram (block0/1) to ARM7)
     MI_SetWramBank(MI_WRAM_ARM7_ALL);
 #endif
@@ -47,5 +50,6 @@ void MI_Init(void)
     //---- add for TWL
 
     //---- DMA arbitration
-    MIi_SetExDmaArbiter( MI_EXDMAGBL_ARB_ROUND_ROBIN, MI_EXDMAGBL_YLD_CYCLE_DEFAULT );
+    MIi_SetExDmaArbitration( MI_EXDMAGBL_ARB_ROUND_ROBIN );
+    MIi_SetExDmaYieldCycles( MI_EXDMAGBL_YLD_CYCLE_DEFAULT );
 }

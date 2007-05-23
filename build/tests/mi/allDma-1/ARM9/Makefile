@@ -1,6 +1,6 @@
 #! make -f
 #----------------------------------------------------------------------------
-# Project:  TwlSDK - OS - demos - exDma-1
+# Project:  TwlSDK - OS - demos - allDma-1
 # File:     Makefile
 #
 # Copyright 2007 Nintendo.  All rights reserved.
@@ -15,15 +15,13 @@
 # $NoKeywords: $
 #----------------------------------------------------------------------------
 
+
 SUBDIRS		=
 
 
 #----------------------------------------------------------------------------
 
-#TWL_CODEGEN   =       THUMB
-TWL_PROC      =       ARM7
-
-TARGET_BIN	=	exDma7_1.axf
+TARGET_BIN	=	allDma9_1.axf
 
 SRCS		=	main.c
 

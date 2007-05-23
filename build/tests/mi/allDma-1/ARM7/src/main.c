@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*
-  Project:  TwlSDK - MI - demos - exDma-1
+  Project:  TwlSDK - MI - demos - allDma-1
   File:     main.c
 
   Copyright 2007 Nintendo.  All rights reserved.
@@ -14,17 +14,21 @@
   $NoKeywords: $
  *---------------------------------------------------------------------------*/
 #include <twl.h>
+#include <../build/libraries/mi/common/include/mi_dma.h>
 
 
 #define MY_DMA_MMEM   ((t_TestBuf *)HW_MAIN_MEM_SUB)
 #define MY_TEST_LOOPS (sizeof(copyfillArg)/sizeof(t_CommonArg))
-#define ONE_BUF_SIZE  0x2004
+#define ONE_BUF_SIZE  0x1004
+
+#define MY_DMA_CH_START  1
+#define MY_DMA_CH_END    7
 
 typedef struct
 {
     u32 prePad __attribute__ ((aligned (32)));
-    u16 src[4][ONE_BUF_SIZE/2]  __attribute__ ((aligned (32)));
-    u16 dest[4][ONE_BUF_SIZE/2] __attribute__ ((aligned (32)));
+    u16 src[8][ONE_BUF_SIZE/2]  __attribute__ ((aligned (32)));
+    u16 dest[8][ONE_BUF_SIZE/2] __attribute__ ((aligned (32)));
     u32 PostPad __attribute__ ((aligned (32)));
 }
 t_TestBuf;
@@ -134,7 +138,7 @@ static BOOL CheckDmaCopyAndFill( t_CommonArg *arg, u32 data )
     BOOL c_ercd = TRUE, f_ercd = TRUE;
     u32 i, ii;
 
-    for (i=0; i<4; i++)
+    for (i=MY_DMA_CH_END; i>=MY_DMA_CH_START; i--)
     {
         for (ii=0; ii<ONE_BUF_SIZE/2; ii++)
         {
@@ -144,15 +148,22 @@ static BOOL CheckDmaCopyAndFill( t_CommonArg *arg, u32 data )
 
     if ( copyStr )
     {
-        for (i=0; i<4; i++)
+        for (i=MY_DMA_CH_END; i>=MY_DMA_CH_START; i--)
         {
-            u32 ch = i + MI_EXDMA_CH_MIN;
+            u32 ch = i;
             u16 *s = src[i];
             u16 *d = dest[i];
             char *str = NULL;
 
-            MIi_ExDmaCopy( ch, s, d, ONE_BUF_SIZE );
-            if ( i == 3 )
+            if (MI_EXDMA_CH_MIN <= ch && ch <= MI_EXDMA_CH_MAX)
+            {
+                MIi_ExDmaCopy( ch, s, d, ONE_BUF_SIZE );
+            }
+            else if (ch < MI_EXDMA_CH_MIN)
+            {
+                MI_DmaCopy32( ch, s, d, ONE_BUF_SIZE );
+            }
+            if ( i == MY_DMA_CH_START )
             {
                 str = copyStr;
             }
@@ -162,14 +173,21 @@ static BOOL CheckDmaCopyAndFill( t_CommonArg *arg, u32 data )
 
     if ( fillStr )
     {
-        for (i=0; i<4; i++)
+        for (i=MY_DMA_CH_END; i>=MY_DMA_CH_START; i--)
         {
-            u32 ch = i + MI_EXDMA_CH_MIN;
+            u32 ch = i;
             u16 *d = dest[i];
             char *str = NULL;
 
-            MIi_ExDmaFill( ch, d, data+i, ONE_BUF_SIZE );
-            if ( i == 3 )
+            if (MI_EXDMA_CH_MIN <= ch && ch <= MI_EXDMA_CH_MAX)
+            {
+                 MIi_ExDmaFill( ch, d, data+i, ONE_BUF_SIZE );
+            }
+            else if (ch < MI_EXDMA_CH_MIN)
+            {
+                 MI_DmaFill32( ch, d, data+i, ONE_BUF_SIZE );
+            }
+            if ( i == MY_DMA_CH_START )
             {
                 str = fillStr;
             }
@@ -189,7 +207,7 @@ static BOOL CheckDmaCopyAndFillAsync( t_CommonArg *arg, u32 data )
     BOOL c_ercd = TRUE, f_ercd = TRUE;
     u32 i, ii;
 
-    for (i=0; i<4; i++)
+    for (i=MY_DMA_CH_END; i>=MY_DMA_CH_START; i--)
     {
         for (ii=0; ii<ONE_BUF_SIZE/2; ii++)
         {
@@ -199,35 +217,64 @@ static BOOL CheckDmaCopyAndFillAsync( t_CommonArg *arg, u32 data )
 
     if ( copyStr )
     {
-        for (i=0; i<4; i++)
+        while ( GX_GetVCount() != 189 )
         {
-            u32 ch = i + MI_EXDMA_CH_MIN;
+        }
+        while ( GX_GetVCount() != 190 )
+        {
+        }
+        for (i=MY_DMA_CH_END; i>=MY_DMA_CH_START; i--)
+        {
+            u32 ch = i;
             u16 *s = src[i];
             u16 *d = dest[i];
 
-            MIi_ExDmaCopyAsync( ch, s, d, ONE_BUF_SIZE );
+            if (MI_EXDMA_CH_MIN <= ch && ch <= MI_EXDMA_CH_MAX)
+            {
+                MIi_ExDmaCopyAsync( ch, s, d, ONE_BUF_SIZE );
+            }
+            else if (ch < MI_EXDMA_CH_MIN)
+            {
+                MIi_DmaSetParams(ch, (u32)s, (u32)d, MI_CNT_VBCOPY32(ONE_BUF_SIZE) & ~MI_DMA_CONTINUOUS_ON);
+            }
         }
-        for (i=0; i<4; i++)
+        for (i=MY_DMA_CH_END; i>=MY_DMA_CH_START; i--)
         {
-            u32 ch = i + MI_EXDMA_CH_MIN;
-            if ( MIi_IsExDmaBusy( ch ) == FALSE )
+            u32 ch = i;
+            BOOL bool = FALSE;
+            if (MI_EXDMA_CH_MIN <= ch && ch <= MI_EXDMA_CH_MAX)
+            {
+                bool = MIi_IsExDmaBusy( ch );
+            }
+            else if (ch < MI_EXDMA_CH_MIN)
+            {
+                bool = MI_IsDmaBusy( ch );
+            }
+            if ( bool == FALSE )
             {
                 OS_TPrintf( "warning: DmaCopyAsync isn't busy dmaNo = %d.\n", ch );
             }
         }
-        for (i=0; i<4; i++)
+        for (i=MY_DMA_CH_END; i>=MY_DMA_CH_START; i--)
         {
-            u32 ch = i + MI_EXDMA_CH_MIN;
-            MIi_WaitExDma( ch );
+            u32 ch = i;
+            if (MI_EXDMA_CH_MIN <= ch && ch <= MI_EXDMA_CH_MAX)
+            {
+                MIi_WaitExDma( ch );
+            }
+            else if (ch < MI_EXDMA_CH_MIN)
+            {
+                MI_WaitDma( ch );
+            }
         }
-        for (i=0; i<4; i++)
+        for (i=MY_DMA_CH_END; i>=MY_DMA_CH_START; i--)
         {
-            u32 ch = i + MI_EXDMA_CH_MIN;
+            u32 ch = i;
             u16 *s = src[i];
             u16 *d = dest[i];
             char *str = NULL;
 
-            if ( i == 3 )
+            if ( i == MY_DMA_CH_START )
             {
                 str = copyStr;
             }
@@ -237,33 +284,62 @@ static BOOL CheckDmaCopyAndFillAsync( t_CommonArg *arg, u32 data )
 
     if ( fillStr )
     {
-        for (i=0; i<4; i++)
+        while ( GX_GetVCount() != 190 )
         {
-            u32 ch = i + MI_EXDMA_CH_MIN;
+        }
+        while ( GX_GetVCount() != 191 )
+        {
+        }
+        for (i=MY_DMA_CH_END; i>=MY_DMA_CH_START; i--)
+        {
+            u32 ch = i;
             u16 *d = dest[i];
 
-            MIi_ExDmaFillAsync( ch, d, data+i, ONE_BUF_SIZE );
+            if (MI_EXDMA_CH_MIN <= ch && ch <= MI_EXDMA_CH_MAX)
+            {
+                MIi_ExDmaFillAsync( ch, d, data+i, ONE_BUF_SIZE );
+            }
+            else if (ch < MI_EXDMA_CH_MIN)
+            {
+                MIi_DmaSetParams_src32(ch, data+i, (u32)d, (MI_CNT_VBCOPY32(ONE_BUF_SIZE) & ~MI_DMA_CONTINUOUS_ON) | MI_DMA_SRC_FIX);
+            }
         }
-        for (i=0; i<4; i++)
+        for (i=MY_DMA_CH_END; i>=MY_DMA_CH_START; i--)
         {
-            u32 ch = i + MI_EXDMA_CH_MIN;
-            if ( MIi_IsExDmaBusy( ch ) == FALSE )
+            u32 ch = i;
+            BOOL bool = FALSE;
+            if (MI_EXDMA_CH_MIN <= ch && ch <= MI_EXDMA_CH_MAX)
+            {
+                bool = MIi_IsExDmaBusy( ch );
+            }
+            else if (ch < MI_EXDMA_CH_MIN)
+            {
+                bool = MI_IsDmaBusy( ch );
+            }
+            if ( bool == FALSE )
             {
                 OS_TPrintf( "warning: DmaFillAsync isn't busy dmaNo = %d.\n", ch );
             }
         }
-        for (i=0; i<4; i++)
+        for (i=MY_DMA_CH_END; i>=MY_DMA_CH_START; i--)
         {
-            u32 ch = i + MI_EXDMA_CH_MIN;
-            MIi_WaitExDma( ch );
+            u32 ch = i;
+            if (MI_EXDMA_CH_MIN <= ch && ch <= MI_EXDMA_CH_MAX)
+            {
+                MIi_WaitExDma( ch );
+            }
+            else if (ch < MI_EXDMA_CH_MIN)
+            {
+                MI_WaitDma( ch );
+            }
         }
-        for (i=0; i<4; i++)
+        for (i=MY_DMA_CH_END; i>=MY_DMA_CH_START; i--)
         {
-            u32 ch = i + MI_EXDMA_CH_MIN;
+            u32 ch = i;
             u16 *d = dest[i];
             char *str = NULL;
 
-            if ( i == 3 )
+            if ( i == MY_DMA_CH_START )
             {
                 str = fillStr;
             }
@@ -285,27 +361,74 @@ static BOOL CheckDmaStop( t_CommonArg *arg )
 
     if ( copyStr )
     {
-        for (i=0; i<4; i++)
+        while ( GX_GetVCount() != 189 )
         {
-            u32 ch = i + MI_EXDMA_CH_MIN;
+        }
+        while ( GX_GetVCount() != 190 )
+        {
+        }
+        for (i=MY_DMA_CH_END; i>=MY_DMA_CH_START; i--)
+        {
+            u32 ch = i;
             u16 *s = src[i];
             u16 *d = dest[i];
 
-            MIi_ExDmaCopyAsync( ch, s, d, ONE_BUF_SIZE );
-            if ( MIi_IsExDmaBusy( ch ) == FALSE )
+            if (MI_EXDMA_CH_MIN <= ch && ch <= MI_EXDMA_CH_MAX)
+            {
+                MIi_ExDmaCopyAsync( ch, s, d, ONE_BUF_SIZE );
+            }
+            else if (ch < MI_EXDMA_CH_MIN)
+            {
+                MIi_DmaSetParams(ch, (u32)s, (u32)d, MI_CNT_VBCOPY32(ONE_BUF_SIZE) & ~MI_DMA_CONTINUOUS_ON);
+            }
+        }
+        for (i=MY_DMA_CH_END; i>=MY_DMA_CH_START; i--)
+        {
+            u32 ch = i;
+            BOOL bool = FALSE;
+            if (MI_EXDMA_CH_MIN <= ch && ch <= MI_EXDMA_CH_MAX)
+            {
+                bool = MIi_IsExDmaBusy( ch );
+            }
+            else if (ch < MI_EXDMA_CH_MIN)
+            {
+                bool = MI_IsDmaBusy( ch );
+            }
+            if ( bool == FALSE )
             {
                 OS_TPrintf( "warning: DmaCopyAsync isn't busy dmaNo = %d.\n", ch );
             }
-            MIi_StopExDma( ch );
-
-            if ( MIi_IsExDmaBusy( ch ) == TRUE )
+        }
+        for (i=MY_DMA_CH_END; i>=MY_DMA_CH_START; i--)
+        {
+            u32 ch = i;
+            if (MI_EXDMA_CH_MIN <= ch && ch <= MI_EXDMA_CH_MAX)
             {
-                OS_TPrintf( "error: Stopping DmaCopy failed dmaNo = %d.\n", ch );
-                c_ercd = FALSE;
-//                break;
+                MIi_StopExDma( ch );
+            }
+            else if (ch < MI_EXDMA_CH_MIN)
+            {
+                MI_StopDma( ch );
             }
         }
-        if ( c_ercd == TRUE )
+        for (i=MY_DMA_CH_END; i>=MY_DMA_CH_START; i--)
+        {
+            u32 ch = i;
+            BOOL bool = FALSE;
+            if (MI_EXDMA_CH_MIN <= ch && ch <= MI_EXDMA_CH_MAX)
+            {
+                bool = MIi_IsExDmaBusy( ch );
+            }
+            else if (ch < MI_EXDMA_CH_MIN)
+            {
+                bool = MI_IsDmaBusy( ch );
+            }
+            if ( bool == TRUE )
+            {
+                OS_TPrintf( "error: Stopping DmaCopy failed dmaNo = %d.\n", ch );
+            }
+        }
+        if ( c_ercd == TRUE && copyStr )
         {
             OS_TPrintf( copyStr );
         }
@@ -313,26 +436,73 @@ static BOOL CheckDmaStop( t_CommonArg *arg )
 
     if ( fillStr )
     {
-        for (i=0; i<4; i++)
+        while ( GX_GetVCount() != 188 )
         {
-            u32 ch = i + MI_EXDMA_CH_MIN;
+        }
+        while ( GX_GetVCount() != 189 )
+        {
+        }
+        for (i=MY_DMA_CH_END; i>=MY_DMA_CH_START; i--)
+        {
+            u32 ch = i;
             u16 *d = dest[i];
 
-            MIi_ExDmaFillAsync( ch, d, i, ONE_BUF_SIZE );
-            if ( MIi_IsExDmaBusy( ch ) == FALSE )
+            if (MI_EXDMA_CH_MIN <= ch && ch <= MI_EXDMA_CH_MAX)
+            {
+                MIi_ExDmaFillAsync( ch, d, i, ONE_BUF_SIZE );
+            }
+            else if (ch < MI_EXDMA_CH_MIN)
+            {
+                MIi_DmaSetParams_src32(ch, i, (u32)d, (MI_CNT_VBCOPY32(ONE_BUF_SIZE) & ~MI_DMA_CONTINUOUS_ON) | MI_DMA_SRC_FIX);
+            }
+        }
+        for (i=MY_DMA_CH_END; i>=MY_DMA_CH_START; i--)
+        {
+            u32 ch = i;
+            BOOL bool = FALSE;
+            if (MI_EXDMA_CH_MIN <= ch && ch <= MI_EXDMA_CH_MAX)
+            {
+                bool = MIi_IsExDmaBusy( ch );
+            }
+            else if (ch < MI_EXDMA_CH_MIN)
+            {
+                bool = MI_IsDmaBusy( ch );
+            }
+            if ( bool == FALSE )
             {
                 OS_TPrintf( "warning: DmaFillAsync isn't busy dmaNo = %d.\n", ch );
             }
-            MIi_StopExDma( ch );
-
-            if ( MIi_IsExDmaBusy( ch ) == TRUE )
+        }
+        for (i=MY_DMA_CH_END; i>=MY_DMA_CH_START; i--)
+        {
+            u32 ch = i;
+            if (MI_EXDMA_CH_MIN <= ch && ch <= MI_EXDMA_CH_MAX)
             {
-                OS_TPrintf( "error: Stopping DmaFill failed dmaNo = %d.\n", ch );
-                f_ercd = FALSE;
-//                break;
+                MIi_StopExDma( ch );
+            }
+            else if (ch < MI_EXDMA_CH_MIN)
+            {
+                MI_StopDma( ch );
             }
         }
-        if ( f_ercd == TRUE )
+        for (i=MY_DMA_CH_END; i>=MY_DMA_CH_START; i--)
+        {
+            u32 ch = i;
+            BOOL bool = FALSE;
+            if (MI_EXDMA_CH_MIN <= ch && ch <= MI_EXDMA_CH_MAX)
+            {
+                bool = MIi_IsExDmaBusy( ch );
+            }
+            else if (ch < MI_EXDMA_CH_MIN)
+            {
+                bool = MI_IsDmaBusy( ch );
+            }
+            if ( bool == TRUE )
+            {
+                OS_TPrintf( "error: Stopping DmaFill failed dmaNo = %d.\n", ch );
+            }
+        }
+        if ( f_ercd == TRUE && fillStr )
         {
             OS_TPrintf( fillStr );
         }
@@ -393,10 +563,10 @@ void TwlMain()
     OS_TPrintf( "\nTurn into Priority Mode.\n" );
 
     MIi_SetExDmaArbitration( MI_EXDMAGBL_ARB_PRIORITY );
-    MIi_SetExDmaInterval( 4, 495, MI_EXDMA_PRESCALER_1 );
-    MIi_SetExDmaInterval( 5, 480, MI_EXDMA_PRESCALER_1 );
-    MIi_SetExDmaInterval( 6, 465, MI_EXDMA_PRESCALER_1 );
-    MIi_SetExDmaInterval( 7, 450, MI_EXDMA_PRESCALER_1 );
+    MIi_SetExDmaInterval( 4, 595, MI_EXDMA_PRESCALER_1 );
+    MIi_SetExDmaInterval( 5, 580, MI_EXDMA_PRESCALER_1 );
+    MIi_SetExDmaInterval( 6, 565, MI_EXDMA_PRESCALER_1 );
+    MIi_SetExDmaInterval( 7, 550, MI_EXDMA_PRESCALER_1 );
 
     TestDmaFuncs();
 
@@ -405,10 +575,10 @@ void TwlMain()
 
     MIi_SetExDmaArbitration( MI_EXDMAGBL_ARB_ROUND_ROBIN );
     MIi_SetExDmaYieldCycles( MI_EXDMAGBL_YLD_CYCLE_DEFAULT );
-    MIi_SetExDmaInterval( 4, 7, MI_EXDMA_PRESCALER_1 );
-    MIi_SetExDmaInterval( 5, 5,  MI_EXDMA_PRESCALER_1 );
-    MIi_SetExDmaInterval( 6, 3,  MI_EXDMA_PRESCALER_1 );
-    MIi_SetExDmaInterval( 7, 1,  MI_EXDMA_PRESCALER_1 );
+    MIi_SetExDmaInterval( 4, 107, MI_EXDMA_PRESCALER_1 );
+    MIi_SetExDmaInterval( 5, 105,  MI_EXDMA_PRESCALER_1 );
+    MIi_SetExDmaInterval( 6, 103,  MI_EXDMA_PRESCALER_1 );
+    MIi_SetExDmaInterval( 7, 101,  MI_EXDMA_PRESCALER_1 );
 
     TestDmaFuncs();
 

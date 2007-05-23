@@ -401,14 +401,23 @@ void TwlMain()
     // priority dma test
     OS_TPrintf( "\nTurn into Priority Mode.\n" );
 
-    MIi_SetExDmaArbiter( MI_EXDMAGBL_ARB_PRIORITY, MI_EXDMAGBL_YLD_CYCLE_DEFAULT );
+    MIi_SetExDmaArbitration( MI_EXDMAGBL_ARB_PRIORITY );
+    MIi_SetExDmaInterval( 4, 595, MI_EXDMA_PRESCALER_1 );
+    MIi_SetExDmaInterval( 5, 580, MI_EXDMA_PRESCALER_1 );
+    MIi_SetExDmaInterval( 6, 565, MI_EXDMA_PRESCALER_1 );
+    MIi_SetExDmaInterval( 7, 550, MI_EXDMA_PRESCALER_1 );
 
     TestDmaFuncs();
 
     // round robin dma test
     OS_TPrintf( "\nTurn into Round Robin Mode.\n" );
 
-    MIi_SetExDmaArbiter( MI_EXDMAGBL_ARB_ROUND_ROBIN, MI_EXDMAGBL_YLD_CYCLE_DEFAULT );
+    MIi_SetExDmaArbitration( MI_EXDMAGBL_ARB_ROUND_ROBIN );
+    MIi_SetExDmaYieldCycles( MI_EXDMAGBL_YLD_CYCLE_DEFAULT );
+    MIi_SetExDmaInterval( 4, 15, MI_EXDMA_PRESCALER_1 );
+    MIi_SetExDmaInterval( 5, 11, MI_EXDMA_PRESCALER_1 );
+    MIi_SetExDmaInterval( 6, 7,  MI_EXDMA_PRESCALER_1 );
+    MIi_SetExDmaInterval( 7, 4,  MI_EXDMA_PRESCALER_1 );
 
     TestDmaFuncs();
 
