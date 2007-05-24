@@ -1,9 +1,9 @@
 #! make -f
 #----------------------------------------------------------------------------
-# Project:  TwlDK - tests
+# Project:  TwlSDK - SND - demos - capture
 # File:     Makefile
 #
-# Copyright 2007 Nintendo.  All rights reserved.
+# Copyright 2005 Nintendo.  All rights reserved.
 #
 # These coded instructions, statements, and computer programs contain
 # proprietary information of Nintendo of America Inc. and/or Nintendo
@@ -11,24 +11,31 @@
 # not be disclosed to third parties or copied or duplicated in any form,
 # in whole or in part, without the prior written consent of Nintendo.
 #
-# $Log: $
+# $Log: Makefile,v $
 # $NoKeywords: $
 #----------------------------------------------------------------------------
+
+SUBDIRS		=
+
+
+#----------------------------------------------------------------------------
+
+#TWL_CODEGEN   =       THUMB
+
+TARGET_BIN	=	main.axf
+
+SRCS		=	main.c fanfare.32.c
+
+#SRCDIR		=	# using default
+#LCFILE		=	# using default
 
 include	$(TWLSDK_ROOT)/build/buildtools/commondefs
 
 
 #----------------------------------------------------------------------------
 
-SUBDIRS =	os \
-		mi \
-		aes \
-		snd
-
-
-#----------------------------------------------------------------------------
+do-build:		$(TARGETS)
 
 include	$(TWLSDK_ROOT)/build/buildtools/modulerules
-
 
 #===== End of Makefile =====

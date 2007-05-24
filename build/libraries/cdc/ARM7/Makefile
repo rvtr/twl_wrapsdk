@@ -1,6 +1,6 @@
 #! make -f
 #----------------------------------------------------------------------------
-# Project:  TwlDK - tests
+# Project:  TwlSDK - CDC - libraries
 # File:     Makefile
 #
 # Copyright 2007 Nintendo.  All rights reserved.
@@ -11,24 +11,45 @@
 # not be disclosed to third parties or copied or duplicated in any form,
 # in whole or in part, without the prior written consent of Nintendo.
 #
-# $Log: $
+# $Log: Makefile,v $
 # $NoKeywords: $
 #----------------------------------------------------------------------------
 
-include	$(TWLSDK_ROOT)/build/buildtools/commondefs
-
-
-#----------------------------------------------------------------------------
-
-SUBDIRS =	os \
-		mi \
-		aes \
-		snd
-
+SUBDIRS     =
 
 #----------------------------------------------------------------------------
 
-include	$(TWLSDK_ROOT)/build/buildtools/modulerules
+# build ARM & THUMB libraries
+TWL_CODEGEN_ALL ?= True
 
+# Codegen for sub processer
+TWL_PROC    =   ARM7
+
+SRCS	=	cdc.c		\
+		cdc_api.c	\
+		cdc_filter_coefficient.c
+
+
+TARGET_LIB	=	libcdc_sp$(TWL_LIBSUFFIX).a
+
+#----------------------------------------------------------------------------
+
+# DEBUG版ビルドの場合、RELEASE版でビルドして
+# DEBUG版のライブラリを装います。
+
+ifdef	TWL_DEBUG
+TWL_BUILD_TYPE	= RELEASE
+endif
+
+include $(TWLSDK_ROOT)/build/buildtools/commondefs
+
+INSTALL_TARGETS	=	$(TARGETS)
+INSTALL_DIR	=	$(TWL_INSTALL_LIBDIR)
+
+#----------------------------------------------------------------------------
+
+do-build:       $(TARGETS)
+
+include $(TWLSDK_ROOT)/build/buildtools/modulerules
 
 #===== End of Makefile =====

@@ -1,6 +1,6 @@
 #! make -f
 #----------------------------------------------------------------------------
-# Project:  TwlDK - tests
+# Project:  TwlSDK - libraries - spi
 # File:     Makefile
 #
 # Copyright 2007 Nintendo.  All rights reserved.
@@ -15,20 +15,37 @@
 # $NoKeywords: $
 #----------------------------------------------------------------------------
 
+SUBDIRS			= #camera
+
+#----------------------------------------------------------------------------
+
+# build ARM & THUMB libraries
+TWL_CODEGEN_ALL 	?= True
+
+TWL_PROC		= ARM7
+
+SRCS			= i2c_instruction.c
+
+TARGET_LIB		= libi2c_sp$(TWL_LIBSUFFIX).a
+
+#----------------------------------------------------------------------------
+
+# DEBUG版ビルドの場合、RELEASE版でビルドして
+# DEBUG版のライブラリを装います。
+
+ifdef	NITRO_DEBUG
+NITRO_BUILD_TYPE	= RELEASE
+endif
+
 include	$(TWLSDK_ROOT)/build/buildtools/commondefs
 
+INSTALL_TARGETS		= $(TARGETS)
+INSTALL_DIR		= $(TWL_INSTALL_LIBDIR)
 
 #----------------------------------------------------------------------------
 
-SUBDIRS =	os \
-		mi \
-		aes \
-		snd
-
-
-#----------------------------------------------------------------------------
+do-build:		$(TARGETS)
 
 include	$(TWLSDK_ROOT)/build/buildtools/modulerules
-
 
 #===== End of Makefile =====
