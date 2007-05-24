@@ -59,6 +59,7 @@ SDK_WEAK_SYMBOL asm void _start( void )
         str             r12, [r12, #REG_IME_OFFSET]
 
         //---- clear memory
+#if 0
         // private-WRAM (except program area)
         ldr             r1, =SDK_STATIC_BSS_END // r1= max(__bss_end__, #HW_PRV_WRAM)
         mov             r0, #HW_PRV_WRAM
@@ -71,6 +72,7 @@ SDK_WEAK_SYMBOL asm void _start( void )
         cmp             r1, r2
         stmltia         r1!, {r0}
         blt             @1
+#endif
 
         //---- initialize stack pointer
         // SVC mode
@@ -109,7 +111,7 @@ SDK_WEAK_SYMBOL asm void _start( void )
         bmi             @1_2
 
         //---- load autoload block and initialize bss
-//        bl              do_autoload
+        bl              do_autoload
         
         //---- fill static static bss with 0
         ldr             r0, =_start_ModuleParams
@@ -184,11 +186,15 @@ static asm void do_autoload( void )
         ldr     dest,      [infop], #4          // dest
         ldr     dest_size, [infop], #4          // size
         add     dest_end, dest, dest_size       // dest_end
+#if 1
+        mov     dest, dest_end
+#else
 @1:
         cmp     dest, dest_end
         ldrmi   tmp, [src],  #4                 // [dest++] <- [src++]
         strmi   tmp, [dest], #4
         bmi     @1
+#endif
 
         //---- fill bss with 0
         ldr     dest_size, [infop], #4          // size

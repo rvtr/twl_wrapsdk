@@ -123,7 +123,7 @@ SDK_WEAK_SYMBOL asm void _start( void )
         ldr             r1, =_start_ModuleParams
         ldr             r0, [r1, #20]   // r0 = bottom of compressed data
         bl              MIi_UncompressBackward
-//        bl              do_autoload
+        bl              do_autoload
         
         //---- fill static static bss with 0
         ldr             r0, =_start_ModuleParams
@@ -352,11 +352,15 @@ static asm void do_autoload( void )
         ldr     tmp,       [infop], #4          // size
         add     dest_end, dest_begin, tmp       // dest_end
         mov     dest,     dest_begin            // dest working pointer
+#if 1
+        mov     dest, dest_end
+#else
 @1:
         cmp     dest, dest_end
         ldrmi   tmp, [src],  #4                 // [dest++] <- [src++]
         strmi   tmp, [dest], #4
         bmi     @1
+#endif
 
         //---- fill bss with 0
         ldr     tmp, [infop], #4                // size
