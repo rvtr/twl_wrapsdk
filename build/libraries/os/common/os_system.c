@@ -311,6 +311,31 @@ void OS_SpinWait(u32 cycle)
 }
 #endif
 
+/*---------------------------------------------------------------------------*
+  Name:         OS_SpinWaitSysCycles
+
+  Description:  Spin and Wait for specified SYSTEM cycles at least
+
+  Arguments:    cycles      waiting SYSTEM cycle
+
+  Returns:      None
+ *---------------------------------------------------------------------------*/
+#if defined(SDK_ARM9)
+void OS_SpinWaitSysCycles( u32 cycle )
+{
+    cycle <<= (1 + ((reg_CFG_CLK & REG_CFG_CLK_ARM2X_MASK) >> REG_CFG_CLK_ARM2X_SHIFT));
+    if (cycle > 16)
+    {
+        OS_SpinWait(cycle - 16);
+    }
+}
+#else
+void OS_SpinWaitSysCycles(u32 cycle)
+{
+    OS_SpinWait((s32)cycle / 4);
+}
+#endif
+
 
 /*---------------------------------------------------------------------------*
   Name:         OS_WaitInterrupt
@@ -356,7 +381,7 @@ void OS_WaitInterrupt(BOOL clear, OSIrqMask irqFlags)
   Name:         OS_WaitVBlankIntr
 
   Description:  wait till vblank interrupt occurred.
-				the difference between SVC_WaitVBlankIntr and OS_WaitVBlankIntr is:
+                the difference between SVC_WaitVBlankIntr and OS_WaitVBlankIntr is:
                 OS_WaitVBlankIntr does switch thread,
                 SVC_WaitVBlankIntr doesn't switch thread.
 
