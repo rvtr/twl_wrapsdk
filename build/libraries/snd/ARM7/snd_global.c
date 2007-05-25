@@ -17,7 +17,6 @@
 
 #include <twl/os.h>
 #include <twl/misc.h>
-#include <twl/cdc.h>
 #include <twl/snd/ARM7/i2s.h>
 #include <nitro/hw/ARM7/ioreg_SND.h>
 #include <nitro/spi/common/pm_common.h>

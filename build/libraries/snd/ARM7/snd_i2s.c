@@ -71,6 +71,10 @@ void SND_I2SEnable(void)
 
     if (isTwl)
     {
+        if ((reg_CFG_CLK & REG_CFG_CLK_SND_MASK) == 0)
+        {
+            CDC_Init();
+        }
         reg_SND_I2SCNT |= REG_SND_I2SCNT_E_MASK;
     }
 }
