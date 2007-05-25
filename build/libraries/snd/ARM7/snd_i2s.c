@@ -41,6 +41,10 @@ static void SNDi_I2SInit(void)
     if (isInitialized == FALSE)
     {
         isInitialized = TRUE;
+        if ((reg_CFG_CLK & REG_CFG_CLK_SND_MASK) == 0)
+        {
+            CDC_Init();
+        }
         reg_SND_POWCNT |= REG_SND_POWCNT_SPE_MASK;
         reg_CFG_TWL_EX |= REG_CFG_TWL_EX_I2S_MASK;
         if (reg_CFG_TWL_EX & REG_CFG_TWL_EX_I2S_MASK)
@@ -71,10 +75,6 @@ void SND_I2SEnable(void)
 
     if (isTwl)
     {
-        if ((reg_CFG_CLK & REG_CFG_CLK_SND_MASK) == 0)
-        {
-            CDC_Init();
-        }
         reg_SND_I2SCNT |= REG_SND_I2SCNT_E_MASK;
     }
 }
@@ -170,10 +170,11 @@ void SND_I2SMute(BOOL isMute)
 /*---------------------------------------------------------------------------*
   Name:         SND_I2SSetMixingRatio
 
-  Description:  Set output selector
+  Description:  Set mixing ratio
 
-  Arguments:    nitroRatio  : NITRO / (NITRO + DSP) ratio.  (0-8)
+  Arguments:    nitroRatio  : NITRO : DSP ratio.  (0-8)
                               if 8, nitro sound is all.
+                              if 0, DSP sound is all.
 
   Returns:      None
  *---------------------------------------------------------------------------*/
@@ -185,6 +186,30 @@ void SND_I2SSetMixingRatio(int nitroRatio)
         {
             reg_SND_I2SCNT &= ~REG_SND_I2SCNT_MIX_RATIO_MASK;
             reg_SND_I2SCNT = (u8)((reg_SND_I2SCNT & ~REG_SND_I2SCNT_MIX_RATIO_MASK) | nitroRatio);
+        }
+    }
+}
+
+/*---------------------------------------------------------------------------*
+  Name:         SND_I2SSetSamplingRatio
+
+  Description:  Set I2S sampling ratio
+
+  Arguments:    is47kHz : set 48 kHz if TRUE. set 32kHz if FALSE.
+
+  Returns:      None
+ *---------------------------------------------------------------------------*/
+void SND_I2SSetSamplingRatio(BOOL is47kHz)
+{
+    if (isTwl)
+    {
+        if (is47kHz)
+        {
+            reg_SND_I2SCNT |= REG_SND_I2SCNT_CODEC_SMP_MASK;
+        }
+        else
+        {
+            reg_SND_I2SCNT &= ~REG_SND_I2SCNT_CODEC_SMP_MASK;
         }
     }
 }
