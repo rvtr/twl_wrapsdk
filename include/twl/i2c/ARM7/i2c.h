@@ -21,6 +21,7 @@
 extern "C" {
 #endif
 
+#include <twl/misc.h>
 #include <twl/ioreg.h>
 #include <nitro/hw/ARM7/ioreg_EXI.h>
 

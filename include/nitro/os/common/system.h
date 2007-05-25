@@ -141,9 +141,9 @@ extern "C" {
 
 //----------------------------------------------------------------------------
 #ifndef SDK_ASM
-#define		OS_EXIT_STRING_1		"*** Exit nitro program (status="
-#define		OS_EXIT_STRING_2		"%d).\n"
-#define		OS_EXIT_STRING			OS_EXIT_STRING_1 OS_EXIT_STRING_2
+#define     OS_EXIT_STRING_1        "*** Exit nitro program (status="
+#define     OS_EXIT_STRING_2        "%d).\n"
+#define     OS_EXIT_STRING          OS_EXIT_STRING_1 OS_EXIT_STRING_2
 
 typedef enum
 {
@@ -276,7 +276,7 @@ extern OSProcMode OS_GetProcMode(void);
   Name:         OS_Terminate
 
   Description:  Halt CPU and loop
-  
+
   Arguments:    None
 
   Returns:      None
@@ -288,7 +288,7 @@ extern void OS_Terminate(void);
   Name:         OS_Halt
 
   Description:  Halt CPU
-  
+
   Arguments:    None
 
   Returns:      None
@@ -306,8 +306,8 @@ static inline void OS_Halt(void)
   Name:         OS_Exit
 
   Description:  Display exit string and Terminate.
-                This is useful for 'loadrun' tool command.                 
-  
+                This is useful for 'loadrun' tool command.
+
   Arguments:    status : exit status
 
   Returns:      --  (Never return)
@@ -327,6 +327,17 @@ extern void OS_Exit(int status);
   Returns:      None
  *---------------------------------------------------------------------------*/
 extern void OS_SpinWait(u32 cycle);
+
+/*---------------------------------------------------------------------------*
+  Name:         OS_SpinWaitSysCycles
+
+  Description:  Spin and Wait for specified SYSTEM cycles at least
+
+  Arguments:    cycles      waiting SYSTEM cycle
+
+  Returns:      None
+ *---------------------------------------------------------------------------*/
+extern void OS_SpinWaitSysCycles(u32 cycle);
 
 /*---------------------------------------------------------------------------*
   Name:         OS_WaitInterrupt
@@ -360,7 +371,7 @@ extern void OS_WaitInterrupt(BOOL clear, OSIrqMask irqFlags);
   Name:         OS_WaitVBlankIntr
 
   Description:  wait till vblank interrupt occurred.
-				the difference between SVC_WaitVBlankIntr and OS_WaitVBlankIntr is:
+                the difference between SVC_WaitVBlankIntr and OS_WaitVBlankIntr is:
                 OS_WaitVBlankIntr does switch thread,
                 SVC_WaitVBlankIntr doesn't switch thread.
 

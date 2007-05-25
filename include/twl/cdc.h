@@ -21,7 +21,7 @@
 #include <twl/cdc/ARM7/cdc.h>
 #include <twl/cdc/ARM7/cdc_api.h>
 #include <twl/cdc/ARM7/cdc_filter_coefficient.h>
-//#include <twl/cdc/ARM7/cdc_dsmode_access.h>
+#include <twl/cdc/ARM7/cdc_dsmode_access.h>
 
 /* TWL_CDC_H_ */
 #endif

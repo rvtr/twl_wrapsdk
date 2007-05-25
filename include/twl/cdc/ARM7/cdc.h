@@ -22,10 +22,12 @@
 #include <nitro/spi/ARM7/spi.h>
 #include <twl/i2c/ARM7/i2c.h>
 
-
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+extern void SPI_Lock(u32 id);
+extern void SPI_Unlock(u32 id);
 
 //================================================================
 // CODEC status variables
@@ -213,7 +215,6 @@ static inline void CDC_ReadI2cRegisters( u8 reg, u8 *bufp, size_t size )
     I2C_ReadRegisters( I2C_SLAVE_CODEC_TP, reg, bufp, size );
 }
 
-#if 0
 //================================================================================
 //        SPI BIT CONTROL
 //================================================================================
@@ -273,9 +274,9 @@ void CDC_ClearSpiFlags( u8 reg, u8 clrBits );
 void CDCi_WriteSpiRegister( u8 reg, u8 data );
 static inline void CDC_WriteSpiRegister( u8 reg, u8 data )
 {
-    (void)spiLock();
+    (void)SPI_Lock(123);
     CDCi_WriteSpiRegister( reg, data );
-    (void)spiUnlock();
+    (void)SPI_Unlock(123);
 }
 
 /*---------------------------------------------------------------------------*
@@ -290,9 +291,9 @@ static inline void CDC_WriteSpiRegister( u8 reg, u8 data )
 u8 CDCi_ReadSpiRegister( u8 reg );
 static inline void CDC_ReadSpiRegister( u8 reg )
 {
-    (void)spiLock();
+    (void)SPI_Lock(123);
     CDCi_ReadSpiRegister( reg );
-    (void)spiUnlock();
+    (void)SPI_Unlock(123);
 }
 
 /*---------------------------------------------------------------------------*
@@ -308,9 +309,9 @@ static inline void CDC_ReadSpiRegister( u8 reg )
 void CDCi_WriteSpiRegisters( u8 reg, const u8 *bufp, size_t size );
 static inline void CDC_WriteSpiRegisters( u8 reg, const u8 *bufp, size_t size )
 {
-    (void)spiLock();
+    (void)SPI_Lock(123);
     CDCi_WriteSpiRegisters( reg, bufp, size );
-    (void)spiUnlock();
+    (void)SPI_Unlock(123);
 }
 
 /*---------------------------------------------------------------------------*
@@ -325,11 +326,10 @@ static inline void CDC_WriteSpiRegisters( u8 reg, const u8 *bufp, size_t size )
 void CDCi_ReadSpiRegisters( u8 reg, u8 *bufp, size_t size );
 static inline void CDC_ReadSpiRegisters( u8 reg, u8 *bufp, size_t size )
 {
-    (void)spiLock();
+    (void)SPI_Lock(123);
     CDCi_ReadSpiRegisters( reg, bufp, size );
-    (void)spiUnlock();
+    (void)SPI_Unlock(123);
 }
-#endif
 
 //================================================================================
 //        Utility Functions
