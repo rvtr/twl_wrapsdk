@@ -16,6 +16,8 @@
 #include <twl.h>
 #include <twl/cdc.h>
 
+#include "pm_pmic.h"
+
 //#define MEASUREMENT_BY_TICK
 #ifdef  MEASUREMENT_BY_TICK
 #include <twl/vlink.h>
@@ -35,8 +37,8 @@ BOOL isADCOn = FALSE;
 BOOL isDACOn = FALSE;
 #define CDC_PLL_STABLE_WAIT_TIME    18
 
-void CDCi_PowerUpPLL( void );
-void CDCi_PowerDownPLL( void );
+static void CDCi_PowerUpPLL( void );
+static void CDCi_PowerDownPLL( void );
 
 //================================================================================
 //        INIT APIs
@@ -243,7 +245,7 @@ u8 CDC_GetRevisionId( void )
     CDC_ChangePage( 0 );
     return (u8)(( CDC_ReadI2cRegister( REG_CDC0_REV_ID_ADDR ) & CDC0_REV_ID_MASK ) >> CDC0_REV_ID_SHIFT);
 }
-#if 0
+
 //================================================================================
 //        State Transition APIs
 //================================================================================
@@ -300,7 +302,7 @@ void CDC_GoDsMode( void )
     {
         // MicBias powered up
         // In Rev-A, MicBias must be powered up before enabling Master Sound Power
-        dsmodeSetSpiFlags( REG_CDC255_DS_MIC_CTL_ADDR, CDC255_DS_MIC_CTL_BIAS_PWR );
+        CDC_DsmodeSetSpiFlags( REG_CDC255_DS_MIC_CTL_ADDR, CDC255_DS_MIC_CTL_BIAS_PWR );
 
         // enable Master Sound Power  (via reg0 : current page=255)
         //
@@ -310,18 +312,18 @@ void CDC_GoDsMode( void )
         //       CODEC PCSN is connected to IO-board Analog Key CS.
         //       CODEC PCSN is associated with TouchPanel now (for revision A).
         //
-        dsmodeSetSpiFlags( REG_CDC255_AUD_CTL_ADDR, CDC255_AUD_CTL_PWR );
+        CDC_DsmodeSetSpiFlags( REG_CDC255_AUD_CTL_ADDR, CDC255_AUD_CTL_PWR );
     }
     else
     {
         // MicBias powered up
-        pmSetFlags( REG_CDC255_DS_MIC_CTL_ADDR, CDC255_DS_MIC_CTL_BIAS_PWR );
+        u8 flags = PMi_GetRegister( REG_CDC255_DS_MIC_CTL_ADDR );
+        PMi_SetRegister( REG_CDC255_DS_MIC_CTL_ADDR, (u8)(flags | CDC255_DS_MIC_CTL_BIAS_PWR) );
     }
 
     // change CODEC status variable
-    CDCi_IsTwlMode = FALSE;
+    cdcIsTwlMode = FALSE;
 }
-#endif
 
 /*---------------------------------------------------------------------------*
   Name:         CDC_SetInputPinControl
@@ -392,7 +394,7 @@ void CDC_GetInputPinControl( BOOL *enable_vcnt5, BOOL *enable_sphp, BOOL *enable
 
   Returns:      None
  *---------------------------------------------------------------------------*/
-void CDCi_PowerUpPLL( void )
+static void CDCi_PowerUpPLL( void )
 {
     // IOP Ç©ÇÁÇÃ MCLK Ç check / enable
 
@@ -414,7 +416,7 @@ void CDCi_PowerUpPLL( void )
 
   Returns:      None
  *---------------------------------------------------------------------------*/
-void CDCi_PowerDownPLL( void )
+static void CDCi_PowerDownPLL( void )
 {
     // page 0, reg 5 Ç≈ PLL off ê›íË
     CDC_ChangePage( 0 );

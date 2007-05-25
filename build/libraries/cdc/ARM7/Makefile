@@ -27,8 +27,11 @@ TWL_PROC    =   ARM7
 
 SRCS	=	cdc.c		\
 		cdc_api.c	\
-		cdc_filter_coefficient.c
+		cdc_filter_coefficient.c	\
+		cdc_dsmode_access.c
 
+INCDIR	+=	$(TWL_NITROSDK_ROOT)/build/libraries/spi/ARM7/include \
+		$(TWL_NITROSDK_ROOT)/build/libraries/spi/ARM7/pm/include
 
 TARGET_LIB	=	libcdc_sp$(TWL_LIBSUFFIX).a
 

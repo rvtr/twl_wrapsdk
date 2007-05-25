@@ -18,6 +18,7 @@
 #include <twl/cdc/ARM7/cdc_reg.h>
 #include <twl/cdc/ARM7/cdc.h>
 
+#include "spi_sp.h"
 
 void CDCi_PreInitAudio( void );
 void CDCi_PostInitAudio( void );
@@ -39,17 +40,16 @@ int         cdcRevisionID  = 0;
                            (CDC_SPI_BAUDRATE_DEFAULT << REG_SPI_SPICNT_BAUDRATE_SHIFT)))
 #define     CDC_SPI_MODE_SETTING_REVISION_B     ((u16)((1 << REG_SPI_SPICNT_E_SHIFT) |  \
                            (0 << REG_SPI_SPICNT_I_SHIFT) |                              \
-                           (SPI_SLAVE_CODEC_TP << REG_SPI_SPICNT_SEL_SHIFT) |           \
+                           (SPI_COMMPARTNER_TP << REG_SPI_SPICNT_SEL_SHIFT) |           \
                            (CDC_SPI_BAUDRATE_DEFAULT << REG_SPI_SPICNT_BAUDRATE_SHIFT)))
 #define     CDC_SPI_MODE_SETTING_REVISION_C     CDC_SPI_MODE_SETTING_REVISION_B
 
-#if 0
 u16         cdcSpiMode     = CDC_SPI_MODE_SETTING_REVISION_B;
 
 //================================================================================
 static inline void CDCi_ChangeSpiMode( SPITransMode continuous )
 {
-    reg_SPI_SPICNT = (u16)((continuous << REG_SPI_SPICNT_MODE_SHIFT) | CDC_SpiMode );
+    reg_SPI_SPICNT = (u16)((continuous << REG_SPI_SPICNT_MODE_SHIFT) | cdcSpiMode );
 }
 
 //================================================================================
@@ -77,9 +77,9 @@ void CDCi_SetSpiParams( u8 reg, u8 setBits, u8 maskBits )
 }
 void CDC_SetSpiParams( u8 reg, u8 setBits, u8 maskBits )
 {
-    (void)spiLock();
+    (void)SPI_Lock(123);
     CDCi_SetSpiParams( reg, setBits, maskBits );
-    (void)spiUnlock();
+    (void)SPI_Unlock(123);
 }
 
 /*---------------------------------------------------------------------------*
@@ -135,13 +135,13 @@ void CDC_ClearSpiFlags( u8 reg, u8 clrBits )
  *---------------------------------------------------------------------------*/
 void CDCi_WriteSpiRegister( u8 reg, u8 data )
 {
-    i_spiWait();
+    SPI_Wait();
 
     CDCi_ChangeSpiMode( SPI_TRANSMODE_CONTINUOUS );
-    i_spiSendWait( reg << 1 );
+    SPI_SendWait( reg << 1 );
 
     CDCi_ChangeSpiMode( SPI_TRANSMODE_1BYTE );
-    i_spiSend( data );
+    SPI_Send( data );
 }
 
 /*---------------------------------------------------------------------------*
@@ -157,13 +157,13 @@ u8 CDCi_ReadSpiRegister( u8 reg )
 {
     u8      data;
 
-    i_spiWait();
+    SPI_Wait();
 
     CDCi_ChangeSpiMode( SPI_TRANSMODE_CONTINUOUS );
-    i_spiSendWait( reg << 1 );
+    SPI_SendWait( reg << 1 );
 
     CDCi_ChangeSpiMode( SPI_TRANSMODE_1BYTE );
-    data = i_spiDummyWaitReceive();
+    data = SPI_DummyWaitReceive();
     return data;
 }
 
@@ -181,19 +181,19 @@ void CDCi_WriteSpiRegisters( u8 reg, const u8 *bufp, size_t size )
 {
     int i;
 
-    i_spiWait();
+    SPI_Wait();
 
     CDCi_ChangeSpiMode( SPI_TRANSMODE_CONTINUOUS );
-    i_spiSendWait( reg << 1 );
+    SPI_SendWait( reg << 1 );
 
     for ( i=0; i<(size-1); i++ )
     {
-        i_spiWait();
-        i_spiSend( *bufp++ );
+        SPI_Wait();
+        SPI_Send( *bufp++ );
     }
-    i_spiWait();
+    SPI_Wait();
     CDCi_ChangeSpiMode( SPI_TRANSMODE_1BYTE );
-    i_spiSend( *bufp++ );
+    SPI_Send( *bufp++ );
 }
 
 /*---------------------------------------------------------------------------*
@@ -209,20 +209,19 @@ void CDCi_ReadSpiRegisters( u8 reg, u8 *bufp, size_t size )
 {
     int i;
 
-    i_spiWait();
+    SPI_Wait();
 
     CDCi_ChangeSpiMode( SPI_TRANSMODE_CONTINUOUS );
-    i_spiSendWait( reg << 1 );
+    SPI_SendWait( reg << 1 );
 
     for ( i=0; i<(size-1); i++ )
     {
-        i_spiWait();
-        *bufp++ = i_spiDummyWaitReceive();
+        SPI_Wait();
+        *bufp++ = SPI_DummyWaitReceive();
     }
     CDCi_ChangeSpiMode( SPI_TRANSMODE_1BYTE );
-    *bufp++ = i_spiDummyWaitReceive();
+    *bufp++ = SPI_DummyWaitReceive();
 }
-#endif
 
 //================================================================================
 //        Utility Functions
