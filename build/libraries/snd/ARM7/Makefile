@@ -33,16 +33,17 @@ SRCS	=	\
 		snd_global.c  		\
 		snd_channel.c		\
 		snd_util.c		\
-		snd_main.c			\
+		snd_main.c		\
 		snd_capture.c		\
-		snd_exchannel.c 		\
-		snd_seq.c 			\
-		snd_midiplayer.c 			\
-		snd_bank.c 			\
-		snd_work.c 			\
-		snd_alarm.c			\
-		snd_command.c			\
-		snd_data.c
+		snd_exchannel.c 	\
+		snd_seq.c 		\
+		snd_midiplayer.c 	\
+		snd_bank.c 		\
+		snd_work.c 		\
+		snd_alarm.c		\
+		snd_command.c		\
+		snd_data.c		\
+		snd_i2s.c
 
 
 TARGET_LIB	=	libsnd_sp$(TWL_LIBSUFFIX).a

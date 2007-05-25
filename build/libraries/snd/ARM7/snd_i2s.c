@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------*
   Project:  TwlSDK - SND - libraries
-  File:     snd_global.c
+  File:     snd_i2s.c
 
   Copyright 2004-2006 Nintendo.  All rights reserved.
 
@@ -10,41 +10,54 @@
   not be disclosed to third parties or copied or duplicated in any form,
   in whole or in part, without the prior written consent of Nintendo.
 
-  $Log: snd_global.c,v $
+  $Log: snd_i2s.c,v $
   $NoKeywords: $
  *---------------------------------------------------------------------------*/
-#include <nitro/snd/common/global.h>
+#include <twl/snd/ARM7/i2s.h>
 
 #include <twl/os.h>
 #include <twl/misc.h>
 #include <twl/cdc.h>
-#include <twl/snd/ARM7/i2s.h>
 #include <nitro/hw/ARM7/ioreg_SND.h>
-#include <nitro/spi/common/pm_common.h>
-#include <nitro/snd/common/channel.h>
-#include <nitro/snd/common/capture.h>
 
 /******************************************************************************
-    macro definition
+    static typedef declaration
  ******************************************************************************/
-
-#define SOUND_BIAS_WAIT_COUNT   128
-#define SOUND_BIAS_LEVEL      0x200
-#define SOUND_BIAS_CYCLE_PER_LOOP 4
 
 /******************************************************************************
-    external function declaration
+    static variables
  ******************************************************************************/
 
-extern void PMi_SetControl(u8 sw);
-extern void PMi_ResetControl(u8 sw);
+static u8   state;
+static BOOL isTwl = FALSE;
+
+/******************************************************************************
+    static functions
+ ******************************************************************************/
+
+static void SNDi_I2SInit(void)
+{
+    static BOOL isInitialized = FALSE;
+    if (isInitialized == FALSE)
+    {
+        isInitialized = TRUE;
+        reg_SND_POWCNT |= REG_SND_POWCNT_SPE_MASK;
+        reg_CFG_TWL_EX |= REG_CFG_TWL_EX_I2S_MASK;
+        if (reg_CFG_TWL_EX & REG_CFG_TWL_EX_I2S_MASK)
+        {
+            isTwl = TRUE;
+            reg_SND_I2SCNT |= REG_SND_I2SCNT_MIX_RATIO_MASK;
+            reg_SND_I2SCNT &= ~REG_SND_I2SCNT_MUTE_MASK;
+        }
+    }
+}
 
 /******************************************************************************
     public functions
  ******************************************************************************/
 
 /*---------------------------------------------------------------------------*
-  Name:         SND_Enable
+  Name:         SND_I2SEnable
 
   Description:  Enable sound master control
 
@@ -52,16 +65,18 @@ extern void PMi_ResetControl(u8 sw);
 
   Returns:      None
  *---------------------------------------------------------------------------*/
-void SND_Enable(void)
+void SND_I2SEnable(void)
 {
-    OSIntrMode enabled = OS_DisableInterrupts();
-    SND_I2SEnable();
-    reg_SND_SOUNDCNT_8 |= REG_SND_SOUNDCNT_8_E_MASK;
-    (void)OS_RestoreInterrupts(enabled);
+    SNDi_I2SInit();
+
+    if (isTwl)
+    {
+        reg_SND_I2SCNT |= REG_SND_I2SCNT_E_MASK;
+    }
 }
 
 /*---------------------------------------------------------------------------*
-  Name:         SND_Disable
+  Name:         SND_I2SDisable
 
   Description:  Disable sound master control
 
@@ -69,16 +84,16 @@ void SND_Enable(void)
 
   Returns:      None
  *---------------------------------------------------------------------------*/
-void SND_Disable(void)
+void SND_I2SDisable(void)
 {
-    OSIntrMode enabled = OS_DisableInterrupts();
-    SND_I2SDisable();
-    reg_SND_SOUNDCNT_8 &= ~REG_SND_SOUNDCNT_8_E_MASK;
-    (void)OS_RestoreInterrupts(enabled);
+    if (isTwl)
+    {
+        reg_SND_I2SCNT &= ~REG_SND_I2SCNT_E_MASK;
+    }
 }
 
 /*---------------------------------------------------------------------------*
-  Name:         SND_Shutdown
+  Name:         SND_I2SShutdown
 
   Description:  shutdown sound system
 
@@ -86,18 +101,8 @@ void SND_Disable(void)
 
   Returns:      None.
  *---------------------------------------------------------------------------*/
-void SND_Shutdown(void)
+void SND_I2SShutdown(void)
 {
-    int     ch;
-
-    SND_Disable();
-
-    for (ch = 0; ch < SND_CHANNEL_NUM; ch++)
-    {
-        SND_StopChannel(ch, SND_CHANNEL_STOP_HOLD);
-    }
-    SND_StopCapture(SND_CAPTURE_0);
-    SND_StopCapture(SND_CAPTURE_1);
 }
 
 /*---------------------------------------------------------------------------*
@@ -109,23 +114,12 @@ void SND_Shutdown(void)
 
   Returns:      None.
  *---------------------------------------------------------------------------*/
-void SND_BeginSleep(void)
+void SND_I2SBeginSleep(void)
 {
-    // adding process for TWL
-    SND_I2SBeginSleep();
-
-    // stop all sound
-    SND_Disable();
-
-    // bias level down
-    SVC_ResetSoundBias(SOUND_BIAS_WAIT_COUNT);
-    OS_SpinWait(SOUND_BIAS_CYCLE_PER_LOOP * SOUND_BIAS_WAIT_COUNT * SOUND_BIAS_LEVEL);
-
-    // sound power off
-    PMi_ResetControl(PMIC_CTL_SND_PWR);
-
-    // sound clock stop
-    reg_SND_POWCNT &= ~REG_SND_POWCNT_SPE_MASK;
+    if (isTwl)
+    {
+        state = reg_SND_I2SCNT;
+    }
 }
 
 /*---------------------------------------------------------------------------*
@@ -137,61 +131,58 @@ void SND_BeginSleep(void)
 
   Returns:      None.
  *---------------------------------------------------------------------------*/
-void SND_EndSleep(void)
+void SND_I2SEndSleep(void)
 {
-    // sound clock start
-    reg_SND_POWCNT |= REG_SND_POWCNT_SPE_MASK;
-
-    // sound power on
-    PMi_SetControl(PMIC_CTL_SND_PWR);
-
-    // bias level recover
-    SVC_SetSoundBias(SOUND_BIAS_WAIT_COUNT * 2);
-
-    // wait 15msec
-    OS_SpinWait(OS_MilliSecondsToTicks(15) * 64);
-
-    // sound enable
-    SND_Enable();
-
-    // adding process for TWL
-    SND_I2SEndSleep();
+    if (isTwl)
+    {
+        reg_SND_I2SCNT = state;
+    }
 }
 
 /*---------------------------------------------------------------------------*
-  Name:         SND_SetMasterVolume
+  Name:         SND_I2SMute
 
-  Description:  Set master volume
+  Description:  Set mute status
 
-  Arguments:    volume : master volume
+  Arguments:    isMute : TRUE if mute
 
   Returns:      None
  *---------------------------------------------------------------------------*/
-void SND_SetMasterVolume(int volume)
+void SND_I2SMute(BOOL isMute)
 {
-    SDK_MINMAX_ASSERT(volume, 0, SND_MASTER_VOLUME_MAX);
-
-    reg_SND_SOUNDCNT_VOL = (u8)volume;
+    if (isTwl)
+    {
+        if (isMute)
+        {
+            reg_SND_I2SCNT |= REG_SND_I2SCNT_MUTE_MASK;
+        }
+        else
+        {
+            reg_SND_I2SCNT &= ~REG_SND_I2SCNT_MUTE_MASK;
+        }
+    }
 }
 
 /*---------------------------------------------------------------------------*
-  Name:         SND_SetOutputSelector
+  Name:         SND_I2SSetMixingRatio
 
   Description:  Set output selector
 
-  Arguments:    left     : L-OUT selector
-                right    : R-OUT selector
-                channel1 : channel1 output setting
-                channel3 : channel3 output setting
+  Arguments:    nitroRatio  : NITRO / (NITRO + DSP) ratio.  (0-8)
+                              if 8, nitro sound is all.
 
   Returns:      None
  *---------------------------------------------------------------------------*/
-void SND_SetOutputSelector(SNDOutput left,
-                           SNDOutput right, SNDChannelOut channel1, SNDChannelOut channel3)
+void SND_I2SSetMixingRatio(int nitroRatio)
 {
-    BOOL    enable = (reg_SND_SOUNDCNT_8 & REG_SND_SOUNDCNT_8_E_MASK) ? TRUE : FALSE;
-
-    reg_SND_SOUNDCNT_8 = REG_SND_SOUNDCNT_8_FIELD(enable, channel3, channel1, right, left);
+    if (isTwl)
+    {
+        if (nitroRatio >= 0 && nitroRatio <= 8)
+        {
+            reg_SND_I2SCNT &= ~REG_SND_I2SCNT_MIX_RATIO_MASK;
+            reg_SND_I2SCNT = (u8)((reg_SND_I2SCNT & ~REG_SND_I2SCNT_MIX_RATIO_MASK) | nitroRatio);
+        }
+    }
 }
 
-/*====== End of snd_global.c ======*/
+/*====== End of snd_i2s.c ======*/
