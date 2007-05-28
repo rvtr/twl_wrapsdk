@@ -1,6 +1,6 @@
 #! make -f
 #----------------------------------------------------------------------------
-# Project:  TwlDK - tests
+# Project:  TwlSDK - libraries - camera/ARM9
 # File:     Makefile
 #
 # Copyright 2007 Nintendo.  All rights reserved.
@@ -15,19 +15,40 @@
 # $NoKeywords: $
 #----------------------------------------------------------------------------
 
+SUBDIRS			=
+
+
+#----------------------------------------------------------------------------
+
+# build ARM & THUMB libraries
+TWL_CODEGEN_ALL 	?= True
+
+SRCDIR			= ../common .
+
+SRCS			= camera_api.c \
+			  camera.c
+
+TARGET_LIB		= libcamera$(TWL_LIBSUFFIX).a
+
+
+#----------------------------------------------------------------------------
+
+# DEBUG版ビルドの場合、RELEASE版でビルドして
+# DEBUG版のライブラリを装います。
+
+ifdef	NITRO_DEBUG
+NITRO_BUILD_TYPE	= RELEASE
+endif
+
 include	$(TWLSDK_ROOT)/build/buildtools/commondefs
 
-
-#----------------------------------------------------------------------------
-
-SUBDIRS =	os \
-		mi \
-		aes \
-		snd \
-		camera \
+INSTALL_TARGETS		= $(TARGETS)
+INSTALL_DIR		= $(TWL_INSTALL_LIBDIR)
 
 
 #----------------------------------------------------------------------------
+
+do-build:		$(TARGETS)
 
 include	$(TWLSDK_ROOT)/build/buildtools/modulerules
 

@@ -32,7 +32,7 @@ SUBDIRS		= \
 		  i2c		\
 		  cdc		\
 		  snd		\
-
+		  camera	\
 
 #----------------------------------------------------------------------------
 export	NITRO_BLXCHECKED = yes

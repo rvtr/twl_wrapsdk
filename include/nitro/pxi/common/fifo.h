@@ -112,6 +112,7 @@ typedef enum
     PXI_FIFO_TAG_CTRDG_Ex,             // Cartridge Ex
     PXI_FIFO_TAG_CTRDG_PHI,            // Cartridge PHI
     PXI_FIFO_TAG_AES,                  // AES
+    PXI_FIFO_TAG_CAMERA,               // Camera
 
     PXI_MAX_FIFO_TAG = 32              // MAX FIFO TAG
 }

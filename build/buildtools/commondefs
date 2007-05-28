@@ -159,6 +159,7 @@ TWL_LIBS_BASE	?= \
 			   libvlink \
 			   libctrdg \
 			   libaes \
+			   libcamera \
 
 ifdef		TWL_PROFILE_TYPE
 TWL_LIBS_BASE	+= libos.$(TWL_PROFILE_TYPE)
@@ -176,6 +177,7 @@ TWL_LIBS_BASE	?= \
 			   libi2c_sp \
 			   libcdc_sp \
 			   libsnd_sp \
+			   libcamera_sp \
 
 ifdef		TWL_PROFILE_TYPE
 TWL_LIBS_BASE	+= libos_sp.$(TWL_PROFILE_TYPE)

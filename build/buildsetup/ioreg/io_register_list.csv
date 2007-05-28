@@ -459,9 +459,9 @@
 0x1052,,DB_BLDALPHA,16,rw,G2S,volatile,EVB,8,5,EVA,0,5,,,,,,,,,,,,,,,,,,,,,,,,
 0x1054,,DB_BLDY,16,rw,G2S,volatile,EVY,0,5,,,,,,,,,,,,,,,,,,,,,,,,,,,
 #twl p79 Å` 84,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
-0x4200,,MCNT,16,rw,CAM,volatile,INI,7,1,V28,6,1,VIO,5,1,V18,4,1,IRCLK,3,1,SYNC,2,1,RSTN,1,1,STBYN,0,1,,,,,,
-0x4202,,CNT,16,rw,CAM,volatile,E,15,1,T,14,1,F,13,1,IREQ_I,11,1,IREQ_BE,10,1,IREQ_VS1,9,1,IREQ_VS0,8,1,CL,7,1,ERR,6,1,TL,0,4
-0x4204,,DAT,32,r,CAM,volatile,DATA,0,32,,,,,,,,,,,,,,,,,,,,,,,,,,,
+0x4200,,CAM_MCNT,16,rw,CAM,volatile,INI,7,1,V28,6,1,VIO,5,1,V18,4,1,IRCLK,3,1,SYNC,2,1,RSTN,1,1,STBYN,0,1,,,,,,
+0x4202,,CAM_CNT,16,rw,CAM,volatile,E,15,1,T,14,1,F,13,1,IREQ_I,11,1,IREQ_BE,10,1,IREQ_VS,8,2,CL,5,1,ERR,4,1,TL,0,4
+0x4204,,CAM_DAT,32,r,CAM,volatile,DATA,0,32,,,,,,,,,,,,,,,,,,,,,,,,,,,
 0x4210,,SOFS_H,16,rw,CAM,volatile,OFFSET,0,10
 0x4212,,SOFS_V,16,rw,CAM,volatile,OFFSET,0,9
 0x4214,,EOFS_H,16,rw,CAM,volatile,OFFSET,0,10
