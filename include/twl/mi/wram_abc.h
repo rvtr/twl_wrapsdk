@@ -99,11 +99,11 @@ typedef enum
     MI_WRAM_A_IMG_256KB = 3 << REG_MI_WRAM_A_MAP_IMG_SHIFT,
 
     MI_WRAM_A_IMG_MIN   = MI_WRAM_A_IMG_64KB,
-#ifdef BROM_PLATFORM_BB
+#ifdef TWL_PLATFORM_BB
     MI_WRAM_A_IMG_MAX   = MI_WRAM_A_IMG_128KB
-#else // BROM_PLATFORM_TS
+#else // TWL_PLATFORM_TS
     MI_WRAM_A_IMG_MAX   = MI_WRAM_A_IMG_256KB
-#endif // BROM_PLATFORM_TS
+#endif // TWL_PLATFORM_TS
 }
 MIImageWramA;
 
@@ -115,11 +115,11 @@ typedef enum
     MI_WRAM_B_IMG_256KB = 3 << REG_MI_WRAM_B_MAP_IMG_SHIFT,
 
     MI_WRAM_B_IMG_MIN   = MI_WRAM_B_IMG_32KB,
-#ifdef BROM_PLATFORM_BB
+#ifdef TWL_PLATFORM_BB
     MI_WRAM_B_IMG_MAX   = MI_WRAM_B_IMG_128KB
-#else // BROM_PLATFORM_TS
+#else // TWL_PLATFORM_TS
     MI_WRAM_B_IMG_MAX   = MI_WRAM_B_IMG_256KB
-#endif // BROM_PLATFORM_TS
+#endif // TWL_PLATFORM_TS
 }
 MIImageWramB;
 
@@ -131,11 +131,11 @@ typedef enum
     MI_WRAM_C_IMG_256KB = 3 << REG_MI_WRAM_C_MAP_IMG_SHIFT,
 
     MI_WRAM_C_IMG_MIN   = MI_WRAM_C_IMG_32KB,
-#ifdef BROM_PLATFORM_BB
+#ifdef TWL_PLATFORM_BB
     MI_WRAM_C_IMG_MAX   = MI_WRAM_C_IMG_128KB
-#else // BROM_PLATFORM_TS
+#else // TWL_PLATFORM_TS
     MI_WRAM_C_IMG_MAX   = MI_WRAM_C_IMG_256KB
-#endif // BROM_PLATFORM_TS
+#endif // TWL_PLATFORM_TS
 }
 MIImageWramC;
 
@@ -144,15 +144,15 @@ MIImageWramC;
 #define MI_WRAM_B_BLOCK_SIZE  0x00008000  // 32KB
 #define MI_WRAM_C_BLOCK_SIZE  0x00008000  // 32KB
 
-#ifdef BROM_PLATFORM_BB
+#ifdef TWL_PLATFORM_BB
 #define MI_WRAM_A_BLOCK_NUM   2
 #define MI_WRAM_B_BLOCK_NUM   4
 #define MI_WRAM_C_BLOCK_NUM   4
-#else // BROM_PLATFORM_TS
+#else // TWL_PLATFORM_TS
 #define MI_WRAM_A_BLOCK_NUM   4
 #define MI_WRAM_B_BLOCK_NUM   8
 #define MI_WRAM_C_BLOCK_NUM   8
-#endif // BROM_PLATFORM_TS
+#endif // TWL_PLATFORM_TS
 
 
 #define REG_WRAM_A_BNK_PACK( b_no, master, ofs, enable )  REG_WRAM_BNK_PACK( A, b_no, (master), (ofs), (enable) )
