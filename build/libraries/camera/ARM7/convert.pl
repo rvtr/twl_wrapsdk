@@ -23,9 +23,8 @@ my $file_head_format =<<'EOF';
 //#define PRINT_DEBUG
 
 #ifdef PRINT_DEBUG
-#include <twl/vlink.h>
-#define DBG_PRINTF vlink_dos_printf
-#define DBG_CHAR vlink_dos_put_console
+#include <nitro/os/common/printf.h>
+#define DBG_PRINTF OS_TPrintf
 #else
 #define DBG_PRINTF( ... )  ((void)0)
 #define DBG_CHAR( c )      ((void)0)

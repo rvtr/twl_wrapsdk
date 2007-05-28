@@ -31,11 +31,11 @@ extern BOOL CAMERAi_I2CPreset_A3AFX_EVT3_30fps_Subsampling_16_7M_50Hz( void );
 typedef BOOL (*CameraI2CPresetFunc)(void);
 
 static CameraI2CPresetFunc gs_preset[] = {
-    CAMERAi_I2CPreset_A3AFX_EVT2_20fps_16M_PLLoff_hVGA,
-    CAMERAi_I2CPreset_A3AFX_EVT2_30fps_16M_QVGA,
+//    CAMERAi_I2CPreset_A3AFX_EVT2_20fps_16M_PLLoff_hVGA,
+//    CAMERAi_I2CPreset_A3AFX_EVT2_30fps_16M_QVGA,
     CAMERAi_I2CPreset_A3AFX_EVT2_20fps_16M,
-    CAMERAi_I2CPreset_320x240_noPLL_20fps,
-    CAMERAi_I2CPreset_320x240_PLL_30fps,
+//    CAMERAi_I2CPreset_320x240_noPLL_20fps,
+//    CAMERAi_I2CPreset_320x240_PLL_30fps,
     CAMERAi_I2CPreset_A3AFX_EVT3_30fps_Scaledown_16_7M_50Hz,
     CAMERAi_I2CPreset_A3AFX_EVT3_30fps_Subsampling_16_7M_50Hz,
 };

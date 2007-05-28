@@ -35,6 +35,8 @@ static void CameraIntr(void);
  *---------------------------------------------------------------------------*/
 void TwlMain()
 {
+    CAMERAResult result;
+
     // èâä˙âª
     OS_Init();
     GX_Init();
@@ -63,8 +65,13 @@ void TwlMain()
 
     CAMERA_SelectCamera(CAMERA_SELECT_FIRST);
     CAMERA_PowerOn();
-    CAMERA_I2CInit();
-    CAMERA_I2CPreset(CAMERA_PRESET_QVGA_30SD);
+    result = CAMERA_I2CInit();
+    if (result != CAMERA_RESULT_SUCCESS_TRUE)
+        OS_TPrintf("CAMERA_I2CInit was failed. (%d)\n", result);
+    result = CAMERA_I2CPreset(CAMERA_PRESET_VGA_20);
+    if (result != CAMERA_RESULT_SUCCESS_TRUE)
+        OS_TPrintf("CAMERA_I2CPreset was failed. (%d)\n", result);
+    CAMERA_SetCropping(0, 0, 320, 240);
 
     CAMERA_SetTrimmingParamsCenter(WIDTH, HEIGHT, 320, 240);    // clipped by camera i/f
     CAMERA_SetTrimming(TRUE);
@@ -119,7 +126,7 @@ void CameraIntr(void)
         OSTick current = OS_GetTick();
         if (MIi_IsExDmaBusy(DMA_NO))
         {
-            OS_TPrintf("Why??? %d\n", (int)current);
+            OS_TPrintf("DMA was not done until VBlank.\n");
             OS_SetIrqCheckFlag(OS_IE_CAM);
             return;
         }

@@ -32,7 +32,7 @@ extern "C" {
 typedef enum
 {
     I2C_SLAVE_CODEC_TP = 0,
-    I2C_SLAVE_CAMERA = 2,
+    I2C_SLAVE_CAMERA,
     I2C_SLAVE_NUM
 }
 I2CSlave;
