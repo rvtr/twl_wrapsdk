@@ -177,9 +177,16 @@ MIImageWramC;
 #define REG_WRAM_C_MAP_PACK( start, end, img_size )  REG_WRAM_MAP_PACK( C, (start), (end), (img_size) )
 #define REG_WRAM_MAP_PACK( abc, start, end, img_size ) \
 ( \
-    (((((start) - HW_WRAM_AREA) / MI_WRAM_##abc##_BLOCK_SIZE) << REG_MI_WRAM_##abc##_MAP_START_SHIFT) & REG_MI_WRAM_##abc##_MAP_START_MASK) \
-  | (((((end)   - HW_WRAM_AREA) / MI_WRAM_##abc##_BLOCK_SIZE) << REG_MI_WRAM_##abc##_MAP_END_SHIFT)   & REG_MI_WRAM_##abc##_MAP_END_MASK) \
+    REG_WRAM_MAP_CONV_ADDR( abc, START, (start) ) \
+  | REG_WRAM_MAP_CONV_ADDR( abc, END, (end) ) \
   | (img_size) \
+)
+#define REG_WRAM_A_MAP_CONV_ADDR( border, addr )  REG_WRAM_MAP_CONV_ADDR( A, border, (addr) )
+#define REG_WRAM_B_MAP_CONV_ADDR( border, addr )  REG_WRAM_MAP_CONV_ADDR( B, border, (addr) )
+#define REG_WRAM_C_MAP_CONV_ADDR( border, addr )  REG_WRAM_MAP_CONV_ADDR( C, border, (addr) )
+#define REG_WRAM_MAP_CONV_ADDR( abc, border, addr ) \
+( \
+    (((((addr) - HW_WRAM_AREA) / MI_WRAM_##abc##_BLOCK_SIZE) << REG_MI_WRAM_##abc##_MAP_##border##_SHIFT) & REG_MI_WRAM_##abc##_MAP_##border##_MASK) \
 )
 
 #define REG_WRAM_A_MAP_OFS_PACK( start_ofs, end_ofs )  REG_WRAM_MAP_OFS_PACK( A, (start_ofs), (end_ofs) )
@@ -187,10 +194,16 @@ MIImageWramC;
 #define REG_WRAM_C_MAP_OFS_PACK( start_ofs, end_ofs )  REG_WRAM_MAP_OFS_PACK( C, (start_ofs), (end_ofs) )
 #define REG_WRAM_MAP_OFS_PACK( abc, start_ofs, end_ofs ) \
 ( \
-    ((((start_ofs) / MI_WRAM_##abc##_BLOCK_SIZE) << REG_MI_WRAM_##abc##_MAP_START_SHIFT) & REG_MI_WRAM_##abc##_MAP_START_MASK) \
-  | ((((end_ofs)   / MI_WRAM_##abc##_BLOCK_SIZE) << REG_MI_WRAM_##abc##_MAP_END_SHIFT)   & REG_MI_WRAM_##abc##_MAP_END_MASK) \
+    REG_WRAM_MAP_CONV_OFS( abc, START, (start_ofs) ) \
+  | REG_WRAM_MAP_CONV_OFS( abc, END, (end_ofs) ) \
 )
-
+#define REG_WRAM_A_MAP_CONV_OFS( border, ofs )  REG_WRAM_MAP_CONV_OFS( A, border, (ofs) )
+#define REG_WRAM_B_MAP_CONV_OFS( border, ofs )  REG_WRAM_MAP_CONV_OFS( B, border, (ofs) )
+#define REG_WRAM_C_MAP_CONV_OFS( border, ofs )  REG_WRAM_MAP_CONV_OFS( C, border, (ofs) )
+#define REG_WRAM_MAP_CONV_OFS( abc, border, ofs ) \
+( \
+    ((((ofs) / MI_WRAM_##abc##_BLOCK_SIZE) << REG_MI_WRAM_##abc##_MAP_##border##_SHIFT) & REG_MI_WRAM_##abc##_MAP_##border##_MASK) \
+)
 
 #ifdef __cplusplus
 } /* extern "C" */
