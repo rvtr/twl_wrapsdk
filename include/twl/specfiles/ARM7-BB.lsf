@@ -38,3 +38,13 @@ Autoload WRAM
 	Library		$(LLIBS) $(GLIBS) $(CW_LIBS)
 	Object		* (.wram)
 }
+
+Autoload WRAM_ABC
+{
+	Address		0x03810000
+}
+
+Autoload EXT_WRAM
+{
+	Address		0x06000000
+}

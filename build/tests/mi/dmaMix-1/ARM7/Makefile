@@ -23,7 +23,7 @@ SUBDIRS		=
 #TWL_CODEGEN   =       THUMB
 TWL_PROC      =       ARM7
 
-TARGET_BIN	=	allDma7_1.axf
+TARGET_BIN	=	dmaMix7_1.axf
 
 SRCS		=	main.c
 
