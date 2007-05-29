@@ -35,6 +35,25 @@ typedef enum
 }
 OSChipType;
 
+typedef u32 OSCpuCycle;
+
+#define OS_CPU_CLOCK                   HW_CPU_CLOCK
+
+//---- sec to cpu cycle
+// 150nsec - 30sec
+#define  OS_SEC_TO_CPUCYC(  sec  ) ((OSCpuCycle)( ( OS_CPU_CLOCK * (u32)(sec)) ))
+#define  OS_MSEC_TO_CPUCYC( msec ) ((OSCpuCycle)( ((OS_CPU_CLOCK/1000) * (u32)(msec)) ))
+#define  OS_USEC_TO_CPUCYC( usec ) ((OSCpuCycle)( ((OS_CPU_CLOCK/1000) * (u32)(usec)) / 1000 ))
+#define  OS_NSEC_TO_CPUCYC( nsec ) ((OSCpuCycle)( ((OS_CPU_CLOCK/1000) * (u32)(nsec)) / (1000 * 1000) ))
+
+//---- cpu cycle to sec
+// 150nsec - 30sec
+#define  OS_CPUCYC_TO_SEC(  cyc ) ( ((u32)(cyc) ) / OS_CPU_CLOCK )
+#define  OS_CPUCYC_TO_MSEC( cyc ) ( ((u32)(cyc) ) / (OS_CPU_CLOCK/1000) )
+#define  OS_CPUCYC_TO_USEC( cyc ) ( ((u32)(cyc) * 1000) / (OS_CPU_CLOCK/1000) )
+#define  OS_CPUCYC_TO_NSEC( cyc ) ( ((u32)(cyc) * 1000 * 1000) / (OS_CPU_CLOCK/1000) )
+
+
 
 #ifdef __cplusplus
 } /* extern "C" */

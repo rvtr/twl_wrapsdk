@@ -1,6 +1,6 @@
 #! make -f
 #----------------------------------------------------------------------------
-# Project:  TwlSDK - tests - snd
+# Project:  TwlSDK - build
 # File:     Makefile
 #
 # Copyright 2007 Nintendo.  All rights reserved.
@@ -20,11 +20,9 @@ include	$(TWLSDK_ROOT)/build/buildtools/commondefs
 
 #----------------------------------------------------------------------------
 
-SUBDIRS =	channel \
-		capture \
-		mic-1 \
-		mic-2 \
-
+SUBDIRS =	\
+            ARM7 \
+            ARM9 \
 
 #----------------------------------------------------------------------------
 

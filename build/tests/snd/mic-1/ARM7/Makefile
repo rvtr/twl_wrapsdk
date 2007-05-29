@@ -1,6 +1,6 @@
 #! make -f
 #----------------------------------------------------------------------------
-# Project:  TwlSDK - tests - snd
+# Project:  TwlSDK - SND - demos - channel
 # File:     Makefile
 #
 # Copyright 2007 Nintendo.  All rights reserved.
@@ -15,18 +15,28 @@
 # $NoKeywords: $
 #----------------------------------------------------------------------------
 
+SUBDIRS		=
+
+
+#----------------------------------------------------------------------------
+
+#TWL_CODEGEN   =       THUMB
+TWL_PROC      =       ARM7
+
+TARGET_BIN	=	mic7_1.axf
+
+SRCS		=	main.c
+
+#SRCDIR		=	# using default
+#LCFILE		=	# using default
+
 include	$(TWLSDK_ROOT)/build/buildtools/commondefs
 
 
 #----------------------------------------------------------------------------
 
-SUBDIRS =	channel \
-		capture \
-		mic-1 \
-		mic-2 \
+do-build:		$(TARGETS)
 
-
-#----------------------------------------------------------------------------
 
 include	$(TWLSDK_ROOT)/build/buildtools/modulerules
 

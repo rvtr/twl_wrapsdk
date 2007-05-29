@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------*
-  Project:  TwlSDK
-  File:     twl.h
+  Project:  TwlSDK - include - MIC
+  File:     mic.h
 
   Copyright 2007 Nintendo.  All rights reserved.
 
@@ -13,18 +13,13 @@
   $Log: $
   $NoKeywords: $
  *---------------------------------------------------------------------------*/
-#ifndef TWL_H_
-#define TWL_H_
 
-#include <nitro.h>
+#ifndef TWL_MIC_H_
+#define TWL_MIC_H_
 
-#include <twl/os.h>
-#include <twl/mi.h>
-#include <twl/aes.h>
-#include <twl/mic.h>
-#ifdef SDK_DEBUGGER_KMC
-#include <twl/vlink.h>
-#endif // SDK_DEBUGGER_KMC
+#ifdef SDK_ARM7
+#include <twl/snd/ARM7/snd_mic.h>
+#endif // SDK_ARM7
 
-/* TWL_H_ */
+/* TWL_MIC_H_ */
 #endif

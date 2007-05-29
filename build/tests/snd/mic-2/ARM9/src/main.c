@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------*
-  Project:  TwlSDK
-  File:     twl.h
+  Project:  TwlSDK - SND - tests - mic-2
+  File:     main.c
 
   Copyright 2007 Nintendo.  All rights reserved.
 
@@ -10,21 +10,26 @@
   not be disclosed to third parties or copied or duplicated in any form,
   in whole or in part, without the prior written consent of Nintendo.
 
-  $Log: $
+  $Log: main.c,v $
   $NoKeywords: $
  *---------------------------------------------------------------------------*/
-#ifndef TWL_H_
-#define TWL_H_
+#include <twl.h>
 
-#include <nitro.h>
+/*---------------------------------------------------------------------------*
+  Name:         TwlMain
 
-#include <twl/os.h>
-#include <twl/mi.h>
-#include <twl/aes.h>
-#include <twl/mic.h>
-#ifdef SDK_DEBUGGER_KMC
-#include <twl/vlink.h>
-#endif // SDK_DEBUGGER_KMC
+  Description:  main
 
-/* TWL_H_ */
-#endif
+  Arguments:    None
+
+  Returns:      None
+ *---------------------------------------------------------------------------*/
+void TwlMain()
+{
+    OS_Init();
+
+    OS_TPrintf("\nARM9 starts.\n");
+    OS_TPrintf("\nARM9 ends.\n");
+    OS_Terminate();
+}
+
