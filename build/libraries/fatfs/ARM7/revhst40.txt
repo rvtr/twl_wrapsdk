@@ -1,0 +1,2063 @@
+Functional changes between version 4.4x versus version 4.4ws (August 25, 2006)
+=================================================================
+winhdisk,c - Removed some unreferenced performance diagnostic code that was
+             inadverdantly placed in the file.
+appcmdsh.c - Modified optional macro DISPLAY_ERRNO() to use RTFS print
+             routines instead of printf.
+             Fixed bug in app_failsafe_init() that was inadvertantly
+             reporting failure when failsafe initialization had actually
+             succeeded.
+prfstest.c - Modified optional macro FSDEBUG() to use RTFS print
+             routines instead of printf.
+             Fixed places where po_extend_file() was being called using
+             incorrect parameters. This error was introduced in version
+             44V and was not caught until now.
+prfs.h     - Added CFG_VALIDATE_JOURNAL option value. The description of this
+             option is:
+    CFG_VALIDATE_JOURNAL - Set this to one to force a a low level read of the
+    whole journal file before it is accessed. If any of the reads call Failsafe
+    tries to recover by re-writing the whole file with zeros, for some media
+    types this will correct a read error. When the overwrite is completed
+    the file is read again, if that succeeds we continue, otherwise the journal
+    file open fails. A disk mount that encounters this error will fail and
+    errno will be set to PEIOERRORREADJOURNAL
+
+prfs.h     - Added CFG_VALIDATE_JOURNAL option value. The description of this
+             option is:
+    CFG_VALIDATE_BUFFER_SIZE - This is the size, in blocks of the special
+    buffer dedicated to performing the tasks described in CFG_VALIDATE_JOURNAL.
+    The largest usable value for CFG_VALIDATE_BUFFER_SIZE is 128. Larger
+    values will not be utilized but memory will be wasted.
+    The whole journal file is scanned during startup in disk reads of up to
+    CFG_VALIDATE_BUFFER_SIZE blocks. Larger values will require fewer reads
+    and improve perfromance over smaller values.
+    The buffer is declared as:
+        static byte validate_buffer[CFG_VALIDATE_BUFFER_SIZE*512];
+    in prfsnvio.c.
+    If CFG_VALIDATE_JOURNAL is zero the value of CFG_VALIDATE_BUFFER_SIZE
+    is irrelevant because the buffer is not declared.
+prfs.h     - Added an additional internal field "open_status" to the failsafe context
+        that is used to differentiate between IO errors and other errors
+        during journal file re-opens
+
+prfsapi.c - Remove one unreferenced label "ex_it" from the routine named
+            pro_failsafe_commit. There were no functional changes.
+
+prfscore.c- Modified the routine failsafe_restore_internal() to return
+            FS_STATUS_IO_ERROR if failsafe_reopen_nv_buffer() reported
+            an IO error (while validating the journal file)
+
+prfscore.c- Modified the routine pro_failsafe_autorestore() to fail and set
+            errno to PEIOERRORREADJOURNAL if failsafe_restore_internal()
+            returns FS_STATUS_IO_ERROR. This action is taken regardless of
+            whether auto-recover is enabled or not because it indicates an
+            unrecoverable media failure.
+
+prfsnvio.c- Added code to implement the algorithm that is enabled when
+            CFG_VALIDATE_JOURNAL is enabled.
+
+Functional changes between version 4.4ws versus version 4.4w (August 11, 2006)
+=================================================================
+rtfs.h - Added DRIVE_FLAGS_FILEIO Flag
+apiwrite.c - Set DRIVE_FLAGS_FILEIO before writing file data in po_write
+apifilio.c - Set DRIVE_FLAGS_FILEIO before read file data in po_read
+apifilio.c - Set DRIVE_FLAGS_FILEIO before write file data in pc_flush_file_buffer
+             and restore previous setting
+apifilio.c - Set DRIVE_FLAGS_FILEIO before read file data in pc_load_file_buffer
+             and restore previous setting
+rtfat16.c  - Modified pc_init_drv_fat_info16() to correctly distinguish between
+             FAT12 and FAT16 when clipping maxfindex to the number of sectors
+             reserved for clusters..
+rtnvfat.c  - Modified pc_parsepath()to skip leading spaces and
+             to replace trailing spaces NULLs
+
+=================================================================
+Functional changes between version 4.4w versus version 4.4v (June 1, 2006)
+=================================================================
+rtfs.h - Added po_extend_file() -prototype which was inadvertantly removed in
+         version 44v
+Apirealt.c po_extend_file() - Fixed a bug that was calculating the number of
+           clusters to the end of the current file incorrectly under certain
+           circumstances.
+Changed: line 222 from:
+          clusters_in_chain =
+            pc_chain_length(pdr, pfile->pobj->finode->fsize)-
+            pc_chain_length(pdr, pfile->fptr);
+To:
+        {
+            dword ltemp,fptr_mod_cluster;
+            /* Round fptr down to cluster boundary */
+            fptr_mod_cluster =  pfile->fptr & ~(pdr->byte_into_cl_mask);
+            /* Subtract from the rounded up alloced_size value */
+            ltemp = alloced_size-fptr_mod_cluster;
+            clusters_in_chain = ltemp >> (int) (pfile->pobj->pdrive->log2_secpalloc+9);
+        }
+
+Apiinit.c - Changed the HostDisk file's base name, it was incorrectly set
+            to "E:\\demotest\\Hostdisk". It is now just Hostdisk.
+
+=================================================================
+Functional changes between version 4.4v versus version 4.4u (April 1, 2006)
+=================================================================
+
+rtfsconf.h - Added two new configuration parameters
+
+RTFS_MAX_FILE_SIZE  - Default 0xffffffff
+   Set to the maximum file size ERTFS may create. If po_chsize or po_extend_file()
+   are called with a size request larger than this they fail and set errno
+   to PETOOLARGE. When po_write() is asked to expend the file beyond this maximum
+   the behavior is determined by the value of RTFS_TRUNCATE_WRITE_TO_MAX */
+
+RTFS_TRUNCATE_WRITE_TO_MAX - Default 1
+   Set to 1 to force RTFS to truncate po_write() requests to fit within
+   RTFS_MAX_FILE_SIZE. If RTFS_TRUNCATE_WRITE_TO_MAX is set to 0, po_write
+   requests that attempt to extend the file beyond RTFS_TRUNCATE_WRITE_TO_MAX
+   Fail and set errno to PETOOLARGE. If RTFS_TRUNCATE_WRITE_TO_MAX is set to
+   1, po_write requests that attempt to extend the file beyond
+   RTFS_MAX_FILE_SIZE are truncated to fill the file until its
+   size reaches RTFS_MAX_FILE_SIZE bytes.
+
+rtfs.h - Added PETOOLARGE  errno value. Set when and error occurs because
+         trying to extend a file beyond RTFS_MAX_FILE_SIZE
+
+apiregrs.c - Added do_large_file_test() to test api calls on large
+             files (near 4 Gbyte)
+apifilio.c - po_read() Truncate read operation if it wraps 4 Gbyte
+apifilio.c - po_read() If passed NULL data pinter, read file without data
+             transfer
+apifilio.c - created new API call po_ulseek() to seek across 4 Gbyte range
+apifilio.c - created _po_ulseek() internal seek function with 4 Gbyte range
+apifilio -  change _po_lseek()internal seek to utilize _po_ulseek()
+
+Apirealt.c po_extend_file() Changed API calling sequence and added support
+           for unsigned 32 bit offsets.
+Apirealt.c po_extend_file() - Set error condition if new size
+           is greater than or equal to RTFS_MAX_FILE_SIZE
+Apirealt.c po_chsize() changed offset to unsigned 32 bit.
+Apirealt.c po_chsize() - Set error condition if new size
+           is greater than or equal to RTFS_MAX_FILE_SIZE
+apiwrite.c - po_write() Truncate write operation if it wraps 4 Gbyte
+apiwrite.c - po_write() if write will make file > RTFS_MAX_FILE_SIZE then
+             truncate the write request if RTFS_TRUNCATE_WRITE_TO_MAX is
+             set to 1. Otherwise fail with with PETOOLARGE errno value.
+apiwrite.c - po_write() Use _pc_ulseek() if opened in append mode
+apiwrite.c - Changed po_truncate() to use unsinged 32 bit offset
+apiwrite.c - po_write() If passed NULL data pointer, write file without data
+             transfer
+apiwrite.c - po_write() - Change to set file time and archive bit whenever
+             file is written to, not just when it is extended.
+
+winhdsk.c - Updated to RTFS Pro Plus version, supports multigigabyte disks
+and uses unbuffered win32 file io to better emulate a real disk.
+
+Functional changes between version 4.4u versus version 4.4t (Jan 25, 2006)
+=================================================================
+Bug Fixes:
+1. A change was made to open_failsafe_file() (prfsnvio.c) to fix a
+bug in the code that allocated the contigous cluster chain for the
+Journal file. It was a minor problem that caused Failsafe to skip
+potentially available regions of space for the Journal file.
+
+ if (contig_clusters < n_clusters)
+ {
+    FATOP(pdrive)->fatop_freechain(pdrive, first_cluster, 0, 0xffffffff);
+    first_cluster = first_cluster+contig_clusters;
+    pdrive->free_contig_pointer = first_cluster+contig_clusters;
+ }
+
+ Was changed to
+
+ if (contig_clusters < n_clusters)
+ {
+    FATOP(pdrive)->fatop_freechain(pdrive, first_cluster, 0, 0xffffffff);
+    pdrive->free_contig_pointer = first_cluster+contig_clusters;
+ }
+
+Functional changes between version 4.4T versus version 4.4S (Jan 9, 2006)
+=================================================================
+Bug Fixes:
+
+
+1. A change was made to open_failsafe_file() (prfsnvio.c) to fix a
+bug in the code the allocated the contigous cluster chain for the
+Journal file.
+
+The bug is described as follows:
+
+In pseudo-code representation the algorithm worked as follows:
+
+    pdrive->free_contig_pointer = pdrive->free_contig_base;
+    first_cluster = 0;
+try_again:
+    contig_clusters =
+            FATOP(pobj->pdrive)->fatop_alloc_chain(pobj->pdrive,
+                    &first_cluster, n_clusters, FALSE);
+    if (contig_clusters != n_cluster)
+    {
+      free first_cluster to first_cluster+contig_clusters
+      first_cluster += n_clusters;
+      goto try_again;
+    }
+
+The algorithm relies on the fact that fatop_alloc_chain() starts looking
+for free clusters starting from the initial value passed in first_cluster.
+If a cluster chain less than n_clusters was found this algorithm
+appropriately advanced the start of the allocation region by
+n_clusters and tried to the allocation allocate again, repeating
+the process until n_clusters contigous cluster was allocated.
+
+There was a BUG in the algorithm however:
+
+A side effect of  fatop_alloc_chain() is to link the cluster at
+first_cluster (if it is non-zero) to the newly allocated contiguous
+clusters. So after the first pass the algorithm was linking first_cluster
+to the new chain, causing a lost cluster if first_cluster was not part of
+a chain or causing crossed cluster chains if it was.
+
+
+In pseudo-code representation the fixed algorithm works as follows:
+
+    pdrive->free_contig_pointer = pdrive->free_contig_base;
+try_again:
+    first_cluster = 0;
+    contig_clusters =
+            FATOP(pobj->pdrive)->fatop_alloc_chain(pobj->pdrive,
+                    &first_cluster, n_clusters, FALSE);
+    if (contig_clusters != n_cluster)
+    {
+      free first_cluster to first_cluster+contig_clusters
+      pdrive->free_contig_pointer += n_clusters;
+      goto try_again;
+    }
+
+The algorithm relies on the fact that fatop_alloc_chain() starts looking
+for free clusters starting from pdrive->free_contig_pointer if the initial
+ value passed in first_cluster is zero. If a cluster chain less than
+ n_clusters is found the algorithm appropriately advanced the start of the
+ allocation region (as determined by pdrive->free_contig_pointer) by
+n_clusters and tries to the allocation allocate again, repeating
+the process until n_clusters contigous cluster is allocated. Since
+first_cluster is always passed as zero the bug in the previous
+implementation is eliminated.
+
+
+
+
+
+
+
+
+
+when end of file is reached on a read. A problem was discovered that
+when a read to end of file was done with one open handle to the file
+and the file was extend by writing to it from another open handle,
+the next read call re-read the data at the old end of filem, not the
+data that was just written to the file.
+
+=================================================================
+Functional changes between version 4.4S versus version 4.4R (OCt 25, 2005)
+
+Bug Fixes:
+
+1. A change was made to po_read() (apifilio.c) to set the eof flag
+when end of file is reached on a read. A problem was discovered that
+when a read to end of file was done with one open handle to the file
+and the file was extend by writing to it from another open handle,
+the next read call re-read the data at the old end of filem, not the
+data that was just written to the file.
+
+=================================================================
+Functional changes between version 4.4R versus version 4.4Q (OCt 19, 2005)
+
+Bug Fixes:
+
+1. Several compile warnings were fixed.  This includes adding some
+#include lines in winsplsh.c and portkern.c.
+
+2. A bug was discovered with the partition recognition code.  ERTFS now
+supports Windows extended partitions in addition to supporting DOS
+extended partitions.  This required a couple fixes in rtlowl.c.
+
+3. A couple bugs were discovered with the FAT32 formatting code.  The
+binary volume label is now written and a value of 3 is written to the
+next free cluster hint.  The previous value of 2 was less correct and
+caused MacOS to complain.  These fixes affect rtfat32.c.
+
+4. A bug was discovered that prevented formatting without
+partitions due to the prior READ_PARTITION_NO_TABLE fixes.  Fixing this
+required a change in apifrmat.c.
+
+5. A bug was discovered with the CHS normalization.  Hard drives use a
+different system for cylinder/head/sector numbers than the DOS file
+system, so a conversion needs to happen.  This conversion now supports
+a greater number of hard drive sizes.  These fixes affect apifrmat.c.
+
+6. A bug was discovered where ERTFS could calculate the maximum cluster
+index value incorrectly in some rare format dependant cases. This resulted
+in a mount failure durint the initial cluster scan. Both rtfat32.c and
+rtfat16.c were modified to test the calculated max index against the
+number of sectors dedicated to fat blocks (secpfat) and truncate the
+maximum index.
+
+7. A bug was fixed in drideata.c. If the user data buffer is on an odd
+address buffer ide_insw() and ide_outsw() now double buffer the data in
+512 byte segments. This is needed because some architectures can not do
+word transfers to odd alligned addresses
+
+=================================================================
+Functional changes between version 4.4Q versus version 4.4P (Dec 27, 2004)
+
+Bug Fixes:
+
+1. A bug was discovered with our fix for open_failsafe_file() in 4.4P.
+To fix the problem, open_failsafe_file() was modified to free an allocated
+cluster chain before exiting a certain loop.
+
+=================================================================
+Functional changes between version 4.4P versus version 4.4O (Dec 22, 2004)
+
+Bug Fixes:
+
+1. A bug was discovered in failsafe in which infinite loops could occur
+while creating the failsafe file if disk space was low or fragmented.
+To fix the problem, open_failsafe_file() was modified to start searching
+from the beginning of the FAT if it hit the end, to catch that fact, and
+then stop the search.
+
+2. A bug was discovered in failsafe which caused false positives using the
+FS_STATUS_OUT_OF_DATE feature.  To fix the problem, the task of copying
+sectors was split into several functions, copying the non-FAT blocks
+first, the FAT blocks second, and the FSINFO sector last.
+
+3. A bug was discovered with the FAT formatting code which caused some
+third party utilities to not recognized drives formatted with ERTFS.
+To fix the problem, pc_mkfs16() and pc_mkfs32() were modified to write
+a required signature at the end of the first disk sector.  Because this
+signature was previously used in ERTFS as a flag for whether the drive
+was partitioned, pc_read_partition_table() had to be changed.  To fix
+this, all lines where the function returned READ_PARTITION_NO_ENTRY were
+changed to return READ_PARTITION_NO_TABLE instead.
+
+4. A bug was discovered with the FAT formatting code which caused large
+drives to be formatted with the wrong size and number of clusters.  To
+fix the problem, get_format_parameters() was changed to use Microsoft-
+recommended values and cleanly handle when FAT32 is turned off.
+
+5. A bug was discovered with large I/O which caused IDE I/O larger than
+128 blocks or more generic I/O larger than 65535 blocks to fail.  To
+fix the problem, ide_io() was renamed to _ide_io() and a new ide_io()
+was written as a wrapper to loop calls to _ide_io() with 128 blocks each
+time.  Also, po_write() and po_read() were modified to correctly loop
+over a block count greater than 0xffff.
+
+6. A bug was discovered with the linear flash driver (drflsftl.c) and
+failsafety.  If the power was turned off at certain moments while copying
+a block, the driver would either incorrectly format or just not handle the
+drive.  To fix the problem, the erase count is always set when copying a
+block, and the driver recovers from a power-off right before setting the
+target block as a DATA block.
+
+New Features:
+
+1. JIS encoding support has been expanded to include Microsoft's CP932.
+This is a super-set of JIS and adds NEC special characters (83 characters),
+NEC-selected IBM extended characters (374 characters), and IBM extended
+characters (388 characters).  In addition, seven incorrect character
+mappings have been corrected.  See csjistab.c for the new tables.
+
+=================================================================
+Functional changes between version 4.4O versus version 4.4N (Nov 09, 2004)
+
+Bug Fixes:
+
+One minor change was made to pc_findin() in rtnvfat.c and rtvfat.c.  The
+change prevents volume labels from appearing when the flags GET_INODE_MATCH
+or GET_INODE_DOTDOT are used.  This allows the creation of files with the
+same name as the volume label, but volume labels will still appear when using
+pc_gfirst() and friends.  Volume labels have the AVOLUME attribute set to
+tell them apart.
+
+=================================================================
+Functional changes between version 4.4N versus version 4.4M (July 23, 2004)
+
+Bug Fixes:
+
+Two minor changes were made to FailSafe mode. These changes were made to
+force all of ERTFS's cached information to be flushed before every failsafe
+commit operation.
+
+1. A bug was discovered in failsafe in which the FATs where not being
+updated from the FAT buffer pool to disk before the auto_commit function
+was called. To fix the problem pro_failsafe_commit_internal was modified
+to call flush_fat(). Also, the call to flush_fat was removed from
+pro_failsafe_commit() because it is now being done inside
+pro_failsafe_commit_internal, which is called by pro_failsafe_commit().
+This forces flush_fat to be called from both the api layer
+pro_failsafe_commit() and from the automatic layer pro_failsafe_auto_commit()
+
+2. A bug was discovered in failsafe in which cached directory entries
+were not being updated from the internal finode cache to the journal file
+before failsafe commit completed. Two fix it Pro_failsafe_commit_internal
+was modified to force a flush of cached directory entries to disk before
+proceeding
+
+New Features
+
+1. Created PO_AFLUSH file open flag to automatically force a flush of a
+file every time time it is written to.
+
+Summary of changes:
+1. apifilio.c po_close() - remove call to pc_flush_file_buffer() this is
+now done in _po_flush().
+2. apiwrite.c po_write() - Added support for PO_AFLUSH flag
+3. apiwrite.c _po_flush() - Add call to pc_flush_file_buffer()
+4. apiwrite.c po_flush() - remove call to pc_flush_file_buffer() this is
+now done in _po_flush().
+5. prfsapi.c - Remove call to flush_fat. This is now done inside
+6. prfscore.c pro_failsafe_commit_internal() - Added caals to
+pc_flush_all_fil() and flushfat().
+7. RTFS.H Added PO_AFLUSH file open flags
+
+=================================================================
+Functional changes between version 4.4M versus version 4.4L (June 8, 2004)
+
+Bug Fixes:
+1. A bug was found and repaired in the fat swapping code. The bug occurs when
+a new fat block must be cached but there are no free blocks and no
+ unmodified blocks in the cache to swap with. In this case a "dirty"
+block must be written to disk and then released for re-use.
+pc_map_fat_block() had a bug in it that resulted in only the first copy of
+the fat being written in this case. The bug is fixed in this release. It
+is serious in nature, causing check disk or scan disk to report that the
+FATs are missmatched, but in practice it doesn't actually happen that often
+because ERTFS's FAT flush policies rarely leave "dirty" fat blocks cached for
+long.
+2. A bug was found and fixed in po_extend_file() which left the file pointer
+at the wrong position if the extend feature failed.
+3. Made unicode byte order handling code aware of KS_LITTLE_ENDIAN flag
+instead of requiring a seperate localized configuration value.
+4. Fixed a bug in drideata.c, the driver had been polling the status
+register without allowing the settling time as prescribed by the
+ATA specification.
+
+Summary of changes:
+1. Restructured the FailSafe method first introduced in version 4.4E to
+reduce ram requirements and improve flexibility and efficiency.
+2. Introduce FailSafe autocommit mode. In this mode ERTFS automatically
+performs the FailSafe commit function each time an API call is made that
+changes the contents of the volume structure.
+3. Introduce FailSafe autoinit mode. In this mode ERTFS automatically
+initializes specific devices for FailSafe operation at start up. This
+function along with the autrestore, autorecover and autocommit modes
+provide a means to make FailSafe operation completely transparent to the
+programmer and the user.
+4. Greatly expanded the FailSafe test function to test all modes of FailSafe
+and validate the functionality of each ERTFS API call in FailSafe mode.
+5. Renamed the check disk function from check_disk() to pc_check_disk and
+   added parameters to pc_check_disk() that return status information,
+   control diagniostic output and whether to save or discard lost
+   cluster chains.
+6. Renamed STAT to ERTFS_STAT. Some run time environments like
+   micro-Itron use the type STAT. The same structure is used in ERTFS so to
+   avoid clashes we renamed typedef struct stat {} STAT; to
+   typedef struct ertfs_stat {} ERTFS_STAT;
+7. Modified the mount procedure to support mounting devices that may
+   contain just a bios parameter block (bpb) or both a master boot
+   record (mbr) and a bios parameter block (bpb).
+8. Added support to drideata.c to support removable TRUE-IDE devices along
+   with the existing support for removable pcmcia devices.
+9. Added support to drideata.c and pcmctrl.c to support removable
+   pcmcia devices by polling for a status change. This method will
+   work if the pcmcmia controller does not have a media changed
+   interrupts source but does support a media changed status latch
+   functions.
+
+Detailed description of changes:
+  These files were removed and replaced with other files.
+          prfailsf.c - File was removed
+          prfailsf.h - File was removed
+  These files were added.
+          prfs.h     - New file that replaces prfailsf.h. It is
+        automatically included from rtfs.h when INCLUDE_FAILSAFE is enabled.
+          prfsapi.c  - New file that contains FailSafe API calls.
+          prfscore.c - New file that contains the core FailSafe algorithm.
+          prfsnvio.c - New file that contains the Journal file interface.
+
+          rtfspro.h  - This is a new file that contains miscelaneous
+  function prototypes and definitions that are available only with
+  RTFS-Pro. rtfspro.h is automatically included by rtfs.h in the
+  RTFS pro package.
+          prapipro.c - This is a new file that contains miscelaneous API
+  calls that are available only with RTFS-Pro. In this release prapipro.c
+  contains the source code for the routines pro_buffer_status() and
+  pro_assign_buffers()
+
+  These files were modified.
+        rtfs.h     - Several changes were made to support
+                . Created CHKDSK_STAT structure to be used as an argument
+                . renamed STAT structure to ERTFS_STAT
+                  to pc_check_disk()
+                . Created errno PEIOERRORREADJOURNAL
+                . Created errno PEFSREINIT
+                . Changed function protoype for new versions of
+                  pc_regression_test(), and pc_check_disk().
+                . created DRIVE_FLAGS_FAILSAFE to support FailSafe
+                  Autoinit mode.
+                . Changed RTFS.H to include prfs.h if FailSafe is enabled
+                . Changed RTFS.H to include rtfspro.h if RTFS-Pro is enabled
+
+        rtfsconf.h
+                . Added INCLUDE_RTFS_PRO compile time configuration constant.
+
+
+        prblock.c - Fixed a bug in pc_map_fat_block() that resulted
+        in only the first copy of the FAT being updated during some
+        swap condition
+
+        apirealt.c - Fixed a bug in po_extend_file() which left the file's
+        seek pointer at the end of the file if the File extend failed.
+
+        appcmdsh.c - Modified the code to support the new calling
+        sequences for check disk, regression test and FailSafe.
+        Changed all references to STAT to ERTFS_STAT
+
+        apistat.c - Changed all references to STAT to ERTFS_STAT
+
+        rttermin.c - Changed all references to STAT to ERTFS_STAT
+
+        csstrtab.c - Minor changes to strings used by the test command shell.
+        csstrtab.h
+
+        csunicod.c - Made byte order code aware of KS_LITTLE_ENDIAN flag
+
+        drideata.c - In ide_do_command() when performing a write operation
+        poll the alternate status register several time before testing
+        for busy to provide the required 400 nsec settle time.
+
+        rtlowl.c - new feature -
+        Modified pc_i_dskopen() to test if a device has a valid BPB (logical
+        block 0) and continue the mount process even if it has no MBR
+        (partition table). This specifically supports compact flash cards
+        fromatted with XP, which puts no MBR on the card.
+
+
+        apiregrs.c - A new argument was added to pc_regression_test(). The
+        new argument (do_clean) if TRUE tells the regression test to
+        execute multiple passes and delete all files an subdirectories
+        created in each pass. If do_clean is FALSE the regression test
+        stops after one pass and leaves all files and directories present.
+
+        rtfatxx.c - fatxx_alloc_chain() - Added dolink argument to be able
+        to control whether we link to start cluster if it was provided.
+        This argument was added for failsafe to support allocating from
+        a starting point but not linking to the start point.
+
+        apichkdsk.c - Renamed the check disk function from check_disk() to
+         pc_check_disk and added several parameters.
+         pstat - a pointer to a structure of type CHKDISK_STATS.
+        pc_check_disk returns information about the disk in this structure.
+        typedef struct chkdisk_stats {
+            dword  n_user_files;          /* Total #user files found */
+            dword  n_hidden_files;        /* Total #hidden files found */
+            dword  n_user_directories;    /* Total #directories found */
+            dword  n_free_clusters;       /* # free available clusters */
+            dword  n_bad_clusters;        /* # clusters marked bad */
+            dword  n_file_clusters;       /* Clusters in non hidden files */
+            dword  n_hidden_clusters;     /* Clusters in hidden files */
+            dword  n_dir_clusters;        /* Clusters in directories */
+            dword  n_crossed_points;      /* Number of crossed chains. */
+            dword  n_lost_chains;         /* # lost chains */
+            dword  n_lost_clusters;       /* # lost clusters */
+            dword  n_bad_lfns;            /* # corrupt/disjoint win95 lfn chains */
+        } CHKDISK_STATS;
+
+         verbose - If this parameter is 1 pc_check_disk() prints status
+         information as it runs, if it is 0 pc_check_disk() runs silently.
+         fix_problems - If this parameter is 1 pc_check_disk() will make
+         repairs to the volume, if it is zero, problems are reported but
+         not fixed.
+         write_chains - If this parameter is 1 pc_check_disk()
+         creates files from lost chains. If write_chains is 0
+         lost chains are automatically discarded and freed for re-use.
+         If fix_problems is zero then write_chains has no affect.
+
+        apiinit.c  - Added support for auto initializing FailSafe operation
+        on a device if the user assigns DRIVE_FLAGS_FAILSAFE to the devices
+        the drive flags.
+
+        prfstest.c - This is the source code for the function fs_test() that
+        is documented in the FailSafe manual. In this version fs_test() was
+        completely re-written to be more comprehensive and test new FailSafe
+        features.
+
+        Functions in the following files were modified to support FailSafe's
+        autocommit feature. The epilogue code for functions that may modify
+        the FAT or directory blocks now call release_drive_mount_write()
+        instead of release_drive_mount(). In autocommit mode
+        release_drive_mount_write() performs a failsafe commit if necessary.
+
+        apideltr.c - pc_deltree()
+        apifilio.c - po_open(), po_close()
+        apifilmv.c - pc_mv(), pc_unlink()
+        apimkdir.c - pc_mkdir(), pc_rmdir()
+        apirealt.c - po_extend_file()
+        apiwrite.c - po_write(), po_truncate(), po_flush(), pc_diskflush()
+
+        prblock.c -  Changes were made to support the new FailSafe method.
+                . Several new functions were created to distinguish when
+        disk access is being performed on directory and FAT blocks.
+        block_devio_read(), block_devio_write(), fat_devio_write() and,
+        fat_devio_read(). If Failsafe is enabled routine in prfscore.c
+        replace these functions to provide a journalling feature.
+                . pc_find_block is no longer a static function because it
+                is now called from the FailSafe layer.
+                . pc_read_block(), pc_write_block(), pc_flush_chain_block()
+                  pc_flush_fat_blocks() and pc_map_fat_block() are modified
+                  to replace the previous FailSafe method with the new scheme.
+
+        rtdevio.c -  Changes were made to support the new FailSafe method.
+                . A new routine, release_drive_mount_write() was created
+                  to support the Failsafe autocommit feature.
+                . check_media() was modified to support the new FailSafe
+                  method.
+
+        rtfat32.c - fat_flush_info() was modified to use the block buffer
+        pool instead of direct io. This change was needed for the new
+        FailSafe method.
+
+        rtfatxx.c - fatxx_flushfat() was modified to support the new
+        FailSafe method. It no longer needs any FailSafe specific code
+
+
+
+=================================================================
+
+Functional changes between version 4.4L versus version 4.4K
+
+Summary of changes:
+
+1. The method for closing out a drive when media removal events and
+unrecoverable media IO errors.
+2. Support for buffered file IO has been added
+3. Changes were made to detect if a disk mount was closed between calls to
+po_gfirst, po_gnext and pc_gdone.
+4. A potential buffer overwrite in the routine pc_partition_media() that may
+occur with certain compilers has been eliminated.
+5. pc_free_scratch_blk() was modified to fix a small problem that could cause
+pro_buffer_status() to return an incorrect value for block_buffers_low.
+
+Detailed description of changes:
+
+The method for closing out a drive when media removal events and unrecoverable
+media IO errors has changed. Under the old method the thread that detected the
+failure imediately called pc_dskfree(). Under the new method a flags named
+mount_abort is set when the error is detected. Later on, in the new routine
+release_drive_mount(), before exlusive access to the drive is relinquished,
+ the flag is checked, and if it is true, pc_dskfree() is called. This method
+eliminates race conditions in multitasking environments.
+
+rtdevio.c       - check_drive_name_mount(), check_drive_number_mount() These
+new functions validate and/or initiate the mount and then lock the drive
+before returning.
+rtdevio.c       - check_drive_number_present(). This is a new function
+that clears any media removal status and then checks if media is installed.
+rtdevio.c       - release_drive_mount(), This is a new function that checks
+the pdr->mount_abort flag and if true, calls pc_dskfree() before releasing
+the semaphore.
+rtdevio.c       - As a precaution check_media(), when it is working on
+behalf of check_drive_name_mount() or check_drive_number_mount(), checks
+ the abort flag and if set calls pc_dskfree() before remounting the disk.
+rtdevio.c       - check_media_entry() and check_media_io(),
+card_failed_handler() now set the mount_abort flag in the drive structure
+if an error occurs. They do not call pc_dskfree().
+
+The following routines were modified to take advantage of the new
+functions check_drive_name_mount(name); and check_drive_number_mount(drivno);
+these routines are like the previous check_drive() function which validates
+and makes sure the device is mounted. If the drive is valid, the new
+functions return with the drive's semaphore locked. These routines are also
+modified to call release_drive_mount(driveno) instead of
+OS_RELEASE_LOGDRIVE(driveno). release_drive_mount(driveno) checks to see if
+the drive mount became invalid by an error or media removal event. If so,
+it closes the drive structure and releases its buffers.
+
+apideltr.c - pc_deltree()
+Apirealt.c - pc_cluster_size(), pc_raw_read(), pc_raw_write()
+Apigetwd.c - pc_pwd()
+Apigfrst.c - pc_gfirst()
+prfailsf.c - pro_failsafe_init(), pro_failsafe_commit(),pro_failsafe_restore()
+apiinfo.c  - pc_free(),pc_is(),pc_get_attributes(),
+APIMKDIR.C - pc_mkdir(),pc_rmdir()
+Apisetwd.c - pc_set_cwd()
+Apiwrite.c - pc_diskflush(),pc_set_attributes()
+apistat.c -  pc_stat()
+Apifilmv.c - pc_mv(), pc_unlink()
+apickdsk.c - check_disk()
+Apifilio.c - po_open()
+Apifilmv.c - A simple change was also made to change the order in which the
+drive id's are validated to be more efficient.
+
+The following routines were modified to call the new routine named
+check_drive_number_present(driveno); instead of check_media() routine
+to first clear any pending drive changed status, and then
+to test if media is present. This works the same as the old function
+call check_media(). check_media() is now a static function in
+rtdevio.c that is called by check_drive_number_present() and
+check_drive_name_mount(); and check_drive_number_mount().
+
+rtfat16.c       - pc_mkfs16()
+rtfat32.c       - pc_mkfs32()
+apiinit.c       - auto_format_disk()
+prfailsf.c      - pro_failsafe_init()
+appcmdsh.c      - doformat()
+
+Apifilio.c      - pc_enum_file() - This routine was modified clear the
+file structure's drobj field if it was called on behalf of a media
+removal or failure.  pc_enum_file frees the file's structures but leaves
+the file in the closed state. pc_fd2file() will recognize this state and
+set errno == PECLOSED. po_close must be called on the file to clear this
+
+Apifilio.c      - pc_fd2file() - This routine was modified so that when it
+does return a valid file structure, the associated drive is locked. When it
+returns failure it does not lock the drive. This routine works in harmony
+with po_close() and the free all files part of pc_dskfree() to ensure proper
+behavior when a disk is closed as a result of a removal event or media failure.
+
+Apifilio.c      - po_close() - This routine was modified so that it clears
+the PECLOSED error and frees the file if it is in the closed state.
+
+The following routines were changed in order to use a new feature of
+pc_fd2file(). Users of pc_f2dfile no longer have to call OS_CLAIM_LOGDRIVE()
+since pc_fd2file locks the drive for them. The following routines were
+modified to support this feature. They were also changed to call
+release_drive_mount(driveno) instead of OS_RELEASE_LOGDRIVE(driveno) to
+release the drive and to free its resources if an error was detected.
+
+Apifilio.c      - po_open(), po_read(), po_sleek(), po_close()
+APickdsk.c      - build_chk_file()
+Apirealt.c      - po_extend_file(), pc_get_file_extents()
+Apiwrite.c      - po_write(), po_truncate(), po_flush()
+Apistat.c       - pc_fstat()
+Note that po_chsize() is not modified because it is not an atomic
+function.
+
+The following changes were made to catch possible problems that could
+occur if a device was closed and remounted between calls to pc_gfirst,
+pc_gnext, and pc_gdone().
+
+rtlowl.c -   pc_i_dskopen() when a disk open succeeds increase the global
+ count of opens, prtfs_cfg->drive_opencounter, and assign it to
+ pdr->drive_opencounter. This number is unique to each sucessful mount.
+
+Apigfrst.c - pc_gfirst() set statobj->drive_opencounter to
+ pdrive->drive_opencounter when the call succeeds.
+
+Apigfrst.c - pc_gnext(),  pc_done(). Compare statobj->drive_opencounter to
+ pdrive->drive_opencounter. If they are not the same then fail.
+
+The following changes were made to support buffering of non block alligned
+file data.
+
+ERTFS.H         - Added PO_BUFFERED file open flags
+ERTFS.H         - Added OF_BUFFERED flag to the finode structure.
+ERTFS.H         - Add "struct blkbuff *pfile_buffer" field to the finode
+structure.
+ERTFS.H         - Add "int file_buffer_dirty" field to the finode structure.
+APIFILIO.C      - Created three new functions to support buffered file io.
+        pc_flush_file_buffer(PC_FILE *pfile) - If the finode structure that
+        the file points to contains a file buffer that has been modified
+        but not written to disk, write the data to disk.
+
+        pc_load_file_buffer(PC_FILE *pfile, dword new_blockno) If new_blockno
+        is 0, and the finode structure that the file points to contains a
+        file buffer, then flush and then discard the file_buffer.
+        If new_blockno is not 0, and the finode structure that the file
+        points to  contains a file buffer, then flush and then load the
+        file_buffer with the contents at new_blockno.
+
+        pc_sync_file_buffer(PC_FILE *pfile,
+                 dword start_block, dword nblocks, BOOLEAN doflush)
+        If the finode structure that the file points to contains a file
+        buffer that is in the range of start_block to start_block+nblocks,
+        Then:
+                1. If doflush is true and the buffer has been modified,
+                write the data to disk.
+                2. Discard the buffer
+APIFILIO.C      - po_open() - Added the following section to the open flags
+                  processing part.
+                    if (flag & PO_BUFFERED)
+                                pobj->finode->openflags |= OF_BUFFERED;
+APIFILEIO.C     - po_read() modify section of code that handles non
+                  block alligned writes. Do not discard the buffer if the
+                  underlying finode is set for buffered IO, use the
+                  *pfile_buffer field instead.
+APIFILIO.C      - po_read() modify section that handles block alligned
+                  data reads. First call pc_sync_file_buffer() and
+                  instruct it to flush to disk buffered data that overlaps
+                  with the blocks to be read.
+APIFILIO.C      - po_close() modify to write the file buffer
+                  if needed before closing the file. The buffer is freed
+                  when pc_memory_finode() is called to free the finode.
+APIREGRS.C      - Add do_buffered_file_test(void) to the regression test.
+APPCMDSH.C      - Change docat() to use buffered IO and read one character
+                  at time.
+APIWRITE.C      - po_write() modify section of code that handles non
+                  block alligned writes. (a write of non alligned data
+                  consists of a read/merge/write sequence). Do not discard
+                  the buffer if the underlying finode is set for buffered IO,
+                  use the *pfile_buffer field instead.
+APIWRITE.C      - po_write() modify section that handles block alligned
+                  data writes. Call pc_sync_file_buffer() and instruct it
+                  to purge, rather then write, buffered data that overlaps
+                  with the blocks to be written.
+APIWRITE.C      - po_truncate() Before truncating the file, call
+                  pc_load_file_buffer(pfile, 0) to make sure the
+                  file buffer is written to disk if needed and then
+                  discarded.
+APIWRITE.C      - po_flush() call pc_flush_file_buffer() to make sure the
+                  file buffer is written to disk if needed.
+PRBLOCK.C       - Eliminate pc_read_file_block() subroutine. This is now done
+                  by pc_load_file_buffer().
+PRBLOCK.C       - Eliminate pc_write_file_block() subroutine. This is now done
+                  by pc_flush_file_buffer().
+RTKERNFN.C      - pc_memory_finode(). When freeing a finode, added code to
+                  check if the finode contains a file buffer, and if so,
+                  release the buffer.
+
+
+Other miscelaneous changes.
+
+            It was discovered that with some compilers sizeof(PTABLE) is
+            larger than 0x42 because of structure packing problems at the
+            end of the PTABLE. This caused a buffer pool corruption
+            problem after using pc_partition_media()
+
+APIFRMAT.C  pc_partition_media() the line of code that used
+             the expression:
+                    copybuff((pbuf + 0x1be), &part, sizeof(PTABLE));
+                to
+                    copybuff((pbuf + 0x1be), &part, 0x42);
+
+RTLOWL.C   - pc_read_partition_table() changed two lines of code that used
+             the expression:
+            copybuff(buf->data, pbuf, sizeof(PTABLE));
+                to
+            copybuff(buf->data, pbuf, 0x42);.
+
+    Remove spurious line of code that was accidentally introduced in
+    vesion 44f. This was not causing a runtime problem since the logic
+    is the same.
+APIMKDIR.C - pc_mkdir()
+The lines:
+    if (!pc_parsepath(path,filename,fileext,name))
+    /* Get out the filename and d:parent   */
+    if (!pc_parsepath(path,filename,fileext,name))
+Are changed to:
+    /* Get out the filename and d:parent   */
+    if (!pc_parsepath(path,filename,fileext,name))
+
+PRBLOCK.C       - pc_free_scratch_blk(), modify code to set
+                  pblk->block_state = DIRBLOCK_FREE and to increment
+                  pbuffcntxt->num_free. This fixes a small problem
+                  that could cause pro_buffer_status() to return
+                  an incorrect value for block_buffers_low.
+APICHKDSK.C     - print_chkdsk_statistics() - Changed a line that
+                  was printing free kilabytes remaining when
+                  it was supposed to print the number of free sectors
+                  remaining.
+
+
+====================================================================
+Functional changes between version 4.4K versus version 4.4J
+
+Major changes - Added errno value PECLOSED. This error number is set
+by pc_fd2file() when access to a file descriptor is requested that was
+marked closed by pc_dskclose. The version 44K users manual documents that
+if a file operation fails with errno set to PECLOSED the application should
+call po_close() on the file descriptor to clear the condition.
+
+====================================================================
+Functional changes between version 4.4J versus version 4.4I
+
+Major changes -
+Change pc_dskclose() so that files opened on a volume that is being closed
+ are marked as closed but the files are not released. po_close() must still
+be called to release the file. This eliminates the possibility of one thread
+accidentally using a file descriptor that was closed out but re-used by
+another thread and now is associated with a different file.
+apifilio.c - po_close() - If pc_fd2file() fails check if the FD is
+in the closed state and if so free it.
+apifilio.c - pc_fd2file() - Check file's is_closed setting, if it
+is set pc_fd2file() fails.  pc_fd2file() fix minor bug, was checking
+    if (0 <= fd && fd <= pc_nuserfiles())
+corrected to:
+    if (0 <= fd && fd < pc_nuserfiles())
+apifilio.c - pc_enum_file() - Do not enumerate files in the closed state.
+apifilio.c - pc_enum_file() - ENUM_FREE now marks the file as closed but
+does not mark it free.
+rtfs.h - Add int is_closed; as a field in the pc_file structure;
+Change default drive handling so the init code stores the lowest valid device
+in the prtfs_cfg structure. When the user retrieves the current working drive
+we use the value from prtfs_cfg structure if the user has not explicitly called
+pc_setdfltdrv().
+apiinfo.c - pc_set_default_drive() - When the drive is set, also set the
+dfltdrv_set field in the user structure to indicate that the default drive
+was set explicitly.
+apiinfo.c - pc_getdfltdrno() - Use the value from prtfs_cfg structure if the
+ user has not explicitly called pc_setdfltdrv() (indicated by
+ user->dfltdrv_set not equal 0)
+apiinit.c pc_ertfs_init() - As the devices are initialized set
+prtfs_cfg->default_drive_id to the lowest valid drive id, as indicated
+by the warmstart routine succeeding.
+rtutil.c - pc_parsedrive() - Validate the drive number even if it is the
+default drive id.
+rtfs.h - Add int dfltdrv_set; as a field in the RTFS_SYSTEM_USER structure;
+rtfs.h - Add int default_drive_id; as a field in the RTFS_CFG structure
+
+====================================================================
+Functional changes between version 4.4I versus version 4.4H
+
+Major changes -
+Change pc_mknode() so that ".", ".." and their parent directory are
+all guaranteed to have the same date stamp.
+Change rtkernfn.c, apiinit.c and rtfs.h to store the LOGICAL_DRIVE
+semaphore handle in the drive structure rather then in an array of 26
+ possible logical drives. This fixes a bug where uninitialized semaphore
+handles were used for logical drives when a logical drive's drive number
+was greater than the NDRIVES configuration value.
+Change rtlowl.c to support extended DOS partitions. This feature must be
+ enabled at compile time since it is rarely needed.
+Change rtvfat.c to fix a bug where we were hanging an argument in place
+from "*.*" to "*". This caused the library to missbehave if the argument
+came from the string constant area of ROM.
+Change csjis.c pc_patcmp_3(). Fixes a bug that incorrectly truncates JIS
+.3 extensions to 2 characters.
+rtdrobj.c - At approximately line 605. In pc_mknode(). Change calls to
+pc_init_inode to "." and ".." to use the date value used to initialize the
+subdirectory. This way the directy, "." and ".." will always have the same
+timestamp.
+
+	crdate.time = pobj->finode->ftime;
+        crdate.date = pobj->finode->fdate;
+        pc_init_inode( &lfinode, dot_str,null_str, ADIRENT|ARCHIVE,
+                            cluster, /*size*/ 0L , &crdate);
+        /* And to the buffer in intel form   */
+
+rtkernfn.c - At approxiomately line 30. in rtfs_resource_init(void). Remove
+loop that allocates drive semaphores. This is now done in pc_rtfs_init().
+
+
+apiinit.c - At approximately line 270 - Allocate semaphores and assign them
+to the drive structure.
+	/* Allocate semaphores for all drives here and assign them to the
+	   drive structures. If an allocation fails, fail to initialize */
+    pdr = prtfs_cfg->mem_drives_structures;
+    for (j = 0; j < prtfs_cfg->cfg_NDRIVES; j++, pdr++)
+    {
+		/* make sure this drive has a semaphore associated with it */
+   	    pdr->access_semaphore = rtfs_port_alloc_mutex();
+        if (!pdr->access_semaphore)
+            return(FALSE);
+    }
+
+RTFS.H - At line 433 add an access semaphore field to the DDRIVE structure.
+/* Access semaphore for the drive. This is initialized in pc_ertfs_init
+   from a value in value prtfs_cfg->drive_semaphores[i] */
+		dword access_semaphore;
+
+RTFS.H At line 1260 - change OS_CLAIM_LOGDRIVE() and OS_RELEASE_LOGDRIVE()
+macros to use the handle store in the drive structure.
+
+#define OS_CLAIM_LOGDRIVE(X)    rtfs_port_claim_mutex((prtfs_cfg->drno_to_dr_map[X])->access_semaphore);
+#define OS_RELEASE_LOGDRIVE(X)  rtfs_port_release_mutex((prtfs_cfg->drno_to_dr_map[X])->access_semaphore);
+
+RTFS.H At line 1308 - remove drive_semaphores[] array from the RTFS_CFG
+structure definition.
+
+
+rtvfat.c At line 1057, modify the routine pc_patcmp_vfat() so it no
+longer modifies the pattern argument in-place to convert "*.*" to "*"
+if VFAT is supported. This was a bug since the arguments ("*.*") could
+come from a constant string, which could be constant data
+
+
+rtfsconf.h - At line 51. Create #define SUPPORT_EXTENDED_PARTITIONS, set to
+1 to support DOS extended partitions.
+
+
+Lowl.c - AT line 255. Added support for DOS "Extended Partitions". This code
+must be enabled by setting SUPPORT_EXTENDED_PARTITIONS, in rtfsconf.h to 1.
+
+#if (SUPPORT_EXTENDED_PARTITIONS)
+{
+    /* Special code to support extended partitions */
+    /* since most applications don't use these we compile it
+       conditionally to save code space */
+    dword extended_base, ltemp;
+    int j, skip_count;
+    for (j = 0; j < 4; j++)
+    {
+        if (ppart->ents[j].p_typ == 5)
+        {
+            if (j <= (int)pdr->partition_number)
+            {
+                /* the partition is inside an extended partition */
+                /* Get the relative start and size   */
+                pdr->partition_base = to_DWORD ((byte *) &ppart->ents[j].r_sec);
+                extended_base = pdr->partition_base;
+                pdr->partition_size = to_DWORD ((byte *) &ppart->ents[j].p_size);
+                skip_count = (int)pdr->partition_number - j;
+                for (;;)
+                {
+                    /* Read the partition information in the extended partition */
+                    if (!devio_read(driveno, pdr->partition_base , buf->data , 1, TRUE))
+                    {
+                        /* Failed reading Master boot record */
+                        rtfs_set_errno(PEIOERRORREADMBR);
+                        ret_val = READ_PARTION_IOERROR;
+                        goto done;
+                    }
+                    /* Copy the table to a word alligned buffer   */
+                    pbuf = buf->data;
+                    pbuf += 0x1be;          /* The info starts at buf[1be] */
+                    copybuff(buf->data, pbuf, sizeof(PTABLE));
+                    ppart = (PTABLE *) buf->data;
+
+                    if (to_WORD((byte *) &ppart->signature)  !=  0xAA55)  /*X*/
+                    {
+                        rtfs_set_errno(PEINVALIDMBR);
+                        ret_val = READ_PARTION_NO_TABLE;
+                        goto done;
+                    }
+                    if (skip_count==0)
+                    {
+                        if (pc_validate_partition_type(ppart->ents[0].p_typ))
+                        {
+                            pdr->partition_type = ppart->ents[0].p_typ;
+                            ltemp = pdr->partition_base;
+                            pdr->partition_base = ltemp + to_DWORD ((byte *) &ppart->ents[0].r_sec);
+                            pdr->partition_size = to_DWORD ((byte *) &ppart->ents[0].p_size);
+                            ret_val = READ_PARTION_OK;
+                            goto done;
+                        }
+                        else
+                        {
+                            rtfs_set_errno(PEINVALIDMBROFFSET);
+                            ret_val = READ_PARTION_NO_ENTRY;
+                            goto done;
+                        }
+                    }
+                    else
+                    {
+                        if (ppart->ents[1].p_typ != 5)
+                        {
+                            rtfs_set_errno(PEINVALIDMBROFFSET);
+                            ret_val = READ_PARTION_NO_ENTRY;
+                            goto done;
+                        }
+                        pdr->partition_base = extended_base + to_DWORD ((byte *) &ppart->ents[1].r_sec);
+                        pdr->partition_size = to_DWORD ((byte *) &ppart->ents[1].p_size);
+                        skip_count -= 1;
+                    }
+                }
+            }
+        }
+    }
+}
+    /* Fall through to here if not in an extended partition */
+#endif /* (SUPPORT_EXTENDED_PARTITIONS) */
+
+====================================================================
+Functional changes between in version 4.4H versus version 4.4G
+
+Major functional changes:
+
+apigetcwd.c  In pc_l_pwd modified source code to clean up correctly if the
+depth of the current working directory depth exceeds the compile time
+variable OBJDEPTH.
+
+appcmdsh.c - Added FAILSAFE test routines if INCLUDE_FAILSAFE_CODE is
+enabkled.
+
+csjis.c - Fixed bug in pc_ascii_fileparse with was truncating files
+with greater than 8.3 components to 7.2. Files are now correctly truncated
+to 8.3 format.
+
+csstrtab.c - Added prompts for calling FAILSAFETEST. Prompts are only used
+when failsafe is enabled.
+
+prblock.c -
+In pc_map_fat_block change the order of evaluation of block status blocks
+and query failsafe. This is a simple optimization to cut down on
+subroutine calls.
+
+In pc_map_fat_block in FAILSAFE mode change the error condition to
+PERESOURCEFATBLOCK if no fat blocks are available.
+
+prfailsf.c - Initial supported failsafe release
+
+prfailsf.h - Initial supported failsafe release
+
+rtdrobj.c - In pc_mknode() at line 606 call pc_init_inode for the ".."
+entry passing it the date value that was retieved from the system
+when it was assigned to ".". This way . and .. always have the same
+time stamp.
+
+winhdisk.c - Modified driver to emulate a removable device. Test code can
+now pass remove events to the host disk driver and it will simulate a
+no media CHANGED condition.
+
+prfstest.c - New file containing test code for failsafe mode. This test
+code is designed to run in the windows host disk environment.
+
+====================================================================
+Functional changes between in version 4.4G versus version 4.4F
+
+Major functional changes:
+
+In prblock.c - Added the routine pc_flush_chain_blk to support flushing
+all blocks associated with a subdirectory's cluster chain
+
+At line 535 added the routine:
+void pc_flush_chain_blk(DDRIVE *pdrive, CLUSTERTYPE cluster)
+
+In drmmccrd.c - Many changes to support mmc in the rtfs4.0 environment.
+
+In drflsftl.c - Added support for using a ram base sector map to speed
+up accesses. The code is fixed to use a map large enough to hold 1000
+elements. In the next release this will be modified to be configurable
+and to disable sector mapping.
+
+At line 58 add:
+PhysicalSectorMap StaticSectorMap[1000];
+
+At line 87 change:
+        return (LowLevelFormat(&FlashData, 0, 0));
+To:
+        if (LowLevelFormat(&FlashData, 0, 0) == 0)
+    {
+            MapSectors((void *) &FlashData);
+            return 0;
+        }
+        else
+            return -1;
+
+At line 93 -
+change:
+    case DEVCTL_WARMSTART:
+        MapSectors((void *) &FlashData);
+to:
+    case DEVCTL_WARMSTART:
+        FlashData.SectorMap = &StaticSectorMap[0];
+        MapSectors((void *) &FlashData);
+
+In drflash.h at line 16
+  changed:
+typedef union {
+    byte  PhysicalSectorAddr[3];
+    byte  MustUpdateAddr[1];
+} PhysicalSectorMap, *PhysicalSectorMapPtr;
+to:
+typedef struct {
+    byte  PhysicalSectorAddr[3];
+    byte  MustUpdateAddr[1];
+} PhysicalSectorMap, *PhysicalSectorMapPtr;
+
+apifrmat.c: Fixed to use hidden sectors only on a partitioned disk
+
+At line 549
+changed:
+        fmt.secreserved =    (word) 32;
+        if (pgeometry->dev_geometry_lbas)
+            /* 10-24-2000 - New code to support lba formatting */
+            fmt.numhide     =    (unsigned long)  0; /*PS Does not work as fmt.secptrk here */
+        else
+            /* 10-24-2000 - This was the original code */
+            fmt.numhide     =    (unsigned long)  fmt.secptrk;
+to:
+        fmt.secreserved =    (word) 32;
+    if (pdr->drive_flags & DRIVE_FLAGS_PARTITIONED)
+    {
+        if (pgeometry->dev_geometry_lbas)
+            /* 10-24-2000 - New code to support lba formatting */
+            fmt.numhide     =    (unsigned long)  0; /*PS Does not work as fmt.secptrk here */
+        else
+            /* 10-24-2000 - This was the original code */
+            fmt.numhide     =    (unsigned long)  fmt.secptrk;
+    }
+    else
+        fmt.numhide     =    (unsigned long)  0;
+rtdrobj.c - Fix problem accessing .\xxx in vfat systems change line 175 from:
+        if (CS_OP_CMP_ASCII(pf0,'.') && CS_OP_IS_EOS(pf1)) /* DOT */
+            ;
+to:
+#if (VFAT)
+        if (CS_OP_CMP_ASCII(pf0,'.') && CS_OP_IS_EOS(pf1)) /* DOT */
+            ;
+#else
+        if (CS_OP_CMP_ASCII(pf0,'.') && CS_OP_CMP_ASCII(pf1,' ')) /* DOT-in NON-VFAT it is space filled  */
+            ;
+#endif
+
+rttdrobj.c - Fix a bug initializing the date fields for directory entries.
+
+change lines 590 and 599 from
+        pc_init_inode( &lfinode, dot_str,null_str, ADIRENT|ARCHIVE,
+                            cluster, /*size*/ 0L , &crdate);
+         pc_init_inode( &lfinode, dot_str, null_str, ADIRENT|ARCHIVE, cltemp,
+                    /*size*/ 0L , &crdate);
+to:
+        pc_init_inode( &lfinode, dot_str,null_str, ADIRENT|ARCHIVE,
+                            cluster, /*size*/ 0L ,pc_getsysdate(&crdate));
+         pc_init_inode( &lfinode, dot_str, null_str, ADIRENT|ARCHIVE, cltemp,
+                    /*size*/ 0L , pc_getsysdate(&crdate));
+
+rttdrobj.c - Make sure cluster blocks are flushed from the buffer pool
+when deleting a subdirectory
+ change line 689 from
+    if (pc_update_inode(pobj, TRUE, TRUE))
+    {
+        /* If there is no cluster chain to delete don't call freechain */
+        if (!cluster)
+            return(TRUE);
+        /* And clear up the space   */
+To:
+    if (pc_update_inode(pobj, TRUE, TRUE))
+    {
+        /* If there is no cluster chain to delete don't call freechain */
+        if (!cluster)
+            return(TRUE);
+        /* And clear up the space   */
+    /* Make sure the blocks contained within the cluster chain
+       are flushed from the block buffer pool */
+    pc_flush_chain_blk(pdrive, cluster);
+Rtfs.h Added the following prototype at line 789
+void pc_flush_chain_blk(DDRIVE *pdrive, CLUSTERTYPE cluster);
+
+rttermin.c - Fixed date print formatting
+At line 152, changed:
+    sprintf((char *)gotoeos(p),"-%02d",80 +(statobj->fdate >> 9) & 0xff); /* Year */
+to:
+    year = 80 +(statobj->fdate >> 9) & 0xff; /* Year */
+   if (year >= 100)
+       year -= 100;
+    sprintf((char *)gotoeos(p),"-%02d", year); /* Year */
+====================================================================
+Functional changes between in version 4.4F versus version 4.4E
+Major functional changes:
+apicnfig.c
+
+Change NBLKBUFFS from 10 to 20. We are using a few more scratch buffers.
+(maximum 3 at a time, so up the buffer pool size a little).
+
+apiregrs.c
+ Added a test  to create, reopen, and delete long file names when
+ VFAT is enabled.
+ Replace large stack arrays with allocations from the block buffer pool
+
+Appcmdsh.c
+ Remove long file name test. It was moved to apiregrs.c
+csstrtab.c
+csstrtab.h
+  Added string for long file name test in apiregs.c
+rtfat32.c -
+  Split rtfat32.c into rtfat32.c and rtfat16.c
+rtfs.h -
+  Changed the vfat segdesc structure to contain 3 blocks, the worst case
+  possible. It had been 2.
+rtvfat.c
+ Changed lfi2text to take the lfn's current length as an argument. Checks the
+ that the length does not exceed 255 characters.
+ Changed pc_findin to use scratch buffers instead of large stack byte arrays
+ Changed pc_deleteseglist, pc_seglist2disk and pc_seglist2text to support
+ long file name segments that exceed 3 blocks.
+
+
+
+====================================================================
+Functional changes between in version 4.4E versus version 4.4D
+Major functional changes:
+1. Fixed support for very large file and path names. This increases parse
+buffer sizes substantially for JIS and UNICODE configurations so parse
+buffers were moved to the DDRIVE structure and when those are not
+available scratch buffers are used.
+2. Support for the CD-ROM option (ASCII only) was added to ERTFS. All CD-ROM
+operations are conditionally excluded at compile time.
+3. Preliminary integration of FAILSAFE support was completed. All FAILSAFE
+operations are conditionally excluded at compile time.
+4. The pc_stat function was modified to report the root directory as a
+directory. Before this fix the stat structure was initialized with
+incorrect attributes.
+
+1. rtfvat.c - in text2lfi(), there were lines of the type:
+                lfn = CS_OP_INC_PTR(lfn);
+This causes problems with some optimizing compilers. They were changed to:
+                 CS_OP_INC_PTR(lfn);
+2. apistat.c - in pc_stat. If the path is the root,  fill in the stat
+   structure without consulting the finode structure since the finode structure is an
+   abstraction
+3. apideltr.c - Added a test for read only. Don't remove a directory or its
+   contents if it is read only.
+
+4. The following modules were changed to support major functional
+change one, supporting very long file names. Two main changes were made.
+The first change eliminates use of stack buffers for temporary storage of
+ file and path specifications. In most cases the buffers were replaced
+ with special path and filename buffers contained in the drive structure.
+ In other cases, where the buffers in the drive structure are already in use,
+ scratch buffers are allocated.
+
+ rtfs.h: Added pathname_buffer and filename_buffer fields that are used instead
+   of stack variables by the API parsing routines.
+   . Modified the DSTAT structure declaration for the field lfname.
+   . If VFAT is enabled lfname is FILENAMESIZE_BYTES wide, if not it is 14
+     bytes wide.
+   . Added prototype for new function: int rtfs_cs_strlen_bytes(byte * string);
+ portconf.h: Eliminated the macros FILENAMESIZE and EMAXPATH and created
+  new macros named FILENAMESIZE_CHARS, FILENAMESIZE_BYTES,
+  EMAXPATH_CHARS, EMAXPATH_BYTES. Where FILENAMESIZE_CHARS and EMAXPATH_CHARS
+  are the maximum number in logical characters in the selected character
+  set and FILENAMESIZE_BYTES and EMAXPATH_BYTES are the number of bytes
+  needed to store the NULL terminated string of length FILENAMESIZE_CHARS
+  or EMAXPATH_CHARS.
+ apickdsk.c: Modified path and filename variable declarations.
+ apienum.c: Modified path and filename variable declarations.
+ Apideltr.c: Use drive's pathname_buffer and filename_buffer instead of stack
+ Apifilio.c: Use drive's pathname_buffer and filename_buffer instead of stack
+ Apifilmv.c: Use drive's pathname_buffer and filename_buffer instead of stack
+ APIGFRST.C: Use drive's pathname_buffer and filename_buffer instead of stack
+ APIMKDIR.C: Use drive's pathname_buffer and filename_buffer instead of stack
+ Apisetwd.c: Use drive's pathname_buffer and filename_buffer instead of stack
+ RTDROBJ.C: pc_findnode - Use scratch buffers instead of stack buffers
+ csunicod.c: pc_cs_malias - Use scratch buffers instead of stack buffers
+ RTNVFAT.C:  pc_nibbleparse - use scratch buffers rather than stack buffers
+  . pc_parsepath() - Changed maximum path length test to test if the string
+  length in bytes is greater than the maximum character length for a path.
+  This works for both JIS and ASCII.
+ RTVFAT.C: pc_parsepath() - Changed maximum path length test to test if the logical
+  string in the character set is greater than the maximum character length
+  for a path or file.
+  . Modified lfi2text to accept an extra argument to allow
+   maximum length testing on the long file name as it is built from buffer
+   contents and Implemented length checking feature.
+ csascii.c - Created new function rtfs_cs_strlen_bytes()
+ csjis.c - Created new function rtfs_cs_strlen_bytes()
+
+5. The following modules were changed to support major functional
+change number two, inclusion of optional CDROM support for ERTFS.
+CDROM support is optional and is completely disabled by setting
+INCLUDE_CDROM to zero in PORTCONF.H.
+ Rtfs.h: Added prototype for new functions:
+   word ide_rd_data(dword register_file_address);
+   void ide_wr_data(dword register_file_address, word value);
+ Rtfsconf.h: Removed INCLUDE_CDFS macro. This is now replaced by
+  INCLUDE_CDROM in portconf.h
+ portconf.h: added INCLUDE_CDROM configuration value
+ apiinit.c: Added CD-ROM support, this is conditionally excluded
+ drideata.c: Completed CD-ROM support, this is conditionally excluded
+ Appcmdsh.c: Changed all instances of INCLUDE_CDFS to INCLUDE_CDROM
+ Appcmdsh.c: removed call to if cd_memory_init(), this is now done
+  in pc_ertfs_init
+ portio.c: Added ide_rd_data and ide_wr_data functions to read and write
+  the ide data register.
+
+6. The following modules were changed to support major functional
+ change number 3, failsafe mode. Failsafe mode is not yet release, and
+ it must be left in the disabled state by setting INCLUDE_FAILSAFE_CODE
+ to zero in rtfsconf.h
+ Rtfs.h: Added ERRNO codes to support FAILSAFE operation
+  . Added num_free and low_water fields to the fat buffer context structure.
+  . Added num_free and low_water num_alloc_failures fields to the block buffer
+   context structure. This information will be made available to the user
+   through a new API call when the failsafe operating mode is release.
+  . If failsafe mode is enabled include failsafe header
+ Rtfsconf.h: Added INCLUDE_FAILSAFE_CODE macro to enable failsafe modules.
+ csstrtab.c and csstrtab.h: Added Failsafe strings, these are conditionally
+  excluded.
+ Appcmdsh.c: Added Failsafe test code,  this is conditionally excluded
+ PRBLOCK.C: Modified DEBUG code to work correctly if the drive has a
+ private block buffer pool.
+ . Added code to track statistics on block usages, such as
+  current free and most ever used.
+ . Added calls to the failsafe library if failsafe is enabled.
+  This code is conditionally excluded.
+ rtdevio.c: Added calls to the failsafe library if failsafe is enabled.
+  This code is conditionally excluded.
+ RTFATXX.C: Added calls to the failsafe library if failsafe is enabled.
+  This code is conditionally excluded.
+7. apirealt.c: pc_cluster_size - Add a call to check_drive to be sure
+the mount the drive if it is not already mounted.
+
+====================================================================
+Functional changes between in version 4.4D versus version 4.4C
+1. csunicode.c - Fix problem creating aliases for short file names
+with invalid characters
+in pc_ascii_malias() added:
+    /* Fill filename[8] with spaces before we start. */
+    rtfs_memset(filename, ' ', 8);
+2. csjis.c - Fix problem creating aliases for short file names
+with invalid characters
+ in pc_cs_malias() added:
+    /* Fill filename[8] with spaces before we start. */
+    rtfs_memset(filename, ' ', 8);
+3. Fixed error validating file names an path name lengths
+in rtvfat.c:pc_parsepath()
+change:    if (rtfs_cs_strlen(path) >= EMAXPATH)
+to:    if (rtfs_cs_strlen(path) >= EMAXPATH/2)
+in rtvfat.c:pc_parserpath()
+change:    if (rtfs_cs_strlen(p) >= FILENAMESIZE)
+to :    if (rtfs_cs_strlen(p) >= FILENAMESIZE/2)
+
+====================================================================
+Functional changes between in version 4.4C versus version 4.4B
+1. rtvfat.c - In pc_patcmp_vfat. At line 996 added the following lines:
+    else if (CS_OP_CMP_CHAR_NC(pp, pn))
+            ;
+ this makes comparisons for vfat case independent. So HeLLo.txt matches
+HELlo.txt. The files are stored exactly as they are specified but any
+variation of case in the name finds the entry on a file open of directory
+access.
+
+====================================================================
+Functional changes between in version 4.4B versus version 4.4A
+1. rtvfat.c - Check return code of pc_malias. Set errno to PENOSPC
+in pc_malias if it runs out of possible alias names.
+
+====================================================================
+Functional changes between in version 4.49b versus version 4.49
+apifilio.c - po_open - If truncating the file and the chain contains
+         invalid clusters, thruncate the file anyway, flush the
+         directory entry and proceed to open the file.
+apifilio.c - _po_lseek - Change the function to not detect a bad cluster
+         chain condition if get_chain does not advance because the
+         seek pointer is at EOF.
+rtfatxx.c - fatxx_freechain() - return error if clnext fails
+rtfatxx.c - fatxx_get_chain() - fixed bug setting return value wrong.
+This was problem was introduced in version 4.46
+apimkdir.c- pc_rmdir. modify error handling support to remove the
+        directory and chain and return FALSE if the chain contains
+            an invalid cluster
+rtdrobj.c - pc_rmnode() - If freechain failed on an invalid cluster
+            proceed and flush the fat delete the directory entry
+        and return FALSE.
+
+
+====================================================================
+Functional changes between in version 4.49 versus version 4.48
+
+rtdrobj.c - pc_mknode - Call validate_filename() inside pc_mknode()
+and remove it from routines that call pc_mknode
+
+apigfrst.c - pc_gfirst - If the search path is not a directory set errno
+to PEINVALIDDIR instead of PENOENT.
+
+apisetwd.c - pc_set_cwd - If the path is not a directory set errno
+to PEINVALIDDIR instead of PEACCES.
+apigfrst.c - pc_gfirst - If the search path is not a directory set errno
+to PEINVALIDDIR instead of PENOENT.
+
+rtfs.h - Changed comment about PEINVALIDDIR, checkdisk is not required.
+
+apideltr.c - pc_deltree - change errno setting if illegal directory
+condition from PEINVALIDDIR to PEINVLIDCLUSTER
+
+rtdrobj.c, csjis.c, rtvfat.c, rtfs.h - Mofications to correctly support
+valid leading kanji E5 character in first character of file.
+
+drflsftl.c - Corrected the prototype for mtd_ProgramData ();
+
+apiwrite.c - po_truncate Removed superfluous errno check and add validate
+cluster check in case fptr_cluster is invalid.
+
+rtdrobj.c - pc_mkchild - remove setting errno to PEINVALIDBLOCKNUMBER
+because pc_firstblock set errno already to PEINVALIDCLUSTER or PEINTERNAL
+
+rtutil.c - pc_path_to_driveno test for empty path string
+
+apifilio.c - Added a test to catch the error condition when the file size
+is incorrect, longer than the actual cluster size and the file pointer
+is on the terminating cluster. When a seek to a location that should be in
+the next cluster is requested this was succeding. This new fix eliminates
+ that result. It now returns an error and sets errno to PEINVALIDCLUSTER.
+
+apigfrst.c - pc_gfirst/pc_gnext - Remove gnext_loop_count processing
+
+prblocks.c - Remove memory block loop detection from pc_free_all_blk,
+pc_release_blk, pc_find_blk, pc_allocate_blk,pc_flush_fat_blocks,
+pc_map_fat_block, pc_find_fat_blk, pc_sort_committed_blocks
+
+rtdrobj.c  - Remove memory block loop detection from pc_scani,pc_free_all_i,
+
+rtfatxx.c - fatxx_clgrow,fatxx_cl_truncate_dir changed maximum value for
+detecting endless cluster chain from 32768L to MAX_CLUSTERS_PER_DIR
+
+apigetcwd.c - pc_gm_name remove endless loop detection in scan for current
+directory object in parent directory
+
+rtdrobj.c - pc_rmnode remove min and max cluster to release arguments
+
+pcmkdir.c - In pc_rmdir continue and delete a directory if it
+    contains a corrupted fat chain.
+
+
+====================================================================
+Functional changes between in version 4.48 versus version 4.47
+In BOOLEAN pc_search_csl()
+Bug fix, rotuine was not finding substring at the end of the string
+Change
+         while (*set == *p)
+To
+
+          while (*set && *p && (*set == *p))
+
+
+Change
+        if (*set == ',' && *p == 0)
+To
+        if ((*set == 0 || *set == ',') && *p == 0)
+
+====================================================================
+Functional changes between in version 4.47 versus version 4.46
+pc_validate_partition_type: add (p_type == 0x0E) Windows FAT16 Partition
+====================================================================
+Functional changes between in version 4.46 versus version 4.45
+appcmdsh.c - Added DISPLAY_ERRNO() facility
+
+rtvfat.c - pc_malias - Clear PENOENT errno condition after verifying an
+alias does not exist.
+
+fatop_clnext() - Changed the return values. Returns 0xffffffff on end of
+chain, 0x0 if an error occurs. It is considered an error if the value
+pointed to by gnext is not an end of chain marker and is
+less than 2 or greater than pdr->maxfindex. If so the routine returns
+0 and sets errno to PEINVLIDCLUSTER.
+
+fatxx_clgrow() - Modified routines to take advantage of new interface to
+fatop_clnext(). Double checked clgrow callers for error handling.
+
+fatxx_freechain() - Added a minimum clusters to free and maximum clusters
+to free to catch problems with files who's cluster chain is either
+larger or smaller than the file size says it should be.
+fatxx_freechain() - Modified routines to take advantage of new interface to
+
+fatop_clnext(). Double checked callers for error handling.
+fatxx_truncate_dir() - Modified routines to take advantage of new interface to
+fatop_clnext(). Added a minimum clusters to free to freechain call.
+
+fatxx_get_chain() - Modified to use common code and error handling in
+fatop_clnext. Also added and end_of_chain return value and coordinated it
+with but chain protection in the other files
+
+apichkdsk.c - Modified routines to take advantage of new interface to
+fatop_clnext().
+
+apichkdsk.c - If a file is zero sized make sure the cluster pointer in the
+directory entry is set to zero.
+
+po_open() - Modified routines to take advantage of new interface to. Set an
+error file pointer and cluster chain size do not agree while truncating file
+
+po_read - Use new return codes from fatop_get_chain() to detect when file
+length is out of synch with cluster chain length. Fail if fatop_get_chain()
+returns zero indicating IO or cluster range error
+
+_po_lseek - Use new return codes from fatop_get_chain() to detect when file
+length is out of synch with cluster chain length. Fail if fatop_get_chain()
+returns zero indicating IO or cluster range error
+
+pc_gnext() - Change the maximum number of calls before we think
+we are in an endless loop to 0x2000000 as a maximum possible value.
+thats 32768 (max number of clusters in a directory) times 64 (number of blocks in a 32 K cluster)
+ times 16 (maximum number of entries in a block)
+
+po_extend_file - When scanning to the end of the current file, use range
+checking and new return codes from fatop_clnext to detect when file length
+is out of synch with cluster chain length. Fail if fatop_get_chain()
+returns zero indicating IO or cluster range error
+
+pc_get_file_extents - Use new return codes from fatop_get_chain() to detect
+when file length is out of synch with cluster chain length. Fail if
+fatop_get_chain() returns zero indicating IO or cluster range error
+
+po_write - Use new return codes from fatop_get_chain() to detect
+when file length is out of synch with cluster chain length. Fail if
+fatop_get_chain() returns zero indicating IO or cluster range error
+
+po_truncate - Use new return codes from fatop_clnext() to detect errors
+in the cluster chain when seeking.
+Use new interface to pc_free_chain to set an error when file length is
+out of synch with cluster chain length.
+
+pc_set_attributes - Distignuish between illegal attributes passed as argument and an attempt to change attributes from
+file to a directory or directory to file. Illegal attributes set errno to PEINVALIDPARMS otherwise set PEACCESS.
+
+====================================================================
+Functional changes between in version 4.45d versus version 4.45c
+4.45d is released as version 4.45
+po_open - clear errno after PENOENT when doing a create
+po_extend_file - Fixed range check error that was causing a leak
+po_truncate - Fixed bug in calulation of clusters_to_delete
+pc_regression_test() - Clean up test directory at startup with pc_deltree
+Added tests for pc_deltree, po_chsize, added errno checks
+rtfs.h - Added PEILLEGALERRNO for the regression test to use
+====================================================================
+Functional changes between in version 4.45c versus version 4.45b
+pc_mkdir - clear errno before calling freechain
+fatxx_freechain - Check next_cluster value before calling gnext
+====================================================================
+Functional changes between in version 4.45b versus version 4.45a
+
+po_open()  line 226. change:
+            if (pc_update_inode(pobj, TRUE, TRUE))
+to
+            if (!pc_update_inode(pobj, TRUE, TRUE))
+pc_gnext() - changed to postincrement if (++statobj->gnext_loop_count >= 32768L)
+po_truncate()
+change:        clusters_to_release = new_chain_len - old_chain_len;
+to:        clusters_to_release = old_chain_len - new_chain_len;
+fatxx_freechain() - call pfaxx directly to terminate, because cl_releasedir does not
+set errno
+
+====================================================================
+Functional changes between in version 4.45a versus version 4.44
+    pc_set_attributes - sets PEINVALIDPARMS attribute argument is invalid
+    po_write() - Set p_errno = PEIOERRORWRITE only if devio didn't set it
+    pc_grow_dir() - Set errno to PENOSPC if root directory fills up
+    fatxx_clgrow() - Added endless loop protection and errno check
+    on lower level fat calls.
+    fatxx_clrelease_dir() -  Since it is always part of cleanup in
+    rtdrobj.c modified code to preserve errno, since the error that
+    cause the cleanup call to be made is the important one.
+    fatxx_freechain - Add range check on the initial cluster,
+               added endless loop protection
+               added length argument from caller
+    po_truncate  - Calulate and pass max number of clusters to freechain.
+    po_open      - Calulate and pass max number of clusters to freechain.
+    pc_rmnode    - Passes ass max number of clusters to freechain.
+    pc_deltree   - Handle cases where get_inode failed but errno != PENOENT
+    pc_deltree   - Calulate and pass max number of clusters to pc_rmnode
+    pc_mv         - Calulate and pass max number of clusters to pc_rmnode
+    pc_unlink     - Calulate and pass max number of clusters to pc_rmnode
+    rtfs.h - Added changed prototype for fatxx_freechain() and pc_rmnode
+    fatxx_cl_truncate_dir -  Added range check on the initial cluster
+    fatxx_cl_truncate_dir -  Added endless loop protection.
+    fatxx_cl_truncate_dir -  Added save previous errno since we are a
+        cleanup function
+    fatxx_get_chain - removed incorrect bad cluster detect code
+        po_open() - test _synch_file_ptrs return code
+        po_read() - test _synch_file_ptrs return code
+        synch_file_ptrs - return TRUE/FALSE and set errno if faxx fails
+    po_extend_file - test _synch_file_ptrs return code
+    pc_gm_name - Guard against endless loop
+    pc_gfirst - clear a maximum loop counter for gnext
+    pc_gnext - Fail if > 32768 calls to gnext, infinite loop
+    po_extend_file - Added range check when scanning to end of file
+    po_truncate - added endless loop protection
+    pc_free_all_blk - put endless loop stop in do loop
+    pc_release_blk - put endless loop stop in do loop
+    pc_find_blk - put endless loop stop in do loop
+    pc_allocate_blk - endless loop stop in do loop
+    pc_flush_fat_blocks - put endless loop stop in do loop
+    pc_map_fat_block - put endless loop stop in do loop
+    pc_find_fat_blk - put endless loop stop in do loop
+    pc_sort_committed_blocks - put endless loop stop in do loop
+    pc_get_mom - add range check pc_finode_cluster(pdrive,pdotdot->finode)
+    pc_firstblock - must range check cluster values
+    pc_l_next_block -  range check on cluster values
+    pc_scani - put endless loop stop
+        pc_free_all_i - put endless loop stop
+====================================================================
+Functional changes between in version 4.44 versus version 4.43
+rtdrobj.c - pc_l_next_block() - Fixed error recovery code that was continueing after an
+error.
+csascii.c, csunicode.c and csjis.c - changed pc_malias() so that long file
+names with 8 characters or less use their own name as an alias.
+apimkdir.c - pc_rmdir() fixed error handling code to not overwrite lower
+layers.
+apimkdir.c - pc_rmdir() check retrun code when we use pc_get_inode to
+scan the directory for empty. If errno not equal PENOENT tha we have a
+problem.
+apirealt.c - pc_get_file_extents() Fixed minor error handling problem
+====================================================================
+Functional changes between in version 4.43 versus version 4.42
+rtvfat.c   - pc_parsepath() check string lengths of path and file
+rtnvfat.c  - pc_parsepath() check string length of path. File is already
+tested within pc_parsefile().
+apigfrst.c - pc_gfirst() - set errno to 0 and return null if directory is
+valid but entry not found as reported by pc_findin setting errno to PENOENT.
+apigfrst.c - pc_gnext() - set errno to 0 and return null if directory is
+valid but entry not found as reported by pc_get_inode setting errno to
+PENOENT.
+csunicode.c - changed VFAT validate_filename() to check for reserved words
+csascii.c - changed VFAT validate_filename() to check for reserved words
+csjis.c   - changed VFAT validate_filename() to check for reserved words
+csascii.c - changed NVFAT validate_filename() to check for reserved words
+csjis.c   - changed NVFAT validate_filename() to check for reserved words
+csunicode.c - changed VFAT validate_filename() to check for reserved words
+rtvfat.c - moved name_is_reserved() to rtutil.c since it is now used by
+vfat and non vfat systems.
+rtutil.c - moved name_is_reserved() to rtutil.c since it is now used by
+vfat and non vfat systems.
+csstrtab.c - USTRING_SYS_BADALIAS. USTRING_SYS_LCRESERVED_NAMES and
+USTRING_SYS_UCRESERVED_NAMES are stored as 8 bit ascii. Even when using
+Unicode. These strings are always looked at as strings of 8 bit data
+drflsemu.c - Removed. Put simplified emulator in drflsmtd.c
+drflsftl.c - Simplified interface to MTS'd removed extraneous code and
+structures.
+
+====================================================================
+
+====================================================================
+Functional changes between in version 4.42 versus version 4.41
+apifilmv.c - Errno handling fix
+apigfrst.c - Errno handling fix in pc_gdone
+====================================================================
+====================================================================
+Functional changes between in version 4.41 versus version 4.4
+csjistab.c - Fixed Declare tables constant
+drfloppy.c - Declare fl_errors[] constant
+apiwrite.c - pc_set_attributes: Fail if trying to set bits (0x80|0x40)
+drfloppy.c - Declare fl_errors constant
+====================================================================
+Functional changes between in version 4.4 versus version 4.3.
+prblock.c -
+ A new function named pc_free_all_fat_blocks() has been created, this
+routine clears the fat cache. It is called by pc_dskfree() to release
+cached fat data from a closing mount. For consistency the routine
+pc_initialize_fat_block_pool now calls pc_free_all_fat_blocks() to
+initialized the fat buffer pool once the configuration values have been
+stored.
+prblock.c - Improved error handling
+apideltr.c - Improved error handling
+apifilio.c - Improved error handling
+apifilio.c - Modified pc_enum_file to not trigger errno when scanning all
+files.
+apifilmv.c - Improved error handling
+apifrmat.c - Improved error handling
+apigetwd.c - Improved error handling
+apigfrst.c - Improved error handling
+apiinfo.c  - Improved error handling
+apiinit.c  - Don't print device driver name in autoformat loop if
+             STORE_DEVICE_NAMES_IN_DRIVE_STRUCT is disabled.
+apimkdir.c - Improved error handling
+apimkdir.c - Fixed bug in pc_rmdir() that was allowing removal of the
+"." and ".." directory entries.
+apirealt.c - Improved error handling
+apisetwd.c - Improved error handling
+apistat.c  - Improved error handling
+apiwrite.c - Improved error handling
+csstrtab.c - Declare strings constant.
+csstrtab.c - Eliminate MAP_UNICODE strings. Use the L modifier instead to
+declare the text as UTF 16.
+csjistab.c - Declare tables constant
+rtkernfn.c - Declare med_st[] critical error table constant
+rtkernfn.c - Set errno when out of resources
+csunicode.c- Changed incorrect definition of BYTE_HIGH and BYTE_LOW
+csunicode.c- Removed unicode_convert_strtable() call that was using malloc
+csunicode.c- Fixed bug in unicode_make_printable() that caused an endless
+loop
+rtdevio.c  - Remove check for dirty files before status check. Wasting bandwidth
+rtdevio.c  - Improved error handling
+rtdrobj.c  - Improved error handling
+rtfat32.c  - Improved error handling
+rtfatxx.c  - Improved error handling
+rtfatxx.c  - Fixed bug in fatxx_alloc_chain() and fatxx_clalloc() that was
+not finding the last cluster.
+rtfs.h     - Added new errnos, changed drive_flags to a dword, added READ_ONLY
+flag and note that high 8 bits are for private driver use.
+rtlowl.c  - Improved error handling
+rtlowl.c  - Add call to pc_free_all_fat_blocks() of disk close
+rtnvfat.c - Improved error handling
+rtvfat.c - Improved error handling
+====================================================================
+Functional changes between in version 4.3 versus version 4.2.
+
+apifileio.c - Some errno handling changes have been made in po_lseek()
+and po_open().
+apigfrst.c - pc_gnext() has been modified to check the DSTAT arguments to
+avoid a crash if the input arguments are invalid.
+apimkdir.c - pc_rmdir() now checks if a subdirectory is read only before deleting.
+csstrtab.c - The string table is declared as KS_CONSTANT. The file has also
+been modified to allow conditional exclusion of strings. To preserve memory
+you may exclude strings from the string table if the corresponding module is
+ not being used. Set the definition in this table to zero if you wish to
+exclude strings from the from the corresponding module.
+
+#define INCLUDE_CHKDSK_STRINGS         1
+#define INCLUDE_FLDRVER_STRINGS     1
+#define INCLUDE_FLASHDRV_STRINGS     1
+#define INCLUDE_FLASHEMU_STRINGS     1
+#define INCLUDE_RTFSINIT_STRINGS     1
+#define INCLUDE_IDEDRV_STRINGS         1
+#define INCLUDE_PORTMAIN_STRINGS     1
+#define INCLUDE_PORTKERN_STRINGS     1
+#define INCLUDE_RTFSDEM_STRINGS     1 /* For APIRGRS.C */
+#define INCLUDE_TSTSH_STRINGS         1
+
+rtdrobj.c - Added routine pc_free_all_drobj() that releases all drobj
+structures associated with a drive. Also made certain the drobj->pdrive was
+initialized properly imediately after all drobj allocations.
+
+rtfs.h -
+Eliminated spurious declaration: LFNRECORD s;
+modified rtfs_system_user structure to include: dword rtfs_driver_errno
+Added prototypes for:
+    void pc_free_all_drobj( DDRIVE *pdrive);
+    void rtfs_set_driver_errno(dword error);
+    dword rtfs_get_driver_errno(void);
+rtkernfn.c -
+Implemented two new functions
+    void rtfs_set_driver_errno(dword error);
+    dword rtfs_get_driver_errno(void);
+
+rtlowl.c -
+Started adding calls to set_errno() for failures to read BPB and FAT. These
+will have no effect until the upper level calls are changed to not overwrite
+these values. This work will be completed in version 4.3.
+In pc_dskfree() added a call to pc_free_all_drobj() to release drobj
+structures not associated with files user current working directory.
+
+rtvfat.c - Fixed a bug in pc_parsepath() that caused problems if a path
+name contained colon characters.
+
+Many other files were changed but the changes were not substantive.
+THe files were simply editted to replace C++ style comments with C
+comments.
+
+====================================================================
+Functional changes between in version 4.2 versus version 4.1.
+    pc_gfirst/pc_gnext always updates the DSTAT->lfname field. With the
+    short file name if necessary
+    fix vfat bug causing lost files in Unicode at sector boundaries.
+apicnfig.c - Minor fixes to comments
+apigfrst.c - Modified pc_upstat() to put the short file name in statobj->lfname
+         if there is no lfn.
+appcmdsh.c - Set INCLUDE_STRESS_TESTS    0 as default
+prblock.c  - define INCLUDE_FAILSAFE_CODE as 0, disables failsafe callbacks
+         make pc_commit_fat_table() and pc_sort_committed_blocks()
+         not static
+Prfailsf.c - Removed, failsafe mode is not implemened yet.
+rtfs.h       - Change DSTAT structure dimensions of filename[] and pname[] fixed
+rtvfat.c   - Change text2lfi() and routines that call it to fix vfat bug
+         causing lost files in Unicode at sector boundaries.
+====================================================================
+Functional changes between in version 4.1 versus version 4.0.
+    pc_mv() - Can now move directories as well as files
+    Added changes to support ATA contiguous IO mode
+    Fixed a bug caused blocks to be freed twice on a disk abort
+apifilio.c - Changed calling sequence to pc_mknode because of new argument
+apifilmv.c - Modified pc_mv() to move directories as well as files.
+apiinit.c  - Added changes to support ATA contiguous IO mode
+apimkdir.c - Changed calling sequence to pc_mknode because of new argument
+drideata.c  - Added changes to support ATA contiguous IO mode
+portio.c - Added changes to support ATA contiguous IO mode
+prblock.c - Fixed a bug that allowed blocks to be freed twice on a disk abort
+rtdrobj.c - MOdified pc_mknode() so it can be used in pc_mv()
+rtfs.h - Changed some prototypes to support changes to pc_mv and ATA
+     contiguous IO mode.
+
+
+
+April 29
+
+Notes:
+
+
+1. Endless loop checking in chains, looks pretty easy. Looks like find_in,
+fndnode are the only ones. next block already has error handling so it should
+ be smooth.
+
+2. Need to change 32768 to a constant so when we decide MAX we are set
+Usage by file and line number
+File APIDELTR.C:
+198   ret_val = pc_rmnode(pchild, 0, 32768L); MAXCLUSTERSINDIR
+219  ret_val = pc_rmnode(pobj, 0, 32768L); MAXCLUSTERSINDIR
+File APIMKDIR.C:
+241  ret_val = pc_rmnode(pobj, 0, 32768L); MAXCLUSTERSINDIR
+File APIGETWD.C:
+167  if (++range_check >= 32768L) - Clusters
+File APIGFRST.C:
+169 Thats 32768 (max number of clusters in a directory) times
+ if (statobj->gnext_loop_count++ >= 0x2000000)
+File RTDROBJ.C:
+1084  if (++range_check >= 32768L) MAXFINODES
+1182  if (++range_check >= 32768L) MAXFINODES
+File PRBLOCK.C:
+330  if (++range_check >= 32768L) MAXBLOCKS
+337  if (++range_check >= 32768L) MAXBLOCKS
+428  if (++range_check >= 32768L)MAXBLOCKS
+473  if (++range_check >= 32768L)MAXBLOCKS
+497  if (++range_check >= 32768L)MAXBLOCKS
+585  if (++range_check >= 32768L) MAXFATBLOCKS
+609  if (++range_check >= 32768L)
+718 if (++range_check >= 32768L)MAXFATBLOCKS
+748 if (++range_check >= 32768L)MAXFATBLOCKS
+779  if (++range_check >= 32768L)MAXFATBLOCKS
+904  if (++range_check >= 32768L)MAXFATBLOCKS
+975  if (++range_check >= 32768L)MAXFATBLOCKS
+987  if (++range_check >= 32768L)MAXFATBLOCKS
+File RTFATXX.C:
+321  while (nextcluster != 0xffffffff && ++range_check < 32768L) MAXCLUSTERSINDIR
+330 if (range_check == 32768L) MAXCLUSTERSINDIR
+518  while (nextcluster != 0xffffffff && ++range_check < 32768L)MAXCLUSTERSINDIR
+530  if (!fatxx_freechain(pdr, l_cluster, 0, 32768L))MAXCLUSTERSINDIR
+
+
+
+3. Need to solve append/lseek on file with last cluster broken.
+
+4. Need routine to break cluster chains.
+
+A. POSITION -
+ 0 =='s DOSINODE
+ 1 =='s FIRST
+-1 == LAST
+-2 == LAST -1
+-3 == LAST -3 etc
+B. OPTION
+ 1 == INVALID 0
+ 2 == INVALID 1
+ 3 == INVALID >MAX
+ 4 == LOOP ARG 1 to ARG 2
+Returns: &clno, &oldvalue
+
+
+3. Need regression test to test for
+
+ Cluster chain larger  then file size
+ Cluster chain smaller then file size
+ Cluster chain contains 0,1, > maxfindex
+ Finode->cluster chain contains 0,1, > maxfindex
+ Cluster chain loops
+
+
+BOOLEAN pc_deltree(byte  *name)
+int pc_enumerate( /* __apifn__ */
+PCFD po_open(byte *name, word flag, word mode)
+int po_read(PCFD fd,    byte *buf, int count)
+long po_lseek(PCFD fd, long offset, int origin)
+int po_close(PCFD fd)
+BOOLEAN pc_mv(byte *old_name, byte *new_name)
+BOOLEAN pc_unlink(byte *name)
+BOOLEAN pc_mkdir(byte  *name)
+BOOLEAN pc_rmdir(byte  *name)
+BOOLEAN pc_pwd(byte *drive, byte *path)
+BOOLEAN pc_gfirst(DSTAT *statobj, byte *name)
+BOOLEAN pc_gnext(DSTAT *statobj)
+void pc_gdone(DSTAT *statobj)
+BOOLEAN pc_set_cwd(byte *name)
+BOOLEAN pc_isdir(byte *path)
+BOOLEAN pc_isvol(byte *path)
+BOOLEAN pc_get_attributes(byte *path, byte *p_return)
+int po_write(PCFD fd, byte *buf, int count)
+BOOLEAN po_truncate(PCFD fd, long offset)
+BOOLEAN po_flush(PCFD fd)
+BOOLEAN pc_set_attributes(byte *path, byte attributes)
+long po_extend_file(PCFD fd, long n_bytes, long start_cluster, int method)
+int po_chsize(PCFD fd, long offset)
+int pc_get_file_extents(PCFD fd, int infolistsize, FILESEGINFO *plist, BOOLEAN raw)
+int pc_get_free_list(int driveno, int listsize, FREELISTINFO *plist, long threshhold)
+int pc_fstat(PCFD fd, STAT *pstat)
+int pc_stat(byte *name, STAT *pstat)
+
+
+#define MC_ZERO 0
+#define MC_ONE    1
+#define MC_MAX    2
+#define MC_LOOP    3
+#define MC_SET    4
+#define MC_GET    5
+
+/* manipulate_cluster_chain
+Arguments:
+DROBJ *pobj - Directory entry to break
+int action - what action to take
+ MC_ZERO Set the cluster at pos_1 to 0. Ignore pos_2 argument
+ MC_ONE  Set the cluster at pos_1 to 1. Ignore pos_2 argument
+ MC_MAX  Set the cluster at pos_1 to > maxfindex. Ignore pos_2 argument
+ MC_LOOP link the cluster at pos_1 to pos_2 (create a loop)
+ MC_SET  Put *value into the cluster
+ MC_GET  Load *cluster and *value from the entry specified in pos_1
+long pos_1 - cluster position in the chain
+ 0 == The directory entry's cluster number
+ 1 == The first cluster in the chain
+ 2 == The second cluster in the chain
+ 3 == Third.. etc
+-1 == The last cluster in the chain
+-2 == The last cluster in the chain -2
+-3 == The last cluster in the chain -3 etc
+long pos_2- cluster position in the chain to loop to if action == 4
+ Same arguments as pos_1 but 0 is illegal
+dword *cluster - the cluster index specified by pos_1 is put into *cluster
+dword *value - the value at *cluster is stored here
+*/
+
+
+Note: write routine to just change size field (PRO)
+write routine to return return actual size of cluster size (PRO)
+write routine to delete clusters beyond end of file
+add flags to open
+1. flush dirent when file size changes
+2. flush fat when cluster allocated
+
+
+manipulate_cluster_chain(DROBJ *pobj, int action,long pos_1, long pos2, dword *cluster, dword *value)
+{
+
+}
+
+
+BOOLEAN populate_directory(
+
+
+
+
+int dochsize(int agc, byte **agv)                                  /*__fn__*/
+{
+    long l;
+    long newsize;
+    dword cluster;
+    DROBJ *pobj;
+
+    if (agc == 2)
+    {
+    pobj = pc_fndnode(*agv);
+    if (pobj)
+        {
+            /* cal pc_finode_stat() to update the stat structure   */
+            newsize = rtfs_atol( *(agv+1) );
+            if (newsize == 99)
+            {
+                cluster = pc_finode_cluster(pobj->pdrive,pobj->finode);
+                while (cluster && cluster != 0xffffffff)
+                {
+                    printf("%d->", cluster);
+                    cluster = FATOP(pobj->pdrive)->fatop_clnext(pobj->pdrive, cluster);
+                }
+                printf("\n");
+            pc_freeobj(pobj);
+            return(0);
+            }
+
+            cluster = pc_finode_cluster(pobj->pdrive,pobj->finode);
+            for (l = 1 ; l < newsize; l++)
+            {
+                cluster =
+                 FATOP(pobj->pdrive)->fatop_clnext(pobj->pdrive, cluster);
+            }
+            if (cluster && cluster != 0xffffffff)
+            {
+                FATOP(pobj->pdrive)->fatop_pfaxx(pobj->pdrive, cluster, BADVALUE);
+            }
+            FATOP(pobj->pdrive)->fatop_flushfat(pobj->pdrive->driveno);
+            pc_freeobj(pobj);
+
+        }
+        return(0);
+    }
+    else
+    {
+        printf("CHSIZE path, # clusters\n");
+        return(0);
+    }
+}
