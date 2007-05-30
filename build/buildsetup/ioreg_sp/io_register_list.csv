@@ -76,9 +76,9 @@
 0x4500,,I2CD,8,rw,EXI,volatile,,,,,,,,,,,,,,,,,,,,,
 0x4501,,I2CCNT,8,rw,EXI,volatile,E,7,1,I,6,1,RW,5,1,ACK,4,1,NT,2,1,START,1,1,STOP,0,1
 #I2S twl p208 ～ p213,,,,,,,,,,,,,,,,,,,,,,,,,,,
-0x4700,,I2SCNT,8,rw,SND,volatile,E,15,1,MUTE,14,1,CODEC_SMP,13,1,MIX_RATIO,0,4,,,,,,,,,
+0x4700,,I2SCNT,16,rw,SND,volatile,E,15,1,MUTE,14,1,CODEC_SMP,13,1,MIX_RATIO,0,4,,,,,,,,,
 #MIC twl p200 ～ p203,,,,,,,,,,,,,,,,,,,,,,,,,,,
-0x4600,,MICCNT,8,rw,SND,volatile,E,15,1,IM,13,2,FIFO_CLR,12,1,FIFO_ERR,11,1,FIFO_FUL,10,1,FIFO_HALF,9,1,FIFO_EMP,8,1,FIFO_SMP,2,2,NR,1,1,NL,0,1
+0x4600,,MICCNT,16,rw,SND,volatile,E,15,1,IM,13,2,FIFO_CLR,12,1,FIFO_ERR,11,1,FIFO_FUL,10,1,FIFO_HALF,9,1,FIFO_EMP,8,1,FIFO_SMP,2,2,NR,1,1,NL,0,1
 0x4604,,MIC_FIFO,32,rw,SND,volatile,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
 #表示ステータス nitro p215 / twl p222,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
 0x004,,DISPSTAT,16,rw,GX,volatile,VCOUNTER,7,9,LD_INI,6,1,VQI,5,1,HBI,4,1,VBI,3,1,LYC,2,1,HBLK,1,1,VBLK,0,1,,,,,,

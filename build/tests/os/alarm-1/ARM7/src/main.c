@@ -221,6 +221,7 @@ void alarmDisp2(u32 arg)
         OS_Panic("END\n");
     }
 
+    OS_Printf(">>> called alarmCallback2. arg=%x\n", arg);
 //    OS_Printf(">>> called alarmCallback2. arg=%x SYSCLOCK=%x\n", arg, OS_GetTime());
 //    OS_Printf( ">>> sp=%x\n", OSi_GetCurrentStackPointer() );
 }

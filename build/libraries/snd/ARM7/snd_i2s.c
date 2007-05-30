@@ -28,7 +28,7 @@
     static variables
  ******************************************************************************/
 
-static u8   state;
+static u16  state;
 static BOOL isTwl = FALSE;
 
 /******************************************************************************
@@ -41,17 +41,18 @@ static void SNDi_I2SInit(void)
     if (isInitialized == FALSE)
     {
         isInitialized = TRUE;
-        if ((reg_CFG_CLK & REG_CFG_CLK_SND_MASK) == 0)
-        {
-            CDC_Init();
-        }
         reg_SND_POWCNT |= REG_SND_POWCNT_SPE_MASK;
         reg_CFG_TWL_EX |= REG_CFG_TWL_EX_I2S_MASK;
         if (reg_CFG_TWL_EX & REG_CFG_TWL_EX_I2S_MASK)
         {
             isTwl = TRUE;
             reg_SND_I2SCNT |= REG_SND_I2SCNT_MIX_RATIO_MASK;
-            reg_SND_I2SCNT &= ~REG_SND_I2SCNT_MUTE_MASK;
+            reg_SND_I2SCNT &= ~(REG_SND_I2SCNT_MUTE_MASK | REG_SND_I2SCNT_CODEC_SMP_MASK);  // 32KHz
+        }
+        if ((reg_CFG_CLK & REG_CFG_CLK_SND_MASK) == 0)
+        {
+            // initialize codec with enabling I2S
+            CDC_Init();
         }
     }
 }

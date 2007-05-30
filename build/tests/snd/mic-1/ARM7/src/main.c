@@ -34,8 +34,22 @@ void TwlSpMain(void)
     OS_Init();
     OS_InitThread();
 
+//    reg_CFG_DS_MDFY |= REG_CFG_DS_MDFY_SND_MASK;  // SOUND回路バグ修正 (default: off)
+//    reg_CFG_DS_MDFY |= REG_CFG_DS_MDFY_SDMA_MASK; // SOUND-DMAバグ修正 (default: off)
+//    reg_CFG_DS_EX &= ~REG_CFG_DS_EX_SDMA2_MASK;   // SOUND-DMA新回路 (default: on)
+
+    // ボタン入力サーチ初期化
+    (void)PAD_InitXYButton();
+
+    // 割込み許可
+    (void)OS_EnableIrq();
+    (void)OS_EnableInterrupts();
+
     // サウンド初期化
     SND_Init(THREAD_PRIO_SND);
+
+    // マイク初期化
+//    MICi_Init();
 
     OS_TPrintf("\nARM7 starts.\n");
 
@@ -61,3 +75,4 @@ void TwlSpMain(void)
     OS_TPrintf("\nARM7 ends.\n");
     OS_Terminate();
 }
+

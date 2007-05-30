@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------*
-  Project:  TwlSDK
-  File:     twl.h
+  Project:  TwlSDK - include - PM
+  File:     pm.h
 
   Copyright 2007 Nintendo.  All rights reserved.
 
@@ -13,19 +13,13 @@
   $Log: $
   $NoKeywords: $
  *---------------------------------------------------------------------------*/
-#ifndef TWL_H_
-#define TWL_H_
 
-#include <nitro.h>
+#ifndef TWL_PM_H_
+#define TWL_PM_H_
 
-#include <twl/os.h>
-#include <twl/mi.h>
-#include <twl/pm.h>
-#include <twl/aes.h>
-#include <twl/mic.h>
-#ifdef SDK_DEBUGGER_KMC
-#include <twl/vlink.h>
-#endif // SDK_DEBUGGER_KMC
+#include <nitro/spi.h>
 
-/* TWL_H_ */
+#include <twl/pm/common/pm_ex_reg.h>
+
+/* TWL_PM_H_ */
 #endif
