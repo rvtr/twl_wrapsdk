@@ -20,7 +20,8 @@
 #include <math.h>
 
 
-#define ENABLE_PSG
+//#define ENABLE_PSG
+//#define ENABLE_OLD_SND
 
 // ===== スレッド優先度 =====
 
@@ -87,7 +88,7 @@ static void MY_SndInit( void )
 
 #ifdef ENABLE_PSG
 
-    SND_SetupChannelPsg( 8, SND_DUTY_4_8, SND_CHANNEL_VOLUME_MAX, SND_CHANNEL_DATASHIFT_1BIT, 0x0000, SND_CHANNEL_PAN_CENTER );
+    SND_SetupChannelPsg( 8, SND_DUTY_4_8, SND_CHANNEL_VOLUME_MAX, SND_CHANNEL_DATASHIFT_NONE, 0x0000, SND_CHANNEL_PAN_CENTER );
 
     SND_StartChannel( 8 );
 
@@ -148,7 +149,7 @@ static void PrintfCaptureBuf( int startIdx )
 
 static void CheckSound( void )
 {
-   int i;
+   int i, ii;
 
     OS_TPrintf( "\nDump reverb buffer.\n" );
     OS_TPrintf( "[Top]\n" );
@@ -157,11 +158,14 @@ static void CheckSound( void )
     PrintfCaptureBuf( MY_SND_CAPTURE_LEN - 16 );
 
     OS_TPrintf( "\nDump mic buffer.\n" );
-    for (i=0; i<16; i++)
+    for (i=0; i<2; i++)
     {
-        OS_TPrintf( "%4.4x ", micBuf[i] );
+        for (ii=0; ii<16; ii++)
+        {
+            OS_TPrintf( "%4.4x ", micBuf[i*16+ii] );
+        }
+        OS_TPrintf( "\n" );
     }
-    OS_TPrintf( "\n" );
 }
 
 static void TestFunc( void )
@@ -188,9 +192,11 @@ void TwlSpMain(void)
     OS_Init();
     OS_InitThread();
 
-//    reg_CFG_DS_MDFY |= REG_CFG_DS_MDFY_SND_MASK;  // SOUND回路バグ修正 (default: off)
-//    reg_CFG_DS_MDFY |= REG_CFG_DS_MDFY_SDMA_MASK; // SOUND-DMAバグ修正 (default: off)
-//    reg_CFG_DS_EX &= ~REG_CFG_DS_EX_SDMA2_MASK;   // SOUND-DMA新回路 (default: on)
+#ifdef ENABLE_OLD_SND
+    reg_CFG_DS_MDFY |= REG_CFG_DS_MDFY_SND_MASK;  // SOUND回路バグ修正 (default: off)
+    reg_CFG_DS_MDFY |= REG_CFG_DS_MDFY_SDMA_MASK; // SOUND-DMAバグ修正 (default: off)
+    reg_CFG_DS_EX &= ~REG_CFG_DS_EX_SDMA2_MASK;   // SOUND-DMA新回路 (default: on)
+#endif
 
     // ボタン入力サーチ初期化
     (void)PAD_InitXYButton();

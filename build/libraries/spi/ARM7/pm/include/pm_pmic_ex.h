@@ -18,7 +18,6 @@
 
 #include <twl/misc.h>
 #include <twl/types.h>
-#include "../include/pm_pmic.h"
 
 #ifdef __cplusplus
 extern "C" {

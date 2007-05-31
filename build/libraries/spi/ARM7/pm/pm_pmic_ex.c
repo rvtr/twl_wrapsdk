@@ -14,6 +14,7 @@
   $NoKeywords: $
  *---------------------------------------------------------------------------*/
 #include <twl/pm.h>
+#include "../include/pm_pmic.h"
 #include "./include/pm_pmic_ex.h"
 
 
