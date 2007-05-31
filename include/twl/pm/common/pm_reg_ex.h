@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------*
   Project:  TwlSDK - PM - include - common
-  File:     pm_ex_reg.h
+  File:     pm_reg_ex.h
 
   Copyright 2006 Nintendo.  All rights reserved.
 
@@ -13,8 +13,8 @@
   $Log: $
   $NoKeywords: $
  *---------------------------------------------------------------------------*/
-#ifndef TWL_PM_PM_EX_REG_H_
-#define TWL_PM_PM_EX_REG_H_
+#ifndef TWL_PM_PM_REG_EX_H_
+#define TWL_PM_PM_REG_EX_H_
 
 
 #ifdef __cplusplus
@@ -581,5 +581,5 @@ PMBackLightBrightness;
 } /* extern "C" */
 #endif
 
-/* TWL_PM_PM_EX_REG_H_ */
+/* TWL_PM_PM_REG_EX_H_ */
 #endif

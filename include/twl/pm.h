@@ -19,7 +19,7 @@
 
 #include <nitro/spi.h>
 
-#include <twl/pm/common/pm_ex_reg.h>
+#include <twl/pm/common/pm_reg_ex.h>
 
 /* TWL_PM_H_ */
 #endif

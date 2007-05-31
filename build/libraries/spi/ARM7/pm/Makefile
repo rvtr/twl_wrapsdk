@@ -15,18 +15,27 @@
 # $NoKeywords: $
 #----------------------------------------------------------------------------
 
-SUBDIRS			= nvram pm # tp mic
+SUBDIRS			=
 
 #----------------------------------------------------------------------------
 
 # build ARM & THUMB libraries
-TWL_CODEGEN_ALL 	?= True
+TWL_CODEGEN_ALL	?= True
 
 TWL_PROC		= ARM7
 
-# SRCS			= spi_sp.c
+SRCDIR			= .
+SRCDIR			+= $(TWL_NITROSDK_ROOT)/build/libraries/spi/ARM7/pm/src \
 
-# TARGET_LIB		= libspi_sp$(TWL_LIBSUFFIX).a
+SRCS			= pm_sp.c \
+			  pm_send.c \
+			  pm_pmic.c \
+			  pm_pmic_ex.c \
+			  pm_utility.c \
+			  pm_sleep.c \
+			  pm_selfBlink.c \
+
+TARGET_LIB		= libpm_sp$(TWL_LIBSUFFIX).a
 INCDIR			= $(TWL_NITROSDK_ROOT)/build/libraries/spi/ARM7/include
 
 #----------------------------------------------------------------------------
@@ -40,12 +49,12 @@ endif
 
 include	$(TWLSDK_ROOT)/build/buildtools/commondefs
 
-INSTALL_TARGETS		= $(TARGETS)
-INSTALL_DIR		= $(TWL_INSTALL_LIBDIR)
+INSTALL_TARGETS	=	$(TARGETS)
+INSTALL_DIR	=	$(TWL_INSTALL_LIBDIR)
 
 #----------------------------------------------------------------------------
 
-# do-build:		$(TARGETS)
+do-build:		$(TARGETS)
 
 include	$(TWLSDK_ROOT)/build/buildtools/modulerules
 

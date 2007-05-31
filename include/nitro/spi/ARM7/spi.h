@@ -17,12 +17,13 @@
 #ifndef TWL_SPI_SPI_H_
 #define TWL_SPI_SPI_H_
 
+#include <twl/misc.h>
+#include <nitro/ioreg.h>
+#include <nitro/hw/ARM7/ioreg_SPI.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-#include <nitro/ioreg.h>
-#include <nitro/hw/ARM7/ioreg_SPI.h>
 
 //----------------------------------------------------------------
 //        enums
