@@ -78,8 +78,8 @@ MIExDmaBlockSize;
 //---- pre-scaler
 typedef enum
 {
-    MI_EXDMA_PRESCALER_1 = (0UL << REG_MI_DMA4BCNT_PS_SHIFT),  // x 1
-    MI_EXDMA_PRESCALER_4 = (1UL << REG_MI_DMA4BCNT_PS_SHIFT),  // x 4
+    MI_EXDMA_PRESCALER_1  = (0UL << REG_MI_DMA4BCNT_PS_SHIFT), // x 1
+    MI_EXDMA_PRESCALER_4  = (1UL << REG_MI_DMA4BCNT_PS_SHIFT), // x 4
     MI_EXDMA_PRESCALER_16 = (2UL << REG_MI_DMA4BCNT_PS_SHIFT), // x 16
     MI_EXDMA_PRESCALER_64 = (3UL << REG_MI_DMA4BCNT_PS_SHIFT)  // x 64
 }
@@ -153,17 +153,6 @@ typedef volatile t_MIExDmaChanRegs MIExDmaChanRegs;
 //---- continuous mode
 #define MI_EXDMA_CONTINUOUS_OFF      (0UL << REG_MI_DMA4CNT_CM_SHIFT)      // continuous mode off
 #define MI_EXDMA_CONTINUOUS_ON       (1UL << REG_MI_DMA4CNT_CM_SHIFT)      // continuous mode on
-
-//---- DMA timing
-#if 0
-#  define MI_EXDMA_TIMING_MASK       (REG_MI_DMA4CNT_TIMING_MASK) // mask  of start field
-#  define MI_EXDMA_TIMING_SHIFT      (REG_MI_DMA4CNT_TIMING_SHIFT)        // shift of start field
-#  define MI_EXDMA_TIMING_IMM        (0UL << REG_MI_DMA4CNT_TIMING_SHIFT) // start immediately
-#  define MI_EXDMA_TIMING_V_BLANK    (1UL << REG_MI_DMA4CNT_TIMING_SHIFT) // start by VBlank
-#  define MI_EXDMA_TIMING_CARD       (2UL << REG_MI_DMA4CNT_TIMING_SHIFT) // card
-#  define MI_EXDMA_TIMING_WIRELESS   (3UL << REG_MI_DMA4CNT_TIMING_SHIFT) // DMA4,2:wireless interrupt
-#  define MI_EXDMA_TIMING_CARTRIDGE  MI_DMA_TIMING_WIRELESS       // DMA1,3:cartridge warning
-#endif
 
 //---- block size
 #define MI_EXDMA_BLOCK_SIZE_MASK     (REG_MI_DMA4CNT_BSIZE_MASK)          // mask  of block size

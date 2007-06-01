@@ -92,6 +92,13 @@ NITRO_BUILD_DIR		?= $(TWL_BUILD_DIR)
 
 
 #
+# PMIC Revision
+#
+
+TWL_PMIC_REV	?= 0
+
+
+#
 # Debugger Type
 #
 #	one of [ISD/KMC/ARM]
@@ -247,8 +254,9 @@ TWL_INSTALL_ADDINS	:= $(TWL_INSTALL_ROOT)/add-ins
 #----------------------------------------------------------------------------
 #  Compiler flags
 #
-MACRO_FLAGS += -DSDK_DEBUGGER_$(TWL_DEBUGGER)
 MACRO_FLAGS += -DTWL_PLATFORM_$(TWL_PLATFORM)
+MACRO_FLAGS += -DSDK_DEBUGGER_$(TWL_DEBUGGER)
+MACRO_FLAGS += -DSDK_PMIC_REV=$(TWL_PMIC_REV)
 
 
 #----------------------------------------------------------------------------
