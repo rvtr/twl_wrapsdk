@@ -1,6 +1,6 @@
 #! make -f
 #----------------------------------------------------------------------------
-# Project:  TwlSDK - libraries
+# Project:  TwlSDK - build
 # File:     Makefile
 #
 # Copyright 2007 Nintendo.  All rights reserved.
@@ -20,23 +20,9 @@ include	$(TWLSDK_ROOT)/build/buildtools/commondefs
 
 #----------------------------------------------------------------------------
 
-SUBDIRS		= \
-		  init		\
-		  os		\
-		  pxi		\
-		  mi		\
-		  vlink		\
-		  spi		\
-		  ctrdg		\
-		  aes		\
-		  i2c		\
-		  cdc		\
-		  snd		\
-		  camera	\
-          devices   \
-
-#----------------------------------------------------------------------------
-export	NITRO_BLXCHECKED = yes
+SUBDIRS =	\
+            ARM7 \
+            ARM9 \
 
 #----------------------------------------------------------------------------
 

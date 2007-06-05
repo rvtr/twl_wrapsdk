@@ -29,23 +29,16 @@ TWL_PROC		= ARM7
 SRCDIR			= ../common/src src
 
 INCDIR			= ../common
-INCDIR			+= . \
+INCDIR			+= $(TWLSDK_ROOT)/include/twl \
+                   $(TWLSDK_ROOT)/include/twl/devices/rom_sdmc/ARM7 \
                    $(TWLSDK_ROOT)/include/twl/fatfs/ARM7 \
 
-SRCS			= apistat.c prfsapi.c rtlowl.c apickdsk.c apiwrite.c \
-                  prfscore.c rtnvfat.c apicnfig.c \
-                  prfsnvio.c rttermin.c apideltr.c appdemo.c prfstest.c \
-                  rtutbyte.c apienum.c csascii.c rtutil.c \
-                  apifilio.c csjis.c rtdevio.c rtvfat.c apifilmv.c csjistab.c \
-                  rtdrobj.c apifrmat.c csstrtab.c rtfat16.c apigetwd.c \
-                  rtfat32.c apigfrst.c csunicod.c rtfatxx.c apiinfo.c \
-                  portio.c apiinit.c portkern.c \
-                  apimkdir.c apirealt.c \
-                  prapipro.c apiregrs.c prblock.c apisetwd.c \
-                  rtkernfn.c \
-                  drdefault.c drfile.c attach.c \
+SRCS			= \
+              sdmc.c \
+              sdif.c \
+              drsdmc.c
 
-TARGET_LIB		= libfatfs_sp$(TWL_LIBSUFFIX).a
+TARGET_LIB		= libromsd_sp$(TWL_LIBSUFFIX).a
 
 
 #----------------------------------------------------------------------------

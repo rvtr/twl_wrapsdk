@@ -22,15 +22,16 @@
 #else
     #define PRINTDEBUG( ...) ((void)0)
 #endif*/
-        #define PRINTDEBUG    OS_TPrintf
+//        #define PRINTDEBUG    OS_TPrintf
+    #define PRINTDEBUG( ...) ((void)0)
 
 
 /***********************************************************************
  定数
 ***********************************************************************/
 #define SD_STACK_SIZE        (4096*2)
-#define SD_THREAD_PRIO       (10)
-#define SD_INTR_THREAD_PRIO  (SD_THREAD_PRIO - 1)
+//#define SD_THREAD_PRIO       (10)
+//#define SD_INTR_THREAD_PRIO  (SD_THREAD_PRIO - 1)
 
 #define SD_OPERATION_INIT               (0)
 #define SD_OPERATION_READ               (1)
@@ -51,13 +52,7 @@ static BOOL    thread_flag;
  global変数
 ***********************************************************************/
 BOOL    sdmc_tsk_created = FALSE;
-#if (TARGET_OS_CTR == 1)
-ER_ID   sdmc_tsk_id;        //SDタスクID
-ER_ID   sdmc_dtq_id;
-ER_ID   sdmc_result_dtq_id;
-ER_ID   sdmc_alm_id;
-ER_ID   sdmc_intr_tsk_id;
-#else
+
 OSThread       sdmc_tsk;
 OSMessageQueue sdmc_dtq;
 OSMessage      sdmc_dtq_array[1];
@@ -66,13 +61,10 @@ OSMessage      sdmc_result_dtq_array[1];
 OSAlarm        sdmc_alm;
 OSThread       sdmc_intr_tsk;
 OSThreadQueue  sdmc_tsk_q;
-#endif
 
-#if (TARGET_OS_CTR == 1)
-#else
+
 u64            sd_stack[SD_STACK_SIZE / sizeof(u64)];
 u64            sd_intr_stack[SD_STACK_SIZE / sizeof(u64)];
-#endif
 
 /* drsdmc.cでも参照 */
 SdmcSpec    sdmc_current_spec;    //TODO:ポート切り替え時、Port0とPort1に保存するように
@@ -104,7 +96,7 @@ static SDMC_ERR_CODE SDCARDi_Write(void* buf,u32 bufsize,u32 offset,void(*func)(
 
 int     MMCP_SetBusWidth( BOOL b4bit);       /* ビット幅の選択(MMCplus, eMMC, moviNAND) */
 
-static void SDCARD_Thread( void* arg);        //SDスレッド
+SDMC_ERR_CODE SDCARD_Thread( SDCARDMsg* SdMsg);        //SDスレッド
 static void SDCARD_Intr_Thread( void* arg);        //SD割り込み処理スレッド
 
 SDMC_ERR_CODE sdmcGoIdle( void (*func1)(),void (*func2)());
@@ -382,6 +374,7 @@ void SDCARD_irq_Handler( void)
 #else
     PRINTDEBUG( "SD irq!\n");
     OS_SetIrqCheckFlag( OS_IE_SD);
+    SDCARD_Intr_Thread( NULL);
 //TODO!    OS_WakeupThreadDirect( &sdmc_intr_tsk);
 #endif
 }
@@ -414,91 +407,11 @@ static void SDCARD_Dmy_Handler( void)
  *---------------------------------------------------------------------------*/
 SDMC_ERR_CODE sdmcInit(void (*func1)(),void (*func2)())
 {
-#if (TARGET_OS_CTR == 1)
-    T_CALM    calm;
-    T_CTSK    ctsk;
-    T_CDTQ    cdtq;
-#endif
 //    SDCARDMsg SdMsg;
 //    u32            init_msg;
     SDMC_ERR_CODE    api_result;
 
     if( sdmc_tsk_created == FALSE) {
-        /*---------- OS準備 ----------*/
-        /* アラームハンドラ登録 */
-#if (TARGET_OS_CTR == 1)
-        calm.almatr     = TA_HLNG;          // set attribution : for high level language
-        calm.exinf      = 0;                // set argument for alarm handler
-        calm.almhdr     = SDCARD_Timer_irq; // set alarm handler
-        sdmc_alm_id = acre_alm(&calm);
-        if (sdmc_alm_id < 0)
-        {
-            PRINTDEBUG("create_alarm_simple: Cannot create new alarm handler (%d).\n", sdmc_alm_id);
-        }
-
-        /* メッセージ初期化 */
-        // setup dataqueue structure
-        cdtq.dtqatr     = TA_TFIFO;         // set attribution : normal FIFO
-        cdtq.dtqcnt     = 1;                // there are 2 datas in queue
-        cdtq.dtq        = NULL;             // set data queue address : NULL means automatically allocated by kernel
-        sdmc_dtq_id = acre_dtq(&cdtq);
-        if (sdmc_dtq_id < 0)
-        {
-            PRINTDEBUG("create_dataqueue_simple: Cannot create new data queue.\n");
-        }
-        /**/    
-        cdtq.dtqatr     = TA_TFIFO;         // set attribution : normal FIFO
-        cdtq.dtqcnt     = 1;                // there are 2 datas in queue
-        cdtq.dtq        = NULL;             // set data queue address : NULL means automatically allocated by kernel
-        sdmc_result_dtq_id = acre_dtq(&cdtq);
-        if (sdmc_result_dtq_id < 0)
-        {
-            PRINTDEBUG("create_dataqueue_simple: Cannot create new data queue.\n");
-        }
-
-//        OS_InitThread();    //自分の優先度が16になる
-//        chg_pri( (ID)0, (PRI)12);
-
-        /* SDタスクの立ち上げ */
-        ctsk.tskatr     = TA_HLNG | TA_ACT; // set attribution : for high level language and running now
-        ctsk.task       = SDCARD_Thread;    // set task routine
-        ctsk.exinf      = (void*)0;         // set argument for task routine
-        ctsk.itskpri    = SD_THREAD_PRIO;   // set priority
-        ctsk.stksz      = SD_STACK_SIZE;    // set stack size
-        ctsk.stk        = NULL;             // set stack address : NULL means automatically allocated by kernel
-        sdmc_tsk_id = acre_tsk(&ctsk);
-        if (sdmc_tsk_id < 0)
-        {
-            PRINTDEBUG("create_task_sd: Cannot create new task.\n");
-        }else{
-            if( (sdmc_tsk_id == E_NOID)||(sdmc_tsk_id == E_NOMEM)||(sdmc_tsk_id == E_RSATR)||
-                (sdmc_tsk_id == E_PAR)||(sdmc_tsk_id == E_OBJ)) {
-                PRINTDEBUG("create_task_sd: Cannot create new task.\n");
-            }
-            PRINTDEBUG("create_task_sd: 0x%x\n", sdmc_tsk_id);
-        }
-        /*----------------------------*/
-
-        /* SD割り込み処理タスクの立ち上げ */
-        ctsk.tskatr     = TA_HLNG | TA_ACT;     // set attribution : for high level language and running now
-        ctsk.task       = SDCARD_Intr_Thread;   // set task routine
-        ctsk.exinf      = (void*)0;             // set argument for task routine
-        ctsk.itskpri    = SD_INTR_THREAD_PRIO;  // set priority
-        ctsk.stksz      = SD_STACK_SIZE;        // set stack size
-        ctsk.stk        = NULL;                 // set stack address : NULL means automatically allocated by kernel
-        sdmc_intr_tsk_id = acre_tsk(&ctsk);
-        if (sdmc_intr_tsk_id < 0)
-        {
-            PRINTDEBUG("create_intr_task_sd: Cannot create new task.\n");
-        }else{
-            if( (sdmc_intr_tsk_id == E_NOID)||(sdmc_intr_tsk_id == E_NOMEM)||(sdmc_intr_tsk_id == E_RSATR)||
-                (sdmc_intr_tsk_id == E_PAR)||(sdmc_intr_tsk_id == E_OBJ)) {
-                PRINTDEBUG("create_intr_task_sd: Cannot create new task.\n");
-            }
-            PRINTDEBUG("create_intr_task_sd: 0x%x\n", sdmc_intr_tsk_id);
-        }
-        
-#else //(TARGET_OS_NITRO = 1)
         /*---------- OS準備 ----------*/
         if( !OS_IsAlarmAvailable()) {	/* アラームチェック(OS_InitAlarm済みか?) */
             SDCARD_ErrStatus |= SDMC_ERR_END;
@@ -507,28 +420,12 @@ SDMC_ERR_CODE sdmcInit(void (*func1)(),void (*func2)())
         }
         
         /* メッセージ初期化 */
-        OS_InitMessageQueue( &sdmc_dtq,        &sdmc_dtq_array[0],        1);
-        OS_InitMessageQueue( &sdmc_result_dtq, &sdmc_result_dtq_array[0], 1);
+//        OS_InitMessageQueue( &sdmc_dtq,        &sdmc_dtq_array[0],        1);
+//        OS_InitMessageQueue( &sdmc_result_dtq, &sdmc_result_dtq_array[0], 1);
 
 //        OS_InitThread();	//自分の優先度が16になる
 
-        /* SDスレッドの立ち上げ */
-        OS_CreateThread( &sdmc_tsk, SDCARD_Thread, NULL,
-                         (sd_stack+SD_STACK_SIZE / sizeof(u64)), SD_STACK_SIZE, SD_THREAD_PRIO);
-        OS_WakeupThreadDirect( &sdmc_tsk);
-        PRINTDEBUG( "sdmc_tsk:0x%x\n", &sdmc_tsk);
-        
-
-        /* SD割り込み処理スレッドの立ち上げ */
-        OS_CreateThread( &sdmc_intr_tsk, SDCARD_Intr_Thread, NULL,
-                         (sd_intr_stack+SD_STACK_SIZE / sizeof(u64)), SD_STACK_SIZE, SD_INTR_THREAD_PRIO);
-        OS_WakeupThreadDirect( &sdmc_intr_tsk);
-        PRINTDEBUG( "sdmc_intr_tsk:0x%x\n", &sdmc_intr_tsk);
-
-        /* スレッドキューの初期化 */
-        OS_InitThreadQueue( &sdmc_tsk_q);
         /*----------------------------*/
-#endif
         /**/
         sdmc_tsk_created = TRUE;
     }
@@ -546,37 +443,24 @@ SDMC_ERR_CODE sdmcInit(void (*func1)(),void (*func2)())
 SDMC_ERR_CODE sdmcGoIdle( void (*func1)(),void (*func2)())
 {
     SDCARDMsg        SdMsg;
-#if (TARGET_OS_CTR == 1)
-    u32              init_msg;
-#else
-    OSMessage        init_msg;
-#endif
+//    OSMessage        init_msg;
     SDMC_ERR_CODE    api_result;
     
     func_SDCARD_In  = func1;        /* カード挿入イベント用関数のアドレスを設定 */
     func_SDCARD_Out = func2;        /* カード排出イベント用関数のアドレスを設定 */
     
     /*----- SDスレッドと通信 -----*/
-#if (TARGET_OS_CTR == 1)
-    SdMsg.operation =    SD_OPERATION_INIT;
-
-    snd_dtq( sdmc_dtq_id, (VP_INT)&SdMsg);
-
-    /* 返り値待ち */
-    rcv_dtq( sdmc_result_dtq_id, (VP_INT*)&init_msg);
-    api_result = (SDMC_ERR_CODE)init_msg;
-#else
     SdMsg.operation = SD_OPERATION_INIT;
 //    SdMsg.func  = func1;
 //    SdMsg.func2 = func2;
 
-    init_msg = (OSMessage)&SdMsg;
-    OS_SendMessage( &sdmc_dtq, init_msg, OS_MESSAGE_BLOCK);
+//    init_msg = (OSMessage)&SdMsg;
+    api_result = SDCARD_Thread( &SdMsg);
+//    OS_SendMessage( &sdmc_dtq, init_msg, OS_MESSAGE_BLOCK);
 
     /* 返り値待ち */
-    OS_ReceiveMessage( &sdmc_result_dtq, &init_msg, OS_MESSAGE_BLOCK);
-    api_result = *(SDMC_ERR_CODE*)init_msg;
-#endif
+//    OS_ReceiveMessage( &sdmc_result_dtq, &init_msg, OS_MESSAGE_BLOCK);
+//    api_result = *(SDMC_ERR_CODE*)init_msg;
     /*----------------------------------*/
 
     return api_result;
@@ -1106,7 +990,7 @@ SDMC_ERR_CODE sdmcReadFifo(void* buf,u32 bufsize,u32 offset,void(*func)(void),Sd
 #if (TARGET_OS_CTR == 1)
     u32           recv_dat;
 #else
-    OSMessage     recv_dat;
+//    OSMessage     recv_dat;
 #endif
     SDMC_ERR_CODE api_result;                    //SDCARD関数の返り値
 
@@ -1117,23 +1001,13 @@ SDMC_ERR_CODE sdmcReadFifo(void* buf,u32 bufsize,u32 offset,void(*func)(void),Sd
     SdMsg.info      = info;
     SdMsg.operation = SD_OPERATION_READ_WITH_FIFO;
 
-#if (TARGET_OS_CTR == 1)
-    PRINTDEBUG( "readfifo : snd_dtq begin\n");
-    snd_dtq( sdmc_dtq_id, (VP_INT)&SdMsg);
-
-    /* 返り値待ち */
-    PRINTDEBUG( "readfifo : rcv_dtq begin\n");
-    rcv_dtq( sdmc_result_dtq_id, (VP_INT*)&recv_dat);
-
-    api_result = (SDMC_ERR_CODE)recv_dat;
-#else
-    recv_dat = (OSMessage)&SdMsg; //SdMsgのアドレスを伝える
-    OS_SendMessage( &sdmc_dtq, recv_dat, OS_MESSAGE_BLOCK);
+//    recv_dat = (OSMessage)&SdMsg; //SdMsgのアドレスを伝える
+    api_result = SDCARD_Thread( &SdMsg);
+//    OS_SendMessage( &sdmc_dtq, recv_dat, OS_MESSAGE_BLOCK);
     
     /* 返り値待ち */
-    OS_ReceiveMessage( &sdmc_result_dtq, &recv_dat, OS_MESSAGE_BLOCK);
-    api_result = (SDMC_ERR_CODE)recv_dat;
-#endif
+//    OS_ReceiveMessage( &sdmc_result_dtq, &recv_dat, OS_MESSAGE_BLOCK);
+//    api_result = (SDMC_ERR_CODE)recv_dat;
 
     return api_result;
 }
@@ -1203,21 +1077,13 @@ SDMC_ERR_CODE sdmcRead(void* buf,u32 bufsize,u32 offset,void(*func)(void),SdmcRe
     SdMsg.info      = info;
     SdMsg.operation = SD_OPERATION_READ;
 
-#if (TARGET_OS_CTR == 1)
-    snd_dtq( sdmc_dtq_id, (VP_INT)&SdMsg);
-
-    /* 返り値待ち */
-    rcv_dtq( sdmc_result_dtq_id, (VP_INT*)&recv_dat);
-
-    api_result = (SDMC_ERR_CODE)recv_dat;
-#else
-    recv_dat = (OSMessage)&SdMsg;
-    OS_SendMessage( &sdmc_dtq, recv_dat, OS_MESSAGE_BLOCK);
+//    recv_dat = (OSMessage)&SdMsg;
+    api_result = SDCARD_Thread( &SdMsg);
+//    OS_SendMessage( &sdmc_dtq, recv_dat, OS_MESSAGE_BLOCK);
     
     /* 返り値待ち */
-    OS_ReceiveMessage( &sdmc_result_dtq, &recv_dat, OS_MESSAGE_BLOCK);
-    api_result = (SDMC_ERR_CODE)recv_dat;
-#endif
+//    OS_ReceiveMessage( &sdmc_result_dtq, &recv_dat, OS_MESSAGE_BLOCK);
+//    api_result = (SDMC_ERR_CODE)recv_dat;
 
     return api_result;
 }
@@ -1274,13 +1140,8 @@ static SDMC_ERR_CODE SDCARDi_Read(void* buf,u32 bufsize,u32 offset,void(*func)(v
 
         /**/
         PRINTDEBUG( "--Slp Tsk--\n");
-#if (TARGET_OS_CTR == 1)
-        //can_wup( 0);
-        slp_tsk();
-#else
 //        OS_SleepThread( NULL);
-        OS_SleepThread( &sdmc_tsk_q);
-#endif
+//        OS_SleepThread( &sdmc_tsk_q);
         PRINTDEBUG( "waked\n");
 
         thread_flag = FALSE;
@@ -1667,7 +1528,7 @@ static void    SDCARD_Timer_irq(void* arg)
     PRINTDEBUG( "id : 0x%x\n", sdmc_tsk_id);
 #else
 //    OS_WakeupThreadDirect( &sdmc_tsk);
-    OS_WakeupThread( &sdmc_tsk_q);
+//    OS_WakeupThread( &sdmc_tsk_q);
 #endif
 }
 
@@ -1726,13 +1587,10 @@ static u16 i_sdmcSendSCR(void)
     thread_flag = TRUE;
     SD_SendSCR();                            /*    SCRの取得コマンド発行 */
     PRINTDEBUG( "--Slp Tsk--\n");
-#if (TARGET_OS_CTR == 1)
-    //can_wup( 0);
-    slp_tsk();
-#else
+    
 //    OS_SleepThread( NULL);
-        OS_SleepThread( &sdmc_tsk_q);
-#endif
+//    OS_SleepThread( &sdmc_tsk_q);
+
     PRINTDEBUG( "waked\n");
     thread_flag = FALSE;
 
@@ -1883,13 +1741,10 @@ static u16 SDCARD_SD_Status(void)
     thread_flag = TRUE;
     SD_SDStatus();                           /* ACMD13 SD_STATUSの取得コマンド発行処理 */
     PRINTDEBUG( "--Slp Tsk--\n");
-#if (TARGET_OS_CTR == 1)
-    //can_wup( 0);
-    slp_tsk();
-#else
+
 //    OS_SleepThread( NULL);
-        OS_SleepThread( &sdmc_tsk_q);
-#endif
+//    OS_SleepThread( &sdmc_tsk_q);
+
     PRINTDEBUG( "waked\n");
     thread_flag = FALSE;
 
@@ -2079,21 +1934,13 @@ SDMC_ERR_CODE sdmcWriteFifo(void* buf,u32 bufsize,u32 offset,void(*func)(),SdmcR
     SdMsg.info      = info;
     SdMsg.operation = SD_OPERATION_WRITE_WITH_FIFO;
 
-#if (TARGET_OS_CTR == 1)
-    snd_dtq( sdmc_dtq_id, (VP_INT)&SdMsg);
+//    recv_dat = (OSMessage)&SdMsg;
+    api_result = SDCARD_Thread( &SdMsg);
+//    OS_SendMessage( &sdmc_dtq, recv_dat, OS_MESSAGE_BLOCK);
 
     /* 返り値待ち */
-    rcv_dtq( sdmc_result_dtq_id, (VP_INT*)&recv_dat);
-
-    api_result = (SDMC_ERR_CODE)recv_dat;
-#else
-    recv_dat = (OSMessage)&SdMsg;
-    OS_SendMessage( &sdmc_dtq, recv_dat, OS_MESSAGE_BLOCK);
-
-    /* 返り値待ち */
-    OS_ReceiveMessage( &sdmc_result_dtq, &recv_dat, OS_MESSAGE_BLOCK);
-    api_result = (SDMC_ERR_CODE)recv_dat;
-#endif
+//    OS_ReceiveMessage( &sdmc_result_dtq, &recv_dat, OS_MESSAGE_BLOCK);
+//    api_result = (SDMC_ERR_CODE)recv_dat;
     
     return api_result;
 }
@@ -2163,21 +2010,13 @@ SDMC_ERR_CODE sdmcWrite(void* buf,u32 bufsize,u32 offset,void(*func)(),SdmcResul
     SdMsg.info      = info;
     SdMsg.operation = SD_OPERATION_WRITE;
 
-#if (TARGET_OS_CTR == 1)
-    snd_dtq( sdmc_dtq_id, (VP_INT)&SdMsg);
+//    recv_dat = (OSMessage)&SdMsg;
+    api_result = SDCARD_Thread( &SdMsg);
+//    OS_SendMessage( &sdmc_dtq, recv_dat, OS_MESSAGE_BLOCK);
     
     /* 返り値待ち */
-    rcv_dtq( sdmc_result_dtq_id, (VP_INT*)&recv_dat);
-
-    api_result = (SDMC_ERR_CODE)recv_dat;
-#else
-    recv_dat = (OSMessage)&SdMsg;
-    OS_SendMessage( &sdmc_dtq, recv_dat, OS_MESSAGE_BLOCK);
-    
-    /* 返り値待ち */
-    OS_ReceiveMessage( &sdmc_result_dtq, &recv_dat, OS_MESSAGE_BLOCK);
-    api_result = (SDMC_ERR_CODE)recv_dat;
-#endif
+//    OS_ReceiveMessage( &sdmc_result_dtq, &recv_dat, OS_MESSAGE_BLOCK);
+//    api_result = (SDMC_ERR_CODE)recv_dat;
     
     return api_result;
 }
@@ -2353,13 +2192,10 @@ static u16 i_sdmcGetResid(u32 *pResid)
     SD_SendNumWRSectors();                                
     /*-------------------------------------------------*/
     PRINTDEBUG( "--Slp Tsk--\n");
-#if (TARGET_OS_CTR == 1)
-//    can_wup( 0);
-    slp_tsk();
-#else
+    
 //    OS_SleepThread( NULL);
-        OS_SleepThread( &sdmc_tsk_q);
-#endif
+//    OS_SleepThread( &sdmc_tsk_q);
+
     PRINTDEBUG( "waked\n");
     thread_flag = FALSE;
 
@@ -2553,25 +2389,13 @@ static u16 i_sdmcSelect(u16 select)
 
   Returns:      None
  *---------------------------------------------------------------------------*/
-static void SDCARD_Thread( void* arg)
+SDMC_ERR_CODE SDCARD_Thread( SDCARDMsg* SdMsg)
 {
-    SDCARDMsg*    SdMsg;
-#if (TARGET_OS_CTR == 1)
-    u32           current_dat;
-#else
-    OSMessage     current_dat;
-#endif
     SDMC_ERR_CODE api_result;
 
     while( TRUE) {
         /* メッセージ待ち */
         PRINTDEBUG( "rcv mes sdThread\n");
-#if (TARGET_OS_CTR == 1)
-        rcv_dtq( sdmc_dtq_id, (VP_INT*)&current_dat);
-#else
-        OS_ReceiveMessage( &sdmc_dtq, &current_dat, OS_MESSAGE_BLOCK);
-#endif
-        SdMsg = (SDCARDMsg*)current_dat;
         PRINTDEBUG( "sd task : receive command : %d\n", SdMsg->operation);
 
         switch( SdMsg->operation) {
@@ -2611,12 +2435,7 @@ static void SDCARD_Thread( void* arg)
         PRINTDEBUG( "sd task : operation ends(result : 0x%x), send message begin\n", api_result);
 
         /*メッセージ返送*/
-        current_dat = (OSMessage)api_result;
-#if (TARGET_OS_CTR == 1)
-        snd_dtq( sdmc_result_dtq_id, (VP_INT)api_result);
-#else
-        OS_SendMessage( &sdmc_result_dtq, current_dat, OS_MESSAGE_BLOCK);
-#endif
+        return( api_result);
     }
 }
 
@@ -2634,18 +2453,15 @@ static void SDCARD_Intr_Thread( void* arg)
     u16        sd_info1;//, sd_info2;
     OSIntrMode enabled;
     
-    while( 1) {
+//    while( 1) {
         PRINTDEBUG( "next_tsk:0x%x\n", OS_SelectThread());
         PRINTDEBUG( "Slp sdIntr\n");
-#if (TARGET_OS_CTR == 1)
-        slp_tsk();
-#else
-        OS_WaitIrq( FALSE, OS_IE_SD);
+
+/*        OS_WaitInterrupt( FALSE, OS_IE_SD);
         enabled = OS_DisableInterrupts();
         (void)OS_ClearIrqCheckFlag( OS_IE_SD);
-        (void)OS_RestoreInterrupts( enabled);
+        (void)OS_RestoreInterrupts( enabled);*/
         //TODO!        OS_SleepThread( NULL);
-#endif
         
         PRINTDEBUG( "sdIntr waked\n");
         /*SD割り込みのIF解除*/
@@ -2658,127 +2474,56 @@ static void SDCARD_Intr_Thread( void* arg)
                 ((!(*SDIF_CNT & SDIF_CNT_NEMP))&&(*SDIF_CNT & SDIF_CNT_FEIE))) {
             
                 PRINTDEBUG( ">>>SD Intr(FIFO)\n");// Full or Empty)\n");
-#if (TARGET_OS_CTR == 1)
-                osDisableInterruptID( OS_INTR_ID_SD);
-#else
+
                 OS_DisableIrqMask( OS_IE_SD);
-#endif
+
                 SDCARD_FPGA_irq();                        /*カードからのリードライト要求割り込み*/
-#if (TARGET_OS_CTR == 1)
-                osEnableInterruptID( OS_INTR_ID_SD);
-#else
                 OS_EnableIrqMask( OS_IE_SD);
-#endif
+
                    /* FIFO割り込みとALLEND割り込みがほぼ同時の場合に対応 */
                 if( SD_CheckFPGAReg( sd_info1, SD_INFO1_ALL_END)) {
-#if (TARGET_OS_CTR == 1)
-                    osDisableInterruptID( OS_INTR_ID_SD);
-#else
                     OS_DisableIrqMask( OS_IE_SD);
-#endif
+
                     SYSFPGA_irq();
-#if (TARGET_OS_CTR == 1)
-                    osEnableInterruptID( OS_INTR_ID_SD);
-#else
                     OS_EnableIrqMask( OS_IE_SD);
-#endif
-                    if( thread_flag) {
-                        PRINTDEBUG( "--Wup sdThread!--\n");
-#if (TARGET_OS_CTR == 1)
-                        wup_tsk( sdmc_tsk_id);
-                        PRINTDEBUG( "id : 0x%x\n", sdmc_tsk_id);
-#else
-//                        OS_WakeupThreadDirect( &sdmc_tsk);
-    OS_WakeupThread( &sdmc_tsk_q);
-#endif
-                    }
                 }
             }else{
                 if( SD_CheckFPGAReg( SD_INFO2, (SD_INFO2_MASK_BRE | SD_INFO2_MASK_BWE))) {
                     PRINTDEBUG( ">>>SD Intr(R/W Req)\n");
                     //ここで自動的にラッパーのFIFO<->SD_BUF0間で通信が行われる
     //                if((!(*SDIF_CNT & SDIF_CNT_NEMP))&&(*SDIF_CNT & SDIF_CNT_FEIE)) {
-#if (TARGET_OS_CTR == 1)
-                    osDisableInterruptID( OS_INTR_ID_SD);
-#else
                     OS_DisableIrqMask( OS_IE_SD);
-#endif
+
                     PRINTDEBUG( "begin\n");
                     SDCARD_FPGA_irq();
                     PRINTDEBUG( "end\n");
-#if (TARGET_OS_CTR == 1)
-                    osEnableInterruptID( OS_INTR_ID_SD);
-#else
                     OS_EnableIrqMask( OS_IE_SD);
-#endif
                 }else{
                     PRINTDEBUG( ">>>SD Intr(End or Err)\n");
-#if (TARGET_OS_CTR == 1)
-                    osDisableInterruptID( OS_INTR_ID_SD);
-#else
                     OS_DisableIrqMask( OS_IE_SD);
-#endif
+
                     SYSFPGA_irq();                            /*完了またはエラー割り込み*/
-#if (TARGET_OS_CTR == 1)
-                    osEnableInterruptID( OS_INTR_ID_SD);
-#else
                     OS_EnableIrqMask( OS_IE_SD);
-#endif
                     /**/
-                    if( thread_flag) {
-                        PRINTDEBUG( "--Wup sdThread!--\n");
-#if (TARGET_OS_CTR == 1)
-                        wup_tsk( sdmc_tsk_id);
-                        PRINTDEBUG( "id : 0x%x\n", sdmc_tsk_id);
-#else
-//                        OS_WakeupThreadDirect( &sdmc_tsk);
-                          OS_WakeupThread( &sdmc_tsk_q);
-#endif
-                    }
                 }
             }
         /*--- FIFOを使わないとき ---*/
         }else{
             if( SD_CheckFPGAReg( SD_INFO2, (SD_INFO2_MASK_BRE | SD_INFO2_MASK_BWE))) {
                 PRINTDEBUG( ">>>SD Intr(R/W Req)\n");
-#if (TARGET_OS_CTR == 1)
-                osDisableInterruptID( OS_INTR_ID_SD);
-#else
                 OS_DisableIrqMask( OS_IE_SD);
-#endif
+
                 PRINTDEBUG( "begin\n");
                 SDCARD_FPGA_irq();                        /*カードからのリードライト要求割り込み*/
                 PRINTDEBUG( "end\n");
-#if (TARGET_OS_CTR == 1)
-                osEnableInterruptID( OS_INTR_ID_SD);
-#else
                 OS_EnableIrqMask( OS_IE_SD);
-#endif
             }else{
                 PRINTDEBUG( ">>>SD Intr(End or Err)\n");
-#if (TARGET_OS_CTR == 1)
-                osDisableInterruptID( OS_INTR_ID_SD);
-#else
                 OS_DisableIrqMask( OS_IE_SD);
-#endif
                 SYSFPGA_irq();                            /*完了またはエラー割り込み*/
-#if (TARGET_OS_CTR == 1)
-                osEnableInterruptID( OS_INTR_ID_SD);
-#else
                 OS_EnableIrqMask( OS_IE_SD);
-#endif
                 /**/
-                if( thread_flag) {
-                    PRINTDEBUG( "--Wup sdThread!--\n");
-#if (TARGET_OS_CTR == 1)
-                    wup_tsk( sdmc_tsk_id);
-                    PRINTDEBUG( "id : 0x%x\n", sdmc_tsk_id);
-#else
-//                    OS_WakeupThreadDirect( &sdmc_tsk);
-                      OS_WakeupThread( &sdmc_tsk_q);
-#endif
-                }
             }
         }
-    }
+//    }
 }

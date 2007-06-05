@@ -1,6 +1,6 @@
 #! make -f
 #----------------------------------------------------------------------------
-# Project:  TwlSDK - libraries
+# Project:  TwlSDK - CAMERA - demos - camera-1
 # File:     Makefile
 #
 # Copyright 2007 Nintendo.  All rights reserved.
@@ -15,30 +15,37 @@
 # $NoKeywords: $
 #----------------------------------------------------------------------------
 
+SUBDIRS		=
+
+LCFILE_SPEC	=	main.lsf
+
+#----------------------------------------------------------------------------
+
+#TWL_CODEGEN   =       THUMB
+TWL_PROC      =       ARM7
+
+TARGET_BIN	=	main.axf
+
+SRCS		=	main.c
+
+INCDIR      += $(TWLSDK_ROOT)/include/twl \
+               $(TWLSDK_ROOT)/include/twl/devices/sdmc/ARM7 \
+               $(TWLSDK_ROOT)/include/twl/fatfs/ARM7 \
+
+LLIBRARY_DIRS = $(TWLSDK_ROOT)/lib/ARM-BB/Release
+LLIBRARIES = libfatfs_sp.twl.a \
+             libromsd_sp.twl.a \
+
+#SRCDIR		=	# using default
+#LCFILE		=	# using default
+
 include	$(TWLSDK_ROOT)/build/buildtools/commondefs
 
 
 #----------------------------------------------------------------------------
 
-SUBDIRS		= \
-		  init		\
-		  os		\
-		  pxi		\
-		  mi		\
-		  vlink		\
-		  spi		\
-		  ctrdg		\
-		  aes		\
-		  i2c		\
-		  cdc		\
-		  snd		\
-		  camera	\
-          devices   \
+do-build:		$(TARGETS)
 
-#----------------------------------------------------------------------------
-export	NITRO_BLXCHECKED = yes
-
-#----------------------------------------------------------------------------
 
 include	$(TWLSDK_ROOT)/build/buildtools/modulerules
 
