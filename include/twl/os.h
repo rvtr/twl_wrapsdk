@@ -21,6 +21,7 @@
 
 #include <twl/os/common/system.h>
 #include <twl/os/common/emulator.h>
+#include <twl/os/common/systemCall.h>
 
 #ifdef SDK_DEBUGGER_KMC
 #include <twl/vlink.h>
