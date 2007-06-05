@@ -46,7 +46,7 @@
 extern u16 BgBak[32*32];
 //u16 sdcard_request_flag;            //カードからのデータ転送要求の有無フラグ
 static BOOL    thread_flag;
-
+static u32 sdmc_dma_no;
 
 /***********************************************************************
  global変数
@@ -399,18 +399,22 @@ static void SDCARD_Dmy_Handler( void)
   Description:  Initialize SD interface and SD card.
                 初期化
 
-  Arguments:    func1 : カード挿入時コールバック関数
+  Arguments:    dma_no : 使用するDMA番号
+                func1 : カード挿入時コールバック関数
                 func2 : カード排出時コールバック関数
 
   Returns:      0 : success
                 > 0 : error code
  *---------------------------------------------------------------------------*/
-SDMC_ERR_CODE sdmcInit(void (*func1)(),void (*func2)())
+SDMC_ERR_CODE sdmcInit( SDMC_DMA_NO dma_no, void (*func1)(),void (*func2)())
 {
 //    SDCARDMsg SdMsg;
 //    u32            init_msg;
     SDMC_ERR_CODE    api_result;
 
+    /**/
+    sdmc_dma_no = dma_no;
+    
     if( sdmc_tsk_created == FALSE) {
         /*---------- OS準備 ----------*/
         if( !OS_IsAlarmAvailable()) {	/* アラームチェック(OS_InitAlarm済みか?) */
@@ -1213,50 +1217,59 @@ static void SDCARD_FPGA_irq(void)
         
         /*--- SDカードからのリード時 ---*/
         if(bRead){
-            while(TransCount != 0){                                      /* 転送カウント分のループ */
-                if( SDCARD_UseFifoFlag) {                                /*--- FIFOを使うとき ---*/
-                    *((u32*)pSDCARD_BufferAddr) = *(SDIF_FI);            /* 32bit読み出し */
-                }else{                                                   /*--- FIFOを使わないとき ---*/
-                    *(pSDCARD_BufferAddr) = *(SD_BUF0);                  /* 16bit読み出し */
-                }
-                TransCount = (u16)(TransCount-1);                        /* 転送カウントのデクリメント */
-                if(TransCount == 0){                                     /* 転送カウント分終了? */
+            if( sdmc_dma_no != SDMC_NOUSE_DMA) {
+                if( TransCount != 0) {
+                    if( SDCARD_UseFifoFlag) {
+                        MI_DmaRecv32( sdmc_dma_no, (void*)SDIF_FI, pSDCARD_BufferAddr, SDCARD_SectorSize);//TransCount*4);
+                    }else{
+                        MI_DmaRecv16( sdmc_dma_no, (void*)SD_BUF0, pSDCARD_BufferAddr, SDCARD_SectorSize);//TransCount*2);
+                    }
+                    TransCount = 0;
+                    /*転送終了*/
                     if( ulSDCARD_RestSectorCount <= 0) {                 /* 要求セクタ数リード完了したか? */
                         if(SD_CheckFPGAReg(SD_STOP,SD_STOP_SEC_ENABLE)){ /* SD_SECCNTレジスタがEnableか? */
-//                            SD_DisableSeccnt();                        /* SD_SECCNTレジスタ無効設定 */
+                        SD_DisableSeccnt();                        /* SD_SECCNTレジスタ無効設定 */
                         }else{                                           /* SD_SECCNTレジスタがDisableのとき */
                             SD_StopTransmission();                       /* カード転送終了をFPGAに通知（CMD12発行） */
                         }
                     }
                     SDCARD_ATC0_irq();                                   /* 転送完了後の処理 */
                 }
-                if( SDCARD_UseFifoFlag) {
-                    pSDCARD_BufferAddr+=2;                               /* 読込みデータのバッファアドレスをインクリメント */
-                }else{
-                    pSDCARD_BufferAddr++;                                /* 読込みデータのバッファアドレスをインクリメント */
+            }else{
+                while(TransCount != 0){                                      /* 転送カウント分のループ */
+                    if( SDCARD_UseFifoFlag) {                                /*--- FIFOを使うとき ---*/
+                        *((u32*)pSDCARD_BufferAddr) = *(SDIF_FI);            /* 32bit読み出し */
+                    }else{                                                   /*--- FIFOを使わないとき ---*/
+                        *(pSDCARD_BufferAddr) = *(SD_BUF0);                  /* 16bit読み出し */
+                    }
+                    TransCount = (u16)(TransCount-1);                        /* 転送カウントのデクリメント */
+                    if(TransCount == 0){                                     /* 転送カウント分終了? */
+                        if( ulSDCARD_RestSectorCount <= 0) {                 /* 要求セクタ数リード完了したか? */
+                            if(SD_CheckFPGAReg(SD_STOP,SD_STOP_SEC_ENABLE)){ /* SD_SECCNTレジスタがEnableか? */
+    //                            SD_DisableSeccnt();                        /* SD_SECCNTレジスタ無効設定 */
+                            }else{                                           /* SD_SECCNTレジスタがDisableのとき */
+                                SD_StopTransmission();                       /* カード転送終了をFPGAに通知（CMD12発行） */
+                            }
+                        }
+                        SDCARD_ATC0_irq();                                   /* 転送完了後の処理 */
+                    }
+                    if( SDCARD_UseFifoFlag) {
+                        pSDCARD_BufferAddr+=2;                               /* 読込みデータのバッファアドレスをインクリメント */
+                    }else{
+                        pSDCARD_BufferAddr++;                                /* 読込みデータのバッファアドレスをインクリメント */
+                    }
                 }
             }
         }else{    /*--- SDカードへのライト時 ---*/
-            while(TransCount != 0){                                      /* 転送カウント分のループ */
-                if( SDCARD_UseFifoFlag) {                                /*--- FIFOを使うとき ---*/
-#if (CTR_DEF_ENVIRONMENT_DSEMU == 1)
-                    *(vu16*)0x08030200 = 1;                              /* ブレッドボード固有の先読み無効 */
-#endif
-                    *(SDIF_FI) = *((u32*)pSDCARD_BufferAddr);            /* 32bit書き込み */
-#if (CTR_DEF_ENVIRONMENT_DSEMU == 1)
-                    *(vu16*)0x08030200 = 0;                              /* ブレッドボード固有の先読み有効 */
-#endif
-                }else{                                                   /*--- FIFOを使わないとき ---*/
-#if (CTR_DEF_ENVIRONMENT_DSEMU == 1)
-                    *(vu16*)0x08030200 = 1;                              /* ブレッドボード固有の先読み無効 */
-#endif
-                    *(SD_BUF0) = *(pSDCARD_BufferAddr);                  /* 16bit書き込み */
-#if (CTR_DEF_ENVIRONMENT_DSEMU == 1)
-                    *(vu16*)0x08030200 = 0;                              /* ブレッドボード固有の先読み有効 */
-#endif
-                }
-                TransCount = (u16)(TransCount-1);                        /* 転送カウントのデクリメント */
-                if(TransCount == 0){                                     /* 転送カウント分終了? */
+            if( sdmc_dma_no != SDMC_NOUSE_DMA) {
+                if( TransCount != 0) {
+                    if( SDCARD_UseFifoFlag) {
+                        MI_DmaSend32( sdmc_dma_no, pSDCARD_BufferAddr, SDIF_FI, SDCARD_SectorSize);
+                    }else{
+                        MI_DmaSend16( sdmc_dma_no, pSDCARD_BufferAddr, SDIF_FI, SDCARD_SectorSize);
+                    }
+                    TransCount = 0;
+                    /*転送終了*/
                     if( ulSDCARD_RestSectorCount <= 0){                  /* 要求セクタ数ライト完了? */
                         if( SDCARD_UseFifoFlag) {                        /* FIFOを使用するときは */
                             while( (*SDIF_CNT & SDIF_CNT_NEMP)) {};      /* FIFOにデータが残っているうちは終了しない */
@@ -1269,10 +1282,32 @@ static void SDCARD_FPGA_irq(void)
                     }
                     SDCARD_ATC0_irq();                                   /* 転送完了後の処理 */
                 }
-                if( SDCARD_UseFifoFlag) {
-                    pSDCARD_BufferAddr+=2;                               /* 書込みデータのバッファアドレスをインクリメント */
-                }else{
-                    pSDCARD_BufferAddr++;                                /* 書込みデータのバッファアドレスをインクリメント */
+            }else{
+                while(TransCount != 0){                                      /* 転送カウント分のループ */
+                    if( SDCARD_UseFifoFlag) {                                /*--- FIFOを使うとき ---*/
+                        *(SDIF_FI) = *((u32*)pSDCARD_BufferAddr);            /* 32bit書き込み */
+                    }else{                                                   /*--- FIFOを使わないとき ---*/
+                        *(SD_BUF0) = *(pSDCARD_BufferAddr);                  /* 16bit書き込み */
+                    }
+                    TransCount = (u16)(TransCount-1);                        /* 転送カウントのデクリメント */
+                    if(TransCount == 0){                                     /* 転送カウント分終了? */
+                        if( ulSDCARD_RestSectorCount <= 0){                  /* 要求セクタ数ライト完了? */
+                            if( SDCARD_UseFifoFlag) {                        /* FIFOを使用するときは */
+                                while( (*SDIF_CNT & SDIF_CNT_NEMP)) {};      /* FIFOにデータが残っているうちは終了しない */
+                            }
+                            if(SD_CheckFPGAReg(SD_STOP,SD_STOP_SEC_ENABLE)){ /* SD_SECCNTレジスタがEnableか? */
+    //                            SD_DisableSeccnt();                        /* SD_SECCNTレジスタ無効設定 */
+                            }else{                                           /* SD_SECCNTレジスタがDisableのとき */
+                                SD_StopTransmission();                       /* カード転送終了をFPGAに通知（CMD12発行） */
+                            }
+                        }
+                        SDCARD_ATC0_irq();                                   /* 転送完了後の処理 */
+                    }
+                    if( SDCARD_UseFifoFlag) {
+                        pSDCARD_BufferAddr+=2;                               /* 書込みデータのバッファアドレスをインクリメント */
+                    }else{
+                        pSDCARD_BufferAddr++;                                /* 書込みデータのバッファアドレスをインクリメント */
+                    }
                 }
             }
         }

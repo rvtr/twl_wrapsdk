@@ -19,6 +19,7 @@
 
 #include <nitro/mi.h>
 
+#include <twl/mi/dma_patch.h>
 #include <twl/mi/exDma.h>
 #include <twl/mi/wram_abc.h>
 

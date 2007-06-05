@@ -35,6 +35,7 @@ INCDIR			+= $(TWL_NITROSDK_ROOT)/build/libraries/mi/common/include \
 
 SRCS			= \
               mi_dma.c \
+              mi_dma_patch.c \
 			  mi_exDma.c \
 			  mi_dma_hblank.c \
 			  mi_dma_vblank.c \
