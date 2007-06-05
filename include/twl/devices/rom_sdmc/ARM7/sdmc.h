@@ -12,6 +12,15 @@ extern "C" {
 
 
 /*********************************************
+ ポート番号
+*********************************************/
+typedef enum {
+    SDMC_PORT_CARD    = 0x400,
+    SDMC_PORT_NAND    = 0x401
+}SDMC_PORT_NO;
+
+
+/*********************************************
  DMA番号
 *********************************************/
 typedef enum {
@@ -110,6 +119,10 @@ SDMC_ERR_CODE    sdmcRead(void* buf,u32 bufsize,u32 offset,void(*func)(void),Sdm
 SDMC_ERR_CODE    sdmcWriteFifo(void* buf,u32 bufsize,u32 offset,void(*func)(void),SdmcResultInfo *info);/* テスト用カードライト */
 /*ライトする*/
 SDMC_ERR_CODE    sdmcWrite(void* buf,u32 bufsize,u32 offset,void(*func)(void),SdmcResultInfo *info);    /* テスト用カードライト */
+
+/*ポート選択*/
+u16           sdmcSelectedNo(void);
+SDMC_ERR_CODE sdmcSelect(u16 select);
 
 
 #ifdef __cplusplus

@@ -123,8 +123,8 @@ static void SDCARD_ATC0_irq(void);            /* ATC0転送完了割り込み処理 */
 static void SYSFPGA_irq(void);                /* SYSFPGAエラー割り込み処理 */
 
 /*ポート1は無線固定なのでポート選択関数は公開しない*/
-static u16 i_sdmcSelectedNo(void);            /* カードポートの選択 */
-static u16 i_sdmcSelect(u16 select);          /* 現在のカードポート番号のチェック */
+//u16 sdmcSelectedNo(void);            /* カードポートの選択 */
+//u16 sdmcSelect(u16 select);          /* 現在のカードポート番号のチェック */
 
 
 
@@ -875,7 +875,14 @@ PRINTDEBUG( "%d\n", __LINE__);
         SDCARD_ErrStatus = SDMC_NORMAL;         /* エラーステータスをクリア */
         SDCARD_OutFlag = TRUE;                  /* 排出フラグをセット */
     }else{
-        SDCARD_ErrStatus = SDCARD_Layer_Init();
+        if( SD_CheckFPGAReg( SD_INFO1, SD_INFO1_DETECT)) {
+            sdmcSelect( (u16)SDMC_PORT_CARD);
+            SDCARD_ErrStatus = SDCARD_Layer_Init();
+        }
+        if( SD_CheckFPGAReg( EXT_CD, EXT_CD_PORT1_DETECT)) {
+            sdmcSelect( (u16)SDMC_PORT_NAND);
+            SDCARD_ErrStatus = SDCARD_Layer_Init();
+        }
         SDCARD_OutFlag = FALSE;                 /* 排出フラグをリセット */
     }
 
@@ -2334,7 +2341,7 @@ static void SDCARD_Restore_port1(void)
 
 
 /*---------------------------------------------------------------------------*
-  Name:         i_sdmcSelectedNo
+  Name:         sdmcSelectedNo
 
   Description:  get selected port number.
                 選択されているポート番号を取得する
@@ -2344,7 +2351,7 @@ static void SDCARD_Restore_port1(void)
   Returns:      [15:8]port numbers which supported（サポートされているポート数）
                 [7:0]port number which selected now（選択されているポート番号）
  *---------------------------------------------------------------------------*/
-static u16 i_sdmcSelectedNo(void)
+u16 sdmcSelectedNo(void)
 {
     u16 i_sdmcSelect_Value;
 
@@ -2354,7 +2361,7 @@ static u16 i_sdmcSelectedNo(void)
 }
 
 /*---------------------------------------------------------------------------*
-  Name:         i_sdmcSelect
+  Name:         sdmcSelect
 
   Description:  select port.
                 ポートを選択する
@@ -2364,7 +2371,7 @@ static u16 i_sdmcSelectedNo(void)
   Returns:      0 : success
                 >0 : error
  *---------------------------------------------------------------------------*/
-static u16 i_sdmcSelect(u16 select)
+SDMC_ERR_CODE sdmcSelect(u16 select)
 {
     union
     {
