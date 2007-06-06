@@ -513,7 +513,7 @@ static void AesThread(void *arg)
             break;
 
         case AES_PXI_COMMAND_CPU_SEND:
-            AES_PXI_SIZE_CHECK(AES_PXI_SIZE_START_DMA_SEND);
+            AES_PXI_SIZE_CHECK(AES_PXI_SIZE_CPU_SEND);
             AES_UNPACK_U32(&data32a, &aesWork.data[0]);
             AES_UNPACK_U32(&data32b, &aesWork.data[4]);
             AES_CpuSend((void*)data32a, data32b);
@@ -521,7 +521,7 @@ static void AesThread(void *arg)
             break;
 
         case AES_PXI_COMMAND_CPU_RECV:
-            AES_PXI_SIZE_CHECK(AES_PXI_SIZE_START_DMA_RECV);
+            AES_PXI_SIZE_CHECK(AES_PXI_SIZE_CPU_RECV);
             AES_UNPACK_U32(&data32a, &aesWork.data[0]);
             AES_UNPACK_U32(&data32b, &aesWork.data[4]);
             AES_CpuRecv((void*)data32a, data32b);
