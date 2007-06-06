@@ -22,23 +22,54 @@
 extern "C" {
 #endif
 
-
-/*---------------------------------------------------------------------------*
-  Name:         SVC_DecryptoSign
-
-  Description:  
-
-  Arguments:    buffer : 
-                sgn_ptr : 
-                key_ptr : 
-
-  Returns:      None
- *---------------------------------------------------------------------------*/
-int SVC_DecryptoSign(
-                    void*   buffer,     //  出力領域
-                    const void*   sgn_ptr,    //  データへのポインタ
-                    const void*   key_ptr     //  キーへのポインタ
+int SVC_InitSignHeap(
+                    int             acmemory_pool[3],
+                    void*           heap,
+                    unsigned int    length
                     );
+
+int SVC_DecryptoRSA(
+                    void*           acmemory_pool,
+                    void*           pData,
+                    unsigned int    *len        // 出力サイズ
+                    );
+
+int SVC_DecryptoSign(
+                    void*           acmemory_pool,
+                    void*           buffer,     //  出力領域
+                    const void*     sgn_ptr,    //  データへのポインタ
+                    const void*     key_ptr     //  キーへのポインタ
+                    );
+
+int SVC_DecryptoSignDER(
+                    void*           acmemory_pool,
+                    void*           buffer,     //  出力領域
+                    const void*     sgn_ptr,    //  データへのポインタ
+                    const void*     key_ptr     //  キーへのポインタ
+                    );
+
+int SVC_GetDigest(
+                    void*         buffer,     //  出力領域
+                    const void*   buf,        //  データへのポインタ
+                    unsigned int  len         //  データの長さ
+                    );
+
+int SVC_CompareDigest(
+                    const void* decedHash,    //  ACSign_Decryptoの出力
+                    const void* digest        //  ACSign_DigestUnitの出力
+                    );
+
+int SVC_UncompressLZ8FromDevice( const void* srcp,
+                                  void* destp,
+                                  const void* paramp,
+                                  const MIReadStreamCallbacks *callbacks
+                                  );
+
+int SVC_UncompressLZ16FromDeviceIMG( const void* srcp,
+                                  void* destp,
+                                  const void* paramp,
+                                  const MIReadStreamCallbacks *callbacks
+                                  );
 
 
 #ifdef __cplusplus
