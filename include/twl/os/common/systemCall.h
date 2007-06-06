@@ -48,13 +48,17 @@ int SVC_DecryptoSignDER(
                     const void*     key_ptr     //  キーへのポインタ
                     );
 
-int SVC_GetDigest(
+void SVC_SHA1Init( void *c );
+void SVC_SHA1Update( void *c, const unsigned char *data, unsigned long len );
+void SVC_SHA1GetHash( unsigned char *md, void *c );
+
+int SVC_CalcSHA1(
                     void*         buffer,     //  出力領域
                     const void*   buf,        //  データへのポインタ
                     unsigned int  len         //  データの長さ
                     );
 
-int SVC_CompareDigest(
+int SVC_CompareSHA1(
                     const void* decedHash,    //  SVC_Decrypto*の出力
                     const void* digest        //  SVC_GetDigestの出力
                     );
@@ -70,6 +74,7 @@ int SVC_UncompressLZ16FromDeviceIMG( const void* srcp,
                                   const void* paramp,
                                   const MIReadStreamCallbacks *callbacks
                                   );
+
 
 
 #ifdef __cplusplus
