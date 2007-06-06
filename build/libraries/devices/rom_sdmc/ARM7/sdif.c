@@ -843,7 +843,7 @@ u16 MMCP_BusTest( BOOL readflag)
   Returns:      TRUE : BREäÑÇËçûÇ›î≠ê∂
                 FALSE : BWEäÑÇËçûÇ›î≠ê∂
  *---------------------------------------------------------------------------*/
-s16 SD_FPGA_irq(void)
+BOOL SD_FPGA_irq(void)
 {
     /*--- FIFOÇégÇ§Ç∆Ç´ ---*/
     if( SDCARD_UseFifoFlag) {

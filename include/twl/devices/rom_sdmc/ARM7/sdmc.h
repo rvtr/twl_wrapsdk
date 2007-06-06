@@ -102,6 +102,14 @@ BOOL sdmcCheckMedia( void);
 
 
 /*********************************************
+ データ転送関数の登録関連
+*********************************************/
+typedef void (*sdmcTransferFunction)( void* sd_adr, u32 size, BOOL read_flag);
+
+//void sdmcSetTransferFunction( sdmcTransferFunction usr_func);
+
+
+/*********************************************
  基本API
 *********************************************/
 SDMC_ERR_CODE    sdmcInit( SDMC_DMA_NO dma_no, void (*func1)(),void (*func2)());/* カードドライバ初期化 */
@@ -111,14 +119,20 @@ SDMC_ERR_CODE    sdmcGetStatus(u16 *status);           /* カードドライバの現在の
 u32              sdmcGetCardSize(void);                /* カード全サイズの取得 */
 
 /*SD I/FのFIFOを使ってリードする（高速）*/
-SDMC_ERR_CODE    sdmcReadFifo(void* buf,u32 bufsize,u32 offset,void(*func)(void),SdmcResultInfo *info);/* テスト用カードリード */
+SDMC_ERR_CODE    sdmcReadFifo(void* buf,u32 bufsize,u32 offset,void(*func)(void),SdmcResultInfo *info);
+SDMC_ERR_CODE    sdmcReadFifoDirect( sdmcTransferFunction usr_func,
+                                     u32 bufsize,u32 offset,void(*func)(void),SdmcResultInfo *info);
+
+
 /*リードする*/
-SDMC_ERR_CODE    sdmcRead(void* buf,u32 bufsize,u32 offset,void(*func)(void),SdmcResultInfo *info);    /* テスト用カードリード */
+//SDMC_ERR_CODE    sdmcRead(void* buf,u32 bufsize,u32 offset,void(*func)(void),SdmcResultInfo *info);
 
 /*SD I/FのFIFOを使ってライトする（高速）*/
-SDMC_ERR_CODE    sdmcWriteFifo(void* buf,u32 bufsize,u32 offset,void(*func)(void),SdmcResultInfo *info);/* テスト用カードライト */
+SDMC_ERR_CODE    sdmcWriteFifo(void* buf,u32 bufsize,u32 offset,void(*func)(void),SdmcResultInfo *info);
+SDMC_ERR_CODE    sdmcWriteFifoDirect(sdmcTransferFunction usr_func,
+                                     u32 bufsize,u32 offset,void(*func)(void),SdmcResultInfo *info);
 /*ライトする*/
-SDMC_ERR_CODE    sdmcWrite(void* buf,u32 bufsize,u32 offset,void(*func)(void),SdmcResultInfo *info);    /* テスト用カードライト */
+//SDMC_ERR_CODE    sdmcWrite(void* buf,u32 bufsize,u32 offset,void(*func)(void),SdmcResultInfo *info);
 
 /*ポート選択*/
 u16           sdmcSelectedNo(void);

@@ -325,7 +325,7 @@ u16     MMCP_WriteBusWidth(s16 b4bit);
 u16     MMCP_BusTest( BOOL readflag);
 
 
-s16     SD_FPGA_irq(void);                      /* カード転送要求時のFPGAの制御 */
+BOOL    SD_FPGA_irq(void);                      /* カード転送要求時のFPGAの制御 */
 void    SD_StopTransmission(void);              /* カード転送終了をFPGAに通知する。 */
 void    SD_TransEndFPGA(void);                  /* カード転送の終了処理(割り込みマスクを戻す) */
 u16     SD_CheckStatus(BOOL bRead);             /* Normal response command カードステータスのチェック */

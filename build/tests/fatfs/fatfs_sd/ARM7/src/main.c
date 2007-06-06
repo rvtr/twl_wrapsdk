@@ -32,9 +32,28 @@ static void VBlankIntr(void);
 /*---------------------------------------------------------------------------*
     
  *---------------------------------------------------------------------------*/
-u32 BlockBuf[512/4];
-u32 BlockBuf2[512/4];
+u32 BlockBuf[(512*3)/4];
+u32 BlockBuf2[(512*3)/4];
 
+/*バッファオフセット*/
+static u32 my_buf_offset = 0;
+
+/*ユーザ転送関数*/
+void MY_SdTransfer( void* sd_adr, u32 size, BOOL read_flag)
+{
+    if( read_flag) { //リード
+        MI_DmaRecv32( 2, sd_adr, (void*)((u32)BlockBuf2 + my_buf_offset), size);
+    }else{           //ライト
+        MI_DmaSend32( 2, (void*)((u32)BlockBuf + my_buf_offset), sd_adr, size);
+    }
+    my_buf_offset += size;
+}
+
+/*バッファオフセットのリセット関数*/
+void MY_SdTransferRewind( void)
+{
+    my_buf_offset = 0;
+}
 
 /*---------------------------------------------------------------------------*
   Name:         TwlSpMain
@@ -80,9 +99,12 @@ void TwlSpMain(void)
     /**/
     PRINTDEBUG("Sample program starts.\n");
 //    rtfs_init();
+
+    MI_DmaFill32( 2, BlockBuf,  0x55AA55AA, 512*3);
+    MI_DmaFill32( 2, BlockBuf2, 0x00FF00FF, 512*3);
     
     /*SDドライバ初期化*/
-    result = sdmcInit( SDMC_USE_DMA_2, NULL, NULL);
+    result = sdmcInit( SDMC_NOUSE_DMA, NULL, NULL);
     if( result != 0) {
         PRINTDEBUG( "sdmcInit : failed\n");
         while( 1) {};
@@ -90,7 +112,8 @@ void TwlSpMain(void)
         PRINTDEBUG( "sdmcInit : success\n");
     }
 
-    /*--- SDからブロックリード ---*/
+#if 0
+    /*--- SDへブロックライト／リード ---*/
     result = sdmcSelect( (u16)SDMC_PORT_CARD);
     if( result != 0) {
         PRINTDEBUG( "sdmcSelect failed.\n");    
@@ -98,15 +121,22 @@ void TwlSpMain(void)
         PRINTDEBUG( "sdmcSelect success.\n");    
     }
     
-    result = sdmcReadFifo( BlockBuf, 1, 0, NULL, &SdResult);
+    result = sdmcWriteFifo( BlockBuf, 3, 10, NULL, &SdResult);
+    if( result != 0) {
+        PRINTDEBUG( "sdmcWriteFifo failed.\n");    
+    }else{
+        PRINTDEBUG( "sdmcWriteFifo success.\n");
+    }
+    
+    result = sdmcReadFifo( BlockBuf2, 3, 10, NULL, &SdResult);
     if( result != 0) {
         PRINTDEBUG( "sdmcReadFifo failed.\n");    
     }else{
         PRINTDEBUG( "sdmcReadFifo success.\n");
     }
     /*----------------------------*/
-
-    /*NANDからブロックリード*/
+#else
+    /*NANDからブロックライト／リード*/
     result = sdmcSelect( (u16)SDMC_PORT_NAND);
     if( result != 0) {
         PRINTDEBUG( "sdmcSelect failed.\n");    
@@ -114,72 +144,24 @@ void TwlSpMain(void)
         PRINTDEBUG( "sdmcSelect success.\n");    
     }
     
-    result = sdmcReadFifo( BlockBuf2, 1, 0, NULL, &SdResult);
+    MY_SdTransferRewind();
+    result = sdmcWriteFifoDirect( (sdmcTransferFunction)&MY_SdTransfer, 3, 10, NULL, &SdResult);
     if( result != 0) {
-        PRINTDEBUG( "sdmcReadFifo failed.\n");    
+        PRINTDEBUG( "sdmcWriteFifoDirect failed.\n");    
     }else{
-        PRINTDEBUG( "sdmcReadFifo success.\n");
+        PRINTDEBUG( "sdmcWriteFifoDirect success.\n");
+    }
+    
+    MY_SdTransferRewind();
+    result = sdmcReadFifoDirect( (sdmcTransferFunction)&MY_SdTransfer, 3, 10, NULL, &SdResult);
+    if( result != 0) {
+        PRINTDEBUG( "sdmcReadFifoDirect failed.\n");    
+    }else{
+        PRINTDEBUG( "sdmcReadFifoDirect success.\n");
     }
     /*----------------------------*/
 
-
-    /*--- SDからブロックリード ---*/
-    result = sdmcSelect( (u16)SDMC_PORT_CARD);
-    if( result != 0) {
-        PRINTDEBUG( "sdmcSelect failed.\n");    
-    }else{
-        PRINTDEBUG( "sdmcSelect success.\n");    
-    }
-    
-    result = sdmcReadFifo( BlockBuf2, 1, 0, NULL, &SdResult);
-    if( result != 0) {
-        PRINTDEBUG( "sdmcReadFifo failed.\n");    
-    }else{
-        PRINTDEBUG( "sdmcReadFifo success.\n");
-    }
-    /*----------------------------*/
-
-    /*NANDからブロックリード*/
-    result = sdmcSelect( (u16)SDMC_PORT_NAND);
-    if( result != 0) {
-        PRINTDEBUG( "sdmcSelect failed.\n");    
-    }else{
-        PRINTDEBUG( "sdmcSelect success.\n");    
-    }
-    
-    result = sdmcReadFifo( BlockBuf, 1, 0, NULL, &SdResult);
-    if( result != 0) {
-        PRINTDEBUG( "sdmcReadFifo failed.\n");    
-    }else{
-        PRINTDEBUG( "sdmcReadFifo success.\n");
-    }
-    /*----------------------------*/
-
-    
-    /*SDへブロックライト*/
-/*    MI_CpuFill8( BlockBuf2, 0xA5, 512);
-    result = sdmcWriteFifo( BlockBuf2, 1, 0, NULL, &SdResult);
-    if( result != 0) {
-    PRINTDEBUG( "sdmcWriteFifo failed.\n");    
-    }
-    PRINTDEBUG( "sdmcWriteFifo success.\n");    
-*/
-
-    /*SDからブロックリード*/
-/*    result = sdmcReadFifo( BlockBuf2, 1, 0, NULL, &SdResult);
-    if( result != 0) {
-    PRINTDEBUG( "sdmcReadFifo failed.\n");    
-    }
-    PRINTDEBUG( "sdmcReadFifo success.\n");    
-*/
-    
-    /*SDへブロックライト*/
-/*    result = sdmcWriteFifo( BlockBuf, 1, 0, NULL, &SdResult);
-    if( result != 0) {
-    PRINTDEBUG( "sdmcWriteFifo failed.\n");    
-    }
-    PRINTDEBUG( "sdmcWriteFifo success.\n");    
-*/
+#endif    
     /*デバイスドライバの登録*/
 /*    if( sdmcRtfsAttach( 4) == FALSE) {  //sdmcをEドライブにする
         PRINTDEBUG( "sdmcRtfsAttach failed.\n");

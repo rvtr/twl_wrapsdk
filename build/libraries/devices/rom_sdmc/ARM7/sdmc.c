@@ -160,6 +160,10 @@ u16  SDCARD_WP_TEMPORARY;        /* カードライトプロテクト一時フラグ。0=なし、1=
 
 u16* pSDCARD_BufferAddr;         /* 保存用データ格納バッファアドレス */
 
+sdmcTransferFunction SDCARD_USR_TRANSFER_FUNC = NULL; /* ユーザ転送関数 */
+//sdmcTransferFunction CURRENT_TRANSFER_FUNC;    /* カレント転送関数 */
+
+BOOL SDCARD_DataFlag;            /* データフラグ(転送種別) */
 u32  ulSDCARD_SectorCount;       /* 転送セクタ数 */
 u32  ulSDCARD_RestSectorCount;   /* 残り転送セクタ数 */
 u32  SDCARD_SectorSize;          /* セクタサイズ デフォルト 512bytes */
@@ -1005,6 +1009,8 @@ SDMC_ERR_CODE sdmcReadFifo(void* buf,u32 bufsize,u32 offset,void(*func)(void),Sd
 #endif
     SDMC_ERR_CODE api_result;                    //SDCARD関数の返り値
 
+    SDCARD_USR_TRANSFER_FUNC = NULL; //ライブラリ内部関数によるリード
+    
     SdMsg.buf       = buf;
     SdMsg.bufsize   = bufsize;
     SdMsg.offset    = offset;
@@ -1022,6 +1028,41 @@ SDMC_ERR_CODE sdmcReadFifo(void* buf,u32 bufsize,u32 offset,void(*func)(void),Sd
 
     return api_result;
 }
+
+/*---------------------------------------------------------------------------*
+  Name:         sdmcReadFifoDirect
+
+  Description:  read from card.
+                ラッパーのFIFOを使用してカードからの読み出し。
+
+  Arguments:    buf : 読み出したデータを格納するためのバッファのアドレス
+                bufsize : 読み出しサイズ（セクタ数）
+                offset : 読み出し開始オフセット（セクタ番号）
+                info : 実行結果を格納するための構造体へのアドレス
+
+  Returns:      0 : success
+                > 0 : error
+ *---------------------------------------------------------------------------*/
+SDMC_ERR_CODE sdmcReadFifoDirect(sdmcTransferFunction usr_func,
+                                 u32 bufsize,u32 offset,void(*func)(void),SdmcResultInfo *info)
+{
+    SDCARDMsg     SdMsg;
+    SDMC_ERR_CODE api_result;                    //SDCARD関数の返り値
+
+    SDCARD_USR_TRANSFER_FUNC = usr_func; //User関数による直接リード
+    
+    SdMsg.buf       = NULL;
+    SdMsg.bufsize   = bufsize;
+    SdMsg.offset    = offset;
+    SdMsg.func      = func;
+    SdMsg.info      = info;
+    SdMsg.operation = SD_OPERATION_READ_WITH_FIFO;
+
+    api_result = SDCARD_Thread( &SdMsg);
+    
+    return api_result;
+}
+
 
 /*---------------------------------------------------------------------------*
   Name:         SDCARDi_ReadFifo
@@ -1057,6 +1098,7 @@ static SDMC_ERR_CODE SDCARDi_ReadFifo(void* buf,u32 bufsize,u32 offset,void(*fun
     return result;
 }
 
+#if 0
 /*---------------------------------------------------------------------------*
   Name:         sdmcRead
 
@@ -1098,6 +1140,7 @@ SDMC_ERR_CODE sdmcRead(void* buf,u32 bufsize,u32 offset,void(*func)(void),SdmcRe
 
     return api_result;
 }
+#endif
 
 /*---------------------------------------------------------------------------*
   Name:         SDCARDi_Read
@@ -1129,6 +1172,7 @@ static SDMC_ERR_CODE SDCARDi_Read(void* buf,u32 bufsize,u32 offset,void(*func)(v
         ulSDCARD_RestSectorCount = bufsize;     /* 残り転送セクタ数の設定 */
         pSDCARD_BufferAddr = buf;               /* データ格納バッファのアドレスを設定 */
 
+        SDCARD_DataFlag = TRUE;
         SDCARD_ATC0_Flag = FALSE;               /* 全ATC処理完了フラグクリア */
         SDCARD_FPGA_Flag = FALSE;               /* FPGA処理完了フラグクリア */
         SDCARD_EndFlag = FALSE;                 /* 転送処理完了フラグクリア */
@@ -1192,6 +1236,23 @@ static SDMC_ERR_CODE SDCARDi_Read(void* buf,u32 bufsize,u32 offset,void(*func)(v
     return SDCARD_ErrStatus;
 }
 
+
+
+/*---------------------------------------------------------------------------*
+  Name:         sdmcSetTransferFunction
+
+  Description:  
+
+  Arguments:    None
+
+  Returns:      None
+ *---------------------------------------------------------------------------*/
+/*
+void sdmcSetTransferFunction( sdmcTransferFunction usr_func)
+{
+    SDCARD_USR_TRANSFER_FUNC = usr_func;
+}*/
+
 /*---------------------------------------------------------------------------*
   Name:         SDCARD_FPGA_irq
 
@@ -1221,15 +1282,39 @@ static void SDCARD_FPGA_irq(void)
                 TransCount = (u16)(SDCARD_SectorSize/2); /* 転送カウント設定 (16bit転送なのでセクタサイズの半分) */
             }
         }
-        
+
+        /*-------- ユーザ関数(データ転送、Fifoモード時に有効) --------*/
+        if(( SDCARD_DataFlag == TRUE)&&( SDCARD_USR_TRANSFER_FUNC != NULL)&&
+           ( SDCARD_UseFifoFlag)) {
+            SDCARD_USR_TRANSFER_FUNC( (void*)SDIF_FI, SDCARD_SectorSize, bRead);
+            TransCount = 0;
+            /*転送終了*/
+            if( ulSDCARD_RestSectorCount <= 0) {                 /* 要求セクタ数リード完了したか? */
+                if( bRead == FALSE) {
+                    if( SDCARD_UseFifoFlag) {                    /* FIFOを使用するときは */
+                        while( (*SDIF_CNT & SDIF_CNT_NEMP)) {};  /* FIFOにデータが残っているうちは終了しない */
+                    }
+                }
+                if(SD_CheckFPGAReg(SD_STOP,SD_STOP_SEC_ENABLE)){ /* SD_SECCNTレジスタがEnableか? */
+                    if( bRead) {
+                        SD_DisableSeccnt();                      /* SD_SECCNTレジスタ無効設定 */
+                    }
+                }else{                                           /* SD_SECCNTレジスタがDisableのとき */
+                    SD_StopTransmission();                       /* カード転送終了をFPGAに通知（CMD12発行） */
+                }
+            }
+            SDCARD_ATC0_irq();                                   /* 転送完了後の処理 */
+            
+        }else{
+
         /*--- SDカードからのリード時 ---*/
         if(bRead){
             if( sdmc_dma_no != SDMC_NOUSE_DMA) {
                 if( TransCount != 0) {
                     if( SDCARD_UseFifoFlag) {
-                        MI_DmaRecv32( sdmc_dma_no, (void*)SDIF_FI, pSDCARD_BufferAddr, SDCARD_SectorSize);//TransCount*4);
+                        MI_DmaRecv32( sdmc_dma_no, (void*)SDIF_FI, pSDCARD_BufferAddr, SDCARD_SectorSize);
                     }else{
-                        MI_DmaRecv16( sdmc_dma_no, (void*)SD_BUF0, pSDCARD_BufferAddr, SDCARD_SectorSize);//TransCount*2);
+                        MI_DmaRecv16( sdmc_dma_no, (void*)SD_BUF0, pSDCARD_BufferAddr, SDCARD_SectorSize);
                     }
                     TransCount = 0;
                     /*転送終了*/
@@ -1317,6 +1402,7 @@ static void SDCARD_FPGA_irq(void)
                     }
                 }
             }
+        }
         }
     }
 }
@@ -1620,6 +1706,7 @@ static u16 i_sdmcSendSCR(void)
     pSDCARD_BufferAddr = SD_SCR;                         /* データ格納バッファのアドレスを設定 */
 
     /* 転送前の準備処理 */
+    SDCARD_DataFlag = FALSE;
     SDCARD_ATC0_Flag = FALSE;                /* 全ATC完了フラグクリア */
     SDCARD_FPGA_Flag = FALSE;                /* FPGA処理完了フラグクリア */
     SDCARD_EndFlag = FALSE;                  /* 転送処理完了フラグクリア */
@@ -1775,6 +1862,7 @@ static u16 SDCARD_SD_Status(void)
     pSDCARD_BufferAddr = SD_SDSTATUS;                    /* データ格納バッファのアドレスを設定 */
 
     /* 転送前の準備処理 */
+    SDCARD_DataFlag = FALSE;
     SDCARD_ATC0_Flag = FALSE;                /* 全ATC完了フラグクリア */
     SDCARD_FPGA_Flag = FALSE;                /* FPGA処理完了フラグクリア */
     SDCARD_EndFlag   = FALSE;                /* 転送処理完了フラグクリア */
@@ -1849,6 +1937,7 @@ int MMCP_SetBusWidth( BOOL b4bit)
     pSDCARD_info = NULL;
     ulSDCARD_RestSectorCount = ulSDCARD_SectorCount = 1;
     pSDCARD_BufferAddr = &TestData;            /* データ格納バッファのアドレスを設定 */
+    SDCARD_DataFlag = FALSE;
     SDCARD_ATC0_Flag = FALSE;                  /* 全ATC完了フラグクリア */
     SDCARD_FPGA_Flag = FALSE;                  /* FPGA処理完了フラグクリア */
     SDCARD_EndFlag   = FALSE;                  /* 転送処理完了フラグクリア */
@@ -1875,6 +1964,7 @@ int MMCP_SetBusWidth( BOOL b4bit)
     /**/
     ulSDCARD_RestSectorCount = ulSDCARD_SectorCount = 1;/* 残りセクタサイズ、セクタカウントに１を設定 */
     pSDCARD_BufferAddr = &Resid;                         /* データ格納バッファのアドレスを設定 */
+    SDCARD_DataFlag = FALSE;
     SDCARD_ATC0_Flag = FALSE;                          /* 全ATC完了フラグクリア */
     SDCARD_FPGA_Flag = FALSE;                          /* FPGA処理完了フラグクリア */
     SDCARD_EndFlag   = FALSE;                          /* 転送処理完了フラグクリア */
@@ -1934,8 +2024,8 @@ static u16  i_sdmcCheckWP(void)
         return    SDCARD_ErrStatus;
     }
     else if (SD_port_number == SDCARD_PORT1)       /* ポート1のとき */
-    {
-        if(!(SD_CheckFPGAReg(EXT_WP,EXT_WP_PORT1))) { //WPフラグが立っていないか?
+    {  /*TWLのポート1はライトプロテクトビットが常に0（プロテクト状態）なので反転して評価*/
+        if((SD_CheckFPGAReg(EXT_WP,EXT_WP_PORT1))) { //WPフラグが立っていないか?
             SDCARD_ErrStatus |= SDMC_ERR_WP;          //エラーフラグのWPエラービットを立てる
         }else{                                        //WPフラグが立っていたとき
             SDCARD_ErrStatus &= ~SDMC_ERR_WP;         //エラーフラグのWPエラービットを落とす
@@ -1969,6 +2059,8 @@ SDMC_ERR_CODE sdmcWriteFifo(void* buf,u32 bufsize,u32 offset,void(*func)(),SdmcR
 #endif
     SDMC_ERR_CODE api_result;
 
+    SDCARD_USR_TRANSFER_FUNC = NULL; //ライブラリ内部関数によるリード
+    
     SdMsg.buf       = buf;
     SdMsg.bufsize   = bufsize;
     SdMsg.offset    = offset;
@@ -1986,6 +2078,42 @@ SDMC_ERR_CODE sdmcWriteFifo(void* buf,u32 bufsize,u32 offset,void(*func)(),SdmcR
     
     return api_result;
 }
+
+/*---------------------------------------------------------------------------*
+  Name:         sdmcWriteFifoDirect
+
+  Description:  write to card.
+                ラッパーのFIFOを使用してカードへの書き込み。
+
+  Arguments:    buf : 書き込みデータが格納されているバッファのアドレス
+                bufsize : 書き込むサイズ（セクタ数）
+                offset : 書き込み開始オフセット（セクタ番号）
+                info : 実行結果を格納するための構造体へのアドレス
+
+  Returns:      0 : success
+                > 0 : error
+ *---------------------------------------------------------------------------*/
+SDMC_ERR_CODE sdmcWriteFifoDirect(sdmcTransferFunction usr_func,
+                                  u32 bufsize,u32 offset,void(*func)(),SdmcResultInfo *info)
+{
+    SDCARDMsg     SdMsg;
+    OSMessage     recv_dat;
+    SDMC_ERR_CODE api_result;
+
+    SDCARD_USR_TRANSFER_FUNC = usr_func; //User関数による直接リード
+    
+    SdMsg.buf       = NULL;
+    SdMsg.bufsize   = bufsize;
+    SdMsg.offset    = offset;
+    SdMsg.func      = func;
+    SdMsg.info      = info;
+    SdMsg.operation = SD_OPERATION_WRITE_WITH_FIFO;
+
+    api_result = SDCARD_Thread( &SdMsg);
+    
+    return api_result;
+}
+
 
 /*---------------------------------------------------------------------------*
   Name:         SDCARDi_WriteFifo
@@ -2020,7 +2148,7 @@ static SDMC_ERR_CODE SDCARDi_WriteFifo(void* buf,u32 bufsize,u32 offset,void(*fu
 
     return result;
 }
-
+#if 0
 /*---------------------------------------------------------------------------*
   Name:         sdmcWrite
 
@@ -2062,6 +2190,7 @@ SDMC_ERR_CODE sdmcWrite(void* buf,u32 bufsize,u32 offset,void(*func)(),SdmcResul
     
     return api_result;
 }
+#endif
 
 /*---------------------------------------------------------------------------*
   Name:         SDCARDi_Write
@@ -2102,6 +2231,7 @@ static SDMC_ERR_CODE SDCARDi_Write(void* buf,u32 bufsize,u32 offset,void(*func)(
         ulSDCARD_RestSectorCount = ulSDCARD_SectorCount = bufsize;
         pSDCARD_BufferAddr = buf;                  /* データ格納バッファのアドレスを設定 */
 
+        SDCARD_DataFlag = TRUE;
         SDCARD_ATC0_Flag = FALSE;                  /* 全ATC完了フラグクリア */
         SDCARD_FPGA_Flag = FALSE;                  /* FPGA処理完了フラグクリア */
         SDCARD_EndFlag = FALSE;                    /* 転送処理完了フラグクリア */
@@ -2224,6 +2354,7 @@ static u16 i_sdmcGetResid(u32 *pResid)
     ulSDCARD_RestSectorCount = ulSDCARD_SectorCount = 1;/* 残りセクタサイズ、セクタカウントに１を設定 */
     pSDCARD_BufferAddr = Resid;                         /* データ格納バッファのアドレスを設定 */
 
+    SDCARD_DataFlag = FALSE;
     SDCARD_ATC0_Flag = FALSE;                          /* 全ATC完了フラグクリア */
     SDCARD_FPGA_Flag = FALSE;                          /* FPGA処理完了フラグクリア */
     SDCARD_EndFlag   = FALSE;                          /* 転送処理完了フラグクリア */
