@@ -29,20 +29,20 @@ int SVC_InitSignHeap(
                     );
 
 int SVC_DecryptoRSA(
-                    void*           acmemory_pool,
-                    void*           pData,
-                    unsigned int    *len        // 出力サイズ
+                    const void*     acmemory_pool,
+                    const void*     pData,
+                    unsigned int*   len        // 出力サイズ
                     );
 
 int SVC_DecryptoSign(
-                    void*           acmemory_pool,
+                    const void*     acmemory_pool,
                     void*           buffer,     //  出力領域
                     const void*     sgn_ptr,    //  データへのポインタ
                     const void*     key_ptr     //  キーへのポインタ
                     );
 
 int SVC_DecryptoSignDER(
-                    void*           acmemory_pool,
+                    const void*     acmemory_pool,
                     void*           buffer,     //  出力領域
                     const void*     sgn_ptr,    //  データへのポインタ
                     const void*     key_ptr     //  キーへのポインタ
@@ -55,8 +55,8 @@ int SVC_GetDigest(
                     );
 
 int SVC_CompareDigest(
-                    const void* decedHash,    //  ACSign_Decryptoの出力
-                    const void* digest        //  ACSign_DigestUnitの出力
+                    const void* decedHash,    //  SVC_Decrypto*の出力
+                    const void* digest        //  SVC_GetDigestの出力
                     );
 
 int SVC_UncompressLZ8FromDevice( const void* srcp,
