@@ -79,7 +79,7 @@ typedef enum
 
     AES_KEYSEL_IPL          = AES_KEYSEL_ALTERNATIVE,
 
-    AES_KEYSEL_GENERAL      = 0 // for key register
+    AES_KEYSEL_GENERAL      = 2 // for key register
 }
 AESKeySel;
 

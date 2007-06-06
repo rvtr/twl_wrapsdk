@@ -18,7 +18,11 @@ AESに関するポリシー(仮)
 ○(予習)鍵の基本事項
 
 それぞれが独立したレジスタであるが、SEEDを設定したときに、
-SEED + ID => KEY という計算処理がおこなれる(計算式は秘密)。
+
+	SEED + ID => KEY
+
+という計算処理がおこなれる(計算式は秘密)。
+
 また、任意のタイミングでKEYのひとつをAESコアに送ることができる。
 このAESコアに送る作業を行わない限りAESで使用される鍵は
 変更されない。
@@ -36,6 +40,7 @@ IDとSEEDは任天堂依存のやりとりで使うことになるが、
 ●それぞれの鍵の意味合い
 
         デバイス依存	アプリケーション依存
+	(ユニークID)	(イニシャルコード)
     0:      ×                   ○
     1:      ○                   ○
     2:      ×                   ×
@@ -45,15 +50,16 @@ IDとSEEDは任天堂依存のやりとりで使うことになるが、
 また、アプリケーション依存とは、ROMヘッダ辺りを反映するということ。
 
 上記の内容を反映するように、IDを設定することになる。
+ただし、KEYを直接設定する場合は、この意味合いは関係ない。
 
 
 ●アプリケーションが触ることのできる部分
 
-アプリケーションには、KEY[0]、SEED[0]～SEED[3]を使えるようにする。
-場合によっては、SEED[2]とSEED[3]は解放させない(2つしかない)
+アプリケーションには、KEY[2]、SEED[0]～SEED[3]を使えるようにする。
+とりあえずは、SEED[2]は解放しない。
 
 
-●ARM7側初期化
+●ARM7側初期化コード
 
 ROMコードで全レジスタの初期値を設定している。
 大半はダミーだが、ID関係の固定値はここでのみの設定となる。
@@ -66,22 +72,26 @@ ROMコードで全レジスタの初期値を設定している。
 
 ●ARM9側API
 
-次のような個別のAPIを用意して見た。
+次のような個別のAPIを用意してみた。
 
-AES_SetGeneralKey()	KEY[0]に鍵を設定する
-AES_SetSystemKey()	SEED[3]に鍵を設定する
-AES_SetGameKey()	SEED[0]に鍵を設定する
-AES_SetSpecialKey()	SEED[1]に鍵を設定する
+AES_SetGeneralKey()		KEY[2]に鍵を設定する
+AES_SetSystemKey()		SEED[3]に鍵を設定する
+AES_SetGameKey()		SEED[0]に鍵を設定する
+AES_SetSpecialKey()		SEED[1]に鍵を設定する
 //AESi_SetAlternativeKey()	SEED[2]に鍵を設定する (非公開)
 
 それぞれ引数をすぐに有効にするもので、「以前の鍵」という使い方は
-できないようにしている。
+(とりあえず)できないようにしている。
 
+課題: Static領域の読み直しはさせないのか？
+      読み直しを許可するなら、SetGameKeyの引数をなくす
+      (設定させない)ようにする。
 
 ●ARM7側API
 
 個別に指定することも上記APIを使用することもできる。
 個別設定用に、次のenumを用意している。
+
 typedef enum
 {
     AES_KEYSEL_GAME         = 0,
@@ -91,6 +101,6 @@ typedef enum
 
     AES_KEYSEL_IPL          = AES_KEYSEL_ALTERNATIVE,
 
-    AES_KEYSEL_GENERAL      = 0 // for key register
+    AES_KEYSEL_GENERAL      = 2 // for key register
 }
 AESKeySel;

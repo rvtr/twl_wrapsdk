@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------*
   Project:  TwlSDK - library - aes
-  File:     aes_sp.c
+  File:     aes_control.c
 
   Copyright 2007 Nintendo.  All rights reserved.
 
@@ -19,7 +19,7 @@
     íËêîíËã`
  *---------------------------------------------------------------------------*/
 #define AES_PXI_SIZE_CHECK(nums)                                            \
-    if (aesWork.total < (nums) && aesWork.total > (nums) + 2) {             \
+    if (aesWork.total != (nums)) {                                          \
         aesWork.locked = AES_UNLOCKED;                                      \
         AesReturnResult(aesWork.command, AES_PXI_RESULT_INVALID_PARAMETER); \
         break;                                                              \
