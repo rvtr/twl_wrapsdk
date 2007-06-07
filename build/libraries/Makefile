@@ -33,7 +33,8 @@ SUBDIRS		= \
 		  cdc		\
 		  snd		\
 		  camera	\
-          devices   \
+		  fatfs		\
+		  devices	\
 
 #----------------------------------------------------------------------------
 export	NITRO_BLXCHECKED = yes
