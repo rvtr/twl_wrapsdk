@@ -684,7 +684,7 @@ static inline AESResult AES_StartCtrEncAsync(const u128 *iv, u32 length, AESCall
 }
 
 /*---------------------------------------------------------------------------*
-  Name:         AES_StartEncDec
+  Name:         AES_StartCtrEnc
 
   Description:  start AES engine for AES-CTR encryption/decryption.
                 sync version.
@@ -694,7 +694,7 @@ static inline AESResult AES_StartCtrEncAsync(const u128 *iv, u32 length, AESCall
 
   Returns:      AESResult
  *---------------------------------------------------------------------------*/
-static inline AESResult AES_StartEncDec(const u128 *iv, u32 length)
+static inline AESResult AES_StartCtrEnc(const u128 *iv, u32 length)
 {
     return AES_StartCtrDec(iv, length);
 }
