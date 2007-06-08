@@ -21,7 +21,7 @@ SUBDIRS		=
 
 #----------------------------------------------------------------------------
 
-TARGET_BIN	=	alerm.axf
+TARGET_BIN	=	alarm9_1.axf
 
 SRCS		=	main.c
 

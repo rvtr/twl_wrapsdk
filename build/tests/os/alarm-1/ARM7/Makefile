@@ -23,7 +23,7 @@ SUBDIRS		=
 #TWL_CODEGEN   =       THUMB
 TWL_PROC      =       ARM7
 
-TARGET_BIN	=	main.axf
+TARGET_BIN	=	alarm7_1.axf
 
 SRCS		=	main.c
 
