@@ -170,6 +170,7 @@ TWL_LIBS_BASE	?= \
 			   libctrdg \
 			   libaes \
 			   libcamera \
+			   libdsp \
 
 ifdef		TWL_PROFILE_TYPE
 TWL_LIBS_BASE	+= libos.$(TWL_PROFILE_TYPE)

@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------*
-  Project:  TwlSDK
-  File:     twl.h
+  Project:  TwlSDK - DSP - include
+  File:     camera.h
 
   Copyright 2007 Nintendo.  All rights reserved.
 
@@ -13,21 +13,17 @@
   $Log: $
   $NoKeywords: $
  *---------------------------------------------------------------------------*/
-#ifndef TWL_H_
-#define TWL_H_
 
-#include <nitro.h>
+#ifndef TWL_DSP_H_
+#define TWL_DSP_H_
 
-#include <twl/os.h>
-#include <twl/mi.h>
-#include <twl/pm.h>
-#include <twl/aes.h>
-#include <twl/mic.h>
-#include <twl/camera.h>
-#include <twl/dsp.h>
-#ifdef SDK_DEBUGGER_KMC
-#include <twl/vlink.h>
-#endif // SDK_DEBUGGER_KMC
 
-/* TWL_H_ */
+#ifdef SDK_ARM7
+#else
+
+#include <twl/dsp/ARM9/dsp_if.h>
+
+#endif
+
+/* TWL_LCDC_H_ */
 #endif

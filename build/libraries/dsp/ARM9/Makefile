@@ -1,6 +1,6 @@
 #! make -f
 #----------------------------------------------------------------------------
-# Project:  TwlSDK - libraries
+# Project:  TwlSDK - libraries - dsp
 # File:     Makefile
 #
 # Copyright 2007 Nintendo.  All rights reserved.
@@ -15,32 +15,30 @@
 # $NoKeywords: $
 #----------------------------------------------------------------------------
 
+SUBDIRS			=
+
+#----------------------------------------------------------------------------
+
+# build ARM & THUMB libraries
+TWL_CODEGEN_ALL 	?= True
+
+TWL_PROC		= ARM9
+
+SRCS			= dsp_if.c
+
+TARGET_LIB		= libdsp$(TWL_LIBSUFFIX).a
+
+
 include	$(TWLSDK_ROOT)/build/buildtools/commondefs
 
+INSTALL_TARGETS		= $(TARGETS)
+INSTALL_DIR		= $(TWL_INSTALL_LIBDIR)
+
 
 #----------------------------------------------------------------------------
 
-SUBDIRS		= \
-		  init		\
-		  os		\
-		  pxi		\
-		  mi		\
-		  vlink		\
-		  spi		\
-		  ctrdg		\
-		  aes		\
-		  i2c		\
-		  cdc		\
-		  snd		\
-		  camera	\
-		  fatfs		\
-		  devices	\
-		  dsp		\
+do-build:		$(TARGETS)
 
-#----------------------------------------------------------------------------
-export	NITRO_BLXCHECKED = yes
-
-#----------------------------------------------------------------------------
 
 include	$(TWLSDK_ROOT)/build/buildtools/modulerules
 
