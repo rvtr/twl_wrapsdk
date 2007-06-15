@@ -30,7 +30,7 @@
 ***********************************************************************/
 #define SD_STACK_SIZE        (4096*2)
 #define SD_THREAD_PRIO       (10)
-#define SD_INTR_THREAD_PRIO  (SD_THREAD_PRIO - 1)
+#define SD_INTR_THREAD_PRIO  (SD_THREAD_PRIO + 1)
 
 #define SD_OPERATION_INIT               (0)
 #define SD_OPERATION_READ               (1)
@@ -520,6 +520,7 @@ SDMC_ERR_CODE sdmcInit(void (*func1)(),void (*func2)())
         
 
         /* SD割り込み処理スレッドの立ち上げ */
+        (void)OS_ClearIrqCheckFlag( OS_IE_SD);
         OS_CreateThread( &sdmc_intr_tsk, SDCARD_Intr_Thread, NULL,
                          (sd_intr_stack+SD_STACK_SIZE / sizeof(u64)), SD_STACK_SIZE, SD_INTR_THREAD_PRIO);
         OS_WakeupThreadDirect( &sdmc_intr_tsk);
@@ -575,7 +576,7 @@ SDMC_ERR_CODE sdmcGoIdle( void (*func1)(),void (*func2)())
 
     /* 返り値待ち */
     OS_ReceiveMessage( &sdmc_result_dtq, &init_msg, OS_MESSAGE_BLOCK);
-    api_result = *(SDMC_ERR_CODE*)init_msg;
+    api_result = (SDMC_ERR_CODE)init_msg;
 #endif
     /*----------------------------------*/
 
@@ -832,7 +833,6 @@ PRINTDEBUG( "SD_INFO1_MASK : 0x%x\n", (*(vu32 *)(SD_IP_BASE + 0x20)));*/
 #if TIMEOUT
     SDCARD_TimerStart(SDCARD_INITIAL_TIMEOUT); /* タイムアウト判定用タイマスタート */
 #endif
-PRINTDEBUG( "%d\n", __LINE__);    
 
     SD_SendCID();                            /* CMD2発行 レスポンス確認 */
     if(SDCARD_ErrStatus){                    /* エラーステータスの確認（エラー有り？） */
@@ -850,7 +850,6 @@ PRINTDEBUG( "%d\n", __LINE__);
     }
 
     /*------- standby state -------*/
-PRINTDEBUG( "%d\n", __LINE__);    
     SD_SendCSD();                            /* CMD9発行 レスポンス確認 */
     if(SDCARD_ErrStatus){                    /* エラーステータスの確認（エラー有り？） */
         return SDCARD_ErrStatus;
@@ -880,7 +879,6 @@ PRINTDEBUG( "%d\n", __LINE__);
 
 #if SCR
     SD_SelectBitWidth(FALSE);                /* CMD55->ACMD6 ビット幅の選択 1bit */
-PRINTDEBUG( "%d\n", __LINE__);    
 
     /* ACMD51 発行 SD configuration register (SCR) */
     if(SDCARD_SDFlag){                       /* SDカードフラグ ON かチェック */
@@ -1737,6 +1735,7 @@ static u16 i_sdmcSendSCR(void)
     thread_flag = FALSE;
 
     while(!SDCARD_EndFlag){                            /* カードアクセス終了待ち */
+      PRINTDEBUG( "k\n");
         if(SDCARD_ErrStatus & SDMC_ERR_FPGA_TIMEOUT){  /* タイムアウトエラーか確認 */
             return SDCARD_ErrStatus;
         }
