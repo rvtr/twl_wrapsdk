@@ -67,6 +67,7 @@ extern "C" {
 //---------------- each register spec
 //---- PMIC_CTL2
 #define PMIC_CTL2_RST           (1<< 0)
+#define PMIC_CTL2_VCNT5_BLO     (1<< 1)
 #define PMIC_CTL2_BKLT1         (1<< 2)
 #define PMIC_CTL2_BKLT2         (1<< 3)
 #define PMIC_CTL2_VLT42         (1<< 4)  // ?
