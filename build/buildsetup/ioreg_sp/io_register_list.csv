@@ -13,7 +13,7 @@
 0x4024,,BONDING,8,rw,CFG,volatile,CHIP_TYPE,0,2,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
 #twl p125,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
 0x4010,,MC_DET,8,rw,MI,volatile,MODE2,6,2,DET2,4,1,MODE1,2,2,DET1,0,1,,,,,,,,,,,,,,,,,,,,,,,,
-0x4011,,MC_SWP,8,rw,MI,volatile,SWP,7,1,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+0x4011,,MC_SWP,8,rw,MI,volatile,E,7,1,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
 0x4012,,MC_CHT,16,rw,MI,volatile,,,,,,,,,
 0x4040,,WRAM_A0,8,rw,MI,volatile,E,7,1,OFS,2,2,MST,0,1
 0x4041,,WRAM_A1,8,rw,MI,volatile,E,7,1,OFS,2,2,MST,0,1

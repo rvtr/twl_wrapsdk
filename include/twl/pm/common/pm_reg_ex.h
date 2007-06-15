@@ -211,16 +211,6 @@ typedef enum
 }
 PMBatteryLevel;
 
-//---- PMIC_GPIO_CTL
-typedef enum
-{
-    PMIC_GPIO_CTL_AO_NONE = (0x0 << PMIC_GPIO_CTL_AO_SHIFT),  // default
-    PMIC_GPIO_CTL_AO_VLT  = (0x1 << PMIC_GPIO_CTL_AO_SHIFT),
-    PMIC_GPIO_CTL_AO_AMPR = (0x2 << PMIC_GPIO_CTL_AO_SHIFT),
-    PMIC_GPIO_CTL_AO_TEMP = (0x3 << PMIC_GPIO_CTL_AO_SHIFT)
-}
-PMAnalogOut;
-
 //---- PMIC_TIME_CTL
 typedef enum
 {

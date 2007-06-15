@@ -8,7 +8,7 @@
 0x400a,,TWL_EX,16,rw,CFG,volatile,CFG_E,15,1,WRAM,9,0,MC_B,8,1,DSP,2,1,CAM,1,1,DMA4,0,1
 #twl p39,,,,,,,,,,,,,,,,,,,,,,,,
 0x4010,,MC_DET,8,rw,MI,volatile,MODE2,6,2,DET2,4,1,MODE1,2,2,DET1,0,1,,,,,,
-0x4011,,MC_SWP,8,rw,MI,volatile,SWP,7,1,,,,,,,,,,,,,,,
+0x4011,,MC_SWP,8,rw,MI,volatile,E,7,1,,,,,,,,,,,,,,,
 0x4012,,MC_CHT,16,rw,MI,volatile,,,,,,,,,,,,,,,,,,
 0x4040,,WRAM_A0,8,rw,MI,volatile,E,7,1,OFS,2,2,MST,0,1,,,,,,,,,
 0x4041,,WRAM_A1,8,rw,MI,volatile,E,7,1,OFS,2,2,MST,0,1,,,,,,,,,
