@@ -1,8 +1,8 @@
 /*
     Project:    CTR SD port driver
-    File:       Carddrv.c
+    File:       sdmc.c
 
-    2006, Research and Development Department, Nintendo.
+    2006-2007, Research and Development Department, Nintendo.
 */
 
 #include <twl.h>
@@ -22,7 +22,9 @@
 #else
     #define PRINTDEBUG( ...) ((void)0)
 #endif*/
-        #define PRINTDEBUG    OS_TPrintf
+
+//        #define PRINTDEBUG    OS_TPrintf
+    #define PRINTDEBUG( ...) ((void)0)
 
 
 /***********************************************************************
@@ -30,7 +32,7 @@
 ***********************************************************************/
 #define SD_STACK_SIZE        (4096*2)
 #define SD_THREAD_PRIO       (10)
-#define SD_INTR_THREAD_PRIO  (SD_THREAD_PRIO + 1)
+#define SD_INTR_THREAD_PRIO  (SD_THREAD_PRIO - 1)
 
 #define SD_OPERATION_INIT               (0)
 #define SD_OPERATION_READ               (1)
@@ -65,8 +67,9 @@ OSMessageQueue sdmc_result_dtq;
 OSMessage      sdmc_result_dtq_array[1];
 OSAlarm        sdmc_alm;
 OSThread       sdmc_intr_tsk;
-OSThreadQueue  sdmc_tsk_q;
 #endif
+
+u16 sdmc_wakeup_count = 0; //OS_WakeupThreadのキューイング代わり
 
 #if (TARGET_OS_CTR == 1)
 #else
@@ -382,7 +385,7 @@ void SDCARD_irq_Handler( void)
 #else
     PRINTDEBUG( "SD irq!\n");
     OS_SetIrqCheckFlag( OS_IE_SD);
-//TODO!    OS_WakeupThreadDirect( &sdmc_intr_tsk);
+//    OS_WakeupThreadDirect( &sdmc_intr_tsk);
 #endif
 }
 
@@ -525,9 +528,6 @@ SDMC_ERR_CODE sdmcInit(void (*func1)(),void (*func2)())
                          (sd_intr_stack+SD_STACK_SIZE / sizeof(u64)), SD_STACK_SIZE, SD_INTR_THREAD_PRIO);
         OS_WakeupThreadDirect( &sdmc_intr_tsk);
         PRINTDEBUG( "sdmc_intr_tsk:0x%x\n", &sdmc_intr_tsk);
-
-        /* スレッドキューの初期化 */
-        OS_InitThreadQueue( &sdmc_tsk_q);
         /*----------------------------*/
 #endif
         /**/
@@ -1276,8 +1276,15 @@ static SDMC_ERR_CODE SDCARDi_Read(void* buf,u32 bufsize,u32 offset,void(*func)(v
         //can_wup( 0);
         slp_tsk();
 #else
-//        OS_SleepThread( NULL);
-        OS_SleepThread( &sdmc_tsk_q);
+        /*--------------------*/
+        OS_DisableInterrupts();
+        if( sdmc_wakeup_count == 0) {
+            OS_SleepThread( NULL);
+        }else{
+            sdmc_wakeup_count--;
+        }
+        OS_EnableInterrupts();
+        /*--------------------*/
 #endif
         PRINTDEBUG( "waked\n");
 
@@ -1664,8 +1671,8 @@ static void    SDCARD_Timer_irq(void* arg)
     iwup_tsk( sdmc_tsk_id);
     PRINTDEBUG( "id : 0x%x\n", sdmc_tsk_id);
 #else
-//    OS_WakeupThreadDirect( &sdmc_tsk);
-    OS_WakeupThread( &sdmc_tsk_q);
+    sdmc_wakeup_count++;
+    OS_WakeupThreadDirect( &sdmc_tsk);
 #endif
 }
 
@@ -1728,8 +1735,15 @@ static u16 i_sdmcSendSCR(void)
     //can_wup( 0);
     slp_tsk();
 #else
-//    OS_SleepThread( NULL);
-        OS_SleepThread( &sdmc_tsk_q);
+    /*--------------------*/
+    OS_DisableInterrupts();
+    if( sdmc_wakeup_count == 0) {
+        OS_SleepThread( NULL);
+    }else{
+        sdmc_wakeup_count--;
+    }
+    OS_EnableInterrupts();
+    /*--------------------*/
 #endif
     PRINTDEBUG( "waked\n");
     thread_flag = FALSE;
@@ -1886,8 +1900,15 @@ static u16 SDCARD_SD_Status(void)
     //can_wup( 0);
     slp_tsk();
 #else
-//    OS_SleepThread( NULL);
-        OS_SleepThread( &sdmc_tsk_q);
+    /*--------------------*/
+    OS_DisableInterrupts();
+    if( sdmc_wakeup_count == 0) {
+        OS_SleepThread( NULL);
+    }else{
+        sdmc_wakeup_count--;
+    }
+    OS_EnableInterrupts();
+    /*--------------------*/
 #endif
     PRINTDEBUG( "waked\n");
     thread_flag = FALSE;
@@ -2356,8 +2377,15 @@ static u16 i_sdmcGetResid(u32 *pResid)
 //    can_wup( 0);
     slp_tsk();
 #else
-//    OS_SleepThread( NULL);
-        OS_SleepThread( &sdmc_tsk_q);
+    /*--------------------*/
+    OS_DisableInterrupts();
+    if( sdmc_wakeup_count == 0) {
+        OS_SleepThread( NULL);
+    }else{
+        sdmc_wakeup_count--;
+    }
+    OS_EnableInterrupts();
+    /*--------------------*/
 #endif
     PRINTDEBUG( "waked\n");
     thread_flag = FALSE;
@@ -2636,19 +2664,19 @@ static void SDCARD_Intr_Thread( void* arg)
     while( 1) {
         PRINTDEBUG( "next_tsk:0x%x\n", OS_SelectThread());
         PRINTDEBUG( "Slp sdIntr\n");
+
 #if (TARGET_OS_CTR == 1)
         slp_tsk();
 #else
         OS_WaitIrq( FALSE, OS_IE_SD);
         enabled = OS_DisableInterrupts();
         (void)OS_ClearIrqCheckFlag( OS_IE_SD);
+        /*SD割り込みのIF解除*/
+        *(vu16*)CTR_INT_IF = CTR_IE_SD_MASK;
         (void)OS_RestoreInterrupts( enabled);
-        //TODO!        OS_SleepThread( NULL);
 #endif
         
         PRINTDEBUG( "sdIntr waked\n");
-        /*SD割り込みのIF解除*/
-        *(vu16*)CTR_INT_IF = CTR_IE_SD_MASK;
 
         /*--- FIFOを使うとき ---*/
         if( SDCARD_UseFifoFlag) {
@@ -2687,8 +2715,8 @@ static void SDCARD_Intr_Thread( void* arg)
                         wup_tsk( sdmc_tsk_id);
                         PRINTDEBUG( "id : 0x%x\n", sdmc_tsk_id);
 #else
-//                        OS_WakeupThreadDirect( &sdmc_tsk);
-    OS_WakeupThread( &sdmc_tsk_q);
+                        sdmc_wakeup_count++;
+                        OS_WakeupThreadDirect( &sdmc_tsk);
 #endif
                     }
                 }
@@ -2730,8 +2758,8 @@ static void SDCARD_Intr_Thread( void* arg)
                         wup_tsk( sdmc_tsk_id);
                         PRINTDEBUG( "id : 0x%x\n", sdmc_tsk_id);
 #else
-//                        OS_WakeupThreadDirect( &sdmc_tsk);
-                          OS_WakeupThread( &sdmc_tsk_q);
+                        sdmc_wakeup_count++;
+                        OS_WakeupThreadDirect( &sdmc_tsk);
 #endif
                     }
                 }
@@ -2773,8 +2801,8 @@ static void SDCARD_Intr_Thread( void* arg)
                     wup_tsk( sdmc_tsk_id);
                     PRINTDEBUG( "id : 0x%x\n", sdmc_tsk_id);
 #else
-//                    OS_WakeupThreadDirect( &sdmc_tsk);
-                      OS_WakeupThread( &sdmc_tsk_q);
+                    sdmc_wakeup_count++;
+                    OS_WakeupThreadDirect( &sdmc_tsk);
 #endif
                 }
             }

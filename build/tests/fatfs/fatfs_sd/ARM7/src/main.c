@@ -98,14 +98,24 @@ void TwlSpMain(void)
 
     /**/
     PRINTDEBUG("Sample program starts.\n");
-//    rtfs_init();
+    {
+      OSHeapHandle hh;
+      OS_SetSubPrivArenaLo( OS_InitAlloc( OS_ARENA_MAIN_SUBPRIV, OS_GetSubPrivArenaLo(), OS_GetSubPrivArenaHi(), 1));
+      hh = OS_CreateHeap( OS_ARENA_MAIN_SUBPRIV, OS_GetSubPrivArenaLo(), OS_GetSubPrivArenaHi());
+      OS_SetCurrentHeap( OS_ARENA_MAIN_SUBPRIV, hh);
+      if( rtfs_init() == FALSE) {
+        PRINTDEBUG( "rtfs_init failed.\n");
+      }else{
+        PRINTDEBUG( "rtfs_init success.\n");
+      }
+    }
 
     MI_DmaFill32( 2, BlockBuf,  0x55AA55AA, 512*3);
     MI_DmaFill32( 2, BlockBuf2, 0x00FF00FF, 512*3);
     
     /*SDドライバ初期化*/
     result = sdmcInit( SDMC_NOUSE_DMA, NULL, NULL);
-    if( result != 0) {
+    if( result != SDMC_NORMAL) {
         PRINTDEBUG( "sdmcInit : failed\n");
         while( 1) {};
     }else{
@@ -135,7 +145,7 @@ void TwlSpMain(void)
         PRINTDEBUG( "sdmcReadFifo success.\n");
     }
     /*----------------------------*/
-#else
+//#else
     /*NANDからブロックライト／リード*/
     result = sdmcSelect( (u16)SDMC_PORT_NAND);
     if( result != 0) {
@@ -163,7 +173,8 @@ void TwlSpMain(void)
 
 #endif    
     /*デバイスドライバの登録*/
-/*    if( sdmcRtfsAttach( 4) == FALSE) {  //sdmcをEドライブにする
+  PRINTDEBUG( "attach start\n");
+    if( sdmcRtfsAttach( 4) == FALSE) {  //sdmcをEドライブにする
         PRINTDEBUG( "sdmcRtfsAttach failed.\n");
     }else{
         if( sdmcRtfsAttach( 4) == FALSE) {
@@ -177,7 +188,7 @@ void TwlSpMain(void)
         PRINTDEBUG( "pc_set_default_drive failed\n");
         while( 1){};
     }
-    PRINTDEBUG( "pc_set_default_drive success\n");*/
+    PRINTDEBUG( "pc_set_default_drive success\n");
 
     PRINTDEBUG( "Sample program ends.\n");
 

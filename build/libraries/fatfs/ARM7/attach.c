@@ -125,7 +125,6 @@ static void i_rtfsInit( DDRIVE* pdr)
 {
 	byte drname[8]; /* Temp buffer for displaying drive letters as strings */
 
-    
     /* WARMSTART */
     if( pdr->dev_table_drive_io) {
         prtfs_cfg->drno_to_dr_map[pdr->driveno] = pdr; /* MAPS DRIVE structure to DRIVE: */

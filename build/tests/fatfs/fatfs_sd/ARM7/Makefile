@@ -29,7 +29,7 @@ TARGET_BIN	=	main.axf
 SRCS		=	main.c
 
 INCDIR      += $(TWLSDK_ROOT)/include/twl \
-               $(TWLSDK_ROOT)/include/twl/devices/rom_sdmc/ARM7 \
+               $(TWLSDK_ROOT)/include/twl/devices/sdmc/ARM7 \
                $(TWLSDK_ROOT)/include/twl/fatfs/ARM7 \
 
 LLIBRARY_DIRS = $(TWLSDK_ROOT)/lib/ARM-BB/Release
