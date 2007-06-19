@@ -40,6 +40,14 @@
 #define SD_OPERATION_WRITE              (3)
 #define SD_OPERATION_WRITE_WITH_FIFO    (4)
 
+/*
+TODO:
+SD_INTR_THREAD_PRIOを高くしてSleepをなくせば動く。
+Sleepを使うには、Wakeupの前にSleepさせるためSD_INTR_THREAD_PRIOを低く
+する必要があるが、Sleepの前にSD割り込みが入らなかった場合なぜかずっと
+割り込みが入らなくなり動かなくなる。Sleepの前に割り込みが入れば動く。
+*/
+
 
 /***********************************************************************
  extern変数
@@ -70,6 +78,7 @@ OSThread       sdmc_intr_tsk;
 #endif
 
 u16 sdmc_wakeup_count = 0; //OS_WakeupThreadのキューイング代わり
+u16 sdmc_intr_wakeup_count = 0;
 
 #if (TARGET_OS_CTR == 1)
 #else
@@ -384,7 +393,9 @@ void SDCARD_irq_Handler( void)
     iwup_tsk( sdmc_intr_tsk_id);
 #else
     PRINTDEBUG( "SD irq!\n");
+//  OS_DumpThreadList();
     OS_SetIrqCheckFlag( OS_IE_SD);
+//  sdmc_intr_wakeup_count++;
 //    OS_WakeupThreadDirect( &sdmc_intr_tsk);
 #endif
 }
@@ -787,8 +798,8 @@ PRINTDEBUG( "SD_INFO1_MASK : 0x%x\n", (*(vu32 *)(SD_IP_BASE + 0x20)));*/
     SD_SendIfCond();                            /* CMD8発行、レスポンス確認 */
     if( !SDCARD_SDHCFlag) {                     /* SDHC以外は失敗してるはずなので */
         SDCARD_ErrStatus = SDMC_NORMAL;         /* エラーフラグをクリアしておく */
-    }
-        
+    } //注:CMD8によりここで割り込みが入る！
+
     while(!(SDCARD_ErrStatus & SDMC_ERR_FPGA_TIMEOUT)){ /* タイムアウトになったら抜ける */
         SD_ClrErr((u16)(~SDMC_ERR_FPGA_TIMEOUT));
 
@@ -833,12 +844,10 @@ PRINTDEBUG( "SD_INFO1_MASK : 0x%x\n", (*(vu32 *)(SD_IP_BASE + 0x20)));*/
 #if TIMEOUT
     SDCARD_TimerStart(SDCARD_INITIAL_TIMEOUT); /* タイムアウト判定用タイマスタート */
 #endif
-
     SD_SendCID();                            /* CMD2発行 レスポンス確認 */
     if(SDCARD_ErrStatus){                    /* エラーステータスの確認（エラー有り？） */
         return SDCARD_ErrStatus;
     }
-
     while(1){
         SD_SendRelativeAddr();               /* CMD3発行 レスポンス確認 正常終了時 RCA<-ResのRCA */
         if(SDCARD_ErrStatus){                /* エラーステータスの確認（エラー有り？） */
@@ -848,7 +857,6 @@ PRINTDEBUG( "SD_INFO1_MASK : 0x%x\n", (*(vu32 *)(SD_IP_BASE + 0x20)));*/
             break;
         }
     }
-
     /*------- standby state -------*/
     SD_SendCSD();                            /* CMD9発行 レスポンス確認 */
     if(SDCARD_ErrStatus){                    /* エラーステータスの確認（エラー有り？） */
@@ -862,7 +870,6 @@ PRINTDEBUG( "SD_INFO1_MASK : 0x%x\n", (*(vu32 *)(SD_IP_BASE + 0x20)));*/
     if(SDCARD_ErrStatus){                    /* エラーステータスの確認（エラー有り？） */
         return SDCARD_ErrStatus;
     }
-
     /* Command toggles acard between the Stand-by and Transfer states */
     SD_SelectCard();                         /* CMD7発行 レスポンス確認 */
     if(SDCARD_ErrStatus){                    /* エラーステータスの確認（エラー有り？） */
@@ -1271,19 +1278,14 @@ static SDMC_ERR_CODE SDCARDi_Read(void* buf,u32 bufsize,u32 offset,void(*func)(v
         /*--------------------------*/
 
         /**/
-        PRINTDEBUG( "--Slp Tsk--\n");
+        PRINTDEBUG( "==Slp Tsk==\n");
 #if (TARGET_OS_CTR == 1)
         //can_wup( 0);
         slp_tsk();
 #else
         /*--------------------*/
-        OS_DisableInterrupts();
-        if( sdmc_wakeup_count == 0) {
-            OS_SleepThread( NULL);
-        }else{
-            sdmc_wakeup_count--;
-        }
-        OS_EnableInterrupts();
+//        OS_TPrintf( "sleep %d\n", __LINE__);
+//        OS_SleepThread( NULL);
         /*--------------------*/
 #endif
         PRINTDEBUG( "waked\n");
@@ -1672,6 +1674,7 @@ static void    SDCARD_Timer_irq(void* arg)
     PRINTDEBUG( "id : 0x%x\n", sdmc_tsk_id);
 #else
     sdmc_wakeup_count++;
+    PRINTDEBUG( "wakeup\n");
     OS_WakeupThreadDirect( &sdmc_tsk);
 #endif
 }
@@ -1730,19 +1733,14 @@ static u16 i_sdmcSendSCR(void)
 #if SCR
     thread_flag = TRUE;
     SD_SendSCR();                            /*    SCRの取得コマンド発行 */
-    PRINTDEBUG( "--Slp Tsk--\n");
+    PRINTDEBUG( "==Slp Tsk==\n");
 #if (TARGET_OS_CTR == 1)
     //can_wup( 0);
     slp_tsk();
 #else
     /*--------------------*/
-    OS_DisableInterrupts();
-    if( sdmc_wakeup_count == 0) {
-        OS_SleepThread( NULL);
-    }else{
-        sdmc_wakeup_count--;
-    }
-    OS_EnableInterrupts();
+//        OS_TPrintf( "sleep %d\n", __LINE__);
+//        OS_SleepThread( NULL);
     /*--------------------*/
 #endif
     PRINTDEBUG( "waked\n");
@@ -1895,19 +1893,14 @@ static u16 SDCARD_SD_Status(void)
 
     thread_flag = TRUE;
     SD_SDStatus();                           /* ACMD13 SD_STATUSの取得コマンド発行処理 */
-    PRINTDEBUG( "--Slp Tsk--\n");
+    PRINTDEBUG( "==Slp Tsk==\n");
 #if (TARGET_OS_CTR == 1)
     //can_wup( 0);
     slp_tsk();
 #else
     /*--------------------*/
-    OS_DisableInterrupts();
-    if( sdmc_wakeup_count == 0) {
-        OS_SleepThread( NULL);
-    }else{
-        sdmc_wakeup_count--;
-    }
-    OS_EnableInterrupts();
+//        OS_TPrintf( "sleep %d\n", __LINE__);
+//        OS_SleepThread( NULL);
     /*--------------------*/
 #endif
     PRINTDEBUG( "waked\n");
@@ -2372,19 +2365,14 @@ static u16 i_sdmcGetResid(u32 *pResid)
     /*--- ACMD22 ライト済みセクタ数取得コマンド発行 ---*/
     SD_SendNumWRSectors();                                
     /*-------------------------------------------------*/
-    PRINTDEBUG( "--Slp Tsk--\n");
+    PRINTDEBUG( "==Slp Tsk==\n");
 #if (TARGET_OS_CTR == 1)
 //    can_wup( 0);
     slp_tsk();
 #else
     /*--------------------*/
-    OS_DisableInterrupts();
-    if( sdmc_wakeup_count == 0) {
-        OS_SleepThread( NULL);
-    }else{
-        sdmc_wakeup_count--;
-    }
-    OS_EnableInterrupts();
+//        OS_TPrintf( "sleep %d\n", __LINE__);
+//        OS_SleepThread( NULL);
     /*--------------------*/
 #endif
     PRINTDEBUG( "waked\n");
@@ -2665,17 +2653,18 @@ static void SDCARD_Intr_Thread( void* arg)
         PRINTDEBUG( "next_tsk:0x%x\n", OS_SelectThread());
         PRINTDEBUG( "Slp sdIntr\n");
 
-#if (TARGET_OS_CTR == 1)
-        slp_tsk();
-#else
         OS_WaitIrq( FALSE, OS_IE_SD);
-        enabled = OS_DisableInterrupts();
+//      OS_DisableIrqMask( OS_IE_SD);
+//      if( sdmc_intr_wakeup_count == 0) {
+//        OS_SleepThread( NULL);
+//      }
+//      sdmc_intr_wakeup_count--;
+//      OS_EnableIrqMask( OS_IE_SD);
+//        enabled = OS_DisableInterrupts();
         (void)OS_ClearIrqCheckFlag( OS_IE_SD);
         /*SD割り込みのIF解除*/
         *(vu16*)CTR_INT_IF = CTR_IE_SD_MASK;
-        (void)OS_RestoreInterrupts( enabled);
-#endif
-        
+//        (void)OS_RestoreInterrupts( enabled);
         PRINTDEBUG( "sdIntr waked\n");
 
         /*--- FIFOを使うとき ---*/
@@ -2685,82 +2674,42 @@ static void SDCARD_Intr_Thread( void* arg)
                 ((!(*SDIF_CNT & SDIF_CNT_NEMP))&&(*SDIF_CNT & SDIF_CNT_FEIE))) {
             
                 PRINTDEBUG( ">>>SD Intr(FIFO)\n");// Full or Empty)\n");
-#if (TARGET_OS_CTR == 1)
-                osDisableInterruptID( OS_INTR_ID_SD);
-#else
                 OS_DisableIrqMask( OS_IE_SD);
-#endif
                 SDCARD_FPGA_irq();                        /*カードからのリードライト要求割り込み*/
-#if (TARGET_OS_CTR == 1)
-                osEnableInterruptID( OS_INTR_ID_SD);
-#else
                 OS_EnableIrqMask( OS_IE_SD);
-#endif
                    /* FIFO割り込みとALLEND割り込みがほぼ同時の場合に対応 */
                 if( SD_CheckFPGAReg( sd_info1, SD_INFO1_ALL_END)) {
-#if (TARGET_OS_CTR == 1)
-                    osDisableInterruptID( OS_INTR_ID_SD);
-#else
+        (void)OS_ClearIrqCheckFlag( OS_IE_SD);
+        /*SD割り込みのIF解除*/
+        *(vu16*)CTR_INT_IF = CTR_IE_SD_MASK;
                     OS_DisableIrqMask( OS_IE_SD);
-#endif
                     SYSFPGA_irq();
-#if (TARGET_OS_CTR == 1)
-                    osEnableInterruptID( OS_INTR_ID_SD);
-#else
                     OS_EnableIrqMask( OS_IE_SD);
-#endif
                     if( thread_flag) {
                         PRINTDEBUG( "--Wup sdThread!--\n");
-#if (TARGET_OS_CTR == 1)
-                        wup_tsk( sdmc_tsk_id);
-                        PRINTDEBUG( "id : 0x%x\n", sdmc_tsk_id);
-#else
                         sdmc_wakeup_count++;
+                        PRINTDEBUG( "wakeup\n");
                         OS_WakeupThreadDirect( &sdmc_tsk);
-#endif
                     }
                 }
             }else{
                 if( SD_CheckFPGAReg( SD_INFO2, (SD_INFO2_MASK_BRE | SD_INFO2_MASK_BWE))) {
-                    PRINTDEBUG( ">>>SD Intr(R/W Req)\n");
+                   PRINTDEBUG ( ">>>SD Intr(R/W Req)\n");
                     //ここで自動的にラッパーのFIFO<->SD_BUF0間で通信が行われる
     //                if((!(*SDIF_CNT & SDIF_CNT_NEMP))&&(*SDIF_CNT & SDIF_CNT_FEIE)) {
-#if (TARGET_OS_CTR == 1)
-                    osDisableInterruptID( OS_INTR_ID_SD);
-#else
                     OS_DisableIrqMask( OS_IE_SD);
-#endif
-                    PRINTDEBUG( "begin\n");
                     SDCARD_FPGA_irq();
-                    PRINTDEBUG( "end\n");
-#if (TARGET_OS_CTR == 1)
-                    osEnableInterruptID( OS_INTR_ID_SD);
-#else
                     OS_EnableIrqMask( OS_IE_SD);
-#endif
                 }else{
                     PRINTDEBUG( ">>>SD Intr(End or Err)\n");
-#if (TARGET_OS_CTR == 1)
-                    osDisableInterruptID( OS_INTR_ID_SD);
-#else
                     OS_DisableIrqMask( OS_IE_SD);
-#endif
                     SYSFPGA_irq();                            /*完了またはエラー割り込み*/
-#if (TARGET_OS_CTR == 1)
-                    osEnableInterruptID( OS_INTR_ID_SD);
-#else
                     OS_EnableIrqMask( OS_IE_SD);
-#endif
                     /**/
                     if( thread_flag) {
                         PRINTDEBUG( "--Wup sdThread!--\n");
-#if (TARGET_OS_CTR == 1)
-                        wup_tsk( sdmc_tsk_id);
-                        PRINTDEBUG( "id : 0x%x\n", sdmc_tsk_id);
-#else
                         sdmc_wakeup_count++;
                         OS_WakeupThreadDirect( &sdmc_tsk);
-#endif
                     }
                 }
             }
@@ -2768,42 +2717,19 @@ static void SDCARD_Intr_Thread( void* arg)
         }else{
             if( SD_CheckFPGAReg( SD_INFO2, (SD_INFO2_MASK_BRE | SD_INFO2_MASK_BWE))) {
                 PRINTDEBUG( ">>>SD Intr(R/W Req)\n");
-#if (TARGET_OS_CTR == 1)
-                osDisableInterruptID( OS_INTR_ID_SD);
-#else
                 OS_DisableIrqMask( OS_IE_SD);
-#endif
-                PRINTDEBUG( "begin\n");
                 SDCARD_FPGA_irq();                        /*カードからのリードライト要求割り込み*/
-                PRINTDEBUG( "end\n");
-#if (TARGET_OS_CTR == 1)
-                osEnableInterruptID( OS_INTR_ID_SD);
-#else
                 OS_EnableIrqMask( OS_IE_SD);
-#endif
             }else{
-                PRINTDEBUG( ">>>SD Intr(End or Err)\n");
-#if (TARGET_OS_CTR == 1)
-                osDisableInterruptID( OS_INTR_ID_SD);
-#else
+                PRINTDEBUG( ">>SD Intr(End or Err)\n");
                 OS_DisableIrqMask( OS_IE_SD);
-#endif
                 SYSFPGA_irq();                            /*完了またはエラー割り込み*/
-#if (TARGET_OS_CTR == 1)
-                osEnableInterruptID( OS_INTR_ID_SD);
-#else
                 OS_EnableIrqMask( OS_IE_SD);
-#endif
                 /**/
                 if( thread_flag) {
                     PRINTDEBUG( "--Wup sdThread!--\n");
-#if (TARGET_OS_CTR == 1)
-                    wup_tsk( sdmc_tsk_id);
-                    PRINTDEBUG( "id : 0x%x\n", sdmc_tsk_id);
-#else
                     sdmc_wakeup_count++;
                     OS_WakeupThreadDirect( &sdmc_tsk);
-#endif
                 }
             }
         }

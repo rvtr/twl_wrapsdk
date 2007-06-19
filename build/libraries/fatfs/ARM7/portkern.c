@@ -52,10 +52,9 @@
 		#define PRINTDEBUG	vlink_dos_printf
 	#endif
 #else
-	#define PRINTDEBUG	i_sdmc_no_print
-	static void i_sdmc_no_print( const char *fmt, ... );
-	static void i_sdmc_no_print( const char *fmt, ... ){ return; }
 #endif
+//#define PRINTDEBUG OS_TPrintf
+#define PRINTDEBUG( ...) ((void)0)
 /*--------------------*/
 
 /* This routine takes no arguments and returns an unsigned long. The routine
@@ -123,9 +122,11 @@ dword rtfs_port_alloc_mutex(void)
     OSMutex* my_mtx;
     my_mtx = (OSMutex*)OS_Alloc( sizeof( OSMutex));
     if( my_mtx == NULL) {
+        PRINTDEBUG("fatfs : ERROR! Cannot create new mutex.\n");
         return 0;
     }
     OS_InitMutex( my_mtx);
+    PRINTDEBUG( "CreateMutex:0x%x\n", my_mtx);
     return( (dword)my_mtx);
 #endif
 }
@@ -149,6 +150,7 @@ void rtfs_port_claim_mutex(dword handle)
 //		PRINTDEBUG( "fatfs : task[%d] lock mutex(%d).\n", mytskid, handle);
     }
 #else
+    PRINTDEBUG( "LockMutex:0x%x\n", handle);
     OS_LockMutex( (OSMutex*)handle);
 #endif
 }
@@ -173,8 +175,9 @@ void rtfs_port_release_mutex(dword handle)
 //		PRINTDEBUG( "fatfs : task[%d] release mutex(%d).\n", mytskid, handle);
     }
 #else
+    PRINTDEBUG( "ReleaseMutex:0x%x\n", handle);
     OS_UnlockMutex( (OSMutex*)handle);
-    OS_Free( (OSMutex*)handle);
+//    OS_Free( (OSMutex*)handle);
 #endif
 }
 

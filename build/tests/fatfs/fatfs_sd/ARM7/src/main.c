@@ -66,9 +66,10 @@ void MY_SdTransferRewind( void)
  *---------------------------------------------------------------------------*/
 void TwlSpMain(void)
 {
-    OSHeapHandle heapHandle;
-    SDMC_ERR_CODE result;
+    OSHeapHandle   heapHandle;
+    SDMC_ERR_CODE  result;
     SdmcResultInfo SdResult;
+    PCFD           fd;
 
     // OS初期化
     OS_Init();
@@ -76,8 +77,6 @@ void TwlSpMain(void)
     OS_InitTick();
     OS_InitAlarm();
     
-    OS_InitThread();
-
     // PXI初期化、ARM9と同期
     PXI_Init();
 
@@ -94,6 +93,8 @@ void TwlSpMain(void)
     (void)GX_VBlankIntr(TRUE);
     (void)OS_EnableIrq();
     (void)OS_EnableInterrupts();
+
+    OS_InitThread();
 
 
     /**/
@@ -124,7 +125,7 @@ void TwlSpMain(void)
 
 #if 0
     /*--- SDへブロックライト／リード ---*/
-    result = sdmcSelect( (u16)SDMC_PORT_CARD);
+//    result = sdmcSelect( (u16)SDMC_PORT_CARD);
     if( result != 0) {
         PRINTDEBUG( "sdmcSelect failed.\n");    
     }else{
@@ -145,7 +146,7 @@ void TwlSpMain(void)
         PRINTDEBUG( "sdmcReadFifo success.\n");
     }
     /*----------------------------*/
-//#else
+#if 0
     /*NANDからブロックライト／リード*/
     result = sdmcSelect( (u16)SDMC_PORT_NAND);
     if( result != 0) {
@@ -169,9 +170,10 @@ void TwlSpMain(void)
     }else{
         PRINTDEBUG( "sdmcReadFifoDirect success.\n");
     }
+#endif
     /*----------------------------*/
 
-#endif    
+#else
     /*デバイスドライバの登録*/
   PRINTDEBUG( "attach start\n");
     if( sdmcRtfsAttach( 4) == FALSE) {  //sdmcをEドライブにする
@@ -189,6 +191,31 @@ void TwlSpMain(void)
         while( 1){};
     }
     PRINTDEBUG( "pc_set_default_drive success\n");
+
+    /**/
+    {
+        CHKDISK_STATS dstat;
+        pc_check_disk( (byte*)"E:", &dstat, 0, 1, 1);
+        PRINTDEBUG( "pc_check_disk end.\n");
+    }
+
+    /*----------*/
+    fd = po_open( (byte*)"\\sdmc_twl_test.bin", (PO_CREAT|PO_BINARY|PO_WRONLY), PS_IWRITE);
+    if( fd < 0) {
+        PRINTDEBUG( "po_open failed.\n");
+        while( 1) {};
+    }
+    PRINTDEBUG( "po_open success.\n");
+    /*----------*/
+
+    /*----------*/
+    if( po_close( fd) < 0) {
+        PRINTDEBUG( "po_close failed.\n");
+        while( 1) {};
+    }
+    PRINTDEBUG( "po_close success.\n");
+    /*----------*/
+#endif
 
     PRINTDEBUG( "Sample program ends.\n");
 
