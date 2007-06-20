@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------*
   Project:  NitroSDK - include
-  File:     code32.h
+  File:     code16.h
 
   Copyright 2003-2006 Nintendo.  All rights reserved.
 
@@ -10,27 +10,24 @@
   not be disclosed to third parties or copied or duplicated in any form,
   in whole or in part, without the prior written consent of Nintendo.
 
-  $Log: code32.h,v $
-  Revision 1.8  2006/01/18 02:11:19  kitase_hirotake
+  $Log: code16.h,v $
+  Revision 1.7  2006/01/18 02:11:19  kitase_hirotake
   do-indent
 
-  Revision 1.7  2005/02/28 05:26:02  yosizaki
+  Revision 1.6  2005/02/28 05:26:02  yosizaki
   do-indent.
 
-  Revision 1.6  2005/01/21 09:54:31  yasu
+  Revision 1.5  2005/01/21 09:54:31  yasu
   Copyright year 2004->2005
 
-  Revision 1.5  2005/01/21 07:34:19  yasu
+  Revision 1.4  2005/01/21 07:34:19  yasu
   merge with RC4branch
 
-  Revision 1.4.38.1  2005/01/21 05:59:43  yasu
+  Revision 1.3.38.1  2005/01/21 05:59:43  yasu
   Fix a bug "MATH_CountLeadingZeros() not inlined"
 
-  Revision 1.4  2004/02/25 06:25:03  nishida_kenji
+  Revision 1.3  2004/02/25 06:25:03  nishida_kenji
   Switches FX_Mul/FX_Mul32x64c implementation.
-
-  Revision 1.3  2004/02/20 04:06:59  yasu
-  add comments
 
   Revision 1.2  2004/02/05 07:09:03  yasu
   change SDK prefix iris -> nitro
@@ -40,13 +37,10 @@
 
   $NoKeywords: $
  *---------------------------------------------------------------------------*/
-//
-// include this instead of using C99 pragma extensions for compatibility
-//
 #if defined(SDK_CW) || defined(__MWERKS__)
-#pragma thumb off
+#pragma thumb on
 #elif   defined(SDK_RVCT) || defined(__CC_ARM)
-#pragma arm
+#pragma thumb
 #elif   defined(SDK_ADS)
 TO BE   DEFINED
 #elif   defined(SDK_GCC)
@@ -64,11 +58,7 @@ TO BE   DEFINED
 #ifdef MATH_CountLeadingZeros
 #undef MATH_CountLeadingZeros
 #endif
-// Because CPU is in ARM mode, inline versions are used.
-#define FX_Mul(v1, v2)                 FX_MulInline(v1, v2)
-#define FX_Mul32x64c(v32, v64c)        FX_Mul32x64cInline(v32, v64c)
-#ifdef SDK_ARM9
-#define MATH_CountLeadingZeros(x)      MATH_CountLeadingZerosInline(x)
-#else // SDK_ARM7
+// Because CPU is in ARM mode, function versions are used.
+#define FX_Mul(v1, v2)                 FX_MulFunc(v1, v2)
+#define FX_Mul32x64c(v32, v64c)        FX_Mul32x64cFunc(v32, v64c)
 #define MATH_CountLeadingZeros(x)      MATH_CountLeadingZerosFunc(x)
-#endif // SDK_ARM7
