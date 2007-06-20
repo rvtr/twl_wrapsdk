@@ -63,6 +63,13 @@ int SVC_CompareSHA1(
                     const void* digest        //  SVC_GetDigestの出力
                     );
 
+int SVC_RandomSHA1(
+                    void*           dest_ptr,   // 出力データへのポインタ
+                    unsigned int    dest_len,   // 出力データの長さ
+                    const void*     src_ptr,    // 入力データへのポインタ
+                    unsigned int    src_len     // 入力データの長さ
+                    );
+
 int SVC_UncompressLZ8FromDevice( const void* srcp,
                                   void* destp,
                                   const void* paramp,
