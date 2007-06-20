@@ -193,39 +193,13 @@ u16  SD_INFO_ERROR_VALUE;        /* SD_INFO2, SD_INFO1のエラービット確認用変数 *
 u16  SD_port_en_numbers;         /* サポートするポート数 */
 
 
-/*--- ポート0 保存変数 ---*/
-u16             SD_CLK_CTRL_port0;
-u16             SD_OPTION_port0;
 
-SDMC_ERR_CODE   SDCARD_ErrStatus_port0;
-u16             SD_RCA0;
-s16             SDCARD_MMCFlag_port0;
-u32             SDCARD_Status_port0;
-s16             SDCARD_SDFlag_port0;
-s16             SDCARD_OutFlag_port0;
-SdmcResultInfo  *pSDCARD_info_port0;
-u16             SDCARD_WP_PERMANENT_port0;
-u16             SDCARD_WP_TEMPORARY_port0;
-u16             SD_CID_port0[8] = {0};
-u16             SD_CSD_port0[8] = {0};
-/*------------------------*/
+/*ポート状態保存*/
+SDPortContext SDPort0Context;
+SDPortContext SDPort1Context;
+//SDPortContext *SDPortCurrentContext = &SDPort0Context; /*TODO*/
 
-/*--- ポート1 保存変数 ---*/
-u16             SD_CLK_CTRL_port1;
-u16             SD_OPTION_port1;
 
-SDMC_ERR_CODE   SDCARD_ErrStatus_port1;
-u16             SD_RCA1;
-s16             SDCARD_MMCFlag_port1;
-u32             SDCARD_Status_port1;
-s16             SDCARD_SDFlag_port1;
-s16             SDCARD_OutFlag_port1;
-SdmcResultInfo  *pSDCARD_info_port1;
-u16             SDCARD_WP_PERMANENT_port1;
-u16             SDCARD_WP_TEMPORARY_port1;
-u16             SD_CID_port1[8] = {0};
-u16             SD_CSD_port1[8] = {0};
-/*------------------------*/
 
 u16    TransCount;                       /* R/W転送カウント変数 */
 
@@ -249,6 +223,9 @@ void (*func_SDCARD_Out)(void);           /* カード排出イベント用コールバック保存
 /* void (*func_SDCARD_CallBack)(SdmcResultInfo *info);     処理結果通知用コールバック保存用 */
 
 
+
+
+
 /*---------------------------------------------------------------------------*
   Name:         SDCARD_Backup_port0
 
@@ -262,28 +239,28 @@ void (*func_SDCARD_Out)(void);           /* カード排出イベント用コールバック保存
 static void SDCARD_Backup_port0(void)
 {
     /* registers */
-    SD_GetFPGA(SD_CLK_CTRL_port0,SD_CLK_CTRL);
-    SD_GetFPGA(SD_OPTION_port0,SD_OPTION);
+    SD_GetFPGA(SDPort0Context.SD_CLK_CTRL_VALUE,SD_CLK_CTRL);
+    SD_GetFPGA(SDPort0Context.SD_OPTION_VALUE,  SD_OPTION);
 
     /* variables */
-    SDCARD_ErrStatus_port0      =  SDCARD_ErrStatus;
-    SD_RCA0                     =  SD_RCA;
-    SDCARD_MMCFlag_port0        =  SDCARD_MMCFlag;
-    SDCARD_Status_port0         =  SDCARD_Status;
-    SDCARD_SDFlag_port0         =  SDCARD_SDFlag;
-    SDCARD_OutFlag_port0        =  SDCARD_OutFlag;
-    pSDCARD_info_port0          =  pSDCARD_info;
-    SDCARD_WP_PERMANENT_port0   =  SDCARD_WP_PERMANENT;
-    SDCARD_WP_TEMPORARY_port0   =  SDCARD_WP_TEMPORARY;
+    SDPort0Context.SD_RCA       = SD_RCA;
+    SDPort0Context.ErrStatus = SDCARD_ErrStatus;
+    SDPort0Context.Status    = SDCARD_Status;
+    SDPort0Context.MMCFlag   = SDCARD_MMCFlag;
+    SDPort0Context.SDHCFlag  = SDCARD_SDHCFlag;
+    SDPort0Context.SDFlag    = SDCARD_SDFlag;
 
-    /*registers*/
-#if (TARGET_OS_CTR == 1)
-    miCpuCopy8( SD_CID, SD_CID_port0, 16);
-    miCpuCopy8( SD_CSD, SD_CSD_port0, 16);
-#else
-    MI_CpuCopy8( SD_CID, SD_CID_port0, 16);
-    MI_CpuCopy8( SD_CSD, SD_CSD_port0, 16);
-#endif
+    /*TODO:削れる*/
+    SDPort0Context.OutFlag   = SDCARD_OutFlag;
+    SDPort0Context.info      = pSDCARD_info;
+    SDPort0Context.WP_PERMANENT = SDCARD_WP_PERMANENT;
+    SDPort0Context.WP_TEMPORARY = SDCARD_WP_TEMPORARY;
+
+    /*media registers*/
+    MI_CpuCopy8( SD_CID, SDPort0Context.SD_CID, 16);
+    MI_CpuCopy8( SD_CSD, SDPort0Context.SD_CSD, 16);
+    MI_CpuCopy8( SD_OCR, SDPort0Context.SD_OCR,  4);
+    MI_CpuCopy8( SD_SCR, SDPort0Context.SD_SCR,  8);
 }
 
 /*---------------------------------------------------------------------------*
@@ -299,28 +276,28 @@ static void SDCARD_Backup_port0(void)
 static void SDCARD_Backup_port1(void)
 {
     /* registers */
-    SD_GetFPGA(SD_CLK_CTRL_port1,SD_CLK_CTRL);
-    SD_GetFPGA(SD_OPTION_port1,SD_OPTION);
+    SD_GetFPGA(SDPort1Context.SD_CLK_CTRL_VALUE,SD_CLK_CTRL);
+    SD_GetFPGA(SDPort1Context.SD_OPTION_VALUE,  SD_OPTION);
 
     /* variables */
-    SDCARD_ErrStatus_port1      =  SDCARD_ErrStatus;
-    SD_RCA1                     =  SD_RCA;
-    SDCARD_MMCFlag_port1        =  SDCARD_MMCFlag;
-    SDCARD_Status_port1         =  SDCARD_Status;
-    SDCARD_SDFlag_port1         =  SDCARD_SDFlag;
-    SDCARD_OutFlag_port1        =  SDCARD_OutFlag;
-    pSDCARD_info_port1          =  pSDCARD_info;
-    SDCARD_WP_PERMANENT_port1   =  SDCARD_WP_PERMANENT;
-    SDCARD_WP_TEMPORARY_port1   =  SDCARD_WP_TEMPORARY;
+    SDPort1Context.SD_RCA       = SD_RCA;
+    SDPort1Context.ErrStatus = SDCARD_ErrStatus;
+    SDPort1Context.Status    = SDCARD_Status;
+    SDPort1Context.MMCFlag   = SDCARD_MMCFlag;
+    SDPort1Context.SDHCFlag  = SDCARD_SDHCFlag;
+    SDPort1Context.SDFlag    = SDCARD_SDFlag;
 
-    /*registers*/
-#if (TARGET_OS_CTR == 1)
-    miCpuCopy8( SD_CID, SD_CID_port1, 16);
-    miCpuCopy8( SD_CSD, SD_CSD_port1, 16);
-#else
-    MI_CpuCopy8( SD_CID, SD_CID_port1, 16);
-    MI_CpuCopy8( SD_CSD, SD_CSD_port1, 16);
-#endif
+    /*TODO:削れる*/
+    SDPort1Context.OutFlag   = SDCARD_OutFlag;
+    SDPort1Context.info      = pSDCARD_info;
+    SDPort1Context.WP_PERMANENT = SDCARD_WP_PERMANENT;
+    SDPort1Context.WP_TEMPORARY = SDCARD_WP_TEMPORARY;
+
+    /*media registers*/
+    MI_CpuCopy8( SD_CID, SDPort1Context.SD_CID, 16);
+    MI_CpuCopy8( SD_CSD, SDPort1Context.SD_CSD, 16);
+    MI_CpuCopy8( SD_OCR, SDPort1Context.SD_OCR,  4);
+    MI_CpuCopy8( SD_SCR, SDPort1Context.SD_SCR,  8);
 }
 
 
@@ -884,7 +861,7 @@ PRINTDEBUG( "SD_INFO1_MASK : 0x%x\n", (*(vu32 *)(SD_IP_BASE + 0x20)));*/
         return SDCARD_ErrStatus;
     }
 
-#if SCR
+#if SCR_ON
     SD_SelectBitWidth(FALSE);                /* CMD55->ACMD6 ビット幅の選択 1bit */
 
     /* ACMD51 発行 SD configuration register (SCR) */
@@ -992,7 +969,14 @@ PRINTDEBUG( "SD_INFO1_MASK : 0x%x\n", (*(vu32 *)(SD_IP_BASE + 0x20)));*/
         SDCARD_ErrStatus = SDMC_NORMAL;         /* エラーステータスをクリア */
         SDCARD_OutFlag = TRUE;                  /* 排出フラグをセット */
     }else{
-        SDCARD_ErrStatus = SDCARD_Layer_Init();
+        if( SD_CheckFPGAReg( SD_INFO1, SD_INFO1_DETECT)) {
+            sdmcSelect( (u16)SDMC_PORT_CARD);
+            SDCARD_ErrStatus = SDCARD_Layer_Init();
+        }
+        if( SD_CheckFPGAReg( EXT_CD, EXT_CD_PORT1_DETECT)) {
+            sdmcSelect( (u16)SDMC_PORT_NAND);
+            SDCARD_ErrStatus = SDCARD_Layer_Init();
+        }
         SDCARD_OutFlag = FALSE;                 /* 排出フラグをリセット */
     }
 
@@ -1730,7 +1714,7 @@ static u16 i_sdmcSendSCR(void)
     SDCARD_EndFlag = FALSE;                  /* 転送処理完了フラグクリア */
     SDCARD_ErrStatus = SDMC_NORMAL;          /* エラーステータスのクリア */
 
-#if SCR
+#if SCR_ON
     thread_flag = TRUE;
     SD_SendSCR();                            /*    SCRの取得コマンド発行 */
     PRINTDEBUG( "==Slp Tsk==\n");
@@ -2415,28 +2399,28 @@ static u16 i_sdmcGetResid(u32 *pResid)
 static void SDCARD_Restore_port0(void)
 {
     /* registers */
-    SD_SetFPGA( SD_CLK_CTRL, SD_CLK_CTRL_port0);
-    SD_SetFPGA( SD_OPTION,   SD_OPTION_port0);
+    SD_SetFPGA( SD_CLK_CTRL, SDPort0Context.SD_CLK_CTRL_VALUE);
+    SD_SetFPGA( SD_OPTION,   SDPort0Context.SD_OPTION_VALUE);
 
     /* variables */
-    SDCARD_ErrStatus    = SDCARD_ErrStatus_port0;
-    SD_RCA              = SD_RCA0;
-    SDCARD_MMCFlag      = SDCARD_MMCFlag_port0;
-    SDCARD_Status       = SDCARD_Status_port0;
-    SDCARD_SDFlag       = SDCARD_SDFlag_port0;
-    SDCARD_OutFlag      = SDCARD_OutFlag_port0;
-    pSDCARD_info        = pSDCARD_info_port0;
-    SDCARD_WP_PERMANENT = SDCARD_WP_PERMANENT_port0;
-    SDCARD_WP_TEMPORARY = SDCARD_WP_TEMPORARY_port0;
+    SD_RCA           = SDPort0Context.SD_RCA;
+    SDCARD_ErrStatus = SDPort0Context.ErrStatus;
+    SDCARD_Status    = SDPort0Context.Status;
+    SDCARD_MMCFlag   = SDPort0Context.MMCFlag;
+    SDCARD_SDHCFlag  = SDPort0Context.SDHCFlag;
+    SDCARD_SDFlag    = SDPort0Context.SDFlag;
 
-    /* registers */
-#if (TARGET_OS_CTR == 1)
-    miCpuCopy8( SD_CID_port0, SD_CID, 16);
-    miCpuCopy8( SD_CSD_port0, SD_CSD, 16);
-#else
-    MI_CpuCopy8( SD_CID_port0, SD_CID, 16);
-    MI_CpuCopy8( SD_CSD_port0, SD_CSD, 16);
-#endif
+    /*TODO:削れる*/
+    SDCARD_OutFlag = SDPort0Context.OutFlag;
+    pSDCARD_info   = SDPort0Context.info;
+    SDCARD_WP_PERMANENT = SDPort0Context.WP_PERMANENT;
+    SDCARD_WP_TEMPORARY = SDPort0Context.WP_TEMPORARY;
+
+    /*media registers*/
+    MI_CpuCopy8( SDPort0Context.SD_CID, SD_CID, 16);
+    MI_CpuCopy8( SDPort0Context.SD_CSD, SD_CSD, 16);
+    MI_CpuCopy8( SDPort0Context.SD_OCR, SD_OCR,  4);
+    MI_CpuCopy8( SDPort0Context.SD_SCR, SD_SCR,  8);
 }
 
 /*---------------------------------------------------------------------------*
@@ -2451,34 +2435,34 @@ static void SDCARD_Restore_port0(void)
  *---------------------------------------------------------------------------*/
 static void SDCARD_Restore_port1(void)
 {
-    /*registers*/
-    SD_SetFPGA( SD_CLK_CTRL, SD_CLK_CTRL_port1);
-    SD_SetFPGA( SD_OPTION,   SD_OPTION_port1);
+    /* registers */
+    SD_SetFPGA( SD_CLK_CTRL, SDPort1Context.SD_CLK_CTRL_VALUE);
+    SD_SetFPGA( SD_OPTION,   SDPort1Context.SD_OPTION_VALUE);
 
-    /*variables*/
-    SDCARD_ErrStatus    = SDCARD_ErrStatus_port1;
-    SD_RCA              = SD_RCA1;
-    SDCARD_MMCFlag      = SDCARD_MMCFlag_port1;
-    SDCARD_Status       = SDCARD_Status_port1;
-    SDCARD_SDFlag       = SDCARD_SDFlag_port1;
-    SDCARD_OutFlag      = SDCARD_OutFlag_port1;
-    pSDCARD_info        = pSDCARD_info_port1;
-    SDCARD_WP_PERMANENT = SDCARD_WP_PERMANENT_port1;
-    SDCARD_WP_TEMPORARY = SDCARD_WP_TEMPORARY_port1;
+    /* variables */
+    SD_RCA           = SDPort1Context.SD_RCA;
+    SDCARD_ErrStatus = SDPort1Context.ErrStatus;
+    SDCARD_Status    = SDPort1Context.Status;
+    SDCARD_MMCFlag   = SDPort1Context.MMCFlag;
+    SDCARD_SDHCFlag  = SDPort1Context.SDHCFlag;
+    SDCARD_SDFlag    = SDPort1Context.SDFlag;
 
-    /*registers*/
-#if (TARGET_OS_CTR == 1)
-    miCpuCopy8( SD_CID_port1, SD_CID, 16);
-    miCpuCopy8( SD_CSD_port1, SD_CSD, 16);
-#else
-    MI_CpuCopy8( SD_CID_port1, SD_CID, 16);
-    MI_CpuCopy8( SD_CSD_port1, SD_CSD, 16);
-#endif
+    /*TODO:削れる*/
+    SDCARD_OutFlag = SDPort1Context.OutFlag;
+    pSDCARD_info   = SDPort1Context.info;
+    SDCARD_WP_PERMANENT = SDPort1Context.WP_PERMANENT;
+    SDCARD_WP_TEMPORARY = SDPort1Context.WP_TEMPORARY;
+
+    /*media registers*/
+    MI_CpuCopy8( SDPort1Context.SD_CID, SD_CID, 16);
+    MI_CpuCopy8( SDPort1Context.SD_CSD, SD_CSD, 16);
+    MI_CpuCopy8( SDPort1Context.SD_OCR, SD_OCR,  4);
+    MI_CpuCopy8( SDPort1Context.SD_SCR, SD_SCR,  8);
 }
 
 
 /*---------------------------------------------------------------------------*
-  Name:         i_sdmcSelectedNo
+  Name:         sdmcSelectedNo
 
   Description:  get selected port number.
                 選択されているポート番号を取得する
@@ -2488,7 +2472,7 @@ static void SDCARD_Restore_port1(void)
   Returns:      [15:8]port numbers which supported（サポートされているポート数）
                 [7:0]port number which selected now（選択されているポート番号）
  *---------------------------------------------------------------------------*/
-static u16 i_sdmcSelectedNo(void)
+u16 sdmcSelectedNo(void)
 {
     u16 i_sdmcSelect_Value;
 
@@ -2498,7 +2482,7 @@ static u16 i_sdmcSelectedNo(void)
 }
 
 /*---------------------------------------------------------------------------*
-  Name:         i_sdmcSelect
+  Name:         sdmcSelect
 
   Description:  select port.
                 ポートを選択する
@@ -2508,7 +2492,7 @@ static u16 i_sdmcSelectedNo(void)
   Returns:      0 : success
                 >0 : error
  *---------------------------------------------------------------------------*/
-static u16 i_sdmcSelect(u16 select)
+SDMC_ERR_CODE sdmcSelect(u16 select)
 {
     union
     {

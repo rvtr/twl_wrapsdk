@@ -40,7 +40,7 @@
 
 #define    WP_ena                       1        /* ライトプロテクトのチェック有効 */
 #define    TIMEOUT                      1        /* FPGA Timeout none = FALSE */
-#define    SCR                          1        /* Send SCR Command = TRUE */
+#define    SCR_ON                       1        /* Send SCR Command = TRUE */
 #define    RESID                        1        /* Write Error Resid enable = TRUE */
 #define    ATC_ON                       0        /* ATC転送 使用/未使用 */
 

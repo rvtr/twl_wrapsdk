@@ -1,4 +1,3 @@
-
 #ifndef __SDMC_H__
 #define __SDMC_H__
 

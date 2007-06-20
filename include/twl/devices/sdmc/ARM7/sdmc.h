@@ -11,6 +11,16 @@ extern "C" {
 #endif
 
 
+
+/*********************************************
+ ポート番号
+*********************************************/
+typedef enum {
+    SDMC_PORT_CARD    = 0x400,
+    SDMC_PORT_NAND    = 0x401
+}SDMC_PORT_NO;
+
+
 /*********************************************
  カードエラーコード（カードエラーステータス設定値）アプリケーション固有のSDCARD_ErrStatusに対して
 *********************************************/
@@ -41,6 +51,38 @@ typedef struct {
     u16    result;                      /* 実行結果         */
     u32    resid;                       /* 読み(書き)サイズ */
 } SdmcResultInfo;
+
+
+
+
+
+/*********************************************
+ SDポート状態保存用構造体
+*********************************************/
+typedef struct
+{
+    u16           SD_CID[8];    /* CID保存用 (Card IDentification register) : ID*/
+    u16           SD_CSD[8];    /* CSD保存用 (Card Specific Data register) : spec*/
+    u16           SD_OCR[2];    /* OCR保存用 (Operation Condition Register) : voltage and status*/
+    u16           SD_SCR[4];    /* SCR保存用 (Sd card Configulation Register) : bus-width, card-ver, etc*/
+    u16           SD_RCA;       /* RCA保存用 (Relative Card Address register) : address*/
+    s16           MMCFlag; /* SDCARD_MMC_MASK, SDCARD_SD_MASK, SDCARD_SDHC_MASK */
+    s16           SDHCFlag;
+    s16           SDFlag;
+    SDMC_ERR_CODE ErrStatus; /* SDCARD_ErrStatus */
+    u32           Status;    /* SDCARD_Status */
+    u16           SD_CLK_CTRL_VALUE;
+    u16           SD_OPTION_VALUE;
+
+    SdmcResultInfo *info;
+    s16            OutFlag;
+    u16            WP_PERMANENT;
+    u16            WP_TEMPORARY;
+}
+SDPortContext;
+
+
+
 
 
 /*********************************************
@@ -98,6 +140,9 @@ SDMC_ERR_CODE    sdmcRead(void* buf,u32 bufsize,u32 offset,void(*func)(void),Sdm
 SDMC_ERR_CODE    sdmcWriteFifo(void* buf,u32 bufsize,u32 offset,void(*func)(void),SdmcResultInfo *info);/* テスト用カードライト */
 /*ライトする*/
 SDMC_ERR_CODE    sdmcWrite(void* buf,u32 bufsize,u32 offset,void(*func)(void),SdmcResultInfo *info);    /* テスト用カードライト */
+
+u16           sdmcSelectedNo(void);
+SDMC_ERR_CODE sdmcSelect( u16 select);
 
 
 #ifdef __cplusplus
