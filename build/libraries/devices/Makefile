@@ -22,7 +22,6 @@ include	$(TWLSDK_ROOT)/build/buildtools/commondefs
 
 SUBDIRS		= \
 		  sdmc		\
-          rom_sdmc  \
 
 #----------------------------------------------------------------------------
 export	NITRO_BLXCHECKED = yes
