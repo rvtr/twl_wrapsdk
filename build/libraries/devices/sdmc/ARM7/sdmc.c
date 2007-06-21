@@ -223,9 +223,6 @@ void (*func_SDCARD_Out)(void);           /* カード排出イベント用コールバック保存
 /* void (*func_SDCARD_CallBack)(SdmcResultInfo *info);     処理結果通知用コールバック保存用 */
 
 
-
-
-
 /*---------------------------------------------------------------------------*
   Name:         SDCARD_Backup_port0
 
@@ -243,7 +240,7 @@ static void SDCARD_Backup_port0(void)
     SD_GetFPGA(SDPort0Context.SD_OPTION_VALUE,  SD_OPTION);
 
     /* variables */
-    SDPort0Context.SD_RCA       = SD_RCA;
+    SDPort0Context.SD_RCA    = SD_RCA;
     SDPort0Context.ErrStatus = SDCARD_ErrStatus;
     SDPort0Context.Status    = SDCARD_Status;
     SDPort0Context.MMCFlag   = SDCARD_MMCFlag;
@@ -2034,8 +2031,8 @@ static u16  i_sdmcCheckWP(void)
         return    SDCARD_ErrStatus;
     }
     else if (SD_port_number == SDCARD_PORT1)       /* ポート1のとき */
-    {
-        if(!(SD_CheckFPGAReg(EXT_WP,EXT_WP_PORT1))) { //WPフラグが立っていないか?
+    {  /*TWLのポート1はライトプロテクトビットが常に0（プロテクト状態）なので反転して評価*/
+        if((SD_CheckFPGAReg(EXT_WP,EXT_WP_PORT1))) { //WPフラグが立っていないか?
             SDCARD_ErrStatus |= SDMC_ERR_WP;          //エラーフラグのWPエラービットを立てる
         }else{                                        //WPフラグが立っていたとき
             SDCARD_ErrStatus &= ~SDMC_ERR_WP;         //エラーフラグのWPエラービットを落とす
