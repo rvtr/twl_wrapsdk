@@ -8,7 +8,7 @@
 #include <twl.h>
 #include "sdmc_config.h"
 #include "sdif_reg.h"       /*  IP 対応レジスタ定義 */
-#include "sdmc.h"
+#include <twl/sdmc.h>
 #include "sdif_ip.h"        /*  IP 対応フラグ定義 */
 
 #if (SD_DEBUG_PRINT_ON == 1)
@@ -139,7 +139,7 @@ u16 SD_Command(u16 ucCommand)
     SD_SetFPGA(SD_CMD,(ucCommand));                        /* コマンド発行 */
 
     while(!SD_CheckFPGAReg(SD_INFO1,SD_INFO1_RES_END)){    /* Response end 待ち */
-        if(SDCARD_ErrStatus & SDMC_ERR_FPGA_TIMEOUT){      /* タイムアウトチェック */
+        if( SDCARD_ErrStatus != SDMC_NORMAL){      /* タイムアウトチェック */
             break;
         }
     }
@@ -196,7 +196,7 @@ u16 SD_AppOpCond(void)
 {
     SD_ClrErr((u16)(~SDMC_ERR_FPGA_TIMEOUT));      /* タイムアウト以外のエラーをクリア */
     
-    while(!SDCARD_ErrStatus){                      /* エラーが発生しない間は繰り返し */
+    while( !SDCARD_ErrStatus){                     /* エラーが発生しない間は繰り返し */
         /* Argument(31:0) = OCR without busy (0x00100000 = 3.2-3.3V) */
         /*ホスト側で電圧を選択できる場合などは、初回にSD_ARG1を0にすることにより
           カードが対応している電圧を問い合わせることができる。CTRは電圧3.3V決め打ち
@@ -242,7 +242,7 @@ u16 SD_SendOpCond(void)
     
     SD_ClrErr((u16)(~SDMC_ERR_FPGA_TIMEOUT));  /* タイムアウトエラーをクリア */
     
-    while(!SDCARD_ErrStatus){                  /* エラーが発生しない間は繰り返し */
+    while( !SDCARD_ErrStatus){                 /* エラーが発生しない間は繰り返し */
         SD_SetFPGA(SD_ARG0,(0x0000));          /* Argument(15:0) for MMC (None for SD) */
         SD_SetFPGA(SD_ARG1,(0x0010));          /* Argument(31:16) for MMC (None for SD) */
         SD_Command(SD_CMD_CMD | SEND_OP_COND); /* CMD1発行、レスポンス(R1)待ち */
@@ -487,7 +487,7 @@ u16 SD_SendStatus(void)
     SD_SetFPGA(SD_CMD,(SD_CMD_CMD | SD_SEND_STATUS));      /* CMD13発行 */
 
     while(!SD_CheckFPGAReg(SD_INFO1,SD_INFO1_RES_END)){    /* Response end (R1)待ち */
-        if(SDCARD_ErrStatus & SDMC_ERR_FPGA_TIMEOUT){
+        if( SDCARD_ErrStatus != SDMC_NORMAL) {
             break;
         }
     }
@@ -1094,7 +1094,7 @@ u16    SD_TransCommand(u16 ucCommand)
     SD_SetFPGA(SD_CMD,(ucCommand));                     /* コマンド発行 */
 
     while(!SD_CheckFPGAReg(SD_INFO1,SD_INFO1_RES_END)){ /* Response end 待ち */
-        if(SDCARD_ErrStatus & SDMC_ERR_FPGA_TIMEOUT){
+        if( SDCARD_ErrStatus != SDMC_NORMAL) {
             break;
         }
     }

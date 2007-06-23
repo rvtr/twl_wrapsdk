@@ -3,7 +3,7 @@
 #define __SDMC_H__
 
 #include <twl.h>
-#include <rtfs.h>
+#include <twl/rtfs.h>
 
 
 #ifdef __cplusplus
@@ -19,6 +19,18 @@ typedef enum {
     SDMC_PORT_CARD    = 0x400,
     SDMC_PORT_NAND    = 0x401
 }SDMC_PORT_NO;
+
+
+/*********************************************
+ DMA番号
+*********************************************/
+typedef enum {
+    SDMC_USE_DMA_0    = 0,
+    SDMC_USE_DMA_1    = 1,
+    SDMC_USE_DMA_2    = 2,
+    SDMC_USE_DMA_3    = 3,
+    SDMC_NOUSE_DMA    = 0xFF
+}SDMC_DMA_NO;
 
 
 /*********************************************
@@ -78,6 +90,7 @@ typedef struct
     s16            OutFlag;
     u16            WP_PERMANENT;
     u16            WP_TEMPORARY;
+    u16            port_no;
 }
 SDPortContext;
 
@@ -125,7 +138,7 @@ BOOL sdmcCheckMedia( void);
 /*********************************************
  基本API
 *********************************************/
-SDMC_ERR_CODE    sdmcInit(void (*func1)(void),void (*func2)(void));   /* カードドライバ初期化 */
+SDMC_ERR_CODE    sdmcInit( SDMC_DMA_NO dma_no, void (*func1)(void),void (*func2)(void));   /* カードドライバ初期化 */
 SDMC_ERR_CODE    sdmcReset( void);                                    /* カードリセット */
 
 SDMC_ERR_CODE    sdmcGetStatus(u16 *status);           /* カードドライバの現在の状態を取得する */

@@ -16,7 +16,7 @@
 
 #include    <twl_sp.h>
 #include    <twl/fatfs/ARM7/rtfs.h>
-#include    <twl/devices/rom_sdmc/ARM7/sdmc.h>
+#include    <twl/devices/sdmc/ARM7/sdmc.h>
 
 /*---------------------------------------------------------------------------*
     定数定義
@@ -66,10 +66,12 @@ void MY_SdTransferRewind( void)
  *---------------------------------------------------------------------------*/
 void TwlSpMain(void)
 {
+    u16 i;
     OSHeapHandle   heapHandle;
     SDMC_ERR_CODE  result;
     SdmcResultInfo SdResult;
     PCFD           fd;
+    CHKDISK_STATS dstat;
 
     // OS初期化
     OS_Init();
@@ -175,7 +177,26 @@ void TwlSpMain(void)
 
 #else
     /*デバイスドライバの登録*/
-  PRINTDEBUG( "attach start\n");
+  for( i=0; i<2; i++) {
+      if( (i % 2) == 0) {
+          /*NANDからブロックライト／リード*/
+          result = sdmcSelect( (u16)SDMC_PORT_NAND);
+          if( result != 0) {
+              PRINTDEBUG( "sdmcSelect(NAND) failed.\n");    
+          }else{
+              PRINTDEBUG( "sdmcSelect(NAND) success.\n");    
+          }
+      }else{
+          /*CARDからブロックライト／リード*/
+          result = sdmcSelect( (u16)SDMC_PORT_CARD);
+          if( result != 0) {
+              PRINTDEBUG( "sdmcSelect(CARD) failed.\n");    
+          }else{
+             PRINTDEBUG( "sdmcSelect(CARD) success.\n");    
+          }
+     }
+    
+    PRINTDEBUG( "attach start\n");
     if( sdmcRtfsAttach( 4) == FALSE) {  //sdmcをEドライブにする
         PRINTDEBUG( "sdmcRtfsAttach failed.\n");
     }else{
@@ -193,11 +214,9 @@ void TwlSpMain(void)
     PRINTDEBUG( "pc_set_default_drive success\n");
 
     /**/
-    {
-        CHKDISK_STATS dstat;
+        PRINTDEBUG( "pc_check_disk start. please wait.\n");
         pc_check_disk( (byte*)"E:", &dstat, 0, 1, 1);
         PRINTDEBUG( "pc_check_disk end.\n");
-    }
 
     /*----------*/
     fd = po_open( (byte*)"\\sdmc_twl_test.bin", (PO_CREAT|PO_BINARY|PO_WRONLY), PS_IWRITE);
@@ -215,6 +234,7 @@ void TwlSpMain(void)
     }
     PRINTDEBUG( "po_close success.\n");
     /*----------*/
+  }
 #endif
 
     PRINTDEBUG( "Sample program ends.\n");

@@ -28,11 +28,6 @@ TWL_PROC		= ARM7
 
 SRCDIR			= ../common/src src
 
-INCDIR			= ../common
-INCDIR			+= $(TWLSDK_ROOT)/include/twl \
-                   $(TWLSDK_ROOT)/include/twl/devices/sdmc/ARM7 \
-                   $(TWLSDK_ROOT)/include/twl/fatfs/ARM7 \
-
 SRCS			= \
               sdmc.c \
               sdif.c \
@@ -51,6 +46,8 @@ NITRO_BUILD_TYPE	= RELEASE
 endif
 
 include	$(TWLSDK_ROOT)/build/buildtools/commondefs
+
+GINCLUDES += $(TWL_INCDIR)/twl/fatfs/ARM7
 
 INSTALL_TARGETS		= $(TARGETS)
 INSTALL_DIR		= $(TWL_INSTALL_LIBDIR)

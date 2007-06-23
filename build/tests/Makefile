@@ -20,11 +20,12 @@ include	$(TWLSDK_ROOT)/build/buildtools/commondefs
 
 #----------------------------------------------------------------------------
 
-SUBDIRS =	os \
-		mi \
-		aes \
-		snd \
-		camera \
+SUBDIRS =    os     \
+             mi     \
+             aes    \
+             snd    \
+             camera \
+             fatfs  \
 
 
 #----------------------------------------------------------------------------

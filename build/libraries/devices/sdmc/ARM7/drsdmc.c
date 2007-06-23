@@ -11,12 +11,12 @@
   in whole or in part, without the prior written consent of Nintendo.
  *---------------------------------------------------------------------------*/
 
-#include <rtfs.h>
+#include <twl/rtfs.h>
 #include <portconf.h>
 //#if (INCLUDE_SD)
 
 #include "sdmc_config.h"
-#include "sdmc.h"
+#include <twl/sdmc.h>
 #include "sdif_ip.h"
 #include "sdif_reg.h"
 

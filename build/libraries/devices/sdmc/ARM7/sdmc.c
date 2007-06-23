@@ -9,7 +9,7 @@
 //#include <twl/hw/ARM7/ioreg_MI.h>
 #include "sdmc_config.h"
 #include "sdif_reg.h"            /*  IP 対応レジスタ定義 */
-#include "sdmc.h"
+#include <twl/sdmc.h>
 #include "sdif_ip.h"            /*  IP 対応フラグ定義 */
 
 /*#if (SD_DEBUG_PRINT_ON == 1)
@@ -120,9 +120,9 @@ static void SDCARD_Thread( void* arg);        //SDスレッド
 static void SDCARD_Intr_Thread( void* arg);        //SD割り込み処理スレッド
 
 SDMC_ERR_CODE sdmcGoIdle( void (*func1)(),void (*func2)());
-/*static*/ SDMC_ERR_CODE i_sdmcInit( void);
-/*static*/ SDMC_ERR_CODE SDCARD_Layer_Init(void);
-/*static*/ SDMC_ERR_CODE i_sdmcMPInit( void);     /* カードドライバ初期化(マルチポート対応) */
+static SDMC_ERR_CODE i_sdmcInit( void);
+static SDMC_ERR_CODE SDCARD_Layer_Init(void);
+static SDMC_ERR_CODE i_sdmcMPInit( void);     /* カードドライバ初期化(マルチポート対応) */
 
 static u16 i_sdmcErrProcess(void);            /* エラー時の処理 */
 static u16 i_sdmcGetResid(u32 *pResid);       /* 書きこみ完了セクタ数の取得 */
@@ -394,13 +394,14 @@ static void SDCARD_Dmy_Handler( void)
   Description:  Initialize SD interface and SD card.
                 初期化
 
-  Arguments:    func1 : カード挿入時コールバック関数
+  Arguments:    dma_no : DMA番号
+                func1 : カード挿入時コールバック関数
                 func2 : カード排出時コールバック関数
 
   Returns:      0 : success
                 > 0 : error code
  *---------------------------------------------------------------------------*/
-SDMC_ERR_CODE sdmcInit(void (*func1)(),void (*func2)())
+SDMC_ERR_CODE sdmcInit( SDMC_DMA_NO dma_no, void (*func1)(),void (*func2)())
 {
 #if (TARGET_OS_CTR == 1)
     T_CALM    calm;
@@ -580,7 +581,7 @@ SDMC_ERR_CODE sdmcGoIdle( void (*func1)(),void (*func2)())
   Returns:      0 : success
                 > 0 : error code
  *---------------------------------------------------------------------------*/
-/*static*/ SDMC_ERR_CODE i_sdmcInit( void)
+static SDMC_ERR_CODE i_sdmcInit( void)
 {
     i_sdmcEnable();
     
@@ -663,7 +664,7 @@ SDMC_ERR_CODE sdmcReset( void)
 
   Returns:      None
  *---------------------------------------------------------------------------*/
-/*static*/ SDMC_ERR_CODE SDCARD_Layer_Init(void)
+static SDMC_ERR_CODE SDCARD_Layer_Init(void)
 {
     u32     ulCSize;
 //    SYSTIM  wait_tim, limit_tim;
@@ -957,7 +958,7 @@ PRINTDEBUG( "SD_INFO1_MASK : 0x%x\n", (*(vu32 *)(SD_IP_BASE + 0x20)));*/
   Returns:      0 : success
                 > 0 : error code
  *---------------------------------------------------------------------------*/
-/*static*/ SDMC_ERR_CODE i_sdmcMPInit( void)
+static SDMC_ERR_CODE i_sdmcMPInit( void)
 {
     if(((SD_port_number == SDCARD_PORT0) && (!SD_CheckFPGAReg(SD_INFO1,SD_INFO1_DETECT))) ||
         ((SD_port_number == SDCARD_PORT1) && (!SD_CheckFPGAReg(EXT_CD,EXT_CD_PORT1_DETECT))) ||
