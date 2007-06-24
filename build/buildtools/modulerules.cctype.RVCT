@@ -1,6 +1,6 @@
 #! make -f
 #----------------------------------------------------------------------------
-#  Project:  TwlBromSDK - buildtools - compiler dependant settings for RVCT
+#  Project:  TwlBrom - buildtools - compiler dependant settings for RVCT
 #  File:     modulerules.cctype.RVCT
 #
 #  Copyright 2007 Nintendo.  All rights reserved.
