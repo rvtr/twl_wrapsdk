@@ -78,7 +78,7 @@ typedef struct
     u16           SD_OCR[2];    /* OCR•Û‘¶—p (Operation Condition Register) : voltage and status*/
     u16           SD_SCR[4];    /* SCR•Û‘¶—p (Sd card Configulation Register) : bus-width, card-ver, etc*/
     u16           SD_RCA;       /* RCA•Û‘¶—p (Relative Card Address register) : address*/
-    s16           MMCFlag; /* SDCARD_MMC_MASK, SDCARD_SD_MASK, SDCARD_SDHC_MASK */
+    s16           MMCFlag;
     s16           SDHCFlag;
     s16           SDFlag;
     SDMC_ERR_CODE ErrStatus; /* SDCARD_ErrStatus */
@@ -86,10 +86,7 @@ typedef struct
     u16           SD_CLK_CTRL_VALUE;
     u16           SD_OPTION_VALUE;
 
-    SdmcResultInfo *info;
     s16            OutFlag;
-    u16            WP_PERMANENT;
-    u16            WP_TEMPORARY;
     u16            port_no;
 }
 SDPortContext;

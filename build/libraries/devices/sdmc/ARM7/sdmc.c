@@ -247,11 +247,7 @@ static void SDCARD_Backup_port0(void)
     SDPort0Context.SDHCFlag  = SDCARD_SDHCFlag;
     SDPort0Context.SDFlag    = SDCARD_SDFlag;
 
-    /*TODO:çÌÇÍÇÈ*/
     SDPort0Context.OutFlag   = SDCARD_OutFlag;
-    SDPort0Context.info      = pSDCARD_info;
-    SDPort0Context.WP_PERMANENT = SDCARD_WP_PERMANENT;
-    SDPort0Context.WP_TEMPORARY = SDCARD_WP_TEMPORARY;
 
     /*media registers*/
     MI_CpuCopy8( SD_CID, SDPort0Context.SD_CID, 16);
@@ -284,11 +280,7 @@ static void SDCARD_Backup_port1(void)
     SDPort1Context.SDHCFlag  = SDCARD_SDHCFlag;
     SDPort1Context.SDFlag    = SDCARD_SDFlag;
 
-    /*TODO:çÌÇÍÇÈ*/
     SDPort1Context.OutFlag   = SDCARD_OutFlag;
-    SDPort1Context.info      = pSDCARD_info;
-    SDPort1Context.WP_PERMANENT = SDCARD_WP_PERMANENT;
-    SDPort1Context.WP_TEMPORARY = SDCARD_WP_TEMPORARY;
 
     /*media registers*/
     MI_CpuCopy8( SD_CID, SDPort1Context.SD_CID, 16);
@@ -2408,17 +2400,18 @@ static void SDCARD_Restore_port0(void)
     SDCARD_SDHCFlag  = SDPort0Context.SDHCFlag;
     SDCARD_SDFlag    = SDPort0Context.SDFlag;
 
-    /*TODO:çÌÇÍÇÈ*/
     SDCARD_OutFlag = SDPort0Context.OutFlag;
-    pSDCARD_info   = SDPort0Context.info;
-    SDCARD_WP_PERMANENT = SDPort0Context.WP_PERMANENT;
-    SDCARD_WP_TEMPORARY = SDPort0Context.WP_TEMPORARY;
+    pSDCARD_info   = NULL;
 
     /*media registers*/
     MI_CpuCopy8( SDPort0Context.SD_CID, SD_CID, 16);
     MI_CpuCopy8( SDPort0Context.SD_CSD, SD_CSD, 16);
     MI_CpuCopy8( SDPort0Context.SD_OCR, SD_OCR,  4);
     MI_CpuCopy8( SDPort0Context.SD_SCR, SD_SCR,  8);
+  
+    /*recalc*/
+    SDCARD_WP_PERMANENT = (u16)(SD_CSD[0] & (u16)(SDCARD_WP_PERMANENT_BIT));
+    SDCARD_WP_TEMPORARY = (u16)(SD_CSD[0] & (u16)(SDCARD_WP_TEMPORARY_BIT));
 }
 
 /*---------------------------------------------------------------------------*
@@ -2445,17 +2438,18 @@ static void SDCARD_Restore_port1(void)
     SDCARD_SDHCFlag  = SDPort1Context.SDHCFlag;
     SDCARD_SDFlag    = SDPort1Context.SDFlag;
 
-    /*TODO:çÌÇÍÇÈ*/
     SDCARD_OutFlag = SDPort1Context.OutFlag;
-    pSDCARD_info   = SDPort1Context.info;
-    SDCARD_WP_PERMANENT = SDPort1Context.WP_PERMANENT;
-    SDCARD_WP_TEMPORARY = SDPort1Context.WP_TEMPORARY;
+    pSDCARD_info   = NULL;
 
     /*media registers*/
     MI_CpuCopy8( SDPort1Context.SD_CID, SD_CID, 16);
     MI_CpuCopy8( SDPort1Context.SD_CSD, SD_CSD, 16);
     MI_CpuCopy8( SDPort1Context.SD_OCR, SD_OCR,  4);
     MI_CpuCopy8( SDPort1Context.SD_SCR, SD_SCR,  8);
+  
+    /*recalc*/
+    SDCARD_WP_PERMANENT = (u16)(SD_CSD[0] & (u16)(SDCARD_WP_PERMANENT_BIT));
+    SDCARD_WP_TEMPORARY = (u16)(SD_CSD[0] & (u16)(SDCARD_WP_TEMPORARY_BIT));
 }
 
 
