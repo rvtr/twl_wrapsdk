@@ -103,6 +103,7 @@ typedef struct {                  //OSMessage
 /***********************************************************************
  static関数の宣言
 ***********************************************************************/
+static void i_sdmcCalcSize( void);
 static void SDCARD_Backup_port0(void);
 static void SDCARD_Backup_port1(void);
 static void SDCARD_Restore_port0(void);
@@ -658,9 +659,7 @@ SDMC_ERR_CODE sdmcReset( void)
  *---------------------------------------------------------------------------*/
 static SDMC_ERR_CODE SDCARD_Layer_Init(void)
 {
-    u32     ulCSize;
 //    SYSTIM  wait_tim, limit_tim;
-    u16     read_block_len_val, mult_val;
 
 //    u16 memory_exist, function_number;
     SDCARD_Status = SDMC_NORMAL;    /* カードステータスをクリア */
@@ -887,6 +886,25 @@ PRINTDEBUG( "SD_INFO1_MASK : 0x%x\n", (*(vu32 *)(SD_IP_BASE + 0x20)));*/
         }
     }
 
+    i_sdmcCalcSize();
+
+    return SDCARD_ErrStatus;
+}
+
+/*---------------------------------------------------------------------------*
+  Name:         i_sdmcCalcSize
+
+  Description:  
+
+  Arguments:    
+
+  Returns:      None
+ *---------------------------------------------------------------------------*/
+void i_sdmcCalcSize( void)
+{
+    u32     ulCSize;
+    u16     read_block_len_val, mult_val;
+  
     /*--------------カードサイズの算出---------------*/
     if( ((SD_CSD[7] & CSD_STRUCT_BIT_127_126) >> 6) == 0x1) {    //SDHCのとき
         sdmc_current_spec.csd_ver2_flag = 1;
@@ -936,7 +954,6 @@ PRINTDEBUG( "SD_INFO1_MASK : 0x%x\n", (*(vu32 *)(SD_IP_BASE + 0x20)));*/
     PRINTDEBUG( "SD memory capacity : 0x%x\n", sdmc_current_spec.memory_capacity);
     PRINTDEBUG( "SD protected capacity : 0x%x\n", sdmc_current_spec.protected_capacity);
     PRINTDEBUG( "SD total capacity : 0x%x\n", sdmc_current_spec.card_capacity);
-    return SDCARD_ErrStatus;
 }
 
 /*---------------------------------------------------------------------------*
