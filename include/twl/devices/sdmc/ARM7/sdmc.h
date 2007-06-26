@@ -86,8 +86,8 @@ typedef struct
     u16           SD_CLK_CTRL_VALUE;
     u16           SD_OPTION_VALUE;
 
-    s16            OutFlag;
-    u16            port_no;
+    s16           OutFlag;
+    u16           port_no;
 }
 SDPortContext;
 

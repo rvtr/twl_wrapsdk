@@ -304,13 +304,6 @@ static void SDCARD_Backup_port1(void)
 static void i_sdmcEnable( void)
 {
 #if (TARGET_OS_CTR == 1)
-#if (CTR_DEF_ENVIRONMENT_DSEMU == 1)
-    u16 ctrdg_reg;
-
-    ctrdg_reg = (*(vu16*)REG_EXMEMCNT_ADDR) & (0xFF00);        /* ブレッドボード設定 */
-    *(vu16*)REG_EXMEMCNT_ADDR = (ctrdg_reg | 0);    //ARM9優先、PHIにLo出力、1st:10,2nd:6サイクル
-#endif
-    
     /*SD interrupt setting*/
 //    osInitIntrFlag();
 //    osClearInterruptPendingID( OS_INTR_ID_SD);
@@ -625,7 +618,7 @@ SDMC_ERR_CODE sdmcReset( void)
 #else
     irq_core_flag = OS_DisableInterrupts();    /* 割込み禁止 */
 #endif
-        *SDIF_CNT_L = 0x0402;                  //ラッパーレジスタ
+        *SDIF_CNT_L = (SDIF_CNT_FCLR | SDIF_CNT_USEFIFO); //ラッパーレジスタ
         *SDIF_CNT_L = 0x0000;                  //ラッパーレジスタ
         *SDIF_FDS_L = 0;
         *SDIF_FSC_L = 1;
@@ -675,7 +668,7 @@ static SDMC_ERR_CODE SDCARD_Layer_Init(void)
 //    init_io_exist = 0;
 //    init_mem_exist = 0;
 
-    SD_SetFPGA(SD_CLK_CTRL,(SD_CLK_CTRL_256)); /* SDクロックの周波数 144KHz */
+    SD_SetFPGA(SD_CLK_CTRL,(SD_CLK_CTRL_128)); /* SDクロックの周波数 261KHz(初期化時は100～400khz) */
     SD_EnableClock();                          /* SDカードのクロックをイネーブルにする */
 
     /* SD I/F部ダミー80クロック(1mSec)転送待ち（タイマーで待ちを実装しても良い） */
