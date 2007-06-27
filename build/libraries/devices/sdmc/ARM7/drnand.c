@@ -21,12 +21,7 @@
 #include "sdif_reg.h"
 
 #if (SD_DEBUG_PRINT_ON == 1)
-    #if (CTR_DEF_ENVIRONMENT_DSEMU == 1)
-        #define PRINTDEBUG    osTPrintf
-    #else
-        #include <ctr/vlink.h>
-        #define PRINTDEBUG    vlink_dos_printf
-    #endif
+    #define PRINTDEBUG    OS_TPrintf
 #else
     #define PRINTDEBUG( ...) ((void)0)
 #endif
@@ -63,7 +58,7 @@ static int  nand_drive_no;
  *---------------------------------------------------------------------------*/
 static void sdi_get_CHS_params( void);
 static u32  sdi_get_ceil( u32 cval, u32 mval);
-static void sdi_get_nom( void);
+static void sdi_get_nom( u16 min_nom);
 static void sdi_get_fatparams( void);
 static void sdi_build_partition_table( void);
 
@@ -196,7 +191,7 @@ int nandRtfsCtrl( int driveno, int opcode, void* pargs)
         i_sdmcCalcSize();        //TODO:sdmc_current_specを構造体に入れること
         sdi_get_CHS_params();    //最初に呼ぶこと
         sdi_get_fatparams();
-        sdi_get_nom();
+        sdi_get_nom( (8*1024*1024)/512); //8MBytes <= NOM
 
         PRINTDEBUG( "heads     : 0x%x\n", sdmc_current_spec.heads);
         PRINTDEBUG( "secptrack : 0x%x\n", sdmc_current_spec.secptrack);
@@ -413,7 +408,7 @@ static u32 sdi_get_ceil( u32 cval, u32 mval)
 
 
 /*マスターブートセクタのセクタ数を返す*/
-static void sdi_get_nom( void)
+static void sdi_get_nom( u16 MIN_NOM)
 {
     u32 RSC = 1;      //FAT12,16では1
     u32 RDE = 512;    //ルートディレクトリエントリ。FIX
@@ -428,7 +423,10 @@ static void sdi_get_nom( void)
 
     /*-----------------------SDHCのとき----------------------------*/
     if( sdmc_current_spec.csd_ver2_flag) {
-        sdmc_current_spec.NOM = sdmc_current_spec.BU;
+        /*nandの場合、NOMは少なくともMIN_NOM以上*/
+        sdmc_current_spec.NOM = sdi_get_ceil( MIN_NOM, sdmc_current_spec.BU) *
+                                              sdmc_current_spec.BU;
+        //sdmc_current_spec.NOM = sdmc_current_spec.BU;
         do {
             n = sdi_get_ceil( 2*sdmc_current_spec.SF, sdmc_current_spec.BU);
             sdmc_current_spec.RSC = (sdmc_current_spec.BU * n) - ( 2 * sdmc_current_spec.SF);
@@ -456,6 +454,9 @@ static void sdi_get_nom( void)
         do {
             sdmc_current_spec.SSA = RSC + ( 2 * sdmc_current_spec.SF) + sdi_get_ceil( 32*RDE, SS);
             n = sdi_get_ceil( sdmc_current_spec.SSA, sdmc_current_spec.BU);
+            /*nandの場合、NOMは少なくともMIN_NOM以上*/
+            n+= sdi_get_ceil( MIN_NOM, sdmc_current_spec.BU);
+          
             sdmc_current_spec.NOM = (sdmc_current_spec.BU * n) - sdmc_current_spec.SSA;
             if( sdmc_current_spec.NOM != sdmc_current_spec.BU) {
                 sdmc_current_spec.NOM += sdmc_current_spec.BU;

@@ -21,12 +21,7 @@
 #include "sdif_reg.h"
 
 #if (SD_DEBUG_PRINT_ON == 1)
-    #if (CTR_DEF_ENVIRONMENT_DSEMU == 1)
-        #define PRINTDEBUG    osTPrintf
-    #else
-        #include <ctr/vlink.h>
-        #define PRINTDEBUG    vlink_dos_printf
-    #endif
+    #define PRINTDEBUG    OS_TPrintf
 #else
     #define PRINTDEBUG( ...) ((void)0)
 #endif

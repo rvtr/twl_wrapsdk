@@ -11,16 +11,11 @@
 #include <twl/sdmc.h>
 #include "sdif_ip.h"        /*  IP ‘Î‰žƒtƒ‰ƒO’è‹` */
 
-#if (SD_DEBUG_PRINT_ON == 1)
-    #if (CTR_DEF_ENVIRONMENT_DSEMU == 1)
-        #define PRINTDEBUG    osTPrintf
-    #else
-        #include <ctr/vlink.h>
-        #define PRINTDEBUG    vlink_dos_printf
-    #endif
-#else
+//#if (SD_DEBUG_PRINT_ON == 1)
+//    #define PRINTDEBUG    OS_TPrintf
+//#else
     #define PRINTDEBUG( ...) ((void)0)
-#endif
+//#endif
 
 
 #define ADD_CHECK 1
