@@ -128,8 +128,13 @@ typedef struct {
 BOOL sdmcRtfsIo( int driveno, dword block, void* buffer, word count, BOOLEAN reading);
 int  sdmcRtfsCtrl( int driveno, int opcode, void* pargs);
 BOOL sdmcRtfsAttach( int driveno);
-
 BOOL sdmcCheckMedia( void);
+
+
+BOOL nandRtfsIo( int driveno, dword block, void* buffer, word count, BOOLEAN reading);
+int  nandRtfsCtrl( int driveno, int opcode, void* pargs);
+BOOL nandRtfsAttach( int driveno);
+BOOL nandCheckMedia( void);
 
 
 /*********************************************

@@ -103,7 +103,7 @@ typedef struct {                  //OSMessage
 /***********************************************************************
  staticä÷êîÇÃêÈåæ
 ***********************************************************************/
-static void i_sdmcCalcSize( void);
+void i_sdmcCalcSize( void);
 static void SDCARD_Backup_port0(void);
 static void SDCARD_Backup_port1(void);
 static void SDCARD_Restore_port0(void);

@@ -177,25 +177,6 @@ void TwlSpMain(void)
 
 #else
     /*デバイスドライバの登録*/
-  for( i=0; i<2; i++) {
-      if( (i % 2) == 0) {
-          /*NANDからブロックライト／リード*/
-          result = sdmcSelect( (u16)SDMC_PORT_NAND);
-          if( result != 0) {
-              PRINTDEBUG( "sdmcSelect(NAND) failed.\n");    
-          }else{
-              PRINTDEBUG( "sdmcSelect(NAND) success.\n");    
-          }
-      }else{
-          /*CARDからブロックライト／リード*/
-          result = sdmcSelect( (u16)SDMC_PORT_CARD);
-          if( result != 0) {
-              PRINTDEBUG( "sdmcSelect(CARD) failed.\n");    
-          }else{
-             PRINTDEBUG( "sdmcSelect(CARD) success.\n");    
-          }
-     }
-    
     PRINTDEBUG( "attach start\n");
     if( sdmcRtfsAttach( 4) == FALSE) {  //sdmcをEドライブにする
         PRINTDEBUG( "sdmcRtfsAttach failed.\n");
@@ -206,38 +187,62 @@ void TwlSpMain(void)
             PRINTDEBUG( "sdmcRtfsAttach error!.\n");
         }
     }
-
-    if( !rtfs_pc_set_default_drive( (unsigned char*)"E:")) {
-        PRINTDEBUG( "pc_set_default_drive failed\n");
-        while( 1){};
+    if( nandRtfsAttach( 5) == FALSE) {  //nandをFドライブにする
+        PRINTDEBUG( "nandRtfsAttach failed.\n");
+    }else{
+        if( nandRtfsAttach( 5) == FALSE) {
+            PRINTDEBUG( "nandRtfsAttach success.\n");
+        }else{
+            PRINTDEBUG( "nandRtfsAttach error!.\n");
+        }
     }
-    PRINTDEBUG( "pc_set_default_drive success\n");
 
-    /**/
-        PRINTDEBUG( "pc_check_disk start. please wait.\n");
-        pc_check_disk( (byte*)"E:", &dstat, 0, 1, 1);
-        PRINTDEBUG( "pc_check_disk end.\n");
+  for( i=0; i<2; i++) {
+      if( (i % 2) == 0) {
+          /*SDからブロックライト／リード*/
+          if( !rtfs_pc_set_default_drive( (unsigned char*)"E:")) {
+              PRINTDEBUG( "pc_set_default_drive (E) failed\n");
+              while( 1){};
+          }
+          PRINTDEBUG( "pc_set_default_drive (E) success\n");
+          /**/
+          PRINTDEBUG( "pc_check_disk start. please wait.\n");
+          pc_check_disk( (byte*)"E:", &dstat, 0, 1, 1);
+          PRINTDEBUG( "pc_check_disk end.\n");
+      }else{
+          /*NANDからブロックライト／リード*/
+          if( !rtfs_pc_set_default_drive( (unsigned char*)"F:")) {
+              PRINTDEBUG( "pc_set_default_drive (F) failed\n");
+              while( 1){};
+          }
+          PRINTDEBUG( "pc_set_default_drive (F) success\n");
+          /**/
+          PRINTDEBUG( "pc_check_disk start. please wait.\n");
+          pc_check_disk( (byte*)"F:", &dstat, 0, 1, 1);
+          PRINTDEBUG( "pc_check_disk end.\n");
+      }
 
-    /*----------*/
-    fd = po_open( (byte*)"\\sdmc_twl_test.bin", (PO_CREAT|PO_BINARY|PO_WRONLY), PS_IWRITE);
-    if( fd < 0) {
-        PRINTDEBUG( "po_open failed.\n");
-        while( 1) {};
+
+      /*----------*/
+      fd = po_open( (byte*)"\\sdmc_twl_test.bin", (PO_CREAT|PO_BINARY|PO_WRONLY), PS_IWRITE);
+      if( fd < 0) {
+          PRINTDEBUG( "po_open failed.\n");
+          while( 1) {};
+      }
+      PRINTDEBUG( "po_open success.\n");
+      /*----------*/
+
+      /*----------*/
+      if( po_close( fd) < 0) {
+          PRINTDEBUG( "po_close failed.\n");
+          while( 1) {};
+      }
+      PRINTDEBUG( "po_close success.\n");
+      /*----------*/
     }
-    PRINTDEBUG( "po_open success.\n");
-    /*----------*/
-
-    /*----------*/
-    if( po_close( fd) < 0) {
-        PRINTDEBUG( "po_close failed.\n");
-        while( 1) {};
-    }
-    PRINTDEBUG( "po_close success.\n");
-    /*----------*/
-  }
 #endif
 
-    PRINTDEBUG( "Sample program ends.\n");
+      PRINTDEBUG( "Sample program ends.\n");
 
 
     while (TRUE)

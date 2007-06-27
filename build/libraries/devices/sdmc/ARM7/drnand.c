@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------*
   Project:  CTR - rtfs interface for SD Memory Card
-  File:     drsdmc.h
+  File:     drnand.h
 
   Copyright 2006,2007 Nintendo.  All rights reserved.
 
@@ -39,12 +39,6 @@
 /*---------------------------------------------------------------------------*
   extern変数
  *---------------------------------------------------------------------------*/
-//extern ER_ID    sdmc_dtq_id;
-//extern ER_ID    sdmc_result_dtq_id;
-extern void (*func_SDCARD_In)(void);    /* カード挿入イベント用コールバック保存用 */
-extern void (*func_SDCARD_Out)(void);   /* カード排出イベント用コールバック保存用 */
-extern volatile s16 SDCARD_OutFlag;     /* カード排出発生判定フラグ */
-
 extern int  rtfs_first_stat_flag[26];
 
 /*SDメモリカードのスペック構造体*/
@@ -61,14 +55,12 @@ extern void i_sdmcCalcSize( void); //TODO:sdmc_current_specを構造体に入れること
 /*---------------------------------------------------------------------------*
   static変数
  *---------------------------------------------------------------------------*/
-static int  sdmc_drive_no;
-void (*func_usr_sdmc_out)(void) = NULL;    /* カード排出イベントのユーザコールバック */
+static int  nand_drive_no;
 
 
 /*---------------------------------------------------------------------------*
   static関数
  *---------------------------------------------------------------------------*/
-void i_sdmcRemovedIntr( void);
 static void sdi_get_CHS_params( void);
 static u32  sdi_get_ceil( u32 cval, u32 mval);
 static void sdi_get_nom( void);
@@ -76,8 +68,9 @@ static void sdi_get_fatparams( void);
 static void sdi_build_partition_table( void);
 
 
+
 /*---------------------------------------------------------------------------*
-  Name:         sdmcCheckMedia
+  Name:         nandCheckMedia
 
   Description:  MBRのシグネチャおよび
                 パーティションのフォーマット種別をチェックする
@@ -87,7 +80,7 @@ static void sdi_build_partition_table( void);
   Returns:      TRUE/FALSE
                 （FALSEなら pc_format_media が必要）
  *---------------------------------------------------------------------------*/
-BOOL sdmcCheckMedia( void)
+BOOL nandCheckMedia( void)
 {
     u16             i;
     SdmcResultInfo  SdResult;
@@ -96,7 +89,7 @@ BOOL sdmcCheckMedia( void)
     u8              systemid;
 
     /**/
-    sdmcSelect( (u16)SDMC_PORT_CARD);
+    sdmcSelect( (u16)SDMC_PORT_NAND);
   
     /**/
     if( sdmcReadFifo( buffer, 1, 0, NULL, &SdResult)) {
@@ -130,7 +123,7 @@ BOOL sdmcCheckMedia( void)
 
 
 /*---------------------------------------------------------------------------*
-  Name:         sdmcRtfsIo
+  Name:         nandRtfsIo
 
   Description:  上位層からのセクタリード／ライト要求を受ける
 
@@ -142,13 +135,13 @@ BOOL sdmcCheckMedia( void)
 
   Returns:      TRUE/FALSE
  *---------------------------------------------------------------------------*/
-BOOL sdmcRtfsIo( int driveno, dword block, void* buffer, word count, BOOLEAN reading)
+BOOL nandRtfsIo( int driveno, dword block, void* buffer, word count, BOOLEAN reading)
 {
     u16               result;
     SdmcResultInfo    SdResult;
     
     /**/
-    sdmcSelect( (u16)SDMC_PORT_CARD);
+    sdmcSelect( (u16)SDMC_PORT_NAND);
   
     if( reading) {
         PRINTDEBUG( "DEVCTL_IO_READ ... block:%x, count:%x -> buf:%x\n", block, count, buffer);
@@ -167,7 +160,7 @@ BOOL sdmcRtfsIo( int driveno, dword block, void* buffer, word count, BOOLEAN rea
 }
 
 /*---------------------------------------------------------------------------*
-  Name:         sdmcRtfsCtrl
+  Name:         nandRtfsCtrl
 
   Description:  上位層からのコントロール要求を受ける
 
@@ -183,35 +176,23 @@ BOOL sdmcRtfsIo( int driveno, dword block, void* buffer, word count, BOOLEAN rea
                 CTRL関数の前にはDEVCTL_CHECK_STATUSが呼ばれないので、DEVCTL_
                 GET_GEOMETRYでは自前で再挿入をチェックする必要がある。
  *---------------------------------------------------------------------------*/
-int sdmcRtfsCtrl( int driveno, int opcode, void* pargs)
+int nandRtfsCtrl( int driveno, int opcode, void* pargs)
 {
     DDRIVE       *pdr;
     DEV_GEOMETRY gc;
     int          heads, secptrack;
 
     /**/
-    sdmcSelect( (u16)SDMC_PORT_CARD);
-  
+    sdmcSelect( (u16)SDMC_PORT_NAND);
+
     pdr = pc_drno_to_drive_struct( driveno);
     
     switch( opcode) {
       case DEVCTL_GET_GEOMETRY:    //formatまたはpartirionするときにRTFSが使うパラメータ
         PRINTDEBUG( "DEVCTL_GET_GEOMETRY\n");
-        if( (pdr->drive_flags & DRIVE_FLAGS_INSERTED) == 0) {    /* 抜かれていた場合 */
-            if( SDCARD_OutFlag == TRUE) {                        /* 今現在も抜かれているとき */
-                return( -1);
-            }else{                                               /* 今現在は再挿入されているとき */
-                /*-- GoIdleセット --*/
-                if( func_SDCARD_Out != i_sdmcRemovedIntr) {
-                    func_usr_sdmc_out = func_SDCARD_Out;    //ユーザコールバック取得
-                }
-                sdmcGoIdle( func_SDCARD_In, i_sdmcRemovedIntr);    //カード初期化シーケンス
-                /*------------------*/
-            }
-        }
-
+      
         rtfs_memset( &gc, (byte)0, sizeof(gc));
-        
+
         i_sdmcCalcSize();        //TODO:sdmc_current_specを構造体に入れること
         sdi_get_CHS_params();    //最初に呼ぶこと
         sdi_get_fatparams();
@@ -279,48 +260,24 @@ int sdmcRtfsCtrl( int driveno, int opcode, void* pargs)
         if (!(pdr->drive_flags & DRIVE_FLAGS_REMOVABLE)) {    //リムーバブルでない場合
             return(DEVTEST_NOCHANGE);
         }
-        if (pdr->drive_flags & DRIVE_FLAGS_INSERTED) {        /* 抜かれてない場合 */
-            if( rtfs_first_stat_flag[driveno]) {    //初回のCHECKSTATUS時
-                rtfs_first_stat_flag[driveno] = 0;
-                PRINTDEBUG( "CHANGED!\n");
-                return(DEVTEST_CHANGED);
-            }else{
-                PRINTDEBUG( "DEVTEST_NOCHANGE\n");
-                return( DEVTEST_NOCHANGE);
-            }
-        }else{                                                /* 抜かれていた場合 */
-            if( SDCARD_OutFlag == FALSE) {                    /* 排出フラグ参照 */
-                pdr->drive_flags |= DRIVE_FLAGS_INSERTED;
-                /*-- GoIdleセット --*/
-                if( func_SDCARD_Out != i_sdmcRemovedIntr) {
-                    func_usr_sdmc_out = func_SDCARD_Out;    //ユーザコールバック取得
-                }
-                sdmcGoIdle( func_SDCARD_In, i_sdmcRemovedIntr);    //カード初期化シーケンス
-                /*------------------*/
-                PRINTDEBUG( "DEVTEST_CHANGED\n");
-                return( DEVTEST_CHANGED);        //挿さっている
-            }else{
-                PRINTDEBUG( "DEVTEST_NOMEDIA\n");
-                return( DEVTEST_NOMEDIA);        //挿さってない
-            }
+        if( rtfs_first_stat_flag[driveno]) {    //初回のCHECKSTATUS時
+            rtfs_first_stat_flag[driveno] = 0;
+            PRINTDEBUG( "CHANGED!\n");
+            return(DEVTEST_CHANGED);
+        }else{
+            PRINTDEBUG( "DEVTEST_NOCHANGE\n");
+            return( DEVTEST_NOCHANGE);
         }
         
       case DEVCTL_WARMSTART:    //attachのときしか呼ばれない
         PRINTDEBUG( "DEVCTL_WARMSTART\n");
         /*-- GoIdleセット --*/
-        if( func_SDCARD_Out != i_sdmcRemovedIntr) {
-            func_usr_sdmc_out = func_SDCARD_Out;    //ユーザコールバック取得
-        }
-        sdmcGoIdle( func_SDCARD_In, i_sdmcRemovedIntr);    //カード初期化シーケンス TODO:1ポートだけにする
+        sdmcGoIdle( NULL, NULL);    //カード初期化シーケンス TODO:1ポートだけにする
         /*------------------*/
         pdr->drive_flags |= (DRIVE_FLAGS_VALID | DRIVE_FLAGS_REMOVABLE | DRIVE_FLAGS_PARTITIONED);
         pdr->partition_number = 0;
         
-        if( SDCARD_OutFlag == FALSE) {                    /* 排出フラグ参照 */
-            pdr->drive_flags |= DRIVE_FLAGS_INSERTED;
-        }else{                                            /* カード未挿入のとき */
-            pdr->drive_flags &= (~(DRIVE_FLAGS_INSERTED));    //抜かれているだけではVALIDフラグは落とさないらしい
-        }
+        pdr->drive_flags |= DRIVE_FLAGS_INSERTED;
         return( 0);
         
       case DEVCTL_POWER_RESTORE:
@@ -339,29 +296,7 @@ int sdmcRtfsCtrl( int driveno, int opcode, void* pargs)
 }
 
 /*---------------------------------------------------------------------------*
-  抜取コールバック関数
-
-  RTFSが次回"DEVCTL_GET_GEOMETRY"を行うとき、ここでセットしたパラメータを知る
- *---------------------------------------------------------------------------*/
-void i_sdmcRemovedIntr( void)
-{
-    DDRIVE    *pdr;
-    
-    pdr = pc_drno_to_drive_struct( sdmc_drive_no);
-    if( pdr) {
-        pdr->dev_table_perform_device_ioctl( pdr->driveno,
-                                             DEVCTL_REPORT_REMOVE,
-                                             (void*)0);
-    }
-    
-    if( func_usr_sdmc_out) {
-        func_usr_sdmc_out();    //ユーザコールバック
-    }
-}
-
-
-/*---------------------------------------------------------------------------*
-  Name:         sdmcRtfsAttach
+  Name:         nandRtfsAttach
 
   Description:  sdmcドライバをドライブに割り当てる
 
@@ -369,13 +304,13 @@ void i_sdmcRemovedIntr( void)
 
   Returns:      
  *---------------------------------------------------------------------------*/
-BOOL sdmcRtfsAttach( int driveno)
+BOOL nandRtfsAttach( int driveno)
 {
     BOOLEAN   result;
     DDRIVE    pdr;
 
-    pdr.dev_table_drive_io     = sdmcRtfsIo;
-    pdr.dev_table_perform_device_ioctl = sdmcRtfsCtrl;
+    pdr.dev_table_drive_io     = nandRtfsIo;
+    pdr.dev_table_perform_device_ioctl = nandRtfsCtrl;
     pdr.register_file_address  = (dword) 0; /* Not used  */
     pdr.interrupt_number       = 0;            /* Not used */
     pdr.drive_flags            = 0;//DRIVE_FLAGS_FAILSAFE;
@@ -384,10 +319,10 @@ BOOL sdmcRtfsAttach( int driveno)
     pdr.controller_number      = 0;
     pdr.logical_unit_number    = 0;
 
-    result = rtfs_attach( driveno, &pdr, "SD0");    //構造体がFSライブラリ側にコピーされる
+    result = rtfs_attach( driveno, &pdr, "SD1");    //構造体がFSライブラリ側にコピーされる
     
     /*drivenoをグローバル変数に記憶*/
-    sdmc_drive_no = driveno;
+    nand_drive_no = driveno;
 
     return( result);
 }

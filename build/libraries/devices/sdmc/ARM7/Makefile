@@ -31,7 +31,8 @@ SRCDIR			= ../common/src src
 SRCS			= \
               sdmc.c \
               sdif.c \
-              drsdmc.c
+              drsdmc.c \
+              drnand.c \
 
 TARGET_LIB		= libsd_sp$(TWL_LIBSUFFIX).a
 
