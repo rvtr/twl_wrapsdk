@@ -15,6 +15,8 @@
  *---------------------------------------------------------------------------*/
 
 #include    <twl_sp.h>
+#include    <twl/cdc.h>     // for DS mode
+#include    <twl/snd/ARM7/i2s.h>
 
 /*---------------------------------------------------------------------------*
     íËêîíËã`
@@ -29,7 +31,7 @@
  *---------------------------------------------------------------------------*/
 static OSHeapHandle InitializeAllocateSystem(void);
 static void VBlankIntr(void);
-#include <twl/cdc.h>    // for DS-mode
+
 /*---------------------------------------------------------------------------*
   Name:         TwlSpMain
 
@@ -59,9 +61,9 @@ void TwlSpMain(void)
 #if 0
     // DS mode
     SND_Disable();
-    reg_SND_I2SCNT &= ~REG_SND_I2SCNT_CODEC_SMP_MASK;   // 32kHz
-    SND_Enable();
+    SND_I2SSetSamplingRatio(FALSE); // 32kHz
     CDC_GoDsMode();
+    SND_Enable();
 #endif
 
 //    reg_CFG_DS_MDFY |= REG_CFG_DS_MDFY_SND_MASK;  // SOUNDâÒòHÉoÉOèCê≥ (default: off)

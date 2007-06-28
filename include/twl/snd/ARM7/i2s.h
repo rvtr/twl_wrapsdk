@@ -45,9 +45,13 @@ void    SND_I2SBeginSleep(void);
 void    SND_I2SEndSleep(void);
 
 void    SND_I2SMute(BOOL isMute);
+BOOL    SND_I2SIsMute(void);
 
 void    SND_I2SSetMixingRatio(int nitroRatio);
-void    SND_I2SSetSamplingRatio(BOOL is47kHz);
+int     SND_I2SGetMixingRatio(void);
+
+void    SND_I2SSetSamplingRatio(BOOL is48kHz);
+BOOL    SND_I2SIsSamplingRatio48kHz( void );
 
 #endif /* SDK_ARM7 */
 

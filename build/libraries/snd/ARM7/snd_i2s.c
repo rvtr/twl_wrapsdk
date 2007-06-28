@@ -41,22 +41,23 @@ static void SNDi_I2SInit(void)
     if (isInitialized == FALSE)
     {
         isInitialized = TRUE;
+
         reg_SND_POWCNT |= REG_SND_POWCNT_SPE_MASK;
-        reg_CFG_TWL_EX |= REG_CFG_TWL_EX_I2S_MASK;
-        if (reg_CFG_TWL_EX & REG_CFG_TWL_EX_I2S_MASK)
-        {
-            isTwl = TRUE;
-            // 32KHz
-//            reg_SND_I2SCNT |= REG_SND_I2SCNT_MIX_RATIO_MASK;
-//            reg_SND_I2SCNT &= ~(REG_SND_I2SCNT_MUTE_MASK | REG_SND_I2SCNT_CODEC_SMP_MASK);
-            // 48KHz
-            reg_SND_I2SCNT |= REG_SND_I2SCNT_MIX_RATIO_MASK | REG_SND_I2SCNT_CODEC_SMP_MASK;
-            reg_SND_I2SCNT &= ~(REG_SND_I2SCNT_MUTE_MASK);
-        }
+
         if ((reg_CFG_CLK & REG_CFG_CLK_SND_MASK) == 0)
         {
             // initialize codec with enabling I2S
             CDC_Init();
+        }
+
+        reg_CFG_TWL_EX |= REG_CFG_TWL_EX_I2S_MASK;
+        if (reg_CFG_TWL_EX & REG_CFG_TWL_EX_I2S_MASK)
+        {
+            isTwl = TRUE;
+            // Set default values
+            SND_I2SSetSamplingRatio(TRUE);
+            SND_I2SSetMixingRatio(8);
+            SND_I2SMute(FALSE);
         }
     }
 }
@@ -173,6 +174,20 @@ void SND_I2SMute(BOOL isMute)
 }
 
 /*---------------------------------------------------------------------------*
+  Name:         SND_I2SIsMute
+
+  Description:  Get mute status
+
+  Arguments:    None
+
+  Returns:      TRUE if mute
+ *---------------------------------------------------------------------------*/
+BOOL SND_I2SIsMute(void)
+{
+    return (BOOL)((reg_SND_I2SCNT & REG_SND_I2SCNT_MUTE_MASK) >> REG_SND_I2SCNT_MUTE_SHIFT);
+}
+
+/*---------------------------------------------------------------------------*
   Name:         SND_I2SSetMixingRatio
 
   Description:  Set mixing ratio
@@ -190,25 +205,42 @@ void SND_I2SSetMixingRatio(int nitroRatio)
         if (nitroRatio >= 0 && nitroRatio <= 8)
         {
             reg_SND_I2SCNT &= ~REG_SND_I2SCNT_MIX_RATIO_MASK;
-            reg_SND_I2SCNT = (u8)((reg_SND_I2SCNT & ~REG_SND_I2SCNT_MIX_RATIO_MASK) | nitroRatio);
+            reg_SND_I2SCNT = (u8)((reg_SND_I2SCNT & ~REG_SND_I2SCNT_MIX_RATIO_MASK) | (nitroRatio << REG_SND_I2SCNT_MIX_RATIO_SHIFT));
         }
     }
 }
 
 /*---------------------------------------------------------------------------*
+  Name:         SND_I2SGetMixingRatio
+
+  Description:  Set mixing ratio
+
+  Arguments:    None
+
+  Returns:      NITRO : DSP ratio.  (0-8)
+                              if 8, nitro sound is all.
+                              if 0, DSP sound is all.
+ *---------------------------------------------------------------------------*/
+int SND_I2SGetMixingRatio(void)
+{
+    return (reg_SND_I2SCNT & REG_SND_I2SCNT_MIX_RATIO_MASK) >> REG_SND_I2SCNT_MIX_RATIO_SHIFT;
+}
+
+/*---------------------------------------------------------------------------*
   Name:         SND_I2SSetSamplingRatio
 
-  Description:  Set I2S sampling ratio
+  Description:  Set I2S sampling ratio.
+                It can be called while I2S is disabled.
 
-  Arguments:    is47kHz : set 48 kHz if TRUE. set 32kHz if FALSE.
+  Arguments:    is48kHz : set 48 kHz if TRUE. set 32kHz if FALSE.
 
   Returns:      None
  *---------------------------------------------------------------------------*/
-void SND_I2SSetSamplingRatio(BOOL is47kHz)
+void SND_I2SSetSamplingRatio(BOOL is48kHz)
 {
     if (isTwl)
     {
-        if (is47kHz)
+        if (is48kHz)
         {
             reg_SND_I2SCNT |= REG_SND_I2SCNT_CODEC_SMP_MASK;
         }
@@ -216,7 +248,22 @@ void SND_I2SSetSamplingRatio(BOOL is47kHz)
         {
             reg_SND_I2SCNT &= ~REG_SND_I2SCNT_CODEC_SMP_MASK;
         }
+        CDC_SetParamPLL(is48kHz);
     }
+}
+
+/*---------------------------------------------------------------------------*
+  Name:         SND_I2SIsSamplingRatio48kHz
+
+  Description:  Get I2S sampling ratio.
+
+  Arguments:    None
+
+  Returns:      TRUE if 48 kHz. otherwise FALSE
+ *---------------------------------------------------------------------------*/
+BOOL SND_I2SIsSamplingRatio48kHz(void)
+{
+    return (BOOL)((reg_SND_I2SCNT & REG_SND_I2SCNT_CODEC_SMP_MASK) >> REG_SND_I2SCNT_CODEC_SMP_SHIFT);
 }
 
 /*====== End of snd_i2s.c ======*/

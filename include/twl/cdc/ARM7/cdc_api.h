@@ -152,26 +152,15 @@ void CDC_SetInputPinControl( BOOL  enable_vcnt5, BOOL  enable_sphp, BOOL  enable
 void CDC_GetInputPinControl( BOOL *enable_vcnt5, BOOL *enable_sphp, BOOL *enable_pmoff );
 
 /*---------------------------------------------------------------------------*
-  Name:         i_cdcPowerUpPLL
+  Name:         CDC_SetParamPLL
 
-  Description:  power up Internal PLL of the CODEC
+  Description:  setup PLL parameter of the CODEC
 
-  Arguments:    None
-
-  Returns:      None
- *---------------------------------------------------------------------------*/
-void i_cdcPowerUpPLL( void );
-
-/*---------------------------------------------------------------------------*
-  Name:         i_cdcPowerDownPLL
-
-  Description:  power down Internal PLL of the CODEC
-
-  Arguments:    None
+  Arguments:    is48kHz : set 48 kHz if TRUE. set 32kHz if FALSE.
 
   Returns:      None
  *---------------------------------------------------------------------------*/
-void i_cdcPowerDownPLL( void );
+void CDC_SetParamPLL( BOOL is48kHz );
 
 /*---------------------------------------------------------------------------*
   Name:         CDC_PowerUpDAC

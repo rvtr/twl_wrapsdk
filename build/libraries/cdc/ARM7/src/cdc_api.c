@@ -78,23 +78,23 @@ void CDC_Init( void )
 #ifdef MEASUREMENT_BY_TICK
     tick_cdcInit_tail =OS_GetTick();
 
-    OS_TPrintf("cdcInit                  = %llu, %6d\n", tick_cdcInit_head,
+    OS_TPrintf("CDC_Init                  = %llu, %6d\n", tick_cdcInit_head,
                                                                 OS_TICK_TO_USEC(tick_cdcInit_head));
-    OS_TPrintf("cdcPowerUpPLL            = %llu, %6d\n", tick_cdcPowerUpPLL_head,
+    OS_TPrintf("CDC_PowerUpPLL            = %llu, %6d\n", tick_cdcPowerUpPLL_head,
                                                                 OS_TICK_TO_USEC(tick_cdcPowerUpPLL_head));
-    OS_TPrintf("cdcInitSound             = %llu, %6d\n", tick_cdcInitSound_head,
+    OS_TPrintf("CDC_InitSound             = %llu, %6d\n", tick_cdcInitSound_head,
                                                                 OS_TICK_TO_USEC(tick_cdcInitSound_head));
-    OS_TPrintf("cdcPowerUpDAC            = %llu, %6d\n", tick_cdcPowerUpDAC_head,
+    OS_TPrintf("CDC_PowerUpDAC            = %llu, %6d\n", tick_cdcPowerUpDAC_head,
                                                                 OS_TICK_TO_USEC(tick_cdcPowerUpDAC_head));
-    OS_TPrintf("cdcSetupDAC              = %llu, %6d\n", tick_cdcSetupDAC_head,
+    OS_TPrintf("CDC_SetupDAC              = %llu, %6d\n", tick_cdcSetupDAC_head,
                                                                 OS_TICK_TO_USEC(tick_cdcSetupDAC_head));
-    OS_TPrintf("cdcEnableHeadphoneDriver = %llu, %6d\n", tick_cdcEnableHeadphoneDriver_head,
+    OS_TPrintf("CDC_EnableHeadphoneDriver = %llu, %6d\n", tick_cdcEnableHeadphoneDriver_head,
                                                                 OS_TICK_TO_USEC(tick_cdcEnableHeadphoneDriver_head));
-    OS_TPrintf("cdcEnableSpeakerDriver   = %llu, %6d\n", tick_cdcEnableSpeakerDriver_head,
+    OS_TPrintf("CDC_EnableSpeakerDriver   = %llu, %6d\n", tick_cdcEnableSpeakerDriver_head,
                                                                 OS_TICK_TO_USEC(tick_cdcEnableSpeakerDriver_head));
-    OS_TPrintf("cdcUnmuteDAC             = %llu, %6d\n", tick_cdcUnmuteDAC_head,
+    OS_TPrintf("CDC_UnmuteDAC             = %llu, %6d\n", tick_cdcUnmuteDAC_head,
                                                                 OS_TICK_TO_USEC(tick_cdcUnmuteDAC_head));
-    OS_TPrintf("cdcInit             tail = %llu, %6d\n", tick_cdcInit_tail,
+    OS_TPrintf("CDC_Init             tail = %llu, %6d\n", tick_cdcInit_tail,
                                                                 OS_TICK_TO_USEC(tick_cdcInit_tail));
 #endif
 }
@@ -396,15 +396,12 @@ void CDC_GetInputPinControl( BOOL *enable_vcnt5, BOOL *enable_sphp, BOOL *enable
  *---------------------------------------------------------------------------*/
 static void CDCi_PowerUpPLL( void )
 {
-    // IOP からの MCLK を check / enable
-
     // page 0, reg 5 で P=2,R=1,PLL on 設定
     CDC_ChangePage( 0 );
-    CDC_WriteI2cRegister( REG_CDC0_PLL_P_R_ADDR,
-                            CDC0_PLL_P_R_PWR | (2 << CDC0_PLL_P_R_DIV_SHIFT) |
+    CDC_WriteI2cRegister(   REG_CDC0_PLL_P_R_ADDR,
+                            CDC0_PLL_P_R_PWR |
+                            (2 << CDC0_PLL_P_R_DIV_SHIFT) |
                             (1 << CDC0_PLL_P_R_MUL_SHIFT) );
-// ADC / DAC のパワーアップ時が問題？
-//    dly_tsk( 15 );
 }
 
 /*---------------------------------------------------------------------------*
@@ -421,11 +418,35 @@ static void CDCi_PowerDownPLL( void )
     // page 0, reg 5 で PLL off 設定
     CDC_ChangePage( 0 );
     CDC_WriteI2cRegister( REG_CDC0_PLL_P_R_ADDR, 0 );
-//    dly_tsk( 15 );
-
-    // IOP からの MCLK を check / disable
 }
 
+/*---------------------------------------------------------------------------*
+  Name:         CDC_SetParamPLL
+
+  Description:  setup PLL parameter of the CODEC
+
+  Arguments:    is48kHz : set 48 kHz if TRUE. set 32kHz if FALSE.
+
+  Returns:      None
+ *---------------------------------------------------------------------------*/
+// パラメータをいきなり変更しても問題ないか要確認
+// Codec Off状態で変更すべき？
+
+void CDC_SetParamPLL( BOOL is48kHz )
+{
+    if (is48kHz)
+    {
+        CDC_WriteI2cRegister( REG_CDC0_PLL_J_ADDR,    15 );
+        CDC_WriteI2cRegister( REG_CDC0_NDAC_DIV_ADDR, CDC0_NDAC_DIV_PWR | 5 );
+        CDC_WriteI2cRegister( REG_CDC0_NADC_DIV_ADDR, CDC0_NADC_DIV_PWR | 5 );
+    }
+    else
+    {
+        CDC_WriteI2cRegister( REG_CDC0_PLL_J_ADDR,    21 );
+        CDC_WriteI2cRegister( REG_CDC0_NDAC_DIV_ADDR, CDC0_NDAC_DIV_PWR | 7 );
+        CDC_WriteI2cRegister( REG_CDC0_NADC_DIV_ADDR, CDC0_NADC_DIV_PWR | 7 );
+    }
+}
 /*---------------------------------------------------------------------------*
   Name:         CDC_PowerUpDAC
 
