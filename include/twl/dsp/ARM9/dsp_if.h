@@ -125,6 +125,18 @@ void DSP_ResetOn(void);
 void DSP_ResetOff(void);
 
 /*---------------------------------------------------------------------------*
+  Name:         DSP_ResetInterface
+
+  Description:  reset interface registers.
+                it should be called while reset state.
+
+  Arguments:    None.
+
+  Returns:      None.
+ *---------------------------------------------------------------------------*/
+void DSP_ResetInterface(void);
+
+/*---------------------------------------------------------------------------*
   Name:         DSP_EnableRecvDataInterrupt
 
   Description:  enable interrupt for receive data from DSP.

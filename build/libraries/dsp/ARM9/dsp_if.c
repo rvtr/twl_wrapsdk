@@ -15,6 +15,7 @@
  *---------------------------------------------------------------------------*/
 #include <twl/dsp.h>
 #include <nitro/hw/ARM9/ioreg_CFG.h>
+#include <nitro/os/common/system.h>
 #include <nitro/misc.h>
 
 /*---------------------------------------------------------------------------*
@@ -52,7 +53,9 @@ static volatile DSPData *const dspData = (DSPData*)REG_DSP_SEND_DATA_0_ADDR;
  *---------------------------------------------------------------------------*/
 void DSP_PowerOn(void)
 {
-    reg_CFG_CLK |= REG_CFG_CLK_DSP_MASK;
+    reg_CFG_DSP_RST &= ~REG_CFG_DSP_RST_OFF_MASK;   // DSPブロックのリセット確認
+    reg_CFG_CLK |= REG_CFG_CLK_DSP_MASK;            // DSPブロックの電源On
+    OS_SpinWaitSysCycles(2);                        // wait 8 cycle @ 134MHz
     reg_CFG_DSP_RST |= REG_CFG_DSP_RST_OFF_MASK;    // DSPブロックのリセット解除
     DSP_ResetOn();                                  // DSPコアのリセット設定
 }
@@ -68,7 +71,7 @@ void DSP_PowerOn(void)
 void DSP_PowerOff(void)
 {
     reg_CFG_DSP_RST &= ~REG_CFG_DSP_RST_OFF_MASK;   // DSPブロックのリセット設定
-    reg_CFG_CLK &= ~REG_CFG_CLK_DSP_MASK;
+    reg_CFG_CLK &= ~REG_CFG_CLK_DSP_MASK;           // DSPブロックの電源Off
 }
 
 /*---------------------------------------------------------------------------*
@@ -105,6 +108,27 @@ void DSP_ResetOff(void)
 }
 
 /*---------------------------------------------------------------------------*
+  Name:         DSP_ResetInterface
+
+  Description:  reset interface registers.
+                it should be called while reset state.
+
+  Arguments:    None.
+
+  Returns:      None.
+ *---------------------------------------------------------------------------*/
+void DSP_ResetInterface(void)
+{
+    u16 dummy;
+    reg_DSP_DSP_CONFIG &= ~REG_DSP_DSP_CONFIG_RECV_DATA_IE_MASK;
+    reg_DSP_DSP_SEM_SEND_DATA = 0;
+    reg_DSP_DSP_SEM_RECV_CLEAR = 0xFFFF;
+    dummy = dspData[0].recv;
+    dummy = dspData[1].recv;
+    dummy = dspData[2].recv;
+}
+
+/*---------------------------------------------------------------------------*
   Name:         DSP_EnableRecvDataInterrupt
 
   Description:  enable interrupt for receive data from DSP.
@@ -116,7 +140,7 @@ void DSP_ResetOff(void)
 void DSP_EnableRecvDataInterrupt(u32 dataNo)
 {
     SDK_ASSERT(dataNo >= 0 && dataNo <= 2);
-    reg_DSP_DSP_CONFIG |= (1 << dataNo) << REG_DSP_DSP_CONFIG_FIFO_IE_SHIFT;
+    reg_DSP_DSP_CONFIG |= (1 << dataNo) << REG_DSP_DSP_CONFIG_RECV_DATA_IE_SHIFT;
 }
 
 /*---------------------------------------------------------------------------*
@@ -131,7 +155,7 @@ void DSP_EnableRecvDataInterrupt(u32 dataNo)
 void DSP_DisableRecvDataInterrupt(u32 dataNo)
 {
     SDK_ASSERT(dataNo >= 0 && dataNo <= 2);
-    reg_DSP_DSP_CONFIG &= ~((1 << dataNo) << REG_DSP_DSP_CONFIG_FIFO_IE_SHIFT);
+    reg_DSP_DSP_CONFIG &= ~((1 << dataNo) << REG_DSP_DSP_CONFIG_RECV_DATA_IE_SHIFT);
 }
 
 /*---------------------------------------------------------------------------*
