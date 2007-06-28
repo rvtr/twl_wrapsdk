@@ -82,7 +82,8 @@ static inline void CDCi_DsmodeChangeSpiMode( SPITransMode continuous )
 {
     reg_SPI_SPICNT = (u16)((1 << REG_SPI_SPICNT_E_SHIFT) |
                            (0 << REG_SPI_SPICNT_I_SHIFT) |
-                           (SPI_COMMPARTNER_TP << REG_SPI_SPICNT_SEL_SHIFT) |
+//                           (SPI_COMMPARTNER_TP << REG_SPI_SPICNT_SEL_SHIFT) |
+                           (SPI_COMMPARTNER_PMIC << REG_SPI_SPICNT_SEL_SHIFT) |
                            (continuous << REG_SPI_SPICNT_MODE_SHIFT) |
                            (CDCi_DsmodeGetSPIBaudRate() << REG_SPI_SPICNT_BAUDRATE_SHIFT));
 }

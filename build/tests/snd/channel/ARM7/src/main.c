@@ -29,7 +29,7 @@
  *---------------------------------------------------------------------------*/
 static OSHeapHandle InitializeAllocateSystem(void);
 static void VBlankIntr(void);
-
+#include <twl/cdc.h>    // for DS-mode
 /*---------------------------------------------------------------------------*
   Name:         TwlSpMain
 
@@ -55,6 +55,14 @@ void TwlSpMain(void)
 
     // サウンド初期化
     SND_Init(THREAD_PRIO_SND);
+
+#if 0
+    // DS mode
+    SND_Disable();
+    reg_SND_I2SCNT &= ~REG_SND_I2SCNT_CODEC_SMP_MASK;   // 32kHz
+    SND_Enable();
+    CDC_GoDsMode();
+#endif
 
 //    reg_CFG_DS_MDFY |= REG_CFG_DS_MDFY_SND_MASK;  // SOUND回路バグ修正 (default: off)
 //    reg_CFG_DS_MDFY |= REG_CFG_DS_MDFY_SDMA_MASK; // SOUND-DMAバグ修正 (default: off)

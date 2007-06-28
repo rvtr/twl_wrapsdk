@@ -46,8 +46,12 @@ static void SNDi_I2SInit(void)
         if (reg_CFG_TWL_EX & REG_CFG_TWL_EX_I2S_MASK)
         {
             isTwl = TRUE;
-            reg_SND_I2SCNT |= REG_SND_I2SCNT_MIX_RATIO_MASK;
-            reg_SND_I2SCNT &= ~(REG_SND_I2SCNT_MUTE_MASK | REG_SND_I2SCNT_CODEC_SMP_MASK);  // 32KHz
+            // 32KHz
+//            reg_SND_I2SCNT |= REG_SND_I2SCNT_MIX_RATIO_MASK;
+//            reg_SND_I2SCNT &= ~(REG_SND_I2SCNT_MUTE_MASK | REG_SND_I2SCNT_CODEC_SMP_MASK);
+            // 48KHz
+            reg_SND_I2SCNT |= REG_SND_I2SCNT_MIX_RATIO_MASK | REG_SND_I2SCNT_CODEC_SMP_MASK;
+            reg_SND_I2SCNT &= ~(REG_SND_I2SCNT_MUTE_MASK);
         }
         if ((reg_CFG_CLK & REG_CFG_CLK_SND_MASK) == 0)
         {
