@@ -20,7 +20,8 @@ include	$(TWLSDK_ROOT)/build/buildtools/commondefs
 
 #----------------------------------------------------------------------------
 
-SUBDIRS =  fatfs_sd
+SUBDIRS =  fatfs_sd \
+           nand_formatter_kmc \
 
 
 #----------------------------------------------------------------------------

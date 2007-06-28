@@ -27,6 +27,9 @@
 #endif
 
 
+/*---------------------------------------------------------------------------*
+  定数
+ *---------------------------------------------------------------------------*/
 #define NUM_SD_PAGES
 #define SD_PAGE_SIZE
 
@@ -50,7 +53,9 @@ extern void i_sdmcCalcSize( void); //TODO:sdmc_current_specを構造体に入れること
 /*---------------------------------------------------------------------------*
   static変数
  *---------------------------------------------------------------------------*/
-static int  nand_drive_no;
+static int     nand_drive_no;
+static FATSpec NandFatSpec[4]; //FATパラメータ(パーティション0～3個別)
+static int     nand_calculated_fat_params = 0;
 
 
 /*---------------------------------------------------------------------------*
@@ -62,6 +67,36 @@ static void sdi_get_nom( u16 min_nom);
 static void sdi_get_fatparams( void);
 static void sdi_build_partition_table( void);
 
+
+#if 1    //アプリケーションでパーティション構成を決めたいとき
+
+u32 NAND_FAT_PARTITION_COUNT;
+u32 NAND_RAW_SECTORS;
+u32 NAND_FAT0_SECTORS;
+u32 NAND_FAT1_SECTORS;
+u32 NAND_FAT2_SECTORS;
+u32 NAND_FAT3_SECTORS;
+
+void nandSetFormatRequest( u16 partition_num, u16* partition_mbytes)
+{
+    NAND_RAW_SECTORS  = (partition_mbytes[0] * 1024 * 1024) / 512;
+    NAND_FAT0_SECTORS = ((partition_mbytes[1] * 1024 * 1024) / 512) + NAND_RAW_SECTORS;
+    NAND_FAT1_SECTORS = (partition_mbytes[2] * 1024 * 1024) / 512;
+    NAND_FAT2_SECTORS = (partition_mbytes[3] * 1024 * 1024) / 512;
+    NAND_FAT3_SECTORS = (partition_mbytes[4] * 1024 * 1024) / 512;
+    NAND_FAT_PARTITION_COUNT = partition_num;
+}
+
+#else    //パーティション構成を決め打ちするとき
+
+#define NAND_FAT_PARTITION_COUNT (3)
+#define NAND_RAW_SECTORS     (( 8*1024*1024)/512);
+#define NAND_FAT0_SECTORS    (((16*1024*1024)/512) + NAND_RAW_SECTORS); //計算上RAWを含めておく
+#define NAND_FAT1_SECTORS    ((16*1024*1024)/512);
+#define NAND_FAT2_SECTORS    (( 8*1024*1024)/512);
+#define NAND_FAT3_SECTORS    (0);
+
+#endif
 
 
 /*---------------------------------------------------------------------------*
@@ -75,7 +110,7 @@ static void sdi_build_partition_table( void);
   Returns:      TRUE/FALSE
                 （FALSEなら pc_format_media が必要）
  *---------------------------------------------------------------------------*/
-BOOL nandCheckMedia( void)
+BOOL nandCheckMedia( void) //TODO:nand partition仕様に対応させること
 {
     u16             i;
     SdmcResultInfo  SdResult;
@@ -188,56 +223,64 @@ int nandRtfsCtrl( int driveno, int opcode, void* pargs)
       
         rtfs_memset( &gc, (byte)0, sizeof(gc));
 
-        i_sdmcCalcSize();        //TODO:sdmc_current_specを構造体に入れること
-        sdi_get_CHS_params();    //最初に呼ぶこと
-        sdi_get_fatparams();
-        sdi_get_nom( (8*1024*1024)/512); //8MBytes <= NOM
+        if( nand_calculated_fat_params == 0) {
+            i_sdmcCalcSize();        //TODO:sdmc_current_specを構造体に入れること
+            sdi_get_CHS_params();    //最初に呼ぶこと
+            sdi_get_fatparams();
+            sdi_get_nom( NAND_RAW_SECTORS);
+            nand_calculated_fat_params = 1;
+        }
 
-        PRINTDEBUG( "heads     : 0x%x\n", sdmc_current_spec.heads);
-        PRINTDEBUG( "secptrack : 0x%x\n", sdmc_current_spec.secptrack);
-        PRINTDEBUG( "cylinders : 0x%x\n", sdmc_current_spec.cylinders);
-        PRINTDEBUG( "SC        : 0x%x\n", sdmc_current_spec.SC);
-        PRINTDEBUG( "BU        : 0x%x\n", sdmc_current_spec.BU);
-        PRINTDEBUG( "RDE       : 0x%x\n", sdmc_current_spec.RDE);
-        PRINTDEBUG( "SS        : 0x%x\n", sdmc_current_spec.SS);
-        PRINTDEBUG( "RSC       : 0x%x\n", sdmc_current_spec.RSC);
-        PRINTDEBUG( "FATBITS   : 0x%x\n", sdmc_current_spec.FATBITS);
-        PRINTDEBUG( "SF        : 0x%x\n", sdmc_current_spec.SF);
-        PRINTDEBUG( "SSA       : 0x%x\n", sdmc_current_spec.SSA);
-        PRINTDEBUG( "NOM       : 0x%x\n", sdmc_current_spec.NOM);
+        PRINTDEBUG( "memory capacity : 0x%x\n", NandFatSpec[pdr->partition_number].memory_capacity);
+        PRINTDEBUG( "device capacity : 0x%x\n", NandFatSpec[pdr->partition_number].device_capacity);
+        PRINTDEBUG( "adjusted capacity : 0x%x\n", NandFatSpec[pdr->partition_number].adjusted_memory_capacity);
+        PRINTDEBUG( "volume cylinders : 0x%x\n", NandFatSpec[pdr->partition_number].volume_cylinders);
+        PRINTDEBUG( "\n");
+        PRINTDEBUG( "heads     : 0x%x\n", NandFatSpec[pdr->partition_number].heads);
+        PRINTDEBUG( "secptrack : 0x%x\n", NandFatSpec[pdr->partition_number].secptrack);
+        PRINTDEBUG( "cylinders : 0x%x\n", NandFatSpec[pdr->partition_number].cylinders);
+        PRINTDEBUG( "SC        : 0x%x\n", NandFatSpec[pdr->partition_number].SC);
+        PRINTDEBUG( "BU        : 0x%x\n", NandFatSpec[pdr->partition_number].BU);
+        PRINTDEBUG( "RDE       : 0x%x\n", NandFatSpec[pdr->partition_number].RDE);
+        PRINTDEBUG( "SS        : 0x%x\n", NandFatSpec[pdr->partition_number].SS);
+        PRINTDEBUG( "RSC       : 0x%x\n", NandFatSpec[pdr->partition_number].RSC);
+        PRINTDEBUG( "FATBITS   : 0x%x\n", NandFatSpec[pdr->partition_number].FATBITS);
+        PRINTDEBUG( "SF        : 0x%x\n", NandFatSpec[pdr->partition_number].SF);
+        PRINTDEBUG( "SSA       : 0x%x\n", NandFatSpec[pdr->partition_number].SSA);
+        PRINTDEBUG( "NOM       : 0x%x\n", NandFatSpec[pdr->partition_number].NOM);
         
-        gc.dev_geometry_lbas = (sdmc_current_spec.adjusted_memory_capacity);// - sdmc_current_spec.NOM);
-        gc.dev_geometry_heads         = sdmc_current_spec.heads;
-        gc.dev_geometry_cylinders     = sdmc_current_spec.cylinders;
-        gc.dev_geometry_secptrack     = sdmc_current_spec.secptrack;
+        /*デバイスの先頭から現在のパーティションの領域までを含む容量分をセットする*/
+        gc.dev_geometry_lbas = (NandFatSpec[pdr->partition_number].begin_sect +
+                                NandFatSpec[pdr->partition_number].memory_capacity);
+        gc.dev_geometry_heads         = NandFatSpec[pdr->partition_number].heads;
+        gc.dev_geometry_secptrack     = NandFatSpec[pdr->partition_number].secptrack;
+                                
+        /*デバイスの先頭から現在のパーティションの領域までを含む容量分をセットする*/
+        gc.dev_geometry_cylinders     = gc.dev_geometry_lbas /
+                                        (gc.dev_geometry_heads * gc.dev_geometry_secptrack);
         /**/
-        gc.fmt_parms_valid     = TRUE;
-        gc.fmt.oemname[0]     = 'T';
-        gc.fmt.oemname[1]     = 'W';
-        gc.fmt.oemname[2]     = 'L';
-        gc.fmt.oemname[3]     = '\0';
-        gc.fmt.secpalloc     = sdmc_current_spec.SC;    /*sectors per cluster(FIX by capacity)*/
-        gc.fmt.secreserved     = sdmc_current_spec.RSC;//sdmc_current_spec.RSC;/*reserved sectors(FIX 1 at FAT12,16)*/
-        gc.fmt.numfats         = 2;
-        gc.fmt.secpfat        = sdmc_current_spec.SF;
-        gc.fmt.numhide         = sdmc_current_spec.NOM;    /**/
-        gc.fmt.numroot         = sdmc_current_spec.RDE;    /*FIX*/
+        gc.fmt_parms_valid   = TRUE;
+        gc.fmt.oemname[0]    = 'T';
+        gc.fmt.oemname[1]    = 'W';
+        gc.fmt.oemname[2]    = 'L';
+        gc.fmt.oemname[3]    = '\0';
+        gc.fmt.secpalloc     = NandFatSpec[pdr->partition_number].SC;    /*sectors per cluster(FIX by capacity)*/
+        gc.fmt.secreserved   = NandFatSpec[pdr->partition_number].RSC;//sdmc_current_spec.RSC;/*reserved sectors(FIX 1 at FAT12,16)*/
+        gc.fmt.numfats       = 2;
+        gc.fmt.secpfat       = NandFatSpec[pdr->partition_number].SF;
+        gc.fmt.numhide       = NandFatSpec[pdr->partition_number].NOM;    /**/
+        gc.fmt.numroot       = NandFatSpec[pdr->partition_number].RDE;    /*FIX*/
         gc.fmt.mediadesc     = 0xF8;
-        gc.fmt.secptrk         = sdmc_current_spec.secptrack;    //CHS Recommendation
-        gc.fmt.numhead         = sdmc_current_spec.heads;
-        gc.fmt.numcyl         = sdmc_current_spec.cylinders;
+        gc.fmt.secptrk       = NandFatSpec[pdr->partition_number].secptrack;    //CHS Recommendation
+        gc.fmt.numhead       = NandFatSpec[pdr->partition_number].heads;
+        gc.fmt.numcyl        = gc.dev_geometry_cylinders;//NandFatSpec[pdr->partition_number].cylinders;
         gc.fmt.physical_drive_no = driveno;
         gc.fmt.binary_volume_label = BIN_VOL_LABEL;
         gc.fmt.text_volume_label[0] = '\0';
-        //TODO:dev_geometry_lbasもセットする必要あるか調べること
+
         PRINTDEBUG( "heads : 0x%x, secptrack : 0x%x, cylinders : 0x%x\n", gc.dev_geometry_heads, gc.dev_geometry_secptrack, gc.dev_geometry_cylinders);
 
-#if (TARGET_OS_CTR == 1)
-        miCpuCopy8( &gc, pargs, sizeof(gc));
-//        copybuff( pargs, &gc, sizeof(gc));
-#else
         MI_CpuCopy8( &gc, pargs, sizeof(gc));
-#endif
         return( 0);
         
       case DEVCTL_FORMAT:
@@ -261,6 +304,7 @@ int nandRtfsCtrl( int driveno, int opcode, void* pargs)
             return(DEVTEST_CHANGED);
         }else{
             PRINTDEBUG( "DEVTEST_NOCHANGE\n");
+            pdr->drive_flags |= DRIVE_FLAGS_INSERTED; //
             return( DEVTEST_NOCHANGE);
         }
         
@@ -270,8 +314,6 @@ int nandRtfsCtrl( int driveno, int opcode, void* pargs)
         sdmcGoIdle( NULL, NULL);    //カード初期化シーケンス TODO:1ポートだけにする
         /*------------------*/
         pdr->drive_flags |= (DRIVE_FLAGS_VALID | DRIVE_FLAGS_REMOVABLE | DRIVE_FLAGS_PARTITIONED);
-        pdr->partition_number = 0;
-        
         pdr->drive_flags |= DRIVE_FLAGS_INSERTED;
         return( 0);
         
@@ -299,22 +341,42 @@ int nandRtfsCtrl( int driveno, int opcode, void* pargs)
 
   Returns:      
  *---------------------------------------------------------------------------*/
-BOOL nandRtfsAttach( int driveno)
+BOOL nandRtfsAttach( int driveno, int partition_no)
 {
     BOOLEAN   result;
     DDRIVE    pdr;
 
+    if( partition_no >= NAND_FAT_PARTITION_COUNT) {
+        return( FALSE);
+    }
+  
     pdr.dev_table_drive_io     = nandRtfsIo;
     pdr.dev_table_perform_device_ioctl = nandRtfsCtrl;
-    pdr.register_file_address  = (dword) 0; /* Not used  */
+    pdr.register_file_address  = (dword) 0;    /* Not used */
     pdr.interrupt_number       = 0;            /* Not used */
-    pdr.drive_flags            = 0;//DRIVE_FLAGS_FAILSAFE;
-    pdr.partition_number       = 0;            /* Not used */
+    pdr.drive_flags            = (DRIVE_FLAGS_VALID | DRIVE_FLAGS_PARTITIONED);//DRIVE_FLAGS_FAILSAFE;
+    pdr.partition_number       = partition_no; /* Not used */
     pdr.pcmcia_slot_number     = 0;            /* Not used */
     pdr.controller_number      = 0;
     pdr.logical_unit_number    = 0;
 
-    result = rtfs_attach( driveno, &pdr, "SD1");    //構造体がFSライブラリ側にコピーされる
+    switch( partition_no) {
+      case 0:
+        result = rtfs_attach( driveno, &pdr, "SD1p0"); //構造体がFSライブラリ側にコピーされる
+        break;
+      case 1:
+        result = rtfs_attach( driveno, &pdr, "SD1p1"); //構造体がFSライブラリ側にコピーされる
+        break;
+      case 2:
+        result = rtfs_attach( driveno, &pdr, "SD1p2"); //構造体がFSライブラリ側にコピーされる
+        break;
+      case 3:
+        result = rtfs_attach( driveno, &pdr, "SD1p3"); //構造体がFSライブラリ側にコピーされる
+        break;
+      default:
+        result = FALSE;
+        break;
+    }
     
     /*drivenoをグローバル変数に記憶*/
     nand_drive_no = driveno;
@@ -323,80 +385,137 @@ BOOL nandRtfsAttach( int driveno)
 }
 
 
-
 /*SD File System Specification(仕様書)に基づいた値を出す*/
 static void sdi_get_CHS_params( void)
 {
+    u16 i;
     int mbytes;
+    u32 cumulative_capacity; //累計
+
+    /**/
+    NandFatSpec[0].memory_capacity = NAND_FAT0_SECTORS;
+    NandFatSpec[1].memory_capacity = NAND_FAT1_SECTORS;
+    NandFatSpec[2].memory_capacity = NAND_FAT2_SECTORS;
+    NandFatSpec[3].memory_capacity = NAND_FAT3_SECTORS;
+
+
+    cumulative_capacity = 0;
+    for( i=0; i<(NAND_FAT_PARTITION_COUNT - 1); i++) {
+        cumulative_capacity += NandFatSpec[i].memory_capacity;
+    }
+    /*容量破綻チェック*/
+    if( cumulative_capacity >= sdmc_current_spec.memory_capacity) {
+        OS_TPrintf( "INVALID PARAMETER ERROR!\n");
+        while( 1) {};
+    }
+
+    /*最終パーティションは残りのセクタ全部*/
+    NandFatSpec[NAND_FAT_PARTITION_COUNT -1].memory_capacity =
+      sdmc_current_spec.memory_capacity - cumulative_capacity;
+
+    /*無効なパーティションにサイズ0を設定*/
+    for( i=NAND_FAT_PARTITION_COUNT; i<4; i++) {
+        NandFatSpec[i].memory_capacity = 0;
+    }
+  
 
 //    mbytes = (sdmc_current_spec.card_capacity / (1024 * 1024)) * 512;
-    mbytes = (sdmc_current_spec.card_capacity >> 11);
+    mbytes = (sdmc_current_spec.card_capacity >> 11); //TODO:forの中に入れてパーティション毎の値にするテストをすること
 
+    for( i=0; i<NAND_FAT_PARTITION_COUNT; i++) {
     while( 1) {
         if( mbytes <= 2) {
-            sdmc_current_spec.heads     = 2;
-            sdmc_current_spec.secptrack = 16;
+            NandFatSpec[i].heads     = 2;
+            NandFatSpec[i].secptrack = 16;
             break;
         }
         if( mbytes <= 16) {
-            sdmc_current_spec.heads     = 2;
-            sdmc_current_spec.secptrack = 32;
+            NandFatSpec[i].heads     = 2;
+            NandFatSpec[i].secptrack = 32;
             break;
         }
         if( mbytes <= 32) {
-            sdmc_current_spec.heads     = 4;
-            sdmc_current_spec.secptrack = 32;
+            NandFatSpec[i].heads     = 4;
+            NandFatSpec[i].secptrack = 32;
             break;
         }
         if( mbytes <= 128) {
-            sdmc_current_spec.heads     = 8;
-            sdmc_current_spec.secptrack = 32;
+            NandFatSpec[i].heads     = 8;
+            NandFatSpec[i].secptrack = 32;
             break;
         }
         if( mbytes <= 256) {
-            sdmc_current_spec.heads     = 16;
-            sdmc_current_spec.secptrack = 32;
+            NandFatSpec[i].heads     = 16;
+            NandFatSpec[i].secptrack = 32;
             break;
         }
         if( mbytes <= 504) {
-            sdmc_current_spec.heads     = 16;
-            sdmc_current_spec.secptrack = 63;
+            NandFatSpec[i].heads     = 16;
+            NandFatSpec[i].secptrack = 63;
             break;
         }
         if( mbytes <= 1008) {
-            sdmc_current_spec.heads     = 32;
-            sdmc_current_spec.secptrack = 63;
+            NandFatSpec[i].heads     = 32;
+            NandFatSpec[i].secptrack = 63;
             break;
         }
         if( mbytes <= 2016) {
-            sdmc_current_spec.heads     = 64;
-            sdmc_current_spec.secptrack = 63;
+            NandFatSpec[i].heads     = 64;
+            NandFatSpec[i].secptrack = 63;
             break;
         }
         if( mbytes <= 2048) {
-            sdmc_current_spec.heads     = 128;
-            sdmc_current_spec.secptrack = 63;
+            NandFatSpec[i].heads     = 128;
+            NandFatSpec[i].secptrack = 63;
             break;
         }
         if( mbytes <= 4032) {
-            sdmc_current_spec.heads     = 128;
-            sdmc_current_spec.secptrack = 63;
+            NandFatSpec[i].heads     = 128;
+            NandFatSpec[i].secptrack = 63;
             break;
         }
         if( mbytes <= 32768) {
-            sdmc_current_spec.heads     = 255;
-            sdmc_current_spec.secptrack = 63;
+            NandFatSpec[i].heads     = 255;
+            NandFatSpec[i].secptrack = 63;
             break;
         }
     }
 
-    /*シリンダ数を計算*/
-    sdmc_current_spec.cylinders = (sdmc_current_spec.memory_capacity /
-                    (sdmc_current_spec.heads * sdmc_current_spec.secptrack));
+        /*デバイス容量設定*/
+        NandFatSpec[i].device_capacity = sdmc_current_spec.memory_capacity;
+
+        /*---------- デバイス全体 ----------*/
+        NandFatSpec[i].cylinders =    /*シリンダ数を計算*/
+          (NandFatSpec[i].device_capacity /
+           (NandFatSpec[i].heads * NandFatSpec[i].secptrack));
+
+        /*memory_capacityを再計算してadjusted_memory_capacityに格納*/
+        NandFatSpec[i].adjusted_device_capacity =
+          NandFatSpec[i].cylinders *
+            (NandFatSpec[i].heads * NandFatSpec[i].secptrack);
+        /*----------------------------------*/
+
+        /*---------- ボリューム ----------*/
+        NandFatSpec[i].volume_cylinders =    /*シリンダ数を計算*/
+          (NandFatSpec[i].memory_capacity /
+           (NandFatSpec[i].heads * NandFatSpec[i].secptrack));
+
+        /*memory_capacityを再計算してadjusted_memory_capacityに格納*/
+        NandFatSpec[i].adjusted_memory_capacity =
+          (NandFatSpec[i].volume_cylinders *
+           (NandFatSpec[i].heads * NandFatSpec[i].secptrack));
+        /*--------------------------------*/
+    }
+  
+    PRINTDEBUG( "device_capacity:0x%x, adjusted:0x%x\n",
+                NandFatSpec[0].device_capacity,
+                NandFatSpec[0].adjusted_device_capacity);
     
-    /*memory_capacityを再計算してadjusted_memory_capacityに格納*/
-    sdmc_current_spec.adjusted_memory_capacity = sdmc_current_spec.cylinders *
-                    (sdmc_current_spec.heads * sdmc_current_spec.secptrack);
+    for( i=0; i<NAND_FAT_PARTITION_COUNT; i++) {
+        PRINTDEBUG( "partition %d memory_capacity:0x%x, adjusted:0x%x\n",
+                    i, NandFatSpec[i].memory_capacity,
+                    NandFatSpec[i].adjusted_memory_capacity);
+    }
 }
 
 
@@ -410,72 +529,105 @@ static u32 sdi_get_ceil( u32 cval, u32 mval)
 /*マスターブートセクタのセクタ数を返す*/
 static void sdi_get_nom( u16 MIN_NOM)
 {
-    u32 RSC = 1;      //FAT12,16では1
-    u32 RDE = 512;    //ルートディレクトリエントリ。FIX
-    u32 SS  = 512;    //セクタサイズ。FIX
-    u32 TS, SC, n;
-    u32 MAX, SFdash;
+    u32 RSC[4];
+    u32 TS[4];
+    u32 RDE = 512; //ルートディレクトリエントリ(FIX)
+    u32 SS  = 512; //セクタサイズ(FIX)
+    u32 SC, n, MAX, SFdash;
+    u16 i;
+      
+    RSC[0] = 1; //FAT12,16では1
+    RSC[1] = 1;
+    RSC[2] = 1;
+    RSC[3] = 1;
 
-    TS = sdmc_current_spec.adjusted_memory_capacity;
-    SC = sdmc_current_spec.SC;
+    TS[0] = NandFatSpec[0].adjusted_memory_capacity;
+    TS[1] = NandFatSpec[1].adjusted_memory_capacity;
+    TS[2] = NandFatSpec[2].adjusted_memory_capacity;
+    TS[3] = NandFatSpec[3].adjusted_memory_capacity;
+
+    NandFatSpec[0].begin_sect = 0;
+    NandFatSpec[1].begin_sect = NandFatSpec[0].begin_sect + NandFatSpec[0].memory_capacity;
+    NandFatSpec[2].begin_sect = NandFatSpec[1].begin_sect + NandFatSpec[1].memory_capacity;
+    NandFatSpec[3].begin_sect = NandFatSpec[2].begin_sect + NandFatSpec[2].memory_capacity;
+
+
+    for( i=0; i<NAND_FAT_PARTITION_COUNT; i++) {
+      
+        SC = NandFatSpec[i].SC;
     
-    sdmc_current_spec.SF = sdi_get_ceil( TS/SC * sdmc_current_spec.FATBITS, SS*8);
+        NandFatSpec[i].SF = sdi_get_ceil( TS[i]/SC * NandFatSpec[i].FATBITS, SS*8);
 
-    /*-----------------------SDHCのとき----------------------------*/
-    if( sdmc_current_spec.csd_ver2_flag) {
-        /*nandの場合、NOMは少なくともMIN_NOM以上*/
-        sdmc_current_spec.NOM = sdi_get_ceil( MIN_NOM, sdmc_current_spec.BU) *
-                                              sdmc_current_spec.BU;
-        //sdmc_current_spec.NOM = sdmc_current_spec.BU;
-        do {
-            n = sdi_get_ceil( 2*sdmc_current_spec.SF, sdmc_current_spec.BU);
-            sdmc_current_spec.RSC = (sdmc_current_spec.BU * n) - ( 2 * sdmc_current_spec.SF);
-            if( sdmc_current_spec.RSC < 9) {
-                sdmc_current_spec.RSC += sdmc_current_spec.BU;
-            }
-            sdmc_current_spec.SSA = sdmc_current_spec.RSC + (2 * sdmc_current_spec.SF);
-            do {
-                MAX = ((TS - sdmc_current_spec.NOM - sdmc_current_spec.SSA) / SC) + 1;
-                SFdash = sdi_get_ceil( (2+(MAX-1)) * sdmc_current_spec.FATBITS, SS*8);
-                if( SFdash > sdmc_current_spec.SF) {
-                    sdmc_current_spec.SSA += sdmc_current_spec.BU;
-                    sdmc_current_spec.RSC += sdmc_current_spec.BU;
-                }else{
-                    break;
-                }
-            }while( 1);
-            if( SFdash != sdmc_current_spec.SF) {
-                sdmc_current_spec.SF -= 1;
-            }else{
-                break;
-            }
-        }while( 1);
-    }else{    /*-------------------------SDのとき-------------------------------*/
-        do {
-            sdmc_current_spec.SSA = RSC + ( 2 * sdmc_current_spec.SF) + sdi_get_ceil( 32*RDE, SS);
-            n = sdi_get_ceil( sdmc_current_spec.SSA, sdmc_current_spec.BU);
+        /*-----------------------SDHCのとき----------------------------*/
+        if( sdmc_current_spec.csd_ver2_flag) {
+            PRINTDEBUG( "ERR! enter SDHC branch\n");
             /*nandの場合、NOMは少なくともMIN_NOM以上*/
-            n+= sdi_get_ceil( MIN_NOM, sdmc_current_spec.BU);
-          
-            sdmc_current_spec.NOM = (sdmc_current_spec.BU * n) - sdmc_current_spec.SSA;
-            if( sdmc_current_spec.NOM != sdmc_current_spec.BU) {
-                sdmc_current_spec.NOM += sdmc_current_spec.BU;
+            if( i==0) {
+                NandFatSpec[i].NOM = sdi_get_ceil( MIN_NOM, NandFatSpec[i].BU) *
+                                                   NandFatSpec[i].BU;
+            }else{
+                sdmc_current_spec.NOM = sdmc_current_spec.BU;
             }
             do {
-                MAX = ((TS - sdmc_current_spec.NOM - sdmc_current_spec.SSA) / SC) + 1;
-                SFdash = sdi_get_ceil( (2+(MAX-1)) * sdmc_current_spec.FATBITS, SS*8);
-                if( SFdash > sdmc_current_spec.SF) {
-                    sdmc_current_spec.NOM += sdmc_current_spec.BU;
+                n = sdi_get_ceil( 2*NandFatSpec[i].SF, NandFatSpec[i].BU);
+                NandFatSpec[i].RSC = (NandFatSpec[i].BU * n) - ( 2 * NandFatSpec[i].SF);
+                if( NandFatSpec[i].RSC < 9) {
+                    NandFatSpec[i].RSC += NandFatSpec[i].BU;
+                }
+                NandFatSpec[i].SSA = NandFatSpec[i].RSC + (2 * NandFatSpec[i].SF);
+                do {
+                    MAX = ((TS[i] - NandFatSpec[i].NOM - NandFatSpec[i].SSA) / SC) + 1;
+                    SFdash = sdi_get_ceil( (2+(MAX-1)) * NandFatSpec[i].FATBITS, SS*8);
+                    if( SFdash > NandFatSpec[i].SF) {
+                        NandFatSpec[i].SSA += NandFatSpec[i].BU;
+                        NandFatSpec[i].RSC += NandFatSpec[i].BU;
+                    }else{
+                        break;
+                    }
+                }while( 1);
+                if( SFdash != NandFatSpec[i].SF) {
+                    NandFatSpec[i].SF -= 1;
                 }else{
                     break;
                 }
             }while( 1);
-            if( SFdash != sdmc_current_spec.SF) {
-                sdmc_current_spec.SF = SFdash;
-            }else{
-                break;    //complete
-            }
-        }while( 1);
+        }else{    /*-------------------------SDのとき-------------------------------*/
+            do {
+                NandFatSpec[i].SSA = RSC[i] + ( 2 * NandFatSpec[i].SF) + sdi_get_ceil( 32*RDE, SS);
+                n = sdi_get_ceil( NandFatSpec[i].SSA, NandFatSpec[i].BU);
+              
+                /*nand パーティション0の場合、NOMは少なくともMIN_NOM以上*/
+                if( i==0) {
+                    n+= sdi_get_ceil( MIN_NOM, NandFatSpec[i].BU);
+                }
+          
+                NandFatSpec[i].NOM = (NandFatSpec[i].BU * n) - NandFatSpec[i].SSA;
+                if( NandFatSpec[i].NOM != NandFatSpec[i].BU) {
+                    NandFatSpec[i].NOM += NandFatSpec[i].BU;
+                }
+                do {
+                    MAX = ((TS[i] - NandFatSpec[i].NOM - NandFatSpec[i].SSA) / SC) + 1;
+                    SFdash = sdi_get_ceil( (2+(MAX-1)) * NandFatSpec[i].FATBITS, SS*8);
+                    if( SFdash > NandFatSpec[i].SF) {
+                        NandFatSpec[i].NOM += NandFatSpec[i].BU;
+                    }else{
+                        break;
+                    }
+                }while( 1);
+                if( SFdash != NandFatSpec[i].SF) {
+                    NandFatSpec[i].SF = SFdash;
+                }else{
+                    break;    //complete
+                }
+            }while( 1);
+        }
+    }
+
+    for( i=0; i<NAND_FAT_PARTITION_COUNT; i++) {
+        NandFatSpec[i].NOM += NandFatSpec[i].begin_sect; //各パーティションの先頭
+        PRINTDEBUG( "before NOM:0x%x, begin_sect:0x%x\n", NandFatSpec[i].NOM, NandFatSpec[i].begin_sect);
+        PRINTDEBUG( "partition %d  NOM:0x%x, SSA:0x%x, begin_sect:0x%x\n",
+                    i, NandFatSpec[i].NOM, NandFatSpec[i].SSA, NandFatSpec[i].begin_sect);
     }
 
     return;
@@ -484,150 +636,168 @@ static void sdi_get_nom( u16 MIN_NOM)
 /*FATのビット数を返す*/
 static void sdi_get_fatparams( void)
 {
-    int mbytes;
+    int i, mbytes;
 
-//    mbytes = (sdmc_current_spec.card_capacity / (1024 * 1024)) * 512;
-    mbytes = (sdmc_current_spec.card_capacity >> 11);
+    for( i=0; i<NAND_FAT_PARTITION_COUNT; i++) {
+//        mbytes = (sdmc_current_spec.card_capacity / (1024 * 1024)) * 512;
+        mbytes = (sdmc_current_spec.card_capacity >> 11);
 
     if( mbytes <= 64) {
-        sdmc_current_spec.FATBITS = 12;
-        sdmc_current_spec.RDE = 512;
-        sdmc_current_spec.RSC = 1;
+        NandFatSpec[i].FATBITS = 12;
+        NandFatSpec[i].RDE = 512;
+        NandFatSpec[i].RSC = 1;
     }else{
         if( mbytes <= 2048) {
-            sdmc_current_spec.FATBITS = 16;
-            sdmc_current_spec.RDE = 512;
-            sdmc_current_spec.RSC = 1;
+            NandFatSpec[i].FATBITS = 16;
+            NandFatSpec[i].RDE = 512;
+            NandFatSpec[i].RSC = 1;
         }else{
-            sdmc_current_spec.FATBITS = 32;
-            sdmc_current_spec.RDE = 0;    //FAT32のときは未使用。0にしておかないとRTFSが BAD FORMAT を返す。 
-            sdmc_current_spec.RSC = 1;
+            NandFatSpec[i].FATBITS = 32;
+            NandFatSpec[i].RDE = 0;    //FAT32のときは未使用。0にしておかないとRTFSが BAD FORMAT を返す。 
+            NandFatSpec[i].RSC = 1;
         }
     }
-    
-    if( mbytes <= 8) {
-        sdmc_current_spec.SC = 16;
-        sdmc_current_spec.BU = 16;
-        return;
+
+    while( 1) {
+        if( mbytes <= 8) {
+            NandFatSpec[i].SC = 16;
+            NandFatSpec[i].BU = 16;
+            break;
+        }
+        if( mbytes <= 64) {
+            NandFatSpec[i].SC = 32;
+            NandFatSpec[i].BU = 32;
+            break;
+        }
+        if( mbytes <= 256) {
+            NandFatSpec[i].SC = 32;
+            NandFatSpec[i].BU = 64;
+            break;
+        }
+        if( mbytes <= 1024) {
+            NandFatSpec[i].SC = 32;
+            NandFatSpec[i].BU = 128;
+            break;
+        }
+        if( mbytes <= 2048) {
+            NandFatSpec[i].SC = 64;
+            NandFatSpec[i].BU = 128;
+            break;
+        }
+        if( mbytes <= 32768) {
+            NandFatSpec[i].SC = 64;
+            NandFatSpec[i].BU = 8192;
+            break;
+        }
+        break;
     }
-    if( mbytes <= 64) {
-        sdmc_current_spec.SC = 32;
-        sdmc_current_spec.BU = 32;
-        return;
-    }
-    if( mbytes <= 256) {
-        sdmc_current_spec.SC = 32;
-        sdmc_current_spec.BU = 64;
-        return;
-    }
-    if( mbytes <= 1024) {
-        sdmc_current_spec.SC = 32;
-        sdmc_current_spec.BU = 128;
-        return;
-    }
-    if( mbytes <= 2048) {
-        sdmc_current_spec.SC = 64;
-        sdmc_current_spec.BU = 128;
-        return;
-    }
-    if( mbytes <= 32768) {
-        sdmc_current_spec.SC = 64;
-        sdmc_current_spec.BU = 8192;
-        return;
     }
 }
 
 /*MBRセクタ(パーティションセクタ含む)を生成して書き込む*/
 static void sdi_build_partition_table( void)
 {
-    u16 MbrSectDat[512/2];
-    u32 starting_head, starting_sect, starting_cyl;
-    u32 ending_head, ending_sect, ending_cyl;
-    u32 total_sect;
-#if (SD_DEBUG_PRINT_ON == 1)    
-    u32 starting_data, ending_data;
-#endif
-    u32 systemid;
-    SdmcResultInfo    SdResult;
+    SdmcResultInfo SdResult;
+    u16  MbrSectDat[512/2];
+    u32  starting_head[4], starting_sect[4], starting_cyl[4];
+    u32  ending_head[4],   ending_sect[4],   ending_cyl[4];
+    u32  total_sect[4];
+    u32  starting_data[4], ending_data[4];
+    u32  systemid[4];
+    u16  i;
 
-    /**/
-    starting_head = sdmc_current_spec.NOM % (sdmc_current_spec.heads *
-                                             sdmc_current_spec.secptrack);
-    starting_head /= sdmc_current_spec.secptrack;
+    for( i=0; i<4; i++) {
+        if( i < NAND_FAT_PARTITION_COUNT) {
+            /**/
+            starting_head[i] = NandFatSpec[i].NOM % (NandFatSpec[i].heads *
+                                                     NandFatSpec[i].secptrack);
+            starting_head[i] /= NandFatSpec[i].secptrack;
 
-    /**/
-    starting_sect = (sdmc_current_spec.NOM % sdmc_current_spec.secptrack) + 1;
+            /**/
+            starting_sect[i] = (NandFatSpec[i].NOM % NandFatSpec[i].secptrack) + 1;
 
-    /**/
-    starting_cyl = sdmc_current_spec.NOM / (sdmc_current_spec.heads *
-                                             sdmc_current_spec.secptrack);
+            /**/
+            starting_cyl[i] = NandFatSpec[i].NOM / (NandFatSpec[i].heads *
+                                                    NandFatSpec[i].secptrack);
 
-    /**/
-    total_sect = (sdmc_current_spec.adjusted_memory_capacity - sdmc_current_spec.NOM);
-    ending_head = (sdmc_current_spec.NOM + total_sect - 1) %
-                    (sdmc_current_spec.heads * sdmc_current_spec.secptrack);
-    ending_head /= sdmc_current_spec.secptrack;
+            /**/
+//            total_sect[i] = (NandFatSpec[i].adjusted_memory_capacity - NandFatSpec[i].NOM);
+            total_sect[i] = (NandFatSpec[i].begin_sect +
+                             NandFatSpec[i].adjusted_memory_capacity - NandFatSpec[i].NOM);
+          
+            ending_head[i] = (NandFatSpec[i].NOM + total_sect[i] - 1) %
+                             (NandFatSpec[i].heads * NandFatSpec[i].secptrack);
+            ending_head[i] /= NandFatSpec[i].secptrack;
 
-    /**/
-    ending_sect = ((sdmc_current_spec.NOM + total_sect - 1) %
-                    sdmc_current_spec.secptrack) + 1;
+            /**/
+            ending_sect[i] = ((NandFatSpec[i].NOM + total_sect[i] - 1) %
+                               NandFatSpec[i].secptrack) + 1;
 
-    /**/
-    ending_cyl = (sdmc_current_spec.NOM + total_sect - 1) /
-                    (sdmc_current_spec.heads * sdmc_current_spec.secptrack);
+            /**/
+            ending_cyl[i] = (NandFatSpec[i].NOM + total_sect[i] - 1) /
+                            (NandFatSpec[i].heads * NandFatSpec[i].secptrack);
 
-    /**/
-    if( sdmc_current_spec.FATBITS == 32) {    //FAT32のとき
-        if( total_sect < 0xFB0400) {        //8032.5MBが閾値(SD FileSystemSpec2.00参照)
-            systemid = 0x0B;        /* FAT32 */
+            /**/
+            if( NandFatSpec[i].FATBITS == 32) {    //FAT32のとき
+                if( total_sect[i] < 0xFB0400) {        //8032.5MBが閾値(SD FileSystemSpec2.00参照)
+                    systemid[i] = 0x0B;        /* FAT32 */
+                }else{
+                    systemid[i] = 0x0C;        /* FAT32(拡張INT13対応) */
+                }
+            }else{                                 //FAT12,FAT16のとき
+                if( total_sect[i] < 32680) {
+                    systemid[i] = 0x01;        /* FAT12 */
+                }else if( total_sect[i] < 65536) {
+                    systemid[i] = 0x04;        /* FAT16(16MB～32MB未満) */
+                }else{
+                    systemid[i] = 0x06;        /* FAT16(32MB～4GB) */
+                }
+            }
         }else{
-            systemid = 0x0C;        /* FAT32(拡張INT13対応) */
-        }
-    }else{                                    //FAT12,FAT16のとき
-        if( total_sect < 32680) {
-            systemid = 0x01;        /* FAT12 */
-        }else if( total_sect < 65536) {
-            systemid = 0x04;        /* FAT16(16MB～32MB未満) */
-        }else{
-            systemid = 0x06;        /* FAT16(32MB～4GB) */
+            starting_head[i] = 0;
+            starting_sect[i] = 0;
+            starting_cyl[i]  = 0;
+            total_sect[i]    = 0;
+            ending_head[i]   = 0;
+            ending_sect[i]   = 0;
+            ending_cyl[i]    = 0;
+            systemid[i]      = 0;
         }
     }
         
     /*MBRセクタ(パーティションテーブル含む)作成*/
-#if (TARGET_OS_CTR == 1)
-    miCpuFill8( MbrSectDat, 0, 512);
-#else
     MI_CpuFill8( MbrSectDat, 0, 512);
-#endif
-    MbrSectDat[446/2] = (starting_head<<8);
-    //上位8bit:starting_cylの下位8bit, 下位8bit:starting_cylの上位2bit + starting_sect 6bit.
-    MbrSectDat[448/2] = (starting_cyl<<8) + ((starting_cyl>>2) & 0xC0) + starting_sect;
-    MbrSectDat[450/2] = (ending_head<<8) + systemid;
-    //上位8bit:ending_cylの下位8bit, 下位8bit:ending_cylの上位2bit + ending_sect 6bit.
-    MbrSectDat[452/2] = (ending_cyl<<8) + ((ending_cyl>>2) & 0xC0) + ending_sect;
-    MbrSectDat[454/2] = sdmc_current_spec.NOM;
-    MbrSectDat[456/2] = (sdmc_current_spec.NOM>>16);
-    MbrSectDat[458/2] = total_sect;
-    MbrSectDat[460/2] = (total_sect>>16);
+
+    for( i=0; i<4; i++) {
+        MbrSectDat[(446+(i*16))/2] = (starting_head[i]<<8);
+        //上位8bit:starting_cylの下位8bit, 下位8bit:starting_cylの上位2bit + starting_sect 6bit.
+        MbrSectDat[(448+(i*16))/2] = (starting_cyl[i]<<8) +
+                                    ((starting_cyl[i]>>2) & 0xC0) + starting_sect[i];
+        MbrSectDat[(450+(i*16))/2] = (ending_head[i]<<8) + systemid[i];
+        //上位8bit:ending_cylの下位8bit, 下位8bit:ending_cylの上位2bit + ending_sect 6bit.
+        MbrSectDat[(452+(i*16))/2] = (ending_cyl[i]<<8) +
+                                    ((ending_cyl[i]>>2) & 0xC0) + ending_sect[i];
+        MbrSectDat[(454+(i*16))/2] = NandFatSpec[i].NOM;
+        MbrSectDat[(456+(i*16))/2] = (NandFatSpec[i].NOM>>16);
+        MbrSectDat[(458+(i*16))/2] = total_sect[i];
+        MbrSectDat[(460+(i*16))/2] = (total_sect[i]>>16);
+    }
     MbrSectDat[510/2] = 0xAA55;
     /*セクタ0に書き込み*/
-    sdmcWriteFifo( MbrSectDat, 1, 0, NULL, &SdResult);
+    sdmcWriteFifo( MbrSectDat, 1, 0, NULL, &SdResult);//MbrSectDatは2Byte alignかも知れないので危険
     
     /**/
-    PRINTDEBUG( "total    sect : 0x%x\n", total_sect);
-    PRINTDEBUG( "starting head : 0x%x\n", starting_head);
-    PRINTDEBUG( "starting sect : 0x%x\n", starting_sect);
-    PRINTDEBUG( "starting cyl  : 0x%x\n", starting_cyl);
-    PRINTDEBUG( "ending   head : 0x%x\n", ending_head);
-    PRINTDEBUG( "ending   sect : 0x%x\n", ending_sect);
-    PRINTDEBUG( "ending   cyl  : 0x%x\n", ending_cyl);
-    PRINTDEBUG( "\n");
-#if (SD_DEBUG_PRINT_ON == 1)    
-    starting_data = (starting_cyl<<8) + ((starting_cyl>>2) & 0xC0) + starting_sect;
-    PRINTDEBUG( "starting data : 0x%x\n", starting_data);
-    ending_data = (ending_cyl<<8) + ((ending_cyl>>2) & 0xC0) + ending_sect;
-    PRINTDEBUG( "endign   data : 0x%x\n", ending_data);
-#endif
+    for( i=0; i<4; i++) {
+        PRINTDEBUG( "---partition %d---\n", i);
+        PRINTDEBUG( "total    sect : 0x%x\n", total_sect[i]);
+        PRINTDEBUG( "starting head : 0x%x\n", starting_head[i]);
+        PRINTDEBUG( "starting sect : 0x%x\n", starting_sect[i]);
+        PRINTDEBUG( "starting cyl  : 0x%x\n", starting_cyl[i]);
+        PRINTDEBUG( "ending   head : 0x%x\n", ending_head[i]);
+        PRINTDEBUG( "ending   sect : 0x%x\n", ending_sect[i]);
+        PRINTDEBUG( "ending   cyl  : 0x%x\n", ending_cyl[i]);
+        PRINTDEBUG( "\n");
+    }
 }
 
 //#endif /*(INCLUDE_SD)*/

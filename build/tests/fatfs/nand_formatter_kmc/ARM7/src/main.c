@@ -24,10 +24,25 @@
 #define kmc_getchar() ((char)vlink_dos_get_console())
 #define kmc_putchar(x) vlink_dos_put_console((char)(x))
 
+
+
+
+
+extern void nandSetFormatRequest( u16 partition_num, u16* partition_mbytes);
+
+
 /*---------------------------------------------------------------------------*
     定数定義
  *---------------------------------------------------------------------------*/
 #define PRINTDEBUG  OS_TPrintf
+
+//配列partition_MB_sizeのインデックス
+#define INDEX_RAW_PARTITION    0
+#define INDEX_FAT0_PARTITION   1
+#define INDEX_FAT1_PARTITION   2
+#define INDEX_FAT2_PARTITION   3
+#define INDEX_FAT3_PARTITION   4
+
 
 /*---------------------------------------------------------------------------*
     内部関数定義
@@ -64,6 +79,46 @@ static BOOL getchar_yes_no_prompt(void)
   }
 }
 
+static int pow10( int count)
+{
+  int i, result;
+  
+  result = 1;
+  for( i=0; i<count; i++) {
+    result *= 10;
+  }
+  return result;
+}
+
+/*入力された数字(3桁まで)を返す*/
+static int get_number_prompt( void)
+{
+  int i = 0;
+  char c;
+  int j, keta, pow_num, result_num;
+  int size_num[3]; //3桁MBytes
+  
+  while( (c = kmc_getchar()) != '\r') {
+      if( (c >= '0')&&(c <= '9')) {
+          kmc_putchar( c);
+          size_num[i++] = ((int)c) % ((int)'0');
+          if( i==3) { break;}
+      }
+      if( c == '\b') {
+          if( i != 0) { i--;}
+          kmc_putchar( c);
+      }
+  }
+  keta = i;
+  
+  result_num = 0;
+  for( j=0; j<keta; j++) {
+      pow_num = pow10( keta-i);
+      i--;
+      result_num += (size_num[i] * pow_num);
+  }
+  return( result_num);
+}
 
 
 /*---------------------------------------------------------------------------*
@@ -81,6 +136,11 @@ void TwlSpMain(void)
     OSHeapHandle   heapHandle;
     SDMC_ERR_CODE  result;
     SdmcResultInfo SdResult;
+    /**/
+    byte TEST_FILENAME[] = "\\nand_p0_test.bin";
+    byte VOLUME_LABEL[]  = "F:";
+    u16 nand_fat_partition_num; //FATパーティション数
+    u16 partition_MB_size[5];   //パーティション毎の容量
     /**/
     PCFD           fd;
     CHKDISK_STATS dstat;
@@ -114,7 +174,7 @@ void TwlSpMain(void)
 
 
     /**/
-    PRINTDEBUG("Sample program starts.\n");
+    PRINTDEBUG("\nSample program starts.\n");
     {
       OSHeapHandle hh;
       OS_SetSubPrivArenaLo( OS_InitAlloc( OS_ARENA_MAIN_SUBPRIV, OS_GetSubPrivArenaLo(), OS_GetSubPrivArenaHi(), 1));
@@ -122,8 +182,6 @@ void TwlSpMain(void)
       OS_SetCurrentHeap( OS_ARENA_MAIN_SUBPRIV, hh);
       if( rtfs_init() == FALSE) {
         PRINTDEBUG( "rtfs_init failed.\n");
-      }else{
-        PRINTDEBUG( "rtfs_init success.\n");
       }
     }
 
@@ -135,60 +193,172 @@ void TwlSpMain(void)
     if( result != SDMC_NORMAL) {
         PRINTDEBUG( "sdmcInit : failed\n");
         while( 1) {};
-    }else{
-        PRINTDEBUG( "sdmcInit : success\n");
     }
 
-    /*デバイスドライバの登録*/
-    PRINTDEBUG( "attach start\n");
-    if( nandRtfsAttach( 5) == FALSE) {  //nandをFドライブにする
+  
+    DBG_PRINTF( "NAND FLASH FORMAT?(y/n) -> ");
+    if( FALSE == getchar_yes_no_prompt()) {
+        PRINTDEBUG( "o\n");
+        DBG_CHAR( '\n');
+        goto NAND_FLASH_FORMAT_END;
+    }
+    DBG_PRINTF( "es\n");
+    DBG_CHAR( '\n');
+  
+
+#if 1
+    nand_fat_partition_num = 1;
+    while( 1) {
+        DBG_PRINTF( "RAW PARTITION SIZE?(MBytes) -> ");
+        partition_MB_size[INDEX_RAW_PARTITION] = get_number_prompt();
+        DBG_PRINTF( "  (%d MBytes)\n\n", partition_MB_size[INDEX_RAW_PARTITION]);
+
+        DBG_PRINTF( "FAT PARTITION 0 SIZE?(MBytes) -> ");
+        partition_MB_size[INDEX_FAT0_PARTITION] = get_number_prompt();
+        DBG_PRINTF( "  (%d MBytes)\n\n", partition_MB_size[INDEX_FAT0_PARTITION]);
+        if( partition_MB_size[INDEX_FAT0_PARTITION] == 0) {
+            DBG_PRINTF( "invalid parameter.\n");
+            goto NAND_FLASH_FORMAT_END;
+        }
+        nand_fat_partition_num++;
+
+        DBG_PRINTF( "FAT PARTITION 1 SIZE?(MBytes) -> ");
+        partition_MB_size[INDEX_FAT1_PARTITION] = get_number_prompt();
+        DBG_PRINTF( "  (%d MBytes)\n\n", partition_MB_size[INDEX_FAT1_PARTITION]);
+        if( partition_MB_size[INDEX_FAT1_PARTITION] == 0) {
+            break;
+        }
+        nand_fat_partition_num++;
+
+        DBG_PRINTF( "FAT PARTITION 2 SIZE?(MBytes) -> ");
+        partition_MB_size[INDEX_FAT2_PARTITION] = get_number_prompt();
+        DBG_PRINTF( "  (%d MBytes)\n\n", partition_MB_size[INDEX_FAT2_PARTITION]);
+        if( partition_MB_size[INDEX_FAT2_PARTITION] == 0) {
+            break;
+        }
+        nand_fat_partition_num++;
+  
+        DBG_PRINTF( "FAT PARTITION 3 SIZE?(MBytes) -> ");
+        partition_MB_size[INDEX_FAT3_PARTITION] = get_number_prompt();
+        DBG_PRINTF( "  (%d MBytes)\n\n", partition_MB_size[INDEX_FAT3_PARTITION]);
+        break;
+    }
+#endif
+    DBG_PRINTF( "%d FAT Partitions.\n", nand_fat_partition_num);
+    /*パーティション構成をライブラリに要求*/
+    nandSetFormatRequest( nand_fat_partition_num, partition_MB_size);
+
+  
+  
+    /*マウント*/
+    if( nandRtfsAttach( 5, 0) == FALSE) {  //nandパーティション0をFドライブにする
         PRINTDEBUG( "nandRtfsAttach failed.\n");
+        goto NAND_FLASH_FORMAT_END;
     }else{
-        if( nandRtfsAttach( 5) == FALSE) {
-            PRINTDEBUG( "nandRtfsAttach success.\n");
+        if( nandRtfsAttach( 5, 0) == FALSE) {
         }else{
             PRINTDEBUG( "nandRtfsAttach error!.\n");
+            goto NAND_FLASH_FORMAT_END;
         }
     }
 
     if( !rtfs_pc_set_default_drive( (unsigned char*)"F:")) {
         PRINTDEBUG( "pc_set_default_drive failed\n");
-        while( 1){};
+        goto NAND_FLASH_FORMAT_END;
     }
-    PRINTDEBUG( "pc_set_default_drive success\n");
+
 
     /**/
-    PRINTDEBUG( "pc_check_disk start. please wait.\n");
-    pc_check_disk( (byte*)"F:", &dstat, 0, 1, 1);
-    PRINTDEBUG( "pc_check_disk end.\n");
+//    PRINTDEBUG( "pc_check_disk start. please wait.\n");
+//    pc_check_disk( (byte*)"F:", &dstat, 0, 1, 1);
+//    PRINTDEBUG( "pc_check_disk end.\n");
 
 
+    /*--- MBR書き込み、パーティション0フォーマット ---*/
     if( !rtfs_pc_get_media_parms( (byte*)"F:", &geometry)) {
         PRINTDEBUG( "pc_get_media_parms failed\n");
+        goto NAND_FLASH_FORMAT_END;
     }
   
+    /**/
     if( !pc_format_media( (byte*)"F:", &geometry)) {
         PRINTDEBUG( "pc_format_media failed\n");
+        goto NAND_FLASH_FORMAT_END;
     }
-
+    PRINTDEBUG( "build MBR success.\n");
+  
+    /*ボリュームフォーマット*/
     if( !pc_format_volume( (byte*)"F:", &geometry)) {
-        PRINTDEBUG( "pc_format_volume failed\n");
+        PRINTDEBUG( "pc_format_volume (p0) failed\n");
+        goto NAND_FLASH_FORMAT_END;
     }
+    PRINTDEBUG( "format FAT partition 0 success.\n");
+    /*-------------------------------------------------*/
+
 
   
-    PRINTDEBUG( "Sample program ends.\n");
-
-
-    while (TRUE)
-    {
-        OS_Halt();
-
-        //---- check reset
-        if (OS_IsResetOccurred())
-        {
-            OS_ResetSystem();
+    /*マウント(F:p0, G:p1, H:p2, I:p3)*/
+    for( i=1; i<nand_fat_partition_num; i++) {
+        if( nandRtfsAttach( (5+i), i) == FALSE) {
+            PRINTDEBUG( "nandRtfsAttach failed.\n");
+            goto NAND_FLASH_FORMAT_END;
+        }else{
+            if( nandRtfsAttach( (5+i), i) == FALSE) {
+            }else{
+                PRINTDEBUG( "nandRtfsAttach error!.\n");
+                goto NAND_FLASH_FORMAT_END;
+            }
         }
+
     }
+    /*-----------------------------*/
+
+
+    /*ボリュームフォーマット*/
+    for( i=1; i<nand_fat_partition_num; i++) {
+        VOLUME_LABEL[0] = (byte)(((int)'F') + i);
+        if( !rtfs_pc_get_media_parms( VOLUME_LABEL, &geometry)) {
+            PRINTDEBUG( "pc_get_media_parms failed\n");
+            goto NAND_FLASH_FORMAT_END;
+        }
+        if( !pc_format_volume( VOLUME_LABEL, &geometry)) {
+            PRINTDEBUG( "pc_format_volume failed\n");
+            goto NAND_FLASH_FORMAT_END;
+        }
+        PRINTDEBUG( "format FAT partition %d success.\n", i);
+    }
+    /*----------------------*/
+
+#if 1
+    for( i=0; i<nand_fat_partition_num; i++) {
+        VOLUME_LABEL[0] = (byte)(((int)'F') + i);
+        /*---------- テストファイル作成 ----------*/
+        if( !rtfs_pc_set_default_drive( VOLUME_LABEL)) {
+            PRINTDEBUG( "pc_set_default_drive failed\n");
+            while( 1){};
+        }
+        /*----------*/
+        TEST_FILENAME[7] = (byte)(((int)'0')+i);
+        fd = po_open( (byte*)"\\nand_p0_test.bin", (PO_CREAT|PO_BINARY|PO_WRONLY), PS_IWRITE);
+        if( fd < 0) {
+            PRINTDEBUG( "po_open (p0) failed.\n");
+            while( 1) {};
+        }
+        /*----------*/
+
+        /*----------*/
+        if( po_close( fd) < 0) {
+            PRINTDEBUG( "po_close (p0) failed.\n");
+            while( 1) {};
+        }
+        /*----------*/
+    }
+#endif
+
+
+NAND_FLASH_FORMAT_END:
+  
+    PRINTDEBUG( "Sample program ends.\n");
 }
 
 /*---------------------------------------------------------------------------*

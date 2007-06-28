@@ -122,6 +122,35 @@ typedef struct {
 } SdmcSpec;
 
 
+/*FATパラメータ TODO:SdmcSpecを統合すること*/
+typedef struct {
+    u32    device_capacity;          //デバイス全体のサイズ(512Byte単位)
+    u32    adjusted_device_capacity;
+
+    u32    memory_capacity;          //data areaのサイズ(512Byte単位)
+    u32    adjusted_memory_capacity; //memory_capacityをシリンダ(heads*secptrack)の倍数に調整したサイズ(cylinders*heads*secptrackになる)
+  
+    u16    volume_cylinders;
+    
+    u16    heads;
+    u16    secptrack;
+    u16    cylinders;
+    u16    SC;                       //sectors per cluster
+    u16    BU;
+    u16    RDE;                      //number of root dir entries(512 fix)
+    u32    SS;                       //sector size(512 fix)
+    u32    RSC;                      //reserved sector count(1 fix)
+    u16    FATBITS;                  //16 or 32
+    u16    SF;                       //sectors per FAT
+    u32    SSA;                      //sectors in system area
+    u32    NOM;                      //sectors in master boot record
+
+    u32    begin_sect;
+} FATSpec;
+
+
+
+
 /*********************************************
  RTFS用ドライバインタフェース
 *********************************************/
@@ -133,7 +162,7 @@ BOOL sdmcCheckMedia( void);
 
 BOOL nandRtfsIo( int driveno, dword block, void* buffer, word count, BOOLEAN reading);
 int  nandRtfsCtrl( int driveno, int opcode, void* pargs);
-BOOL nandRtfsAttach( int driveno);
+BOOL nandRtfsAttach( int driveno, int partition_no);
 BOOL nandCheckMedia( void);
 
 

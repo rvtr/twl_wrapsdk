@@ -187,10 +187,10 @@ void TwlSpMain(void)
             PRINTDEBUG( "sdmcRtfsAttach error!.\n");
         }
     }
-    if( nandRtfsAttach( 5) == FALSE) {  //nandをFドライブにする
+    if( nandRtfsAttach( 5, 0) == FALSE) {  //nandをFドライブにする
         PRINTDEBUG( "nandRtfsAttach failed.\n");
     }else{
-        if( nandRtfsAttach( 5) == FALSE) {
+        if( nandRtfsAttach( 5, 0) == FALSE) {
             PRINTDEBUG( "nandRtfsAttach success.\n");
         }else{
             PRINTDEBUG( "nandRtfsAttach error!.\n");
