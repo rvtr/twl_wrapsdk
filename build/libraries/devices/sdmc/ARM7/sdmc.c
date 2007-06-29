@@ -962,23 +962,20 @@ void i_sdmcCalcSize( void)
  *---------------------------------------------------------------------------*/
 static SDMC_ERR_CODE i_sdmcMPInit( void)
 {
-    if(((SD_port_number == SDCARD_PORT0) && (!SD_CheckFPGAReg(SD_INFO1,SD_INFO1_DETECT))) ||
-        ((SD_port_number == SDCARD_PORT1) && (!SD_CheckFPGAReg(EXT_CD,EXT_CD_PORT1_DETECT))) ||
-          (SD_port_number > SDCARD_PORT1))
-    {
-        SDCARD_ErrStatus = SDMC_NORMAL;         /* エラーステータスをクリア */
-        SDCARD_OutFlag = TRUE;                  /* 排出フラグをセット */
-    }else{
-        if( SD_CheckFPGAReg( SD_INFO1, SD_INFO1_DETECT)) {
-            sdmcSelect( (u16)SDMC_PORT_CARD);
-            SDCARD_ErrStatus = SDCARD_Layer_Init();
-        }
-        if( SD_CheckFPGAReg( EXT_CD, EXT_CD_PORT1_DETECT)) {
-            sdmcSelect( (u16)SDMC_PORT_NAND);
-            SDCARD_ErrStatus = SDCARD_Layer_Init();
-        }
-        SDCARD_OutFlag = FALSE;                 /* 排出フラグをリセット */
+    /*ポート選択状態、挿抜状態
+    SD_port_number, SD_CheckFPGAReg(SD_INFO1,SD_INFO1_DETECT),
+    SD_CheckFPGAReg(EXT_CD,EXT_CD_PORT1_DETECT)
+    */
+  
+    if( SD_CheckFPGAReg( SD_INFO1, SD_INFO1_DETECT)) {
+        sdmcSelect( (u16)SDMC_PORT_CARD);
+        SDCARD_ErrStatus = SDCARD_Layer_Init();
     }
+    if( SD_CheckFPGAReg( EXT_CD, EXT_CD_PORT1_DETECT)) {
+        sdmcSelect( (u16)SDMC_PORT_NAND);
+        SDCARD_ErrStatus = SDCARD_Layer_Init();
+    }
+    SDCARD_OutFlag = FALSE;                 /* 排出フラグをリセット */
 
     SDCARD_TimerStop();         /* タイムアウト判定用タイマストップ */
     SD_DisableClock();          /* SD-CLK Disable */

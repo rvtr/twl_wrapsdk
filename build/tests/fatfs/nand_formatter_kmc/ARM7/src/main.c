@@ -269,7 +269,7 @@ void TwlSpMain(void)
                          (((nand_firm_size % (1024*1024)) != 0)? 1:0);
 //        DBG_PRINTF( "firm %dMB, raw %dMB\n", nand_firm_size, partition_MB_size[INDEX_RAW_PARTITION]);
       
-        if( nand_firm_size >= partition_MB_size[INDEX_RAW_PARTITION]) {
+        if( nand_firm_size > partition_MB_size[INDEX_RAW_PARTITION]) {
            
             DBG_PRINTF( "YOUR SETTING WILL ERASE NAND FIRM, OK?(y/n) -> ");
             if( FALSE == getchar_yes_no_prompt()) {
