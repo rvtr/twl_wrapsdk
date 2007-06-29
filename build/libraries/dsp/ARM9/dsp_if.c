@@ -35,7 +35,7 @@ DSPData;
 /*---------------------------------------------------------------------------*
     Ã“I•Ï”’è‹`
  *---------------------------------------------------------------------------*/
-static volatile DSPData *const dspData = (DSPData*)REG_DSP_SEND_DATA_0_ADDR;
+static volatile DSPData *const dspData = (DSPData*)REG_APBP_COM0_ADDR;
 
 /*---------------------------------------------------------------------------*
     “à•”ŠÖ”’è‹`
@@ -44,7 +44,7 @@ static volatile DSPData *const dspData = (DSPData*)REG_DSP_SEND_DATA_0_ADDR;
 /*---------------------------------------------------------------------------*
   Name:         DSP_PowerOn
 
-  Description:  power DSP block on but reset yet.
+  Description:  power DSP block on but DSPR yet.
                 you should call DSP_ResetOff() to boot DSP.
 
   Arguments:    None.
@@ -77,7 +77,7 @@ void DSP_PowerOff(void)
 /*---------------------------------------------------------------------------*
   Name:         DSP_ResetOn
 
-  Description:  reset DSP.
+  Description:  Reset DSP.
 
   Arguments:    None.
 
@@ -85,15 +85,15 @@ void DSP_PowerOff(void)
  *---------------------------------------------------------------------------*/
 void DSP_ResetOn(void)
 {
-    reg_DSP_DSP_CONFIG |= REG_DSP_DSP_CONFIG_RESET_MASK;
-    while ( reg_DSP_DSP_STATUS & REG_DSP_DSP_STATUS_RESET_BUSY_MASK )
+    reg_DSP_PCFG |= REG_DSP_PCFG_DSPR_MASK;
+    while ( reg_DSP_PSTS & REG_DSP_PSTS_PRST_MASK )
     {
     }
 }
 /*---------------------------------------------------------------------------*
   Name:         DSP_ResetOff
 
-  Description:  boot DSP if in reset state.
+  Description:  boot DSP if in Reset state.
 
   Arguments:    None.
 
@@ -101,17 +101,17 @@ void DSP_ResetOn(void)
  *---------------------------------------------------------------------------*/
 void DSP_ResetOff(void)
 {
-    while ( reg_DSP_DSP_STATUS & REG_DSP_DSP_STATUS_RESET_BUSY_MASK )
+    while ( reg_DSP_PSTS & REG_DSP_PSTS_PRST_MASK )
     {
     }
-    reg_DSP_DSP_CONFIG &= ~REG_DSP_DSP_CONFIG_RESET_MASK;
+    reg_DSP_PCFG &= ~REG_DSP_PCFG_DSPR_MASK;
 }
 
 /*---------------------------------------------------------------------------*
   Name:         DSP_ResetInterface
 
-  Description:  reset interface registers.
-                it should be called while reset state.
+  Description:  Reset interface registers.
+                it should be called while Reset state.
 
   Arguments:    None.
 
@@ -120,9 +120,9 @@ void DSP_ResetOff(void)
 void DSP_ResetInterface(void)
 {
     u16 dummy;
-    reg_DSP_DSP_CONFIG &= ~REG_DSP_DSP_CONFIG_RECV_DATA_IE_MASK;
-    reg_DSP_DSP_SEM_SEND_DATA = 0;
-    reg_DSP_DSP_SEM_RECV_CLEAR = 0xFFFF;
+    reg_DSP_PCFG &= ~REG_DSP_PCFG_RRIE_MASK;
+    reg_DSP_PSEM = 0;
+    reg_DSP_PCLEAR = 0xFFFF;
     dummy = dspData[0].recv;
     dummy = dspData[1].recv;
     dummy = dspData[2].recv;
@@ -140,7 +140,7 @@ void DSP_ResetInterface(void)
 void DSP_EnableRecvDataInterrupt(u32 dataNo)
 {
     SDK_ASSERT(dataNo >= 0 && dataNo <= 2);
-    reg_DSP_DSP_CONFIG |= (1 << dataNo) << REG_DSP_DSP_CONFIG_RECV_DATA_IE_SHIFT;
+    reg_DSP_PCFG |= (1 << dataNo) << REG_DSP_PCFG_RRIE_SHIFT;
 }
 
 /*---------------------------------------------------------------------------*
@@ -155,7 +155,7 @@ void DSP_EnableRecvDataInterrupt(u32 dataNo)
 void DSP_DisableRecvDataInterrupt(u32 dataNo)
 {
     SDK_ASSERT(dataNo >= 0 && dataNo <= 2);
-    reg_DSP_DSP_CONFIG &= ~((1 << dataNo) << REG_DSP_DSP_CONFIG_RECV_DATA_IE_SHIFT);
+    reg_DSP_PCFG &= ~((1 << dataNo) << REG_DSP_PCFG_RRIE_SHIFT);
 }
 
 /*---------------------------------------------------------------------------*
@@ -170,7 +170,7 @@ void DSP_DisableRecvDataInterrupt(u32 dataNo)
 BOOL DSP_SendDataIsEmpty(u32 dataNo)
 {
     SDK_ASSERT(dataNo >= 0 && dataNo <= 2);
-    return (reg_DSP_DSP_STATUS & ((1 << dataNo) << REG_DSP_DSP_STATUS_SEND_DATA_FULL_SHIFT)) ? FALSE : TRUE;
+    return (reg_DSP_PSTS & ((1 << dataNo) << REG_DSP_PSTS_RCOMIM_SHIFT)) ? FALSE : TRUE;
 }
 
 /*---------------------------------------------------------------------------*
@@ -185,7 +185,7 @@ BOOL DSP_SendDataIsEmpty(u32 dataNo)
 BOOL DSP_RecvDataIsReady(u32 dataNo)
 {
     SDK_ASSERT(dataNo >= 0 && dataNo <= 2);
-    return (reg_DSP_DSP_STATUS & ((1 << dataNo) << REG_DSP_DSP_STATUS_RECV_DATA_EMP_SHIFT)) ? FALSE : TRUE;
+    return (reg_DSP_PSTS & ((1 << dataNo) << REG_DSP_PSTS_RRI_SHIFT)) ? FALSE : TRUE;
 }
 
 /*---------------------------------------------------------------------------*
@@ -236,7 +236,7 @@ u16 DSP_RecvData(u32 dataNo)
  *---------------------------------------------------------------------------*/
 void DSP_EnableFifoInterrupt(DSPFifoIntr type)
 {
-    reg_DSP_DSP_CONFIG |= type;
+    reg_DSP_PCFG |= type;
 }
 
 /*---------------------------------------------------------------------------*
@@ -250,7 +250,7 @@ void DSP_EnableFifoInterrupt(DSPFifoIntr type)
  *---------------------------------------------------------------------------*/
 void DSP_DisableFifoInterrupt(DSPFifoIntr type)
 {
-    reg_DSP_DSP_CONFIG &= ~type;
+    reg_DSP_PCFG &= ~type;
 }
 
 /*---------------------------------------------------------------------------*
@@ -270,30 +270,30 @@ void DSP_DisableFifoInterrupt(DSPFifoIntr type)
  *---------------------------------------------------------------------------*/
 void DSP_SendFifo(DSPFifoMemSel memsel, u16 dest, const u16 *src, int size, u16 flags)
 {
-    u16 incmode = (u16)((flags & DSP_FIFO_FLAG_SRC_FIX) ? 0 : REG_DSP_DSP_CONFIG_FIFO_INC_MODE_MASK);
+    u16 incmode = (u16)((flags & DSP_FIFO_FLAG_SRC_FIX) ? 0 : REG_DSP_PCFG_AIM_MASK);
 
-    reg_DSP_DSP_FIFO_ADDR = dest;
-    reg_DSP_DSP_CONFIG = (u16)((reg_DSP_DSP_CONFIG & ~(REG_DSP_DSP_CONFIG_FIFO_MEMSEL_MASK|REG_DSP_DSP_CONFIG_FIFO_INC_MODE_MASK))
+    reg_DSP_PADR = dest;
+    reg_DSP_PCFG = (u16)((reg_DSP_PCFG & ~(REG_DSP_PCFG_MEMSEL_MASK|REG_DSP_PCFG_AIM_MASK))
                         | memsel | incmode);
 
     if (flags & DSP_FIFO_FLAG_SRC_FIX)
     {
         while (size-- > 0)
         {
-            while (reg_DSP_DSP_STATUS & REG_DSP_DSP_STATUS_FIFO_SEND_FULL_MASK)
+            while (reg_DSP_PSTS & REG_DSP_PSTS_WFEI_MASK)
             {
             }
-            reg_DSP_DSP_FIFO_DATA = *src;
+            reg_DSP_PDATA = *src;
         }
     }
     else
     {
         while (size-- > 0)
         {
-            while (reg_DSP_DSP_STATUS & REG_DSP_DSP_STATUS_FIFO_SEND_FULL_MASK)
+            while (reg_DSP_PSTS & REG_DSP_PSTS_WFEI_MASK)
             {
             }
-            reg_DSP_DSP_FIFO_DATA = *src++;
+            reg_DSP_PDATA = *src++;
         }
     }
 }
@@ -317,54 +317,54 @@ void DSP_SendFifo(DSPFifoMemSel memsel, u16 dest, const u16 *src, int size, u16 
 void DSP_RecvFifo(DSPFifoMemSel memsel, u16 addr, u16 *bufp, int size, u16 flags)
 {
     DSPFifoRecvLength len;
-    u16 incmode = (u16)((flags & DSP_FIFO_FLAG_SRC_FIX) ? 0 : REG_DSP_DSP_CONFIG_FIFO_INC_MODE_MASK);
+    u16 incmode = (u16)((flags & DSP_FIFO_FLAG_SRC_FIX) ? 0 : REG_DSP_PCFG_AIM_MASK);
 
-    SDK_ASSERT(memsel != DSP_FIFO_MEMSEL_PROGRAM);
+    SDK_ASSERT(memsel != DSP_MEMSEL_PROGRAM);
 
     switch (flags & DSP_FIFO_FLAG_RECV_MASK)
     {
     case DSP_FIFO_FLAG_RECV_UNIT_2B:
-        len = DSP_FIFO_RECV_LEN_2B;
+        len = DSP_FIFO_RECV_2B;
         size = 1;
         break;
     case DSP_FIFO_FLAG_RECV_UNIT_16B:
-        len = DSP_FIFO_RECV_LEN_16B;
+        len = DSP_FIFO_RECV_16B;
         size = 8;
         break;
     case DSP_FIFO_FLAG_RECV_UNIT_32B:
-        len = DSP_FIFO_RECV_LEN_32B;
+        len = DSP_FIFO_RECV_32B;
         size = 16;
         break;
     default:
-        len = DSP_FIFO_RECV_LEN_CONTINUOUS;
+        len = DSP_FIFO_RECV_CONTINUOUS;
         break;
     }
 
-    reg_DSP_DSP_FIFO_ADDR = addr;
-    reg_DSP_DSP_CONFIG = (u16)((reg_DSP_DSP_CONFIG & ~(REG_DSP_DSP_CONFIG_FIFO_MEMSEL_MASK|REG_DSP_DSP_CONFIG_FIFO_RECV_LEN_MASK|REG_DSP_DSP_CONFIG_FIFO_INC_MODE_MASK))
-                        | memsel | len | incmode | REG_DSP_DSP_CONFIG_FIFO_RECV_E_MASK);
+    reg_DSP_PADR = addr;
+    reg_DSP_PCFG = (u16)((reg_DSP_PCFG & ~(REG_DSP_PCFG_MEMSEL_MASK|REG_DSP_PCFG_DRS_MASK|REG_DSP_PCFG_AIM_MASK))
+                        | memsel | len | incmode | REG_DSP_PCFG_RS_MASK);
 
     if (flags & DSP_FIFO_FLAG_DEST_FIX)
     {
         while (size-- > 0)
         {
-            while ((reg_DSP_DSP_STATUS & REG_DSP_DSP_STATUS_FIFO_RECV_NEMP_MASK) == 0)
+            while ((reg_DSP_PSTS & REG_DSP_PSTS_RFNEI_MASK) == 0)
             {
             }
-            *bufp = reg_DSP_DSP_FIFO_DATA;
+            *bufp = reg_DSP_PDATA;
         }
     }
     else
     {
         while (size-- > 0)
         {
-            while ((reg_DSP_DSP_STATUS & REG_DSP_DSP_STATUS_FIFO_RECV_NEMP_MASK) == 0)
+            while ((reg_DSP_PSTS & REG_DSP_PSTS_RFNEI_MASK) == 0)
             {
             }
-            *bufp++ = reg_DSP_DSP_FIFO_DATA;
+            *bufp++ = reg_DSP_PDATA;
         }
     }
-    reg_DSP_DSP_CONFIG &= ~REG_DSP_DSP_CONFIG_FIFO_RECV_E_MASK;
+    reg_DSP_PCFG &= ~REG_DSP_PCFG_RS_MASK;
 }
 
 /*---------------------------------------------------------------------------*
@@ -379,7 +379,7 @@ void DSP_RecvFifo(DSPFifoMemSel memsel, u16 addr, u16 *bufp, int size, u16 flags
  *---------------------------------------------------------------------------*/
 void DSP_SetSemaphore(u16 mask)
 {
-    reg_DSP_DSP_SEM_SEND_DATA |= mask;
+    reg_DSP_PSEM |= mask;
 }
 
 /*---------------------------------------------------------------------------*
@@ -394,7 +394,7 @@ void DSP_SetSemaphore(u16 mask)
  *---------------------------------------------------------------------------*/
 u16 DSP_GetSemaphore(void)
 {
-    return reg_DSP_DSP_SEM_RECV_DATA;
+    return reg_DSP_APBP_SEM;
 }
 
 /*---------------------------------------------------------------------------*
@@ -408,7 +408,7 @@ u16 DSP_GetSemaphore(void)
  *---------------------------------------------------------------------------*/
 void DSP_ClearSemaphore(u16 mask)
 {
-    reg_DSP_DSP_SEM_RECV_CLEAR |= mask;
+    reg_DSP_PCLEAR |= mask;
 }
 
 /*---------------------------------------------------------------------------*
@@ -422,7 +422,7 @@ void DSP_ClearSemaphore(u16 mask)
  *---------------------------------------------------------------------------*/
 void DSP_MaskSemaphore(u16 mask)
 {
-    reg_DSP_DSP_SEM_RECV_MASK |= mask;
+    reg_DSP_PMASK |= mask;
 }
 
 /*---------------------------------------------------------------------------*
@@ -436,6 +436,6 @@ void DSP_MaskSemaphore(u16 mask)
  *---------------------------------------------------------------------------*/
 BOOL DSP_CheckSemaphoreRequest(void)
 {
-    return (reg_DSP_DSP_STATUS & REG_DSP_DSP_STATUS_SEM_RECV_IF_MASK) >> REG_DSP_DSP_STATUS_SEM_RECV_IF_SHIFT;
+    return (reg_DSP_PSTS & REG_DSP_PSTS_PSEMI_MASK) >> REG_DSP_PSTS_PSEMI_SHIFT;
 }
 

@@ -31,21 +31,31 @@ extern "C" {
  *---------------------------------------------------------------------------*/
 typedef enum
 {
-    DSP_FIFO_MEMSEL_DATA    = (0x0 << REG_DSP_DSP_CONFIG_FIFO_MEMSEL_SHIFT),
-    DSP_FIFO_MEMSEL_MMIO    = (0x1 << REG_DSP_DSP_CONFIG_FIFO_MEMSEL_SHIFT),
-    DSP_FIFO_MEMSEL_PROGRAM = (0x5 << REG_DSP_DSP_CONFIG_FIFO_MEMSEL_SHIFT)
+    DSP_FIFO_MEMSEL_DATA    = (0x0 << REG_DSP_PCFG_MEMSEL_SHIFT),
+    DSP_FIFO_MEMSEL_MMIO    = (0x1 << REG_DSP_PCFG_MEMSEL_SHIFT),
+    DSP_FIFO_MEMSEL_PROGRAM = (0x5 << REG_DSP_PCFG_MEMSEL_SHIFT)
 }
 DSPFifoMemSel;
 
 typedef enum
 {
-    DSP_FIFO_RECV_LEN_2B            = (0x0 << REG_DSP_DSP_CONFIG_FIFO_RECV_LEN_SHIFT),
-    DSP_FIFO_RECV_LEN_16B           = (0x1 << REG_DSP_DSP_CONFIG_FIFO_RECV_LEN_SHIFT),
-    DSP_FIFO_RECV_LEN_32B           = (0x2 << REG_DSP_DSP_CONFIG_FIFO_RECV_LEN_SHIFT),
-    DSP_FIFO_RECV_LEN_CONTINUOUS    = (0x3 << REG_DSP_DSP_CONFIG_FIFO_RECV_LEN_SHIFT)
+    DSP_FIFO_RECV_2B            = (0x0 << REG_DSP_PCFG_DRS_SHIFT),
+    DSP_FIFO_RECV_16B           = (0x1 << REG_DSP_PCFG_DRS_SHIFT),
+    DSP_FIFO_RECV_32B           = (0x2 << REG_DSP_PCFG_DRS_SHIFT),
+    DSP_FIFO_RECV_CONTINUOUS    = (0x3 << REG_DSP_PCFG_DRS_SHIFT)
 }
 DSPFifoRecvLength;
 
+typedef enum
+{
+    DSP_FIFO_INTR_SEND_EMPTY        = REG_DSP_PCFG_WFEIE_MASK,
+    DSP_FIFO_INTR_SEND_FULL         = REG_DSP_PCFG_WFFIE_MASK,
+    DSP_FIFO_INTR_RECV_NOT_EMPTY    = REG_DSP_PCFG_RFNEIE_MASK,
+    DSP_FIFO_INTR_RECV_FULL         = REG_DSP_PCFG_RFFIE_MASK
+}
+DSPFifoIntr;
+
+// for complex API
 typedef enum
 {
     DSP_FIFO_FLAG_SRC_INC   = (0UL << 0),
@@ -62,15 +72,6 @@ typedef enum
 }
 DSPFifoFlag;
 
-typedef enum
-{
-    DSP_FIFO_INTR_RECV_FULL         = (1 << REG_DSP_DSP_CONFIG_FIFO_IE_SHIFT),
-    DSP_FIFO_INTR_RECV_NOT_EMPTY    = (2 << REG_DSP_DSP_CONFIG_FIFO_IE_SHIFT),
-    DSP_FIFO_INTR_SEND_FULL         = (4 << REG_DSP_DSP_CONFIG_FIFO_IE_SHIFT),
-    DSP_FIFO_INTR_SEND_EMPTY        = (8 << REG_DSP_DSP_CONFIG_FIFO_IE_SHIFT)
-}
-DSPFifoIntr;
-
 /*---------------------------------------------------------------------------*
     \‘¢‘Ì’è‹`
  *---------------------------------------------------------------------------*/
@@ -82,8 +83,8 @@ DSPFifoIntr;
 /*---------------------------------------------------------------------------*
   Name:         DSP_PowerOn
 
-  Description:  power DSP block on but reset yet.
-                you should call DSP_ResetOff() to boot DSP.
+  Description:  power DSP block on but DSPR yet.
+                you should call DSP_DSPROff() to boot DSP.
 
   Arguments:    None.
 
@@ -105,7 +106,7 @@ void DSP_PowerOff(void);
 /*---------------------------------------------------------------------------*
   Name:         DSP_ResetOn
 
-  Description:  reset DSP.
+  Description:  Reset DSP.
 
   Arguments:    None.
 
@@ -116,7 +117,7 @@ void DSP_ResetOn(void);
 /*---------------------------------------------------------------------------*
   Name:         DSP_ResetOff
 
-  Description:  boot DSP if in reset state.
+  Description:  boot DSP if in Reset state.
 
   Arguments:    None.
 
@@ -127,8 +128,8 @@ void DSP_ResetOff(void);
 /*---------------------------------------------------------------------------*
   Name:         DSP_ResetInterface
 
-  Description:  reset interface registers.
-                it should be called while reset state.
+  Description:  Reset interface registers.
+                it should be called while Reset state.
 
   Arguments:    None.
 
