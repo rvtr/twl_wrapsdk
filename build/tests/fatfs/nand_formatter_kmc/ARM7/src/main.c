@@ -28,7 +28,7 @@
 
 
 
-extern void nandSetFormatRequest( u16 partition_num, u16* partition_mbytes);
+extern void nandSetFormatRequest( u16 partition_num, u32* partition_sectors);
 
 
 /*---------------------------------------------------------------------------*
@@ -138,7 +138,7 @@ void TwlSpMain(void)
     byte TEST_FILENAME[] = "\\nand_p0_test.bin";
     byte VOLUME_LABEL[]  = "F:";
     u16 nand_fat_partition_num; //FATパーティション数
-    u16 partition_MB_size[5];   //パーティション毎の容量
+    u32 partition_MB_size[5];   //パーティション毎の容量
     /**/
     u32 block_buf[512/4];
     u32 arm9_ofs, arm9_size, arm7_ofs, arm7_size;
@@ -236,9 +236,9 @@ void TwlSpMain(void)
         }
         nand_fat_partition_num++;
   
-        DBG_PRINTF( "FAT PARTITION 3 SIZE?(MBytes) -> ");
-        partition_MB_size[INDEX_FAT3_PARTITION] = get_number_prompt();
-        DBG_PRINTF( "  (%d MBytes)\n\n", partition_MB_size[INDEX_FAT3_PARTITION]);
+//        DBG_PRINTF( "FAT PARTITION 3 SIZE?(MBytes) -> ");
+//        partition_MB_size[INDEX_FAT3_PARTITION] = get_number_prompt();
+//        DBG_PRINTF( "  (%d MBytes)\n\n", partition_MB_size[INDEX_FAT3_PARTITION]);
         break;
     }
 #endif
@@ -304,8 +304,13 @@ NAND_FLASH_FORMAT_START:
     /*--------------------*/
 
 
-    /*パーティション構成をライブラリに要求*/
+    /*--- パーティション構成をセクタ単位にしてライブラリに要求 ---*/
+    for( i=0; i<4; i++) {
+        partition_MB_size[i] *= ((1024 * 1024) / 512);
+        PRINTDEBUG( "p%d : %d\n", i, partition_MB_size[i]);
+    }
     nandSetFormatRequest( nand_fat_partition_num, partition_MB_size);
+    /*------------------------------------------------------------*/
 
     /*マウント*/
     if( nandRtfsAttach( 5, 0) == FALSE) {  //nandパーティション0をFドライブにする

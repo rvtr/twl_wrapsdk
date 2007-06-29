@@ -63,7 +63,7 @@ static int     nand_calculated_fat_params = 0;
  *---------------------------------------------------------------------------*/
 static void sdi_get_CHS_params( void);
 static u32  sdi_get_ceil( u32 cval, u32 mval);
-static void sdi_get_nom( u16 min_nom);
+static void sdi_get_nom( u32 min_nom);
 static void sdi_get_fatparams( void);
 static void sdi_build_partition_table( void);
 
@@ -77,13 +77,13 @@ u32 NAND_FAT1_SECTORS;
 u32 NAND_FAT2_SECTORS;
 u32 NAND_FAT3_SECTORS;
 
-void nandSetFormatRequest( u16 partition_num, u16* partition_mbytes)
+void nandSetFormatRequest( u16 partition_num, u32* partition_sectors)
 {
-    NAND_RAW_SECTORS  = (partition_mbytes[0] * 1024 * 1024) / 512;
-    NAND_FAT0_SECTORS = ((partition_mbytes[1] * 1024 * 1024) / 512) + NAND_RAW_SECTORS;
-    NAND_FAT1_SECTORS = (partition_mbytes[2] * 1024 * 1024) / 512;
-    NAND_FAT2_SECTORS = (partition_mbytes[3] * 1024 * 1024) / 512;
-    NAND_FAT3_SECTORS = (partition_mbytes[4] * 1024 * 1024) / 512;
+    NAND_RAW_SECTORS  = partition_sectors[0];
+    NAND_FAT0_SECTORS = partition_sectors[1] + NAND_RAW_SECTORS;
+    NAND_FAT1_SECTORS = partition_sectors[2];
+    NAND_FAT2_SECTORS = partition_sectors[3];
+    NAND_FAT3_SECTORS = partition_sectors[4];
     NAND_FAT_PARTITION_COUNT = partition_num;
 }
 
@@ -527,7 +527,7 @@ static u32 sdi_get_ceil( u32 cval, u32 mval)
 
 
 /*マスターブートセクタのセクタ数を返す*/
-static void sdi_get_nom( u16 MIN_NOM)
+static void sdi_get_nom( u32 MIN_NOM)
 {
     u32 RSC[4];
     u32 TS[4];
