@@ -142,6 +142,10 @@ void TwlSpMain(void)
     u16 nand_fat_partition_num; //FATパーティション数
     u16 partition_MB_size[5];   //パーティション毎の容量
     /**/
+    u32 block_buf[512/4];
+    u32 arm9_ofs, arm9_size, arm7_ofs, arm7_size;
+    u32 nand_firm_size = 0;
+    /**/
     PCFD           fd;
     CHKDISK_STATS dstat;
     DEV_GEOMETRY  geometry;
@@ -245,11 +249,82 @@ void TwlSpMain(void)
     }
 #endif
     DBG_PRINTF( "%d FAT Partitions.\n", nand_fat_partition_num);
+  
+  
+    /*----- nandfirmチェック -----*/
+//    pc_raw_read( 5, (byte*)block_buf, 1, 1, TRUE);
+    nandRtfsIo( 5, 1, (byte*)block_buf, 1, TRUE);
+    arm9_ofs  = *(u32*)(((u8*)block_buf)+0x20);
+    arm9_size = *(u32*)(((u8*)block_buf)+0x2C);
+    arm7_ofs  = *(u32*)(((u8*)block_buf)+0x30);
+    arm7_size = *(u32*)(((u8*)block_buf)+0x3C);
+//    DBG_PRINTF( "arm9: 0x%x, 0x%x\n", arm9_ofs, arm9_size);
+//    DBG_PRINTF( "arm7: 0x%x, 0x%x\n", arm7_ofs, arm7_size);
+
+    if( (arm9_ofs + arm9_size) == arm7_ofs) {
+        nand_firm_size = arm7_ofs + arm7_size;
+        DBG_PRINTF( "nandfirm found. (size:0x%x bytes)\n", nand_firm_size);
+        nand_firm_size = (nand_firm_size / 1024 / 1024) +
+                         (((nand_firm_size % (1024*1024)) != 0)? 1:0);
+//        DBG_PRINTF( "firm %dMB, raw %dMB\n", nand_firm_size, partition_MB_size[INDEX_RAW_PARTITION]);
+      
+        if( nand_firm_size >= partition_MB_size[INDEX_RAW_PARTITION]) {
+           
+            DBG_PRINTF( "YOUR SETTING WILL ERASE NAND FIRM, OK?(y/n) -> ");
+            if( FALSE == getchar_yes_no_prompt()) {
+                PRINTDEBUG( "o\n");
+                DBG_CHAR( '\n');
+                DBG_PRINTF( "RAW PARTITION SETTING CHANGED (%dMB->%dMB)\n",
+                            partition_MB_size[INDEX_RAW_PARTITION], nand_firm_size);
+                partition_MB_size[INDEX_RAW_PARTITION] = nand_firm_size;
+                goto NAND_FLASH_FORMAT_START;
+            }
+            DBG_PRINTF( "es\n");
+            DBG_CHAR( '\n');
+        }
+    }else{
+        DBG_PRINTF( "nandfirm is not found.\n");
+    }
+  
+NAND_FLASH_FORMAT_START:
+    /*------------------------------*/
+
+
+    /*----- 最終確認 -----*/
+    DBG_PRINTF( "\nFAT PARTITIONS : %d\n", nand_fat_partition_num);
+    DBG_PRINTF( "DETAIL ... (RAW:%dMB)", partition_MB_size[INDEX_RAW_PARTITION]);
+    for( i=0; i<nand_fat_partition_num-1; i++) {
+        switch( i) {
+          case 0:
+            DBG_PRINTF( ", (FAT0:%dMB)", partition_MB_size[INDEX_FAT0_PARTITION]);
+            break;
+          case 1:
+            DBG_PRINTF( ", (FAT1:%dMB)", partition_MB_size[INDEX_FAT1_PARTITION]);
+            break;
+          case 2:
+            DBG_PRINTF( ", (FAT2:%dMB)", partition_MB_size[INDEX_FAT2_PARTITION]);
+            break;
+          case 3:
+            DBG_PRINTF( ", (FAT3:%dMB)", partition_MB_size[INDEX_FAT3_PARTITION]);
+            break;
+        }
+    }
+    DBG_PRINTF( ", (FAT%d:rest)", i);
+    DBG_PRINTF( "\n");
+    DBG_PRINTF( "ABOVE SETTING OK?(y/n) -> ");
+    if( FALSE == getchar_yes_no_prompt()) {
+        PRINTDEBUG( "o\n");
+        DBG_CHAR( '\n');
+        goto NAND_FLASH_FORMAT_END;
+    }
+    DBG_PRINTF( "es\n");
+    DBG_CHAR( '\n');
+    /*--------------------*/
+
+
     /*パーティション構成をライブラリに要求*/
     nandSetFormatRequest( nand_fat_partition_num, partition_MB_size);
 
-  
-  
     /*マウント*/
     if( nandRtfsAttach( 5, 0) == FALSE) {  //nandパーティション0をFドライブにする
         PRINTDEBUG( "nandRtfsAttach failed.\n");
@@ -266,8 +341,8 @@ void TwlSpMain(void)
         PRINTDEBUG( "pc_set_default_drive failed\n");
         goto NAND_FLASH_FORMAT_END;
     }
-
-
+  
+  
     /**/
 //    PRINTDEBUG( "pc_check_disk start. please wait.\n");
 //    pc_check_disk( (byte*)"F:", &dstat, 0, 1, 1);
@@ -329,7 +404,7 @@ void TwlSpMain(void)
     }
     /*----------------------*/
 
-#if 1
+#if 0
     for( i=0; i<nand_fat_partition_num; i++) {
         VOLUME_LABEL[0] = (byte)(((int)'F') + i);
         /*---------- テストファイル作成 ----------*/
