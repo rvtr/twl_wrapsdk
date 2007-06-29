@@ -261,7 +261,8 @@ void TwlSpMain(void)
 //    DBG_PRINTF( "arm9: 0x%x, 0x%x\n", arm9_ofs, arm9_size);
 //    DBG_PRINTF( "arm7: 0x%x, 0x%x\n", arm7_ofs, arm7_size);
 
-    if( (arm9_ofs + arm9_size) == arm7_ofs) {
+    if( ((arm9_ofs + arm9_size) == arm7_ofs) && (arm9_ofs < arm7_ofs) &&
+         (arm9_size != 0) && (arm7_size != 0)) {
         nand_firm_size = arm7_ofs + arm7_size;
         DBG_PRINTF( "nandfirm found. (size:0x%x bytes)\n", nand_firm_size);
         nand_firm_size = (nand_firm_size / 1024 / 1024) +
@@ -294,20 +295,7 @@ NAND_FLASH_FORMAT_START:
     DBG_PRINTF( "\nFAT PARTITIONS : %d\n", nand_fat_partition_num);
     DBG_PRINTF( "DETAIL ... (RAW:%dMB)", partition_MB_size[INDEX_RAW_PARTITION]);
     for( i=0; i<nand_fat_partition_num-1; i++) {
-        switch( i) {
-          case 0:
-            DBG_PRINTF( ", (FAT0:%dMB)", partition_MB_size[INDEX_FAT0_PARTITION]);
-            break;
-          case 1:
-            DBG_PRINTF( ", (FAT1:%dMB)", partition_MB_size[INDEX_FAT1_PARTITION]);
-            break;
-          case 2:
-            DBG_PRINTF( ", (FAT2:%dMB)", partition_MB_size[INDEX_FAT2_PARTITION]);
-            break;
-          case 3:
-            DBG_PRINTF( ", (FAT3:%dMB)", partition_MB_size[INDEX_FAT3_PARTITION]);
-            break;
-        }
+        DBG_PRINTF( ", (FAT%d:%dMB)", i, partition_MB_size[INDEX_FAT0_PARTITION + i]);
     }
     DBG_PRINTF( ", (FAT%d:rest)", i);
     DBG_PRINTF( "\n");
