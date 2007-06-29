@@ -53,8 +53,6 @@ static void VBlankIntr(void);
 /*---------------------------------------------------------------------------*
     
  *---------------------------------------------------------------------------*/
-u32 BlockBuf[(512*3)/4];
-u32 BlockBuf2[(512*3)/4];
 
 
 static BOOL getchar_yes_no_prompt(void)
@@ -176,9 +174,9 @@ void TwlSpMain(void)
 
     OS_InitThread();
 
-
-    /**/
-    PRINTDEBUG("\nSample program starts.\n");
+    PRINTDEBUG("\nnand_formatter_kmc starts.\n");
+  
+    /*----- RTFSが使うヒープ作成 -----*/
     {
       OSHeapHandle hh;
       OS_SetSubPrivArenaLo( OS_InitAlloc( OS_ARENA_MAIN_SUBPRIV, OS_GetSubPrivArenaLo(), OS_GetSubPrivArenaHi(), 1));
@@ -188,10 +186,8 @@ void TwlSpMain(void)
         PRINTDEBUG( "rtfs_init failed.\n");
       }
     }
+    /*--------------------------------*/
 
-    MI_DmaFill32( 2, BlockBuf,  0x55AA55AA, 512*3);
-    MI_DmaFill32( 2, BlockBuf2, 0x00FF00FF, 512*3);
-    
     /*SDドライバ初期化*/
     result = sdmcInit( SDMC_NOUSE_DMA, NULL, NULL);
     if( result != SDMC_NORMAL) {
@@ -199,7 +195,6 @@ void TwlSpMain(void)
         while( 1) {};
     }
 
-  
     DBG_PRINTF( "NAND FLASH FORMAT?(y/n) -> ");
     if( FALSE == getchar_yes_no_prompt()) {
         PRINTDEBUG( "o\n");
@@ -221,8 +216,7 @@ void TwlSpMain(void)
         partition_MB_size[INDEX_FAT0_PARTITION] = get_number_prompt();
         DBG_PRINTF( "  (%d MBytes)\n\n", partition_MB_size[INDEX_FAT0_PARTITION]);
         if( partition_MB_size[INDEX_FAT0_PARTITION] == 0) {
-            DBG_PRINTF( "invalid parameter.\n");
-            goto NAND_FLASH_FORMAT_END;
+            break;
         }
         nand_fat_partition_num++;
 
@@ -391,7 +385,8 @@ NAND_FLASH_FORMAT_START:
         PRINTDEBUG( "format FAT partition %d success.\n", i);
     }
     /*----------------------*/
-
+    DBG_CHAR( '\n');
+  
 #if 0
     for( i=0; i<nand_fat_partition_num; i++) {
         VOLUME_LABEL[0] = (byte)(((int)'F') + i);
@@ -416,12 +411,13 @@ NAND_FLASH_FORMAT_START:
         }
         /*----------*/
     }
+    DBG_CHAR( '\n');
 #endif
 
 
 NAND_FLASH_FORMAT_END:
   
-    PRINTDEBUG( "Sample program ends.\n");
+    PRINTDEBUG( "nand_formatter_kmc ends.\n");
 }
 
 /*---------------------------------------------------------------------------*
