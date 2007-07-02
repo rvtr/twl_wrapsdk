@@ -539,7 +539,7 @@ static BOOL sdi_get_nom( u32 MIN_NOM)
     u32 SS  = 512; //セクタサイズ(FIX)
     u32 SC, n, MAX, SFdash;
     u16 i;
-      
+    
     RSC[0] = 1; //FAT12,16では1
     RSC[1] = 1;
     RSC[2] = 1;
