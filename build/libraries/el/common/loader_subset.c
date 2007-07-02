@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*
-  Project:  CTR - ELF Loader
+  Project:  TWL - ELF Loader
   File:     loader_subset.c
 
   Copyright 2006,2007 Nintendo.  All rights reserved.

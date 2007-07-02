@@ -36,6 +36,7 @@ SUBDIRS		= \
 		  fatfs		\
 		  devices	\
 		  dsp		\
+		  el		\
 
 #----------------------------------------------------------------------------
 export	NITRO_BLXCHECKED = yes
