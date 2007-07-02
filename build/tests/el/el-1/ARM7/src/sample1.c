@@ -7,7 +7,8 @@
 #include "sample1.h"
 #include "dlltest.h"
 
-  #define PRINTDEBUG( ...)    ((void)0)
+#define PRINTDEBUG OS_TPrintf
+//  #define PRINTDEBUG( ...)    ((void)0)
 
 
 #define _DLL_LINK_DYNAMIC_ (1)
@@ -94,15 +95,32 @@ void TwlSpMain( void)
 {
     ElDesc dll_desc;
     u32    i;
+    OSHeapHandle   heapHandle;
     u32    free_bytes, free_blocks, total_blocks;
     u8     rslt;
     u32    len;
     int    result;
 
-    // vmsk_log(LOG_UPTO(LOG_INFO), LOG_UPTO(LOG_EMERG)) ;
-    PRINTDEBUG( "Sample program starts (exinf = %d).\n", (INT) exinf);
-    PRINTDEBUG( "printf test 0.03 = %f\n", 0.03);
+    // OSèâä˙âª
+    OS_Init();
+
+    OS_InitTick();
+    OS_InitAlarm();
     
+    // PXIèâä˙âªÅAARM9Ç∆ìØä˙
+    PXI_Init();
+
+    // ÉqÅ[ÉvóÃàÊê›íË
+//    heapHandle = InitializeAllocateSystem();
+  
+    (void)OS_EnableIrq();
+    (void)OS_EnableInterrupts();
+
+    OS_InitThread();
+  
+  
+    // vmsk_log(LOG_UPTO(LOG_INFO), LOG_UPTO(LOG_EMERG)) ;
+    PRINTDEBUG( "Sample program starts.\n");
 
     /**/
     PRINTDEBUG("Sample program starts.\n");
@@ -144,7 +162,8 @@ void TwlSpMain( void)
   
 
     /*----------*/
-    fd = po_open( (byte*)"\\libdlltest.a", (PO_CREAT|PO_BINARY|PO_WRONLY), PS_IREAD);
+//    fd = po_open( (byte*)"\\libdlltest.a", (PO_CREAT|PO_BINARY|PO_WRONLY), PS_IREAD);
+    fd = po_open( (byte*)"\\libsampledll_sp.twl.a", (PO_CREAT|PO_BINARY|PO_WRONLY), PS_IREAD);
     if( fd < 0) {
         PRINTDEBUG( "po_open failed.\n");
         while( 1) {};

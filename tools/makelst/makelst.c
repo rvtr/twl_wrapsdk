@@ -223,8 +223,8 @@ int main(int argc, char *argv[])
     file_write( "#ifndef __STATIC_SYM_LIST__\n", CSourceFilep);
     file_write( "#define __STATIC_SYM_LIST__\n", CSourceFilep);
     file_write( "\n", CSourceFilep);
-    file_write( "#include <ctr.h>\n", CSourceFilep);
-    file_write( "#include <elf_loader.h>\n", CSourceFilep);
+    file_write( "#include <twl.h>\n", CSourceFilep);
+    file_write( "#include <el/elf_loader.h>\n", CSourceFilep);
     file_write( "\n", CSourceFilep);
     
     EL_ResolveAllLibrary();                //抽出シンボルのマーキング
