@@ -61,9 +61,9 @@ static int     nand_calculated_fat_params = 0;
 /*---------------------------------------------------------------------------*
   static関数
  *---------------------------------------------------------------------------*/
-static void sdi_get_CHS_params( void);
+static BOOL sdi_get_CHS_params( void);
 static u32  sdi_get_ceil( u32 cval, u32 mval);
-static void sdi_get_nom( u32 min_nom);
+static BOOL sdi_get_nom( u32 min_nom);
 static void sdi_get_fatparams( void);
 static void sdi_build_partition_table( void);
 
@@ -225,9 +225,13 @@ int nandRtfsCtrl( int driveno, int opcode, void* pargs)
 
         if( nand_calculated_fat_params == 0) {
             i_sdmcCalcSize();        //TODO:sdmc_current_specを構造体に入れること
-            sdi_get_CHS_params();    //最初に呼ぶこと
+            if( sdi_get_CHS_params() == FALSE) {    //最初に呼ぶこと
+                return( -1);
+            }
             sdi_get_fatparams();
-            sdi_get_nom( NAND_RAW_SECTORS);
+            if( sdi_get_nom( NAND_RAW_SECTORS) == FALSE) {
+                return( -1);
+            }
             nand_calculated_fat_params = 1;
         }
 
@@ -386,7 +390,7 @@ BOOL nandRtfsAttach( int driveno, int partition_no)
 
 
 /*SD File System Specification(仕様書)に基づいた値を出す*/
-static void sdi_get_CHS_params( void)
+static BOOL sdi_get_CHS_params( void)
 {
     u16 i;
     int mbytes;
@@ -405,8 +409,7 @@ static void sdi_get_CHS_params( void)
     }
     /*容量破綻チェック*/
     if( cumulative_capacity >= sdmc_current_spec.memory_capacity) {
-        OS_TPrintf( "INVALID PARAMETER ERROR!\n");
-        while( 1) {};
+        return( FALSE);
     }
 
     /*最終パーティションは残りのセクタ全部*/
@@ -516,6 +519,7 @@ static void sdi_get_CHS_params( void)
                     i, NandFatSpec[i].memory_capacity,
                     NandFatSpec[i].adjusted_memory_capacity);
     }
+    return( TRUE);
 }
 
 
@@ -527,7 +531,7 @@ static u32 sdi_get_ceil( u32 cval, u32 mval)
 
 
 /*マスターブートセクタのセクタ数を返す*/
-static void sdi_get_nom( u32 MIN_NOM)
+static BOOL sdi_get_nom( u32 MIN_NOM)
 {
     u32 RSC[4];
     u32 TS[4];
@@ -606,6 +610,9 @@ static void sdi_get_nom( u32 MIN_NOM)
                     NandFatSpec[i].NOM += NandFatSpec[i].BU;
                 }
                 do {
+                    if( NandFatSpec[i].NOM >= sdmc_current_spec.memory_capacity) {
+                      return( FALSE);
+                    }
                     MAX = ((TS[i] - NandFatSpec[i].NOM - NandFatSpec[i].SSA) / SC) + 1;
                     SFdash = sdi_get_ceil( (2+(MAX-1)) * NandFatSpec[i].FATBITS, SS*8);
                     if( SFdash > NandFatSpec[i].SF) {
@@ -630,7 +637,7 @@ static void sdi_get_nom( u32 MIN_NOM)
                     i, NandFatSpec[i].NOM, NandFatSpec[i].SSA, NandFatSpec[i].begin_sect);
     }
 
-    return;
+    return( TRUE);
 }
 
 /*FATのビット数を返す*/

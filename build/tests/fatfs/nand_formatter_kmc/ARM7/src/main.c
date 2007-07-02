@@ -305,9 +305,9 @@ NAND_FLASH_FORMAT_START:
 
 
     /*--- パーティション構成をセクタ単位にしてライブラリに要求 ---*/
-    for( i=0; i<4; i++) {
+    for( i=0; i<5; i++) {
         partition_MB_size[i] *= ((1024 * 1024) / 512);
-        PRINTDEBUG( "p%d : %d\n", i, partition_MB_size[i]);
+//        PRINTDEBUG( "p%d : %d\n", i, partition_MB_size[i]);
     }
     nandSetFormatRequest( nand_fat_partition_num, partition_MB_size);
     /*------------------------------------------------------------*/
@@ -338,7 +338,7 @@ NAND_FLASH_FORMAT_START:
 
     /*--- MBR書き込み、パーティション0フォーマット ---*/
     if( !rtfs_pc_get_media_parms( (byte*)"F:", &geometry)) {
-        PRINTDEBUG( "pc_get_media_parms failed\n");
+        PRINTDEBUG( "Invalid parameter. (size over)\n");
         goto NAND_FLASH_FORMAT_END;
     }
   
