@@ -11,8 +11,8 @@
 //  #define PRINTDEBUG( ...)    ((void)0)
 
 
-#define _DLL_LINK_DYNAMIC_ (1)
-
+#define _DLL_LINK_DYNAMIC_ (1)     // 0:static link, 1:dynamic link
+#define _DLL_FROM_FILE_    (0)     // 0:link from RAM, 1:link from file
 
 
 #define DEBUG_DECLARE   OSTick begin
@@ -135,7 +135,9 @@ void TwlSpMain( void)
     PRINTDEBUG( "po_open success.\n");
     /*-------------------------------*/
 
-    /*----------*/
+#if (_DLL_FROM_FILE_ == 1)
+#else
+    /*----- DLLファイルをRAMへコピー -----*/
     obj_size = po_lseek( fd, 0, PSEEK_END);
     po_lseek( fd, 0, PSEEK_SET);
     if( obj_size > 0) {
@@ -143,7 +145,8 @@ void TwlSpMain( void)
     }else{
         PRINTDEBUG( "po_lseek failed.\n");
     }
-    /*----------*/
+    /*---------------------------------------*/
+#endif
   
     elInit( myAlloc, myFree);
     elInitDesc( &dll_desc);
@@ -152,7 +155,7 @@ void TwlSpMain( void)
     len = po_lseek( fd, 0, PSEEK_END);
     po_lseek( fd, 0, PSEEK_SET);
     DEBUG_BEGIN();
-#if 0
+#if (_DLL_FROM_FILE_ == 1)
     elLoadLibrary( &dll_desc, (ElReadImage)readlib, len, lib_buf); //SD上のファイルからリンク
     DEBUG_END(elLoadLibrary from file);
 #else
