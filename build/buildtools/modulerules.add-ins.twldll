@@ -31,7 +31,7 @@ dll:
 	@$(ECHO_CURDIR)
 ifdef DLL_FILES
 	$(foreach DLLFILE, $(DLL_LIBS), \
-	$(TWLSDK_ROOT)/tools/stripdebug/stripdebug.exe -o $(subst .a,.nodbg.a,$(DLLFILE)) $(DLLFILE))
+	$(TWLSDK_ROOT)/tools/stripdebug/stripdebug.exe -o $(subst .a,.nodbg.a,$(DLLFILE)) $(DLLFILE);)
 
 	$(TWLSDK_ROOT)/tools/makelst/makelst.exe -o $(SRCDIR)/staticsymlist.c \
 	-static $(STATIC_LIBS) \
