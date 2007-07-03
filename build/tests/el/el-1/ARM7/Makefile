@@ -24,6 +24,8 @@ LCFILE_SPEC	=	main.lsf
 #TWL_CODEGEN   =       THUMB
 TWL_PROC      =       ARM7
 
+DLL_FILES	=	libsampledll_sp
+
 TARGET_BIN	=	main.axf
 
 SRCS		=	sample1.c staticsymlist.c \
@@ -44,6 +46,8 @@ include	$(TWLSDK_ROOT)/build/buildtools/commondefs
 
 
 #----------------------------------------------------------------------------
+
+
 
 do-build:		$(TARGETS)
 

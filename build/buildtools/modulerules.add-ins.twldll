@@ -1,0 +1,49 @@
+#! make -f
+#----------------------------------------------------------------------------
+# Project:  TwlSDK - modulerules - common rules for build system
+# File:     modulerules
+#
+# Copyright 2007 Nintendo.  All rights reserved.
+#
+# These coded instructions, statements, and computer programs contain
+# proprietary information of Nintendo of America Inc. and/or Nintendo
+# Company Ltd., and are protected by Federal copyright law.  They may
+# not be disclosed to third parties or copied or duplicated in any form,
+# in whole or in part, without the prior written consent of Nintendo.
+#
+# $Log: $
+# $NoKeywords: $
+#----------------------------------------------------------------------------
+ifndef TWLDLL_MODULERULES_
+
+#----------------------------------------------------------------------------
+
+#Makefile‚ÅDLL_FILES‚ð’è‹`‚µ‚Ä‚¨‚­‚Æmake dll‚Åstaticsymlist.c‚ª‚Å‚«‚Ü‚·
+
+DLL_LIBS ?= $(addprefix $(TWL_LIBDIR)/,$(addsuffix $(TWL_LIBSUFFIX).a,$(DLL_FILES)))
+STATIC_LIBS ?= $(addprefix $(TWL_LIBDIR)/,$(TWL_LIBS))
+
+.PHONY: 	dll
+
+dll:
+	@$(MAKE_SUBDIR)
+	@$(ECHO_CURDIR)
+ifdef DLL_FILES
+	$(TWLSDK_ROOT)/tools/makelst/makelst.exe -o $(SRCDIR)/staticsymlist.c \
+	-static $(STATIC_LIBS) \
+	-dll $(DLL_LIBS)
+endif
+
+
+#
+#	$(foreach DLLFILE, $(DLL_LIBS), \
+#	$(TWLSDK_ROOT)/tools/makelst/makelst.exe -o staticsymlist.c \
+#	-static $(STATIC_LIBS) \
+#	-dll $(TWL_LIBDIR)/$(DLLFILE)
+#)
+#
+
+#----------------------------------------------------------------------------
+TWLDLL_MODULERULES_ = TRUE
+endif	# TWLDLL_MODULERULES_
+#----- End of modulerules -----
