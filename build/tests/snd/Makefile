@@ -23,8 +23,12 @@ include	$(TWLSDK_ROOT)/build/buildtools/commondefs
 SUBDIRS =	channel \
 		capture \
 		mic-1 \
+
+ifneq	($(TWL_PLATFORM),DSTEG)
+SUBDIRS += \
 		mic-2 \
 
+endif # TWL_PLATFORM != DSTEG
 
 #----------------------------------------------------------------------------
 

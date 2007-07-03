@@ -22,11 +22,15 @@ include	$(TWLSDK_ROOT)/build/buildtools/commondefs
 
 SUBDIRS =    os     \
              mi     \
-             aes    \
              snd    \
+
+ifneq	($(TWL_PLATFORM),DSTEG)
+SUBDIRS += \
+             aes    \
              camera \
              fatfs  \
-             el     \
+
+endif # TWL_PLATFORM != DSTEG
 
 #----------------------------------------------------------------------------
 
