@@ -14,17 +14,25 @@
 #define _DLL_LINK_DYNAMIC_ (1)
 
 
+
+#define DEBUG_DECLARE   OSTick begin
+#define DEBUG_BEGIN()   (begin=OS_GetTick())
+#define DEBUG_END(str)  OS_TPrintf( "\n%s was consumed %d msec.\n", #str, (int)OS_TicksToMilliSeconds(OS_GetTick()-begin))
+
+
+
 /*---------------------------------------------------------------------------*
     static変数
  *---------------------------------------------------------------------------*/
-static u32	lib_buf[8192];
-int				fd;
-u32         alloc_total_size = 0;
-u32         alloc_max_size = 0;
+static u32 lib_buf[8192];
+static u32 obj_buf[8192];
+int        fd;
+u32        alloc_total_size = 0;
+u32        alloc_max_size = 0;
 
 #if (_DLL_LINK_DYNAMIC_ == 1)
-global_func_p	global_func;
-g_func_p			g_func;
+global_func_p   global_func;
+g_func_p        g_func;
 #endif
 
 /*---------------------------------------------------------------------------*
@@ -32,74 +40,32 @@ g_func_p			g_func;
  *---------------------------------------------------------------------------*/
 static void display_entries( void);
 u32 readlib( u32 offset, void* buf, u32 size);
+int no_data;    //DLLが使うstatic側グローバル変数
 
-int no_data;
-
-//
-//ストリームAPI用関数 (FILE構造体を使いたいなら必要)
-//実際にはmalloc/freeなどが使えるようにするためのものなので、
-//間違って使ったらサイズが足りなくなるかも
-//
-/*
-#define MY_HEAP_SIZE    (8192*6)//65536
-static u8 myHeap[MY_HEAP_SIZE/sizeof(u8)] ATTRIBUTE_ALIGN(32);
-static ID myMplID;
-
-static void myInitHeap(void)
-{
-    T_CMPL cmpl = { TA_TFIFO, MY_HEAP_SIZE, NULL };
-    myMplID = acre_mpl(&cmpl);
-}
-static void *myAlloc(size_t size)
-{
-    void *ptr;
-    ER ercd = pget_mpl(myMplID, size, &ptr);
-    if (ercd == E_OK) {
-T_RMPL rmpl;
-ref_mpl(myMplID, &rmpl);
-        alloc_total_size += size;
-        if( alloc_total_size > alloc_max_size) {
-            alloc_max_size = alloc_total_size;
-        }
-        return ptr;
-    }
-    return NULL;
-}
-static void myFree(void *ptr)
-{
-    rel_mpl(myMplID, ptr);
-}
-*/
 
 static void *myAlloc(size_t size)
 {
     return( OS_Alloc( size));
 }
+
 static void myFree(void *ptr)
 {
     OS_Free( ptr);
 }
 
 
-int main(void)
-{
-  extern void _uitron_start(void);
-  _uitron_start();
-  return 0;
-}
-
 /*
  *  メインタスク
  */
 void TwlSpMain( void)
 {
-    ElDesc dll_desc;
-    u32    i;
     OSHeapHandle   heapHandle;
-    u32    free_bytes, free_blocks, total_blocks;
+    ElDesc dll_desc;
     u8     rslt;
-    u32    len;
+    u32    free_bytes, free_blocks, total_blocks;
+    u32    i, len, obj_size;
     int    result;
+    DEBUG_DECLARE;
 
     // OS初期化
     OS_Init();
@@ -135,7 +101,6 @@ void TwlSpMain( void)
         PRINTDEBUG( "rtfs_init success.\n");
       }
     }
-    OS_Alloc( 32);
   
 
     /*SDドライバ初期化*/
@@ -161,41 +126,56 @@ void TwlSpMain( void)
     }
   
 
-    /*----------*/
-//    fd = po_open( (byte*)"\\libdlltest.a", (PO_CREAT|PO_BINARY|PO_WRONLY), PS_IREAD);
-    fd = po_open( (byte*)"\\libsampledll_sp.twl.nodbg.a", (PO_CREAT|PO_BINARY|PO_WRONLY), PS_IREAD);
+    /*-----DLLファイルオープン  -----*/
+    fd = po_open( (byte*)"\\libsampledll_sp.twl.nodbg.a", (PO_BINARY|PO_WRONLY), PS_IREAD);
     if( fd < 0) {
         PRINTDEBUG( "po_open failed.\n");
         while( 1) {};
     }
     PRINTDEBUG( "po_open success.\n");
+    /*-------------------------------*/
+
+    /*----------*/
+    obj_size = po_lseek( fd, 0, PSEEK_END);
+    po_lseek( fd, 0, PSEEK_SET);
+    if( obj_size > 0) {
+        po_read( fd, (void*)obj_buf, obj_size);
+    }else{
+        PRINTDEBUG( "po_lseek failed.\n");
+    }
     /*----------*/
   
-    elInit( myAlloc, myFree);//OS_Alloc, OS_Free);
-    PRINTDEBUG( "%s, %d\n", __FUNCTION__, __LINE__);
-    
+    elInit( myAlloc, myFree);
     elInitDesc( &dll_desc);
-    PRINTDEBUG( "%s, %d\n", __FUNCTION__, __LINE__);
     
 //    elLoadLibraryfromFile( &dll_desc, fd, lib_buf);
     len = po_lseek( fd, 0, PSEEK_END);
     po_lseek( fd, 0, PSEEK_SET);
-    elLoadLibrary( &dll_desc, (ElReadImage)readlib, len, lib_buf);
-    PRINTDEBUG( "%s, %d\n", __FUNCTION__, __LINE__);
+    DEBUG_BEGIN();
+#if 0
+    elLoadLibrary( &dll_desc, (ElReadImage)readlib, len, lib_buf); //SD上のファイルからリンク
+    DEBUG_END(elLoadLibrary from file);
+#else
+    elLoadLibraryfromMem( &dll_desc, obj_buf, obj_size, lib_buf); //RAMからリンク
+    DEBUG_END(elLoadLibrary from RAM);
+#endif
     PRINTDEBUG( "alloc size : 0x%x\n", alloc_max_size);
 
+  
     elAddStaticSym();
-    PRINTDEBUG( "%s, %d\n", __FUNCTION__, __LINE__);
-    
-    elResolveAllLibrary( &dll_desc);
-    PRINTDEBUG( "%s, %d\n", __FUNCTION__, __LINE__);
 
+  
+    DEBUG_BEGIN();
+    elResolveAllLibrary( &dll_desc);
+    DEBUG_END(elResolveAllLibrary);
+
+  
 #if (_DLL_LINK_DYNAMIC_ == 1)
     PRINTDEBUG( "LINK : dynamic\n");
     global_func = (global_func_p)elGetGlobalAdr( "global_func\0");
-    PRINTDEBUG( "0x%x\n", global_func);
+    PRINTDEBUG( "global_func : 0x%x\n", global_func);
     g_func = (g_func_p)elGetGlobalAdr( "g_func\0");
-    PRINTDEBUG( "0x%x\n", g_func);
+    PRINTDEBUG( "g_func : 0x%x\n", g_func);
 #endif
     
     PRINTDEBUG( "----- dll-func1 execution -----\n");
@@ -219,6 +199,8 @@ void TwlSpMain( void)
 //  kernel_exit();
     while( 1 ) {};
 }
+
+
 
 u32 readlib( u32 offset, void* buf, u32 size)
 {

@@ -178,10 +178,10 @@ u16 elLoadLibraryfromFile( ElDesc* elElfDesc, int ObjFile, void* buf);
 /*------------------------------------------------------
   ELFオブジェクトまたはそのアーカイブをユーザのリードAPIを通して再配置する
  -----------------------------------------------------*/
-#if (TARGET_OS_NITRO == 1)
-#else
+//#if (TARGET_OS_NITRO == 1)
+//#else
 u16 elLoadLibrary( ElDesc* elElfDesc, ElReadImage readfunc, u32 len, void* buf);
-#endif
+//#endif
 
 /*------------------------------------------------------
   ELFオブジェクトまたはそのアーカイブをメモリからバッファに再配置する
