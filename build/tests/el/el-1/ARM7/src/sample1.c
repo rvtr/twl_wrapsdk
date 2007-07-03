@@ -163,7 +163,7 @@ void TwlSpMain( void)
 
     /*----------*/
 //    fd = po_open( (byte*)"\\libdlltest.a", (PO_CREAT|PO_BINARY|PO_WRONLY), PS_IREAD);
-    fd = po_open( (byte*)"\\libsampledll_sp.twl.a", (PO_CREAT|PO_BINARY|PO_WRONLY), PS_IREAD);
+    fd = po_open( (byte*)"\\libsampledll_sp.twl.nodbg.a", (PO_CREAT|PO_BINARY|PO_WRONLY), PS_IREAD);
     if( fd < 0) {
         PRINTDEBUG( "po_open failed.\n");
         while( 1) {};

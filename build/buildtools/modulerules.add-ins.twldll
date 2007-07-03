@@ -21,6 +21,7 @@ ifndef TWLDLL_MODULERULES_
 #Makefile‚ÅDLL_FILES‚ð’è‹`‚µ‚Ä‚¨‚­‚Æmake dll‚Åstaticsymlist.c‚ª‚Å‚«‚Ü‚·
 
 DLL_LIBS ?= $(addprefix $(TWL_LIBDIR)/,$(addsuffix $(TWL_LIBSUFFIX).a,$(DLL_FILES)))
+NODBG_LIBS ?= $(addprefix $(TWL_LIBDIR)/,$(addsuffix $(TWL_LIBSUFFIX).nodbg.a,$(DLL_FILES)))
 STATIC_LIBS ?= $(addprefix $(TWL_LIBDIR)/,$(TWL_LIBS))
 
 .PHONY: 	dll
@@ -29,9 +30,12 @@ dll:
 	@$(MAKE_SUBDIR)
 	@$(ECHO_CURDIR)
 ifdef DLL_FILES
+	$(foreach DLLFILE, $(DLL_LIBS), \
+	$(TWLSDK_ROOT)/tools/stripdebug/stripdebug.exe -o $(subst .a,.nodbg.a,$(DLLFILE)) $(DLLFILE))
+
 	$(TWLSDK_ROOT)/tools/makelst/makelst.exe -o $(SRCDIR)/staticsymlist.c \
 	-static $(STATIC_LIBS) \
-	-dll $(DLL_LIBS)
+	-dll $(NODBG_LIBS)
 endif
 
 
