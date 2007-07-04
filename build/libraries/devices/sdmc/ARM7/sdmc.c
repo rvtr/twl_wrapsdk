@@ -1,27 +1,21 @@
-/*
-    Project:    CTR SD port driver
-    File:       sdmc.c
+/*---------------------------------------------------------------------------*
+  Project:  TWL - SD port driver
+  File:     sdmc.c
 
-    2006-2007, Research and Development Department, Nintendo.
-*/
+  Copyright 2006,2007 Nintendo.  All rights reserved.
+
+  These coded instructions, statements, and computer programs contain
+  proprietary information of Nintendo of America Inc. and/or Nintendo
+  Company Ltd., and are protected by Federal copyright law.  They may
+  not be disclosed to third parties or copied or duplicated in any form,
+  in whole or in part, without the prior written consent of Nintendo.
+ *---------------------------------------------------------------------------*/
 
 #include <twl.h>
-//#include <twl/hw/ARM7/ioreg_MI.h>
 #include "sdmc_config.h"
-#include "sdif_reg.h"            /*  IP ‘Î‰ƒŒƒWƒXƒ^’è‹` */
+#include "sdif_reg.h"           /*  IP ‘Î‰ƒŒƒWƒXƒ^’è‹` */
 #include <twl/sdmc.h>
 #include "sdif_ip.h"            /*  IP ‘Î‰ƒtƒ‰ƒO’è‹` */
-
-/*#if (SD_DEBUG_PRINT_ON == 1)
-    #if (CTR_DEF_ENVIRONMENT_DSEMU == 1)
-        #define PRINTDEBUG    osTPrintf
-    #else
-        #include <ctr/vlink.h>
-        #define PRINTDEBUG    vlink_dos_printf
-    #endif
-#else
-    #define PRINTDEBUG( ...) ((void)0)
-#endif*/
 
 //        #define PRINTDEBUG    OS_TPrintf
     #define PRINTDEBUG( ...) ((void)0)
@@ -202,8 +196,6 @@ SDPortContext SDPort1Context;
 
 
 
-u16    TransCount;                       /* R/W“]‘—ƒJƒEƒ“ƒg•Ï” */
-
 u32    ulSDCARD_Size;                    /* ƒJ[ƒh‘SƒZƒNƒ^” */
 
 volatile s16    SDCARD_ATC0_Flag;        /* ‘SATCŠ®—¹ƒtƒ‰ƒO */
@@ -222,6 +214,34 @@ u16             SDCARD_IO_Port;          /* ƒJ[ƒh‘}“ü/”roŠ„‚è‚İ”­¶‚Ìƒ|[ƒ
 void (*func_SDCARD_In)(void);            /* ƒJ[ƒh‘}“üƒCƒxƒ“ƒg—pƒR[ƒ‹ƒoƒbƒN•Û‘¶—p */
 void (*func_SDCARD_Out)(void);           /* ƒJ[ƒh”roƒCƒxƒ“ƒg—pƒR[ƒ‹ƒoƒbƒN•Û‘¶—p */
 /* void (*func_SDCARD_CallBack)(SdmcResultInfo *info);     ˆ—Œ‹‰Ê’Ê’m—pƒR[ƒ‹ƒoƒbƒN•Û‘¶—p */
+
+
+
+
+
+/*---------------------------------------------------------------------------*
+  Name:         MyCpuRecv*
+
+  Description:  CPU‚Å“¯‚¶ƒAƒhƒŒƒX‚©‚çƒf[ƒ^‚ğó‚¯æ‚è‚Ü‚·
+
+  Arguments:    src : “]‘—Œ³ƒAƒhƒŒƒXAdest : “]‘—æƒAƒhƒŒƒXAsize : “]‘—ƒTƒCƒY(Bytes)
+
+  Returns:      None
+ *---------------------------------------------------------------------------*/
+static void MyCpuRecv32( u32* src, u32* dest, u16 size)
+{
+    u32 i;
+    for( i=0; i<(size/sizeof(u32)); i++) {
+        *(u32*)dest++ = *(u32*)src;
+    }
+}
+static void MyCpuRecv16( u16* src, u16* dest, u16 size)
+{
+    u32 i;
+    for( i=0; i<(size/sizeof(u16)); i++) {
+        *(u16*)dest++ = *(u16*)src;
+    }
+}
 
 
 /*---------------------------------------------------------------------------*
@@ -303,23 +323,10 @@ static void SDCARD_Backup_port1(void)
  *---------------------------------------------------------------------------*/
 static void i_sdmcEnable( void)
 {
-#if (TARGET_OS_CTR == 1)
-    /*SD interrupt setting*/
-//    osInitIntrFlag();
-//    osClearInterruptPendingID( OS_INTR_ID_SD);
-//    *(vu32*)CTR_INT_IF = CTR_IE_SD_MASK;
-    osSetInterruptHandler( OS_INTR_ID_SD, SDCARD_irq_Handler);
-    osEnableInterruptID( OS_INTR_ID_SD);
-//    *(vu32*)CTR_INT_SE = CTR_IE_SD_MASK;    //Š„‚è‚İ(IRQ)”­¶‹–‰Â
-//    *(vu32*)CTR_INT_IE = CTR_IE_SD_MASK;
-//    osEnableInterrupts();
-//    *(vu16*)0x04000208 = 1;
-#else
     /*SDŠ„‚è‚İ‚ÌIF‰ğœ*/
     *(vu16*)CTR_INT_IF = CTR_IE_SD_MASK;
     OS_SetIrqFunction( OS_IE_SD, SDCARD_irq_Handler);
     OS_EnableIrqMask( OS_IE_SD);
-#endif
 }
 
 /*---------------------------------------------------------------------------*
@@ -349,15 +356,10 @@ static void i_sdmcDisable( void)
  *---------------------------------------------------------------------------*/
 void SDCARD_irq_Handler( void)
 {
-#if (TARGET_OS_CTR == 1)
-    iwup_tsk( sdmc_intr_tsk_id);
-#else
     PRINTDEBUG( "SD irq!\n");
-//  OS_DumpThreadList();
     OS_SetIrqCheckFlag( OS_IE_SD);
 //  sdmc_intr_wakeup_count++;
 //    OS_WakeupThreadDirect( &sdmc_intr_tsk);
-#endif
 }
 
 /*---------------------------------------------------------------------------*
@@ -389,91 +391,9 @@ static void SDCARD_Dmy_Handler( void)
  *---------------------------------------------------------------------------*/
 SDMC_ERR_CODE sdmcInit( SDMC_DMA_NO dma_no, void (*func1)(),void (*func2)())
 {
-#if (TARGET_OS_CTR == 1)
-    T_CALM    calm;
-    T_CTSK    ctsk;
-    T_CDTQ    cdtq;
-#endif
-//    SDCARDMsg SdMsg;
-//    u32            init_msg;
     SDMC_ERR_CODE    api_result;
 
     if( sdmc_tsk_created == FALSE) {
-        /*---------- OS€”õ ----------*/
-        /* ƒAƒ‰[ƒ€ƒnƒ“ƒhƒ‰“o˜^ */
-#if (TARGET_OS_CTR == 1)
-        calm.almatr     = TA_HLNG;          // set attribution : for high level language
-        calm.exinf      = 0;                // set argument for alarm handler
-        calm.almhdr     = SDCARD_Timer_irq; // set alarm handler
-        sdmc_alm_id = acre_alm(&calm);
-        if (sdmc_alm_id < 0)
-        {
-            PRINTDEBUG("create_alarm_simple: Cannot create new alarm handler (%d).\n", sdmc_alm_id);
-        }
-
-        /* ƒƒbƒZ[ƒW‰Šú‰» */
-        // setup dataqueue structure
-        cdtq.dtqatr     = TA_TFIFO;         // set attribution : normal FIFO
-        cdtq.dtqcnt     = 1;                // there are 2 datas in queue
-        cdtq.dtq        = NULL;             // set data queue address : NULL means automatically allocated by kernel
-        sdmc_dtq_id = acre_dtq(&cdtq);
-        if (sdmc_dtq_id < 0)
-        {
-            PRINTDEBUG("create_dataqueue_simple: Cannot create new data queue.\n");
-        }
-        /**/    
-        cdtq.dtqatr     = TA_TFIFO;         // set attribution : normal FIFO
-        cdtq.dtqcnt     = 1;                // there are 2 datas in queue
-        cdtq.dtq        = NULL;             // set data queue address : NULL means automatically allocated by kernel
-        sdmc_result_dtq_id = acre_dtq(&cdtq);
-        if (sdmc_result_dtq_id < 0)
-        {
-            PRINTDEBUG("create_dataqueue_simple: Cannot create new data queue.\n");
-        }
-
-//        OS_InitThread();    //©•ª‚Ì—Dæ“x‚ª16‚É‚È‚é
-//        chg_pri( (ID)0, (PRI)12);
-
-        /* SDƒ^ƒXƒN‚Ì—§‚¿ã‚° */
-        ctsk.tskatr     = TA_HLNG | TA_ACT; // set attribution : for high level language and running now
-        ctsk.task       = SDCARD_Thread;    // set task routine
-        ctsk.exinf      = (void*)0;         // set argument for task routine
-        ctsk.itskpri    = SD_THREAD_PRIO;   // set priority
-        ctsk.stksz      = SD_STACK_SIZE;    // set stack size
-        ctsk.stk        = NULL;             // set stack address : NULL means automatically allocated by kernel
-        sdmc_tsk_id = acre_tsk(&ctsk);
-        if (sdmc_tsk_id < 0)
-        {
-            PRINTDEBUG("create_task_sd: Cannot create new task.\n");
-        }else{
-            if( (sdmc_tsk_id == E_NOID)||(sdmc_tsk_id == E_NOMEM)||(sdmc_tsk_id == E_RSATR)||
-                (sdmc_tsk_id == E_PAR)||(sdmc_tsk_id == E_OBJ)) {
-                PRINTDEBUG("create_task_sd: Cannot create new task.\n");
-            }
-            PRINTDEBUG("create_task_sd: 0x%x\n", sdmc_tsk_id);
-        }
-        /*----------------------------*/
-
-        /* SDŠ„‚è‚İˆ—ƒ^ƒXƒN‚Ì—§‚¿ã‚° */
-        ctsk.tskatr     = TA_HLNG | TA_ACT;     // set attribution : for high level language and running now
-        ctsk.task       = SDCARD_Intr_Thread;   // set task routine
-        ctsk.exinf      = (void*)0;             // set argument for task routine
-        ctsk.itskpri    = SD_INTR_THREAD_PRIO;  // set priority
-        ctsk.stksz      = SD_STACK_SIZE;        // set stack size
-        ctsk.stk        = NULL;                 // set stack address : NULL means automatically allocated by kernel
-        sdmc_intr_tsk_id = acre_tsk(&ctsk);
-        if (sdmc_intr_tsk_id < 0)
-        {
-            PRINTDEBUG("create_intr_task_sd: Cannot create new task.\n");
-        }else{
-            if( (sdmc_intr_tsk_id == E_NOID)||(sdmc_intr_tsk_id == E_NOMEM)||(sdmc_intr_tsk_id == E_RSATR)||
-                (sdmc_intr_tsk_id == E_PAR)||(sdmc_intr_tsk_id == E_OBJ)) {
-                PRINTDEBUG("create_intr_task_sd: Cannot create new task.\n");
-            }
-            PRINTDEBUG("create_intr_task_sd: 0x%x\n", sdmc_intr_tsk_id);
-        }
-        
-#else //(TARGET_OS_NITRO = 1)
         /*---------- OS€”õ ----------*/
         if( !OS_IsAlarmAvailable()) {	/* ƒAƒ‰[ƒ€ƒ`ƒFƒbƒN(OS_InitAlarmÏ‚İ‚©?) */
             SDCARD_ErrStatus |= SDMC_ERR_END;
@@ -501,7 +421,7 @@ SDMC_ERR_CODE sdmcInit( SDMC_DMA_NO dma_no, void (*func1)(),void (*func2)())
         OS_WakeupThreadDirect( &sdmc_intr_tsk);
         PRINTDEBUG( "sdmc_intr_tsk:0x%x\n", &sdmc_intr_tsk);
         /*----------------------------*/
-#endif
+
         /**/
         sdmc_tsk_created = TRUE;
     }
@@ -519,26 +439,13 @@ SDMC_ERR_CODE sdmcInit( SDMC_DMA_NO dma_no, void (*func1)(),void (*func2)())
 SDMC_ERR_CODE sdmcGoIdle( void (*func1)(),void (*func2)())
 {
     SDCARDMsg        SdMsg;
-#if (TARGET_OS_CTR == 1)
-    u32              init_msg;
-#else
     OSMessage        init_msg;
-#endif
     SDMC_ERR_CODE    api_result;
     
     func_SDCARD_In  = func1;        /* ƒJ[ƒh‘}“üƒCƒxƒ“ƒg—pŠÖ”‚ÌƒAƒhƒŒƒX‚ğİ’è */
     func_SDCARD_Out = func2;        /* ƒJ[ƒh”roƒCƒxƒ“ƒg—pŠÖ”‚ÌƒAƒhƒŒƒX‚ğİ’è */
     
     /*----- SDƒXƒŒƒbƒh‚Æ’ÊM -----*/
-#if (TARGET_OS_CTR == 1)
-    SdMsg.operation =    SD_OPERATION_INIT;
-
-    snd_dtq( sdmc_dtq_id, (VP_INT)&SdMsg);
-
-    /* •Ô‚è’l‘Ò‚¿ */
-    rcv_dtq( sdmc_result_dtq_id, (VP_INT*)&init_msg);
-    api_result = (SDMC_ERR_CODE)init_msg;
-#else
     SdMsg.operation = SD_OPERATION_INIT;
 //    SdMsg.func  = func1;
 //    SdMsg.func2 = func2;
@@ -549,7 +456,6 @@ SDMC_ERR_CODE sdmcGoIdle( void (*func1)(),void (*func2)())
     /* •Ô‚è’l‘Ò‚¿ */
     OS_ReceiveMessage( &sdmc_result_dtq, &init_msg, OS_MESSAGE_BLOCK);
     api_result = (SDMC_ERR_CODE)init_msg;
-#endif
     /*----------------------------------*/
 
     return api_result;
@@ -613,11 +519,8 @@ SDMC_ERR_CODE sdmcReset( void)
     pSDCARD_info   = NULL;
     SDCARD_OutFlag = FALSE;            /* ƒJ[ƒh”ro”­¶”»’èƒtƒ‰ƒOƒNƒŠƒA */
     
-#if (TARGET_OS_CTR == 1)
-    irq_core_flag = osDisableInterrupts();     /* Š„‚İ‹Ö~ */
-#else
     irq_core_flag = OS_DisableInterrupts();    /* Š„‚İ‹Ö~ */
-#endif
+
         *SDIF_CNT_L = (SDIF_CNT_FCLR | SDIF_CNT_USEFIFO); //ƒ‰ƒbƒp[ƒŒƒWƒXƒ^
         *SDIF_CNT_L = 0x0000;                  //ƒ‰ƒbƒp[ƒŒƒWƒXƒ^
         *SDIF_FDS_L = 0;
@@ -631,11 +534,7 @@ SDMC_ERR_CODE sdmcReset( void)
         SDCARD_Backup_port0();                   /* port0 backup    */
         SDCARD_Backup_port1();                   /* port1 backup    */
     
-#if (TARGET_OS_CTR == 1)
-    osRestoreInterrupts( irq_core_flag);       /* Š„‚è‚İİ’è‚ğŒ³‚É–ß‚· */
-#else
     OS_RestoreInterrupts( irq_core_flag);      /* Š„‚è‚İİ’è‚ğŒ³‚É–ß‚· */
-#endif
 
     return SDCARD_ErrStatus;
 }
@@ -664,7 +563,6 @@ static SDMC_ERR_CODE SDCARD_Layer_Init(void)
     SDCARD_SDFlag = FALSE;          /* SDƒJ[ƒh”»’èƒtƒ‰ƒOƒNƒŠƒA */
     SDCARD_OutFlag = FALSE;         /* ƒJ[ƒh”ro”­¶”»’èƒtƒ‰ƒOƒNƒŠƒA */
     ulSDCARD_Size = 0;              /* ƒJ[ƒh‘SƒZƒNƒ^”ƒNƒŠƒA */
-    TransCount = 0;                 /* “]‘—ƒJƒEƒ“ƒg•Ï”ƒNƒŠƒA */
 //    init_io_exist = 0;
 //    init_mem_exist = 0;
 
@@ -1089,11 +987,7 @@ static u32 SDCARD_GetR1Status(void)
 SDMC_ERR_CODE sdmcReadFifo(void* buf,u32 bufsize,u32 offset,void(*func)(void),SdmcResultInfo *info)
 {
     SDCARDMsg     SdMsg;
-#if (TARGET_OS_CTR == 1)
-    u32           recv_dat;
-#else
     OSMessage     recv_dat;
-#endif
     SDMC_ERR_CODE api_result;                    //SDCARDŠÖ”‚Ì•Ô‚è’l
 
     SdMsg.buf       = buf;
@@ -1103,23 +997,12 @@ SDMC_ERR_CODE sdmcReadFifo(void* buf,u32 bufsize,u32 offset,void(*func)(void),Sd
     SdMsg.info      = info;
     SdMsg.operation = SD_OPERATION_READ_WITH_FIFO;
 
-#if (TARGET_OS_CTR == 1)
-    PRINTDEBUG( "readfifo : snd_dtq begin\n");
-    snd_dtq( sdmc_dtq_id, (VP_INT)&SdMsg);
-
-    /* •Ô‚è’l‘Ò‚¿ */
-    PRINTDEBUG( "readfifo : rcv_dtq begin\n");
-    rcv_dtq( sdmc_result_dtq_id, (VP_INT*)&recv_dat);
-
-    api_result = (SDMC_ERR_CODE)recv_dat;
-#else
     recv_dat = (OSMessage)&SdMsg; //SdMsg‚ÌƒAƒhƒŒƒX‚ğ“`‚¦‚é
     OS_SendMessage( &sdmc_dtq, recv_dat, OS_MESSAGE_BLOCK);
     
     /* •Ô‚è’l‘Ò‚¿ */
     OS_ReceiveMessage( &sdmc_result_dtq, &recv_dat, OS_MESSAGE_BLOCK);
     api_result = (SDMC_ERR_CODE)recv_dat;
-#endif
 
     return api_result;
 }
@@ -1175,11 +1058,7 @@ static SDMC_ERR_CODE SDCARDi_ReadFifo(void* buf,u32 bufsize,u32 offset,void(*fun
 SDMC_ERR_CODE sdmcRead(void* buf,u32 bufsize,u32 offset,void(*func)(void),SdmcResultInfo *info)
 {
     SDCARDMsg     SdMsg;
-#if (TARGET_OS_CTR == 1)
-    u32           recv_dat;
-#else
     OSMessage     recv_dat;
-#endif
     SDMC_ERR_CODE api_result;
 
     SdMsg.buf       = buf;
@@ -1189,21 +1068,12 @@ SDMC_ERR_CODE sdmcRead(void* buf,u32 bufsize,u32 offset,void(*func)(void),SdmcRe
     SdMsg.info      = info;
     SdMsg.operation = SD_OPERATION_READ;
 
-#if (TARGET_OS_CTR == 1)
-    snd_dtq( sdmc_dtq_id, (VP_INT)&SdMsg);
-
-    /* •Ô‚è’l‘Ò‚¿ */
-    rcv_dtq( sdmc_result_dtq_id, (VP_INT*)&recv_dat);
-
-    api_result = (SDMC_ERR_CODE)recv_dat;
-#else
     recv_dat = (OSMessage)&SdMsg;
     OS_SendMessage( &sdmc_dtq, recv_dat, OS_MESSAGE_BLOCK);
     
     /* •Ô‚è’l‘Ò‚¿ */
     OS_ReceiveMessage( &sdmc_result_dtq, &recv_dat, OS_MESSAGE_BLOCK);
     api_result = (SDMC_ERR_CODE)recv_dat;
-#endif
 
     return api_result;
 }
@@ -1330,81 +1200,43 @@ static void SDCARD_FPGA_irq(void)
     if( ulSDCARD_RestSectorCount) {                 /* c‚èƒZƒNƒ^”‚ª—L‚é */
         ulSDCARD_RestSectorCount--;                 /* c‚èƒZƒNƒ^”‚ğƒfƒNƒŠƒƒ“ƒg */
         
-        if( TransCount==0) {                        /* “]‘—ƒJƒEƒ“ƒg”‚ª0‚©? (R/WŠ„‚İ—v‹‚Ì 1‰ñ‚Ì‚İİ’è)*/
-            if( SDCARD_UseFifoFlag) {
-                TransCount = (u16)(SDCARD_SectorSize/4); /* “]‘—ƒJƒEƒ“ƒgİ’è (32bit“]‘—‚È‚Ì‚ÅƒZƒNƒ^ƒTƒCƒY‚Ì1/4) */
-            }else{
-                TransCount = (u16)(SDCARD_SectorSize/2); /* “]‘—ƒJƒEƒ“ƒgİ’è (16bit“]‘—‚È‚Ì‚ÅƒZƒNƒ^ƒTƒCƒY‚Ì”¼•ª) */
-            }
-        }
-        
         /*--- SDƒJ[ƒh‚©‚ç‚ÌƒŠ[ƒh ---*/
         if(bRead){
-            while(TransCount != 0){                                      /* “]‘—ƒJƒEƒ“ƒg•ª‚Ìƒ‹[ƒv */
-                if( SDCARD_UseFifoFlag) {                                /*--- FIFO‚ğg‚¤‚Æ‚« ---*/
-                    *((u32*)pSDCARD_BufferAddr) = *(SDIF_FI);            /* 32bit“Ç‚İo‚µ */
-                }else{                                                   /*--- FIFO‚ğg‚í‚È‚¢‚Æ‚« ---*/
-                    *(pSDCARD_BufferAddr) = *(SD_BUF0);                  /* 16bit“Ç‚İo‚µ */
-                }
-                TransCount = (u16)(TransCount-1);                        /* “]‘—ƒJƒEƒ“ƒg‚ÌƒfƒNƒŠƒƒ“ƒg */
-                if(TransCount == 0){                                     /* “]‘—ƒJƒEƒ“ƒg•ªI—¹? */
-                    if( ulSDCARD_RestSectorCount <= 0) {                 /* —v‹ƒZƒNƒ^”ƒŠ[ƒhŠ®—¹‚µ‚½‚©? */
-                        if(SD_CheckFPGAReg(SD_STOP,SD_STOP_SEC_ENABLE)){ /* SD_SECCNTƒŒƒWƒXƒ^‚ªEnable‚©? */
-//                            SD_DisableSeccnt();                        /* SD_SECCNTƒŒƒWƒXƒ^–³Œøİ’è */
-                        }else{                                           /* SD_SECCNTƒŒƒWƒXƒ^‚ªDisable‚Ì‚Æ‚« */
-                            SD_StopTransmission();                       /* ƒJ[ƒh“]‘—I—¹‚ğFPGA‚É’Ê’miCMD12”­sj */
-                        }
-                    }
-                    SDCARD_ATC0_irq();                                   /* “]‘—Š®—¹Œã‚Ìˆ— */
-                }
-                if( SDCARD_UseFifoFlag) {
-                    pSDCARD_BufferAddr+=2;                               /* “Ç‚İƒf[ƒ^‚Ìƒoƒbƒtƒ@ƒAƒhƒŒƒX‚ğƒCƒ“ƒNƒŠƒƒ“ƒg */
-                }else{
-                    pSDCARD_BufferAddr++;                                /* “Ç‚İƒf[ƒ^‚Ìƒoƒbƒtƒ@ƒAƒhƒŒƒX‚ğƒCƒ“ƒNƒŠƒƒ“ƒg */
+            if( SDCARD_UseFifoFlag) {                            /*--- FIFO‚ğg‚¤‚Æ‚« ---*/
+                MyCpuRecv32( (u32*)SDIF_FI, (u32*)pSDCARD_BufferAddr, SDCARD_SectorSize);
+            }else{                                               /*--- FIFO‚ğg‚í‚È‚¢‚Æ‚« ---*/
+                MyCpuRecv16( (u16*)SD_BUF0, pSDCARD_BufferAddr, SDCARD_SectorSize);
+            }
+            if( ulSDCARD_RestSectorCount <= 0) {                 /* —v‹ƒZƒNƒ^”ƒŠ[ƒhŠ®—¹‚µ‚½‚©? */
+                if(SD_CheckFPGAReg(SD_STOP,SD_STOP_SEC_ENABLE)){ /* SD_SECCNTƒŒƒWƒXƒ^‚ªEnable‚©? */
+//                    SD_DisableSeccnt();                        /* SD_SECCNTƒŒƒWƒXƒ^–³Œøİ’è */
+                }else{                                           /* SD_SECCNTƒŒƒWƒXƒ^‚ªDisable‚Ì‚Æ‚« */
+                    SD_StopTransmission();                       /* ƒJ[ƒh“]‘—I—¹‚ğFPGA‚É’Ê’miCMD12”­sj */
                 }
             }
         }else{    /*--- SDƒJ[ƒh‚Ö‚Ìƒ‰ƒCƒg ---*/
-            while(TransCount != 0){                                      /* “]‘—ƒJƒEƒ“ƒg•ª‚Ìƒ‹[ƒv */
-                if( SDCARD_UseFifoFlag) {                                /*--- FIFO‚ğg‚¤‚Æ‚« ---*/
-#if (CTR_DEF_ENVIRONMENT_DSEMU == 1)
-                    *(vu16*)0x08030200 = 1;                              /* ƒuƒŒƒbƒhƒ{[ƒhŒÅ—L‚Ìæ“Ç‚İ–³Œø */
-#endif
-                    *(SDIF_FI) = *((u32*)pSDCARD_BufferAddr);            /* 32bit‘‚«‚İ */
-#if (CTR_DEF_ENVIRONMENT_DSEMU == 1)
-                    *(vu16*)0x08030200 = 0;                              /* ƒuƒŒƒbƒhƒ{[ƒhŒÅ—L‚Ìæ“Ç‚İ—LŒø */
-#endif
-                }else{                                                   /*--- FIFO‚ğg‚í‚È‚¢‚Æ‚« ---*/
-#if (CTR_DEF_ENVIRONMENT_DSEMU == 1)
-                    *(vu16*)0x08030200 = 1;                              /* ƒuƒŒƒbƒhƒ{[ƒhŒÅ—L‚Ìæ“Ç‚İ–³Œø */
-#endif
-                    *(SD_BUF0) = *(pSDCARD_BufferAddr);                  /* 16bit‘‚«‚İ */
-#if (CTR_DEF_ENVIRONMENT_DSEMU == 1)
-                    *(vu16*)0x08030200 = 0;                              /* ƒuƒŒƒbƒhƒ{[ƒhŒÅ—L‚Ìæ“Ç‚İ—LŒø */
-#endif
+            if( SDCARD_UseFifoFlag) {                            /*--- FIFO‚ğg‚¤‚Æ‚« ---*/
+                MI_CpuSend32( pSDCARD_BufferAddr, SDIF_FI, SDCARD_SectorSize);
+            }else{                                               /*--- FIFO‚ğg‚í‚È‚¢‚Æ‚« ---*/
+                MI_CpuSend16( pSDCARD_BufferAddr, SD_BUF0, SDCARD_SectorSize);
+            }
+            if( ulSDCARD_RestSectorCount <= 0){                  /* —v‹ƒZƒNƒ^”ƒ‰ƒCƒgŠ®—¹? */
+                if( SDCARD_UseFifoFlag) {                        /* FIFO‚ğg—p‚·‚é‚Æ‚«‚Í */
+                    while( (*SDIF_CNT & SDIF_CNT_NEMP)) {};      /* FIFO‚Éƒf[ƒ^‚ªc‚Á‚Ä‚¢‚é‚¤‚¿‚ÍI—¹‚µ‚È‚¢ */
                 }
-                TransCount = (u16)(TransCount-1);                        /* “]‘—ƒJƒEƒ“ƒg‚ÌƒfƒNƒŠƒƒ“ƒg */
-                if(TransCount == 0){                                     /* “]‘—ƒJƒEƒ“ƒg•ªI—¹? */
-                    if( ulSDCARD_RestSectorCount <= 0){                  /* —v‹ƒZƒNƒ^”ƒ‰ƒCƒgŠ®—¹? */
-                        if( SDCARD_UseFifoFlag) {                        /* FIFO‚ğg—p‚·‚é‚Æ‚«‚Í */
-                            while( (*SDIF_CNT & SDIF_CNT_NEMP)) {};      /* FIFO‚Éƒf[ƒ^‚ªc‚Á‚Ä‚¢‚é‚¤‚¿‚ÍI—¹‚µ‚È‚¢ */
-                        }
-                        if(SD_CheckFPGAReg(SD_STOP,SD_STOP_SEC_ENABLE)){ /* SD_SECCNTƒŒƒWƒXƒ^‚ªEnable‚©? */
-//                            SD_DisableSeccnt();                        /* SD_SECCNTƒŒƒWƒXƒ^–³Œøİ’è */
-                        }else{                                           /* SD_SECCNTƒŒƒWƒXƒ^‚ªDisable‚Ì‚Æ‚« */
-                            SD_StopTransmission();                       /* ƒJ[ƒh“]‘—I—¹‚ğFPGA‚É’Ê’miCMD12”­sj */
-                        }
-                    }
-                    SDCARD_ATC0_irq();                                   /* “]‘—Š®—¹Œã‚Ìˆ— */
-                }
-                if( SDCARD_UseFifoFlag) {
-                    pSDCARD_BufferAddr+=2;                               /* ‘‚İƒf[ƒ^‚Ìƒoƒbƒtƒ@ƒAƒhƒŒƒX‚ğƒCƒ“ƒNƒŠƒƒ“ƒg */
-                }else{
-                    pSDCARD_BufferAddr++;                                /* ‘‚İƒf[ƒ^‚Ìƒoƒbƒtƒ@ƒAƒhƒŒƒX‚ğƒCƒ“ƒNƒŠƒƒ“ƒg */
+                if(SD_CheckFPGAReg(SD_STOP,SD_STOP_SEC_ENABLE)){ /* SD_SECCNTƒŒƒWƒXƒ^‚ªEnable‚©? */
+//                    SD_DisableSeccnt();                        /* SD_SECCNTƒŒƒWƒXƒ^–³Œøİ’è */
+                }else{                                           /* SD_SECCNTƒŒƒWƒXƒ^‚ªDisable‚Ì‚Æ‚« */
+                    SD_StopTransmission();                       /* ƒJ[ƒh“]‘—I—¹‚ğFPGA‚É’Ê’miCMD12”­sj */
                 }
             }
         }
+        /* ƒŠ[ƒh/ƒ‰ƒCƒg‹¤’Êˆ— */
+        SDCARD_ATC0_irq();                                   /* “]‘—Š®—¹Œã‚Ìˆ— */
+        pSDCARD_BufferAddr+=(512/2);                         /* ‘‚İƒf[ƒ^‚Ìƒoƒbƒtƒ@ƒAƒhƒŒƒX‚ğƒCƒ“ƒNƒŠƒƒ“ƒg */
     }
 }
+
 
 /*---------------------------------------------------------------------------*
   Name:         SDCARD_ATC0_irq
@@ -1480,9 +1312,9 @@ static void SYSFPGA_irq(void)
     /* (CTR‚Íƒ|[ƒg1‚ÌCD’[q‚ª–¢Ú‘±(í‚É‘}“üó‘Ô)‚È‚Ì‚ÅAƒ|[ƒg1‚Ì‘}”²ƒ`ƒFƒbƒN‚Ís‚í‚È‚¢) */
 
     /*--- Š„‚è‚İ—v‹‚ÆŠ„‚è‚İƒ}ƒXƒN‚ğ•Û‘¶ ---*/
-    SD_GetFPGA( SD_INFO1_VALUE,            SD_INFO1);
+    SD_GetFPGA( SD_INFO1_VALUE,         SD_INFO1);
     SD_GetFPGA( SD_INFO1_MASK_VALUE,    SD_INFO1_MASK);
-    SD_GetFPGA( SD_INFO2_VALUE,            SD_INFO2);
+    SD_GetFPGA( SD_INFO2_VALUE,         SD_INFO2);
     SD_GetFPGA( SD_INFO2_MASK_VALUE,    SD_INFO2_MASK);
     /*------------------------------------------*/
 
@@ -1621,13 +1453,7 @@ static void    SDCARD_Timer_irq(void* arg)
     PRINTDEBUG( "SD_INFO2_MASK : 0x%x\n", tmp);
     tmp = SD_ERR_STS1;
     PRINTDEBUG( "SD_ERR_STS1   : 0x%x\n", tmp);
-#if (CTR_DEF_ENVIRONMENT_DSEMU == 1)
-    *(vu16*)0x08030200 = 1;
-#endif
     tmp = SD_ERR_STS2;
-#if (CTR_DEF_ENVIRONMENT_DSEMU == 1)
-    *(vu16*)0x08030200 = 0;
-#endif
     PRINTDEBUG( "SD_ERR_STS2   : 0x%x\n", tmp);
     tmp = *(vu16 *)(SD_IF_BASE+0x00);
     PRINTDEBUG( "SD_CNT        : 0x%x\n", tmp);
@@ -2059,11 +1885,7 @@ static u16  i_sdmcCheckWP(void)
 SDMC_ERR_CODE sdmcWriteFifo(void* buf,u32 bufsize,u32 offset,void(*func)(),SdmcResultInfo *info)
 {
     SDCARDMsg     SdMsg;
-#if (TARGET_OS_CTR == 1)
-    u32           recv_dat;
-#else
     OSMessage     recv_dat;
-#endif
     SDMC_ERR_CODE api_result;
 
     SdMsg.buf       = buf;
@@ -2073,21 +1895,12 @@ SDMC_ERR_CODE sdmcWriteFifo(void* buf,u32 bufsize,u32 offset,void(*func)(),SdmcR
     SdMsg.info      = info;
     SdMsg.operation = SD_OPERATION_WRITE_WITH_FIFO;
 
-#if (TARGET_OS_CTR == 1)
-    snd_dtq( sdmc_dtq_id, (VP_INT)&SdMsg);
-
-    /* •Ô‚è’l‘Ò‚¿ */
-    rcv_dtq( sdmc_result_dtq_id, (VP_INT*)&recv_dat);
-
-    api_result = (SDMC_ERR_CODE)recv_dat;
-#else
     recv_dat = (OSMessage)&SdMsg;
     OS_SendMessage( &sdmc_dtq, recv_dat, OS_MESSAGE_BLOCK);
 
     /* •Ô‚è’l‘Ò‚¿ */
     OS_ReceiveMessage( &sdmc_result_dtq, &recv_dat, OS_MESSAGE_BLOCK);
     api_result = (SDMC_ERR_CODE)recv_dat;
-#endif
     
     return api_result;
 }
@@ -2143,11 +1956,7 @@ static SDMC_ERR_CODE SDCARDi_WriteFifo(void* buf,u32 bufsize,u32 offset,void(*fu
 SDMC_ERR_CODE sdmcWrite(void* buf,u32 bufsize,u32 offset,void(*func)(),SdmcResultInfo *info)
 {
     SDCARDMsg     SdMsg;
-#if (TARGET_OS_CTR == 1)
-    u32           recv_dat;
-#else
     OSMessage     recv_dat;
-#endif
     SDMC_ERR_CODE api_result;
 
     SdMsg.buf       = buf;
@@ -2157,21 +1966,12 @@ SDMC_ERR_CODE sdmcWrite(void* buf,u32 bufsize,u32 offset,void(*func)(),SdmcResul
     SdMsg.info      = info;
     SdMsg.operation = SD_OPERATION_WRITE;
 
-#if (TARGET_OS_CTR == 1)
-    snd_dtq( sdmc_dtq_id, (VP_INT)&SdMsg);
-    
-    /* •Ô‚è’l‘Ò‚¿ */
-    rcv_dtq( sdmc_result_dtq_id, (VP_INT*)&recv_dat);
-
-    api_result = (SDMC_ERR_CODE)recv_dat;
-#else
     recv_dat = (OSMessage)&SdMsg;
     OS_SendMessage( &sdmc_dtq, recv_dat, OS_MESSAGE_BLOCK);
     
     /* •Ô‚è’l‘Ò‚¿ */
     OS_ReceiveMessage( &sdmc_result_dtq, &recv_dat, OS_MESSAGE_BLOCK);
     api_result = (SDMC_ERR_CODE)recv_dat;
-#endif
     
     return api_result;
 }
@@ -2554,21 +2354,13 @@ SDMC_ERR_CODE sdmcSelect(u16 select)
 static void SDCARD_Thread( void* arg)
 {
     SDCARDMsg*    SdMsg;
-#if (TARGET_OS_CTR == 1)
-    u32           current_dat;
-#else
     OSMessage     current_dat;
-#endif
     SDMC_ERR_CODE api_result;
 
     while( TRUE) {
         /* ƒƒbƒZ[ƒW‘Ò‚¿ */
         PRINTDEBUG( "rcv mes sdThread\n");
-#if (TARGET_OS_CTR == 1)
-        rcv_dtq( sdmc_dtq_id, (VP_INT*)&current_dat);
-#else
         OS_ReceiveMessage( &sdmc_dtq, &current_dat, OS_MESSAGE_BLOCK);
-#endif
         SdMsg = (SDCARDMsg*)current_dat;
         PRINTDEBUG( "sd task : receive command : %d\n", SdMsg->operation);
 
@@ -2610,11 +2402,7 @@ static void SDCARD_Thread( void* arg)
 
         /*ƒƒbƒZ[ƒW•Ô‘—*/
         current_dat = (OSMessage)api_result;
-#if (TARGET_OS_CTR == 1)
-        snd_dtq( sdmc_result_dtq_id, (VP_INT)api_result);
-#else
         OS_SendMessage( &sdmc_result_dtq, current_dat, OS_MESSAGE_BLOCK);
-#endif
     }
 }
 
@@ -2633,22 +2421,15 @@ static void SDCARD_Intr_Thread( void* arg)
     OSIntrMode enabled;
     
     while( 1) {
-        PRINTDEBUG( "next_tsk:0x%x\n", OS_SelectThread());
         PRINTDEBUG( "Slp sdIntr\n");
 
         OS_WaitIrq( FALSE, OS_IE_SD);
-//      OS_DisableIrqMask( OS_IE_SD);
-//      if( sdmc_intr_wakeup_count == 0) {
-//        OS_SleepThread( NULL);
-//      }
-//      sdmc_intr_wakeup_count--;
-//      OS_EnableIrqMask( OS_IE_SD);
-//        enabled = OS_DisableInterrupts();
+      
         (void)OS_ClearIrqCheckFlag( OS_IE_SD);
-        /*SDŠ„‚è‚İ‚ÌIF‰ğœ*/
-        *(vu16*)CTR_INT_IF = CTR_IE_SD_MASK;
-//        (void)OS_RestoreInterrupts( enabled);
+        *(vu16*)CTR_INT_IF = CTR_IE_SD_MASK;          /*SDŠ„‚è‚İ‚ÌIF‰ğœ*/
+      
         PRINTDEBUG( "sdIntr waked\n");
+      
 
         /*--- FIFO‚ğg‚¤‚Æ‚« ---*/
         if( SDCARD_UseFifoFlag) {
@@ -2660,40 +2441,34 @@ static void SDCARD_Intr_Thread( void* arg)
                 OS_DisableIrqMask( OS_IE_SD);
                 SDCARD_FPGA_irq();                        /*ƒJ[ƒh‚©‚ç‚ÌƒŠ[ƒhƒ‰ƒCƒg—v‹Š„‚è‚İ*/
                 OS_EnableIrqMask( OS_IE_SD);
-                   /* FIFOŠ„‚è‚İ‚ÆALLENDŠ„‚è‚İ‚ª‚Ù‚Ú“¯‚Ìê‡‚É‘Î‰ */
-                if( SD_CheckFPGAReg( sd_info1, SD_INFO1_ALL_END)) {
-        (void)OS_ClearIrqCheckFlag( OS_IE_SD);
-        /*SDŠ„‚è‚İ‚ÌIF‰ğœ*/
-        *(vu16*)CTR_INT_IF = CTR_IE_SD_MASK;
-                    OS_DisableIrqMask( OS_IE_SD);
-                    SYSFPGA_irq();
-                    OS_EnableIrqMask( OS_IE_SD);
-                    if( thread_flag) {
-                        PRINTDEBUG( "--Wup sdThread!--\n");
-                        sdmc_wakeup_count++;
-                        PRINTDEBUG( "wakeup\n");
-                        OS_WakeupThreadDirect( &sdmc_tsk);
-                    }
-                }
+              
             }else{
+
+                /*----- FIFO-EmptyFlag–¢C³‚Ìê‡AWrite‚Ì1‰ñ–Ú‚ÍBWEŠ„‚è‚İ‚É—Š‚é•K—v‚ª‚ ‚é -----*/
                 if( SD_CheckFPGAReg( SD_INFO2, (SD_INFO2_MASK_BRE | SD_INFO2_MASK_BWE))) {
-                   PRINTDEBUG ( ">>>SD Intr(R/W Req)\n");
+                    PRINTDEBUG ( ">>>SD Intr(R/W Req)\n");
                     //‚±‚±‚Å©“®“I‚Éƒ‰ƒbƒp[‚ÌFIFO<->SD_BUF0ŠÔ‚Å’ÊM‚ªs‚í‚ê‚é
-    //                if((!(*SDIF_CNT & SDIF_CNT_NEMP))&&(*SDIF_CNT & SDIF_CNT_FEIE)) {
                     OS_DisableIrqMask( OS_IE_SD);
                     SDCARD_FPGA_irq();
                     OS_EnableIrqMask( OS_IE_SD);
-                }else{
-                    PRINTDEBUG( ">>>SD Intr(End or Err)\n");
-                    OS_DisableIrqMask( OS_IE_SD);
-                    SYSFPGA_irq();                            /*Š®—¹‚Ü‚½‚ÍƒGƒ‰[Š„‚è‚İ*/
-                    OS_EnableIrqMask( OS_IE_SD);
-                    /**/
-                    if( thread_flag) {
-                        PRINTDEBUG( "--Wup sdThread!--\n");
-                        sdmc_wakeup_count++;
-                        OS_WakeupThreadDirect( &sdmc_tsk);
-                    }
+                }
+                /*----------*/
+              
+            }
+          
+            /* FIFOŠ„‚è‚İ‚ÆALLENDŠ„‚è‚İ‚ª‚Ù‚Ú“¯‚Ìê‡‚É‘Î‰ */
+            if( SD_CheckFPGAReg( sd_info1, SD_INFO1_ALL_END)) {
+                PRINTDEBUG( ">>>SD Intr(End or Err)\n");
+                (void)OS_ClearIrqCheckFlag( OS_IE_SD);
+                *(vu16*)CTR_INT_IF = CTR_IE_SD_MASK;  /*SDŠ„‚è‚İ‚ÌIF‰ğœ*/
+                OS_DisableIrqMask( OS_IE_SD);
+                SYSFPGA_irq();
+                OS_EnableIrqMask( OS_IE_SD);
+                if( thread_flag) {
+                    PRINTDEBUG( "--Wup sdThread!--\n");
+                    sdmc_wakeup_count++;
+                    PRINTDEBUG( "wakeup\n");
+                    OS_WakeupThreadDirect( &sdmc_tsk);
                 }
             }
         /*--- FIFO‚ğg‚í‚È‚¢‚Æ‚« ---*/

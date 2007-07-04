@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*
-  Project:  CTR - rtfs interface for SD Memory Card
+  Project:  TWL - rtfs interface for SD Memory Card
   File:     drsdmc.h
 
   Copyright 2006,2007 Nintendo.  All rights reserved.

@@ -1,9 +1,15 @@
-/*
-  Project:	CTR SD Card driver
-  File:		sd_card.c
+/*---------------------------------------------------------------------------*
+  Project:  TWL - SD low-level driver
+  File:     sdif.c
 
-  2006, Research and Development Department, Nintendo.
-*/
+  Copyright 2006,2007 Nintendo.  All rights reserved.
+
+  These coded instructions, statements, and computer programs contain
+  proprietary information of Nintendo of America Inc. and/or Nintendo
+  Company Ltd., and are protected by Federal copyright law.  They may
+  not be disclosed to third parties or copied or duplicated in any form,
+  in whole or in part, without the prior written consent of Nintendo.
+ *---------------------------------------------------------------------------*/
 
 #include <twl.h>
 #include "sdmc_config.h"
@@ -1010,15 +1016,9 @@ void    SD_SetErr(u16 Error)
 {
     OSIntrMode irq_core_flag;
     
-#if (TARGET_OS_CTR == 1)
-    irq_core_flag = osDisableInterrupts(); /* 割込み禁止 */
-        SDCARD_ErrStatus |= Error;         /* エラーステータスを設定 */
-    osRestoreInterrupts( irq_core_flag);   /* 割り込み設定を元に戻す */
-#else
     irq_core_flag = OS_DisableInterrupts();
         SDCARD_ErrStatus |= Error;         /* エラーステータスを設定 */
     OS_RestoreInterrupts( irq_core_flag);
-#endif
 } 
 
 /*---------------------------------------------------------------------------*
@@ -1035,15 +1035,9 @@ void    SD_ClrErr(u16 Error)
 {
     OSIntrMode irq_core_flag;
 
-#if (TARGET_OS_CTR == 1)
-    irq_core_flag = osDisableInterrupts(); /* 割込み禁止 */
-        SDCARD_ErrStatus &= ~(Error);      /* エラーステータスをクリア */
-    osRestoreInterrupts( irq_core_flag);   /* 割り込み設定を元に戻す */
-#else
     irq_core_flag = OS_DisableInterrupts(); /* 割込み禁止 */
         SDCARD_ErrStatus &= ~(Error);       /* エラーステータスをクリア */
     OS_RestoreInterrupts( irq_core_flag);   /* 割り込み設定を元に戻す */
-#endif
 } 
 
 

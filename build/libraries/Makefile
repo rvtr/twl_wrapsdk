@@ -37,6 +37,7 @@ SUBDIRS		= \
 		  devices	\
 		  dsp		\
 		  el		\
+		  sample_dll	\
 
 #----------------------------------------------------------------------------
 export	NITRO_BLXCHECKED = yes

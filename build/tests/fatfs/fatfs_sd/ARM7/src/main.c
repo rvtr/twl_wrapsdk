@@ -55,6 +55,22 @@ void MY_SdTransferRewind( void)
     my_buf_offset = 0;
 }
 
+static void dump(const char *str, const void *buf, unsigned int len)
+{
+    int i;
+    const unsigned char *ptr = buf;
+    OS_TPrintf("\n%s (%d bytes):\n", str, len);
+    for (i = 0; i < len; i++)
+    {
+        if ((i&0xf) == 0) OS_TPrintf("\n%08X: ", i);
+        else        OS_TPrintf(" ");
+        OS_TPrintf("%02X", *ptr++);
+    }
+    OS_TPrintf("\n");
+}
+
+
+
 /*---------------------------------------------------------------------------*
   Name:         TwlSpMain
 
@@ -71,7 +87,7 @@ void TwlSpMain(void)
     SDMC_ERR_CODE  result;
     SdmcResultInfo SdResult;
     PCFD           fd;
-    CHKDISK_STATS dstat;
+    CHKDISK_STATS  dstat;
 
     // OS‰Šú‰»
     OS_Init();
@@ -232,6 +248,15 @@ void TwlSpMain(void)
       PRINTDEBUG( "po_open success.\n");
       /*----------*/
 
+      dump( "BlockBuf", BlockBuf, 0x200);
+      PRINTDEBUG( "po_write : 0x%x\n", po_write( fd, (u8*)BlockBuf2, 512));
+      dump( "BlockBuf2(write data)", BlockBuf2, 0x200);
+
+      po_lseek( fd, 0, PSEEK_SET);
+      
+      PRINTDEBUG( "po_read  : 0x%x\n", po_read( fd, (u8*)BlockBuf, 512));
+      dump( "BlockBuf(read data)", BlockBuf, 0x200);
+
       /*----------*/
       if( po_close( fd) < 0) {
           PRINTDEBUG( "po_close failed.\n");
@@ -239,6 +264,13 @@ void TwlSpMain(void)
       }
       PRINTDEBUG( "po_close success.\n");
       /*----------*/
+
+
+        if( pc_regression_test( (u8*)"E:", FALSE) == FALSE) {
+            PRINTDEBUG( "pc_regression_test failed.\n");
+        }else{
+            PRINTDEBUG( "pc_regression_test success.\n");
+        }
     }
 #endif
 
@@ -256,6 +288,7 @@ void TwlSpMain(void)
         }
     }
 }
+
 
 /*---------------------------------------------------------------------------*
   Name:         InitializeAllocateSystem
