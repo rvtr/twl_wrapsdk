@@ -145,6 +145,12 @@ DEFAULT_TWL_ROM_SPEC	:= $(TWL_SPECDIR)/ROM-$(TWL_PLATFORM).rsf
 # replace NitroSDK
 NITRO_BUILDARCH		?= $(TWL_BUILDARCH)
 
+ifeq	($(CODEGEN_PROC),ARM9)
+TWL_LIBSYSCALL		 ?= $(TWL_LIBSYSCALLDIR)/libsyscall.twl.a
+else #	($(CODEGEN_PROC),ARM7)
+TWL_LIBSYSCALL		 ?= $(TWL_LIBSYSCALLDIR)/libsyscall_sp.twl.a
+endif #	($(CODEGEN_PROC),ARM7)
+
 
 ### Compiler & Linker settings
 
@@ -197,7 +203,9 @@ endif
 
 endif
 
-TWL_LIBS ?= $(addsuffix $(TWL_LIBSUFFIX).a,$(TWL_LIBS_BASE))
+TWL_LIBS ?= $(addsuffix $(TWL_LIBSUFFIX).a,$(TWL_LIBS_BASE)) \
+			$(notdir $(TWL_LIBSYSCALL)) \
+
 
 TWL_LDEPENDS_DBG ?= $(TWLSDK_ROOT)/build/libraries/os/common/os_printf.c \
 
@@ -229,7 +237,7 @@ endif
 ### Global Library resettings
 
 GINCLUDES		:= $(TWL_INCDIR) $(GINCLUDES)
-GLIBRARY_DIRS	:= $(TWL_LIBDIR) $(GLIBRARY_DIRS)
+GLIBRARY_DIRS	:= $(TWL_LIBDIR)  $(dir $(TWL_LIBSYSCALL)) $(GLIBRARY_DIRS)
 GLIBRARIES		:= $(TWL_LIBS) \
 					$(filter-out $(addsuffix $(NITRO_LIBSUFFIX).a,$(TWL_LIBS_BASE)),$(GLIBRARIES))
 
