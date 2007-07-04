@@ -145,11 +145,15 @@ DEFAULT_TWL_ROM_SPEC	:= $(TWL_SPECDIR)/ROM-$(TWL_PLATFORM).rsf
 # replace NitroSDK
 NITRO_BUILDARCH		?= $(TWL_BUILDARCH)
 
+ifneq	($(TWL_PLATFORM),DSTEG)
+
 ifeq	($(CODEGEN_PROC),ARM9)
 TWL_LIBSYSCALL		 ?= $(TWL_LIBSYSCALLDIR)/libsyscall.twl.a
 else #	($(CODEGEN_PROC),ARM7)
 TWL_LIBSYSCALL		 ?= $(TWL_LIBSYSCALLDIR)/libsyscall_sp.twl.a
 endif #	($(CODEGEN_PROC),ARM7)
+
+endif # ($(TWL_PLATFORM),DSTEG)
 
 
 ### Compiler & Linker settings
