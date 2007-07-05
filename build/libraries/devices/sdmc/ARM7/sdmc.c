@@ -394,7 +394,11 @@ SDMC_ERR_CODE sdmcInit( SDMC_DMA_NO dma_no, void (*func1)(),void (*func2)())
     SDMC_ERR_CODE    api_result;
 
     /**/
-    sdmc_dma_no = dma_no;
+    if( (dma_no < 4) || (dma_no == SDMC_NOUSE_DMA)) {
+        sdmc_dma_no = dma_no;
+    }else{
+        return( SDMC_ERR_PARAM);
+    }
   
     if( sdmc_tsk_created == FALSE) {
         /*---------- OS準備 ----------*/
@@ -993,6 +997,10 @@ SDMC_ERR_CODE sdmcReadFifo(void* buf,u32 bufsize,u32 offset,void(*func)(void),Sd
     OSMessage     recv_dat;
     SDMC_ERR_CODE api_result;                    //SDCARD関数の返り値
 
+    if( bufsize == 0) {
+       return( SDMC_ERR_PARAM);
+    }
+  
     SdMsg.buf       = buf;
     SdMsg.bufsize   = bufsize;
     SdMsg.offset    = offset;
@@ -1026,14 +1034,30 @@ SDMC_ERR_CODE sdmcReadFifo(void* buf,u32 bufsize,u32 offset,void(*func)(void),Sd
  *---------------------------------------------------------------------------*/
 static SDMC_ERR_CODE SDCARDi_ReadFifo(void* buf,u32 bufsize,u32 offset,void(*func)(void),SdmcResultInfo *info)
 {
+    u32* DmaReg;
     SDMC_ERR_CODE result;
     
-    /* FIFO Empty割り込み無効、FIFO Full割り込み有効 */
-    *(SDIF_CNT) = (*(SDIF_CNT) & (~SDIF_CNT_FEIE)) | SDIF_CNT_FFIE;
+    if( sdmc_dma_no == SDMC_NOUSE_DMA) {
+        /* FIFO Empty割り込み無効、FIFO Full割り込み有効 */
+        *(SDIF_CNT) = (*(SDIF_CNT) & (~SDIF_CNT_FEIE)) | SDIF_CNT_FFIE;
+    }else{
+        *(SDIF_CNT) = (*(SDIF_CNT) & (~(SDIF_CNT_FFIE | SDIF_CNT_FEIE)));
+    }
     *(SDIF_FDS) = (u16)SDCARD_SectorSize;   /* FIFOのデータサイズ */
     *(SDIF_FSC) = bufsize;
     *(SDIF_CNT) |= (SDIF_CNT_FCLR | SDIF_CNT_USEFIFO);        /* FIFO使用フラグON */
     CC_EXT_MODE = CC_EXT_MODE_DMA;          /* DMAモードON */
+
+    if( sdmc_dma_no != SDMC_NOUSE_DMA) {
+        DmaReg = (u32*)(REG_DMA4SAD_ADDR + (0x1C * sdmc_dma_no));
+        *(u32*)(DmaReg+6) =  0;            //reg_MI_DMA4CNT
+        *(u32*)(DmaReg++) =  (u32)SDIF_FI; //reg_MI_DMA4SAD
+        *(u32*)(DmaReg++) =  (u32)buf;     //reg_MI_DMA4DAD
+        *(u32*)(DmaReg++) = ((SDCARD_SectorSize / sizeof(u32)) * bufsize); //総転送ワード数(reg_MI_DMA4TCNT)
+        *(u32*)(DmaReg++) = (SDCARD_SectorSize / sizeof(u32));             //転送ワード数(reg_MI_DMA4WCNT)
+        *(u32*)(DmaReg++) = 0;                                             //インターバル(reg_MI_DMA4BCNT)
+        *(u32*)(DmaReg+1) = REG_MI_DMA4CNT_E_MASK | 0x08000000 | 0x00070000 | 0x4000; //SD起動、128WC, SRC-FIX(reg_MI_DMA4CNT)
+    }
 
     result = SDCARDi_Read( buf, bufsize, offset, func, info);
 
@@ -1064,6 +1088,10 @@ SDMC_ERR_CODE sdmcRead(void* buf,u32 bufsize,u32 offset,void(*func)(void),SdmcRe
     OSMessage     recv_dat;
     SDMC_ERR_CODE api_result;
 
+    if( bufsize == 0) {
+       return( SDMC_ERR_PARAM);
+    }
+  
     SdMsg.buf       = buf;
     SdMsg.bufsize   = bufsize;
     SdMsg.offset    = offset;
@@ -1873,6 +1901,10 @@ SDMC_ERR_CODE sdmcWriteFifo(void* buf,u32 bufsize,u32 offset,void(*func)(),SdmcR
     OSMessage     recv_dat;
     SDMC_ERR_CODE api_result;
 
+    if( bufsize == 0) {
+       return( SDMC_ERR_PARAM);
+    }
+  
     SdMsg.buf       = buf;
     SdMsg.bufsize   = bufsize;
     SdMsg.offset    = offset;
@@ -1906,11 +1938,16 @@ SDMC_ERR_CODE sdmcWriteFifo(void* buf,u32 bufsize,u32 offset,void(*func)(),SdmcR
  *---------------------------------------------------------------------------*/
 static SDMC_ERR_CODE SDCARDi_WriteFifo(void* buf,u32 bufsize,u32 offset,void(*func)(),SdmcResultInfo *info)
 {
+    u32* DmaReg;
     SDMC_ERR_CODE result;
 
 #if (SD_FIFO_EMPTY_FLAG_NEW == 1)
-    /* FIFO Full割り込み無効、FIFO Empty割り込み有効 */
-    *(SDIF_CNT) = (*(SDIF_CNT) & (~SDIF_CNT_FFIE)) | SDIF_CNT_FEIE;
+  if( sdmc_dma_no == SDMC_NOUSE_DMA) {
+        /* FIFO Full割り込み無効、FIFO Empty割り込み有効 */
+        *(SDIF_CNT) = (*(SDIF_CNT) & (~SDIF_CNT_FFIE)) | SDIF_CNT_FEIE;
+    }else{
+        *(SDIF_CNT) = (*(SDIF_CNT) & (~(SDIF_CNT_FFIE | SDIF_CNT_FEIE)));
+    }
 #else
     /* FIFO割り込み禁止 */
     *(SDIF_CNT) = (*(SDIF_CNT) & (~(SDIF_CNT_FFIE | SDIF_CNT_FEIE)));
@@ -1920,6 +1957,17 @@ static SDMC_ERR_CODE SDCARDi_WriteFifo(void* buf,u32 bufsize,u32 offset,void(*fu
     *(SDIF_FSC) = bufsize;
     *(SDIF_CNT) |= (SDIF_CNT_FCLR | SDIF_CNT_USEFIFO);        /* FIFO使用フラグON */
     CC_EXT_MODE = CC_EXT_MODE_DMA;          /* DMAモードON */
+
+  if( sdmc_dma_no != SDMC_NOUSE_DMA) {
+        DmaReg = (u32*)(REG_DMA4SAD_ADDR + (0x1C * sdmc_dma_no));
+        *(u32*)(DmaReg+6) =  0;                              //reg_MI_DMA4CNT
+        *(u32*)(DmaReg++) =  (u32)buf + SDCARD_SectorSize;   //reg_MI_DMA4SAD (new FIFO emptyのときは1セクタ後から)
+        *(u32*)(DmaReg++) =  (u32)SDIF_FI; //reg_MI_DMA4DAD
+        *(u32*)(DmaReg++) = ((SDCARD_SectorSize / sizeof(u32)) * (bufsize-1)); //総転送ワード数(reg_MI_DMA4TCNT)
+        *(u32*)(DmaReg++) = (SDCARD_SectorSize / sizeof(u32));             //転送ワード数(reg_MI_DMA4WCNT)
+        *(u32*)(DmaReg++) = 0;                                             //インターバル(reg_MI_DMA4BCNT)
+        *(u32*)(DmaReg+1) = REG_MI_DMA4CNT_E_MASK | 0x08000000 | 0x00070000 | 0x0800; //SD起動、128WC, DEST-FIX(reg_MI_DMA4CNT)
+    }
 
     result = SDCARDi_Write( buf, bufsize, offset, func, info);
 
@@ -1950,6 +1998,10 @@ SDMC_ERR_CODE sdmcWrite(void* buf,u32 bufsize,u32 offset,void(*func)(),SdmcResul
     OSMessage     recv_dat;
     SDMC_ERR_CODE api_result;
 
+    if( bufsize == 0) {
+       return( SDMC_ERR_PARAM);
+    }
+  
     SdMsg.buf       = buf;
     SdMsg.bufsize   = bufsize;
     SdMsg.offset    = offset;
@@ -2451,7 +2503,7 @@ static void SDCARD_Intr_Thread( void* arg)
 #if (SD_FIFO_EMPTY_FLAG_NEW == 1)
 #else
             }else{
-                /*----- FIFO-EmptyFlag未修正の場合、Writeの1回目はBWE割り込みに頼る必要がある -----*/
+                /*----- FIFO-EmptyFlag未修正の場合、WriteはBWE割り込みに頼る必要がある -----*/
                 if( SD_CheckFPGAReg( SD_INFO2, (SD_INFO2_MASK_BRE | SD_INFO2_MASK_BWE))) {
 //                    OS_TPrintf( ">>>SD Intr(R/W Req)\n");
                     //ここで自動的にラッパーのFIFO<->SD_BUF0間で通信が行われる
@@ -2466,7 +2518,10 @@ static void SDCARD_Intr_Thread( void* arg)
           
             /* ALL_END */
             sd_info1 = SD_INFO1;
-            if( (SD_CheckFPGAReg( sd_info1, SD_INFO1_ALL_END))&&(ulSDCARD_RestSectorCount<=0)) {
+            if( (SD_CheckFPGAReg( sd_info1, SD_INFO1_ALL_END))&&
+                ((ulSDCARD_RestSectorCount<=0) || (sdmc_dma_no != SDMC_NOUSE_DMA))) {
+//                    while( (*SDIF_CNT & SDIF_CNT_NEMP)) {};      /* FIFOにデータが残っているうちは終了しない */
+                ulSDCARD_RestSectorCount = 0; //DMA使用のときはデクリメントされてないので
 //                OS_TPrintf( ">>>SD Intr(End or Err) %d\n", i);
                 (void)OS_ClearIrqCheckFlag( OS_IE_SD);
                 *(vu16*)CTR_INT_IF = CTR_IE_SD_MASK;  /*SD割り込みのIF解除*/

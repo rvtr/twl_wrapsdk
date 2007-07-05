@@ -575,8 +575,6 @@ u16 SD_MultiReadBlock(u32 ulOffset)
     SD_TransReadyFPGA();                                /* INFOレジスタ初期化 */
     if( !SDCARD_UseFifoFlag) {                          /* FIFOを使わないとき */
         SD_AndFPGA(SD_INFO2_MASK,(~SD_INFO2_MASK_BRE)); /* SDカードからのデータ読出し要求割込み許可*/
-    }else{
-        SD_OrFPGA(SD_INFO2_MASK, SD_INFO2_MASK_BRE);
     }
   
     /* 読み込み開始アドレス（オフセット）設定 */
@@ -1171,9 +1169,7 @@ u16 SD_MultiWriteBlock(u32 ulOffset)
     SD_TransReadyFPGA();                                /* INFOレジスタ初期化 */
 
 #if (SD_FIFO_EMPTY_FLAG_NEW == 1)  // FIFO Emptyフラグ仕様変更後
-    if( SDCARD_UseFifoFlag) {                           /* FIFOを使うとき */
-        SD_OrFPGA( SD_INFO2_MASK, SD_INFO2_MASK_BWE);   /* SDカードからのデータ書込み要求割込み禁止 */
-    }else{
+    if( !(SDCARD_UseFifoFlag)) {                           /* FIFOを使わないとき */
         SD_AndFPGA(SD_INFO2_MASK,(~SD_INFO2_MASK_BWE)); /* SDカードからのデータ書込み要求割込み許可 */
     }
 #else                              // FIFO Emptyフラグ仕様変更前

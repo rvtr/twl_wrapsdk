@@ -141,7 +141,7 @@ void TwlSpMain(void)
     MI_DmaFill32( 2, BlockBuf2, 0x00FF00FF, 512*3);
     
     /*SDÉhÉâÉCÉoèâä˙âª*/
-    result = sdmcInit( SDMC_NOUSE_DMA, NULL, NULL);
+    result = sdmcInit( SDMC_USE_DMA_4/*SDMC_NOUSE_DMA*/, NULL, NULL);
     if( result != SDMC_NORMAL) {
         PRINTDEBUG( "sdmcInit : failed\n");
         while( 1) {};
@@ -215,7 +215,7 @@ void TwlSpMain(void)
     MI_DmaFill32( 2, BlockBuf2, 0x00FF00FF, 512*3);
 
     DEBUG_BEGIN();
-    result = sdmcWriteFifo( (void*)0x02004000, 2, 1, NULL, &SdResult);
+    result = sdmcWriteFifo( (void*)0x02004000, 10000, 1, NULL, &SdResult);
     if( result != 0) {
         PRINTDEBUG( "sdmcWriteFifo failed.\n");    
     }else{
