@@ -25,10 +25,10 @@ typedef enum {
  DMAî‘çÜ
 *********************************************/
 typedef enum {
-    SDMC_USE_DMA_0    = 0,
-    SDMC_USE_DMA_1    = 1,
-    SDMC_USE_DMA_2    = 2,
-    SDMC_USE_DMA_3    = 3,
+    SDMC_USE_DMA_4    = 0,
+    SDMC_USE_DMA_5    = 1,
+    SDMC_USE_DMA_6    = 2,
+    SDMC_USE_DMA_7    = 3,
     SDMC_NOUSE_DMA    = 0xFF
 }SDMC_DMA_NO;
 

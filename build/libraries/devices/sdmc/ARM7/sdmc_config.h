@@ -38,6 +38,8 @@
 *********************************************/
 #define    SD_DEBUG_PRINT_ON            0        /* デバッグ表示 */
 
+#define    SD_FIFO_EMPTY_FLAG_NEW       1        /* FIFOエンプティフラグ仕様変更前/後 */
+
 #define    WP_ena                       1        /* ライトプロテクトのチェック有効 */
 #define    TIMEOUT                      1        /* FPGA Timeout none = FALSE */
 #define    SCR                          1        /* Send SCR Command = TRUE */

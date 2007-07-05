@@ -26,6 +26,8 @@
 
 #define ADD_CHECK 1
 
+
+
 /***********************************************************************
     グローバル
 ***********************************************************************/
@@ -573,8 +575,10 @@ u16 SD_MultiReadBlock(u32 ulOffset)
     SD_TransReadyFPGA();                                /* INFOレジスタ初期化 */
     if( !SDCARD_UseFifoFlag) {                          /* FIFOを使わないとき */
         SD_AndFPGA(SD_INFO2_MASK,(~SD_INFO2_MASK_BRE)); /* SDカードからのデータ読出し要求割込み許可*/
+    }else{
+        SD_OrFPGA(SD_INFO2_MASK, SD_INFO2_MASK_BRE);
     }
-
+  
     /* 読み込み開始アドレス（オフセット）設定 */
     SD_SetFPGA(SD_ARG0,(((LELONG *)&ulOffset)->dt2word.low));
     SD_SetFPGA(SD_ARG1,(((LELONG *)&ulOffset)->dt2word.high));
@@ -851,10 +855,14 @@ s16 SD_FPGA_irq(void)
         if( SD_CheckFPGAReg( *SDIF_CNT_L, (u16)SDIF_CNT_FFIE)) {   /* FULL割り込み許可のとき */
             return TRUE;
         }else{
+#if (SD_FIFO_EMPTY_FLAG_NEW == 1) //FIFO Emptyフラグ仕様変更後
+            return FALSE;
+#else                             //FIFO Emptyフラグ仕様変更前
             if(!SD_CheckFPGAReg(SD_INFO2_MASK,SD_INFO2_MASK_BWE)){ /* SDカードからのデータ書込み要求あり？ */
                 SD_AndFPGA(SD_INFO2,(~SD_INFO2_BWE));              /* SD用バッファ制御 Write Enable リセット*/
             }
             return FALSE;
+#endif
         }
     }else{    /*--- FIFOを使わないとき ---*/
         if(!SD_CheckFPGAReg(SD_INFO2_MASK,SD_INFO2_MASK_BRE)){ /* SDカードからのデータ読出し要求あり？ */
@@ -1161,9 +1169,16 @@ u16 SD_MultiWriteBlock(u32 ulOffset)
     PRINTDEBUG( " CMD25 (WRITE_MULTIPLE_BLOCK)\n");
     
     SD_TransReadyFPGA();                                /* INFOレジスタ初期化 */
-//    if( !SDCARD_UseFifoFlag) {                        /* FIFOを使わないとき */
+
+#if (SD_FIFO_EMPTY_FLAG_NEW == 1)  // FIFO Emptyフラグ仕様変更後
+    if( SDCARD_UseFifoFlag) {                           /* FIFOを使うとき */
+        SD_OrFPGA( SD_INFO2_MASK, SD_INFO2_MASK_BWE);   /* SDカードからのデータ書込み要求割込み禁止 */
+    }else{
         SD_AndFPGA(SD_INFO2_MASK,(~SD_INFO2_MASK_BWE)); /* SDカードからのデータ書込み要求割込み許可 */
-//    }
+    }
+#else                              // FIFO Emptyフラグ仕様変更前
+    SD_AndFPGA(SD_INFO2_MASK,(~SD_INFO2_MASK_BWE)); /* SDカードからのデータ書込み要求割込み許可 */
+#endif
 
     /* 書き込み開始オフセット設定 */
     SD_SetFPGA(SD_ARG0,(((LELONG *)&ulOffset)->dt2word.low));

@@ -80,6 +80,7 @@ u64            sd_stack[SD_STACK_SIZE / sizeof(u64)];
 u64            sd_intr_stack[SD_STACK_SIZE / sizeof(u64)];
 #endif
 
+u16         sdmc_dma_no = SDMC_NOUSE_DMA;
 /* drsdmc.cでも参照 */
 SdmcSpec    sdmc_current_spec;    //TODO:ポート切り替え時、Port0とPort1に保存するように
 
@@ -134,8 +135,8 @@ static void SDCARD_Dmy_Handler( void);        /* 何もしない */
 static void SDCARD_Timer_irq(void* arg);      /* タイムアウト割り込みハンドラ */
 static void SDCARD_irq_Handler( void);        /* SD-IPからの割り込みハンドラ */
 static void SDCARD_FPGA_irq(void);            /* カードリードライト割り込み処理 */
-static void SDCARD_ATC0_irq(void);            /* ATC0転送完了割り込み処理 */
 static void SYSFPGA_irq(void);                /* SYSFPGAエラー割り込み処理 */
+static void SDCARD_ReadyToEnd( void);
 
 /*ポート1は無線固定なのでポート選択関数は公開しない*/
 static u16 i_sdmcSelectedNo(void);            /* カードポートの選択 */
@@ -198,7 +199,6 @@ SDPortContext SDPort1Context;
 
 u32    ulSDCARD_Size;                    /* カード全セクタ数 */
 
-volatile s16    SDCARD_ATC0_Flag;        /* 全ATC完了フラグ */
 volatile s16    SDCARD_FPGA_Flag;        /* FPGA処理完了フラグ */
 volatile s16    SDCARD_EndFlag;          /* 転送処理完了フラグ */
 
@@ -356,7 +356,7 @@ static void i_sdmcDisable( void)
  *---------------------------------------------------------------------------*/
 void SDCARD_irq_Handler( void)
 {
-    PRINTDEBUG( "SD irq!\n");
+//    OS_TPrintf( "SD irq!\n");
     OS_SetIrqCheckFlag( OS_IE_SD);
 //  sdmc_intr_wakeup_count++;
 //    OS_WakeupThreadDirect( &sdmc_intr_tsk);
@@ -393,6 +393,9 @@ SDMC_ERR_CODE sdmcInit( SDMC_DMA_NO dma_no, void (*func1)(),void (*func2)())
 {
     SDMC_ERR_CODE    api_result;
 
+    /**/
+    sdmc_dma_no = dma_no;
+  
     if( sdmc_tsk_created == FALSE) {
         /*---------- OS準備 ----------*/
         if( !OS_IsAlarmAvailable()) {	/* アラームチェック(OS_InitAlarm済みか?) */
@@ -1029,7 +1032,7 @@ static SDMC_ERR_CODE SDCARDi_ReadFifo(void* buf,u32 bufsize,u32 offset,void(*fun
     *(SDIF_CNT) = (*(SDIF_CNT) & (~SDIF_CNT_FEIE)) | SDIF_CNT_FFIE;
     *(SDIF_FDS) = (u16)SDCARD_SectorSize;   /* FIFOのデータサイズ */
     *(SDIF_FSC) = bufsize;
-    *(SDIF_CNT) |= SDIF_CNT_USEFIFO;        /* FIFO使用フラグON */
+    *(SDIF_CNT) |= (SDIF_CNT_FCLR | SDIF_CNT_USEFIFO);        /* FIFO使用フラグON */
     CC_EXT_MODE = CC_EXT_MODE_DMA;          /* DMAモードON */
 
     result = SDCARDi_Read( buf, bufsize, offset, func, info);
@@ -1108,7 +1111,6 @@ static SDMC_ERR_CODE SDCARDi_Read(void* buf,u32 bufsize,u32 offset,void(*func)(v
         ulSDCARD_RestSectorCount = bufsize;     /* 残り転送セクタ数の設定 */
         pSDCARD_BufferAddr = buf;               /* データ格納バッファのアドレスを設定 */
 
-        SDCARD_ATC0_Flag = FALSE;               /* 全ATC処理完了フラグクリア */
         SDCARD_FPGA_Flag = FALSE;               /* FPGA処理完了フラグクリア */
         SDCARD_EndFlag = FALSE;                 /* 転送処理完了フラグクリア */
         SDCARD_ErrStatus = SDMC_NORMAL;         /* エラーステータスのクリア */
@@ -1197,15 +1199,16 @@ static void SDCARD_FPGA_irq(void)
     /* FIFOを使わないとき：BREかBWEかを調べ、INFO2の当該割り込み要求フラグをクリアする */
     bRead = SD_FPGA_irq();
 
-    if( ulSDCARD_RestSectorCount) {                 /* 残りセクタ数が有る時 */
-        ulSDCARD_RestSectorCount--;                 /* 残りセクタ数をデクリメント */
-        
         /*--- SDカードからのリード時 ---*/
         if(bRead){
-            if( SDCARD_UseFifoFlag) {                            /*--- FIFOを使うとき ---*/
-                MyCpuRecv32( (u32*)SDIF_FI, (u32*)pSDCARD_BufferAddr, SDCARD_SectorSize);
-            }else{                                               /*--- FIFOを使わないとき ---*/
-                MyCpuRecv16( (u16*)SD_BUF0, pSDCARD_BufferAddr, SDCARD_SectorSize);
+            if( ulSDCARD_RestSectorCount > 0) {
+//              if( ulSDCARD_RestSectorCount == 1) { TTT();}
+                if( SDCARD_UseFifoFlag) {                            /*--- FIFOを使うとき ---*/
+                    MyCpuRecv32( (u32*)SDIF_FI, (u32*)pSDCARD_BufferAddr, SDCARD_SectorSize);
+                }else{                                               /*--- FIFOを使わないとき ---*/
+                    MyCpuRecv16( (u16*)SD_BUF0, pSDCARD_BufferAddr, SDCARD_SectorSize);
+                }
+                ulSDCARD_RestSectorCount--;                 /* 残りセクタ数をデクリメント */
             }
             if( ulSDCARD_RestSectorCount <= 0) {                 /* 要求セクタ数リード完了したか? */
                 if(SD_CheckFPGAReg(SD_STOP,SD_STOP_SEC_ENABLE)){ /* SD_SECCNTレジスタがEnableか? */
@@ -1215,11 +1218,15 @@ static void SDCARD_FPGA_irq(void)
                 }
             }
         }else{    /*--- SDカードへのライト時 ---*/
-            if( SDCARD_UseFifoFlag) {                            /*--- FIFOを使うとき ---*/
-                MI_CpuSend32( pSDCARD_BufferAddr, SDIF_FI, SDCARD_SectorSize);
-            }else{                                               /*--- FIFOを使わないとき ---*/
-                MI_CpuSend16( pSDCARD_BufferAddr, SD_BUF0, SDCARD_SectorSize);
-            }
+            if( ulSDCARD_RestSectorCount > 0) {
+              if( ulSDCARD_RestSectorCount == 1) { SDCARD_ReadyToEnd();}
+                if( SDCARD_UseFifoFlag) {                            /*--- FIFOを使うとき ---*/
+                    MI_CpuSend32( pSDCARD_BufferAddr, SDIF_FI, SDCARD_SectorSize);
+                }else{                                               /*--- FIFOを使わないとき ---*/
+                    MI_CpuSend16( pSDCARD_BufferAddr, SD_BUF0, SDCARD_SectorSize);
+                }
+                ulSDCARD_RestSectorCount--;                 /* 残りセクタ数をデクリメント */
+             }
             if( ulSDCARD_RestSectorCount <= 0){                  /* 要求セクタ数ライト完了? */
                 if( SDCARD_UseFifoFlag) {                        /* FIFOを使用するときは */
                     while( (*SDIF_CNT & SDIF_CNT_NEMP)) {};      /* FIFOにデータが残っているうちは終了しない */
@@ -1232,47 +1239,27 @@ static void SDCARD_FPGA_irq(void)
             }
         }
         /* リード/ライト共通処理 */
-        SDCARD_ATC0_irq();                                   /* 転送完了後の処理 */
-        pSDCARD_BufferAddr+=(512/2);                         /* 書込みデータのバッファアドレスをインクリメント */
-    }
+        SDCARD_TimerStart(SDCARD_RW_TIMEOUT);   /* タイムアウト判定用タイマスタート(4000msec) */
+        pSDCARD_BufferAddr+=(512/2);            /* 書込みデータのバッファアドレスをインクリメント */
 }
 
 
 /*---------------------------------------------------------------------------*
-  Name:         SDCARD_ATC0_irq
+  Name:         SDCARD_ReadyToEnd
 
   Description:  
-                カードとの転送終了時に行う処理。
+                カードとの最終セクタ転送前に行う処理。
 
   Arguments:    None
 
   Returns:      None
  *---------------------------------------------------------------------------*/
-static void SDCARD_ATC0_irq(void)
+static void SDCARD_ReadyToEnd( void)
 {
-    /*--- 残りセクタ数が 0 のとき ---*/
-    if( ulSDCARD_RestSectorCount == 0) {
-        SDCARD_ATC0_Flag = TRUE;            /* 全ATC完了フラグセット */
-        
-        /* 転送完了 */
-        if( SDCARD_FPGA_Flag) {             /* 転送終了時の割り込み処理(SYSFPGA_irq)が完了している? */
-            SDCARD_TimerStop();             /* タイムアウト判定用タイマストップ */
-            SD_TransEndFPGA();              /* 転送終了処理(割り込みマスクを禁止に戻す) */
-            if( SDCARD_EndFlag == FALSE) {  /* 転送処理完了フラグが立っていない? */
-                SDCARD_EndFlag = TRUE;      /* 転送処理完了フラグをセット */
-                if( pSDCARD_info) {
-                    pSDCARD_info->result = SDCARD_ErrStatus; /* SdmcResultInfo に情報設定 */
-                    pSDCARD_info->resid = (ulSDCARD_SectorCount - ulSDCARD_RestSectorCount) *
-                        SDCARD_SectorSize;                   /* SdmcResultInfo に処理セクタ数設定 */
-                }
-            }
-        }
-    }else{    /*--- 残りセクタ数が 0 でないとき ---*/
-        SDCARD_TimerStop();                 /* タイムアウト判定用タイマストップ */
-#if TIMEOUT
-    SDCARD_TimerStart(SDCARD_RW_TIMEOUT);   /* タイムアウト判定用タイマスタート(4000msec) */
-#endif
-    }
+        *(SDIF_CNT) = (*(SDIF_CNT) & (~(SDIF_CNT_FFIE | SDIF_CNT_FEIE)));
+        SD_OrFPGA( SD_INFO2_MASK, SD_INFO2_MASK_BWE);   /* SDカードからのデータ書込み要求割込み禁止 */
+        SD_OrFPGA( SD_INFO2_MASK, SD_INFO2_MASK_BRE);   /* SDカードからのデータ書込み要求割込み禁止 */
+        SDCARD_TimerStop();             /* タイムアウト判定用タイマストップ */
 }
 
 /*---------------------------------------------------------------------------*
@@ -1345,7 +1332,8 @@ static void SYSFPGA_irq(void)
     if( SD_INFO_ERROR_VALUE & SD_INFO1_MASK_ALL_END) {          /* R/W access all end 割込み発生か? */
         SD_OrFPGA( SD_INFO1_MASK, SD_INFO1_MASK_ALL_END);       /* INFO1の access all end 割込み禁止 */
         SDCARD_FPGA_Flag = TRUE;                                /* R/Wアクセス終了(IP処理完了)フラグセット */
-        if( SDCARD_ATC0_Flag) {                                 /* 転送完了処理(SDCARD_ATC0_irq)が完了しているか? */
+
+//        OS_TPrintf( "SYS\n");
             SDCARD_TimerStop();                                 /* タイムアウト判定用タイマストップ */
             SD_TransEndFPGA();                                  /* 転送終了処理(割り込みマスクを禁止に戻す) */
             if( SDCARD_EndFlag == FALSE) {                      /* 転送が終了していないか? */
@@ -1356,8 +1344,9 @@ static void SYSFPGA_irq(void)
                                             SDCARD_SectorSize;  /* SdmcResultInfo に処理セクタ数設定 */
                 }
             }    /* 転送が終了済みのとき */
+
             return;
-        }        /* 全ATC完了フラグ OFF の場合 */
+
         if( SDCARD_ErrStatus != SDMC_NORMAL) {                  /* エラーが発生している場合 */
             SDCARD_TimerStop();                                 /* タイムアウト判定用タイマストップ */
             if( SDCARD_EndFlag == FALSE) {                      /* 転送が終了していないか? */
@@ -1532,7 +1521,6 @@ static u16 i_sdmcSendSCR(void)
     pSDCARD_BufferAddr = SD_SCR;                         /* データ格納バッファのアドレスを設定 */
 
     /* 転送前の準備処理 */
-    SDCARD_ATC0_Flag = FALSE;                /* 全ATC完了フラグクリア */
     SDCARD_FPGA_Flag = FALSE;                /* FPGA処理完了フラグクリア */
     SDCARD_EndFlag = FALSE;                  /* 転送処理完了フラグクリア */
     SDCARD_ErrStatus = SDMC_NORMAL;          /* エラーステータスのクリア */
@@ -1693,7 +1681,6 @@ static u16 SDCARD_SD_Status(void)
     pSDCARD_BufferAddr = SD_SDSTATUS;                    /* データ格納バッファのアドレスを設定 */
 
     /* 転送前の準備処理 */
-    SDCARD_ATC0_Flag = FALSE;                /* 全ATC完了フラグクリア */
     SDCARD_FPGA_Flag = FALSE;                /* FPGA処理完了フラグクリア */
     SDCARD_EndFlag   = FALSE;                /* 転送処理完了フラグクリア */
     SDCARD_ErrStatus = SDMC_NORMAL;          /* エラーステータスのクリア */
@@ -1772,7 +1759,6 @@ int MMCP_SetBusWidth( BOOL b4bit)
     pSDCARD_info = NULL;
     ulSDCARD_RestSectorCount = ulSDCARD_SectorCount = 1;
     pSDCARD_BufferAddr = &TestData;            /* データ格納バッファのアドレスを設定 */
-    SDCARD_ATC0_Flag = FALSE;                  /* 全ATC完了フラグクリア */
     SDCARD_FPGA_Flag = FALSE;                  /* FPGA処理完了フラグクリア */
     SDCARD_EndFlag   = FALSE;                  /* 転送処理完了フラグクリア */
     SDCARD_ErrStatus = SDMC_NORMAL;            /* エラーステータスのクリア */
@@ -1798,7 +1784,6 @@ int MMCP_SetBusWidth( BOOL b4bit)
     /**/
     ulSDCARD_RestSectorCount = ulSDCARD_SectorCount = 1;/* 残りセクタサイズ、セクタカウントに１を設定 */
     pSDCARD_BufferAddr = &Resid;                         /* データ格納バッファのアドレスを設定 */
-    SDCARD_ATC0_Flag = FALSE;                          /* 全ATC完了フラグクリア */
     SDCARD_FPGA_Flag = FALSE;                          /* FPGA処理完了フラグクリア */
     SDCARD_EndFlag   = FALSE;                          /* 転送処理完了フラグクリア */
     SDCARD_ErrStatus = SDMC_NORMAL;                    /* エラーステータスのクリア */
@@ -1922,12 +1907,18 @@ SDMC_ERR_CODE sdmcWriteFifo(void* buf,u32 bufsize,u32 offset,void(*func)(),SdmcR
 static SDMC_ERR_CODE SDCARDi_WriteFifo(void* buf,u32 bufsize,u32 offset,void(*func)(),SdmcResultInfo *info)
 {
     SDMC_ERR_CODE result;
-    
+
+#if (SD_FIFO_EMPTY_FLAG_NEW == 1)
+    /* FIFO Full割り込み無効、FIFO Empty割り込み有効 */
+    *(SDIF_CNT) = (*(SDIF_CNT) & (~SDIF_CNT_FFIE)) | SDIF_CNT_FEIE;
+#else
     /* FIFO割り込み禁止 */
     *(SDIF_CNT) = (*(SDIF_CNT) & (~(SDIF_CNT_FFIE | SDIF_CNT_FEIE)));
+#endif
+  
     *(SDIF_FDS) = (u16)SDCARD_SectorSize;   /* FIFOのデータサイズ */
     *(SDIF_FSC) = bufsize;
-    *(SDIF_CNT) |= SDIF_CNT_USEFIFO;        /* FIFO使用フラグON */
+    *(SDIF_CNT) |= (SDIF_CNT_FCLR | SDIF_CNT_USEFIFO);        /* FIFO使用フラグON */
     CC_EXT_MODE = CC_EXT_MODE_DMA;          /* DMAモードON */
 
     result = SDCARDi_Write( buf, bufsize, offset, func, info);
@@ -2015,7 +2006,6 @@ static SDMC_ERR_CODE SDCARDi_Write(void* buf,u32 bufsize,u32 offset,void(*func)(
         ulSDCARD_RestSectorCount = ulSDCARD_SectorCount = bufsize;
         pSDCARD_BufferAddr = buf;                  /* データ格納バッファのアドレスを設定 */
 
-        SDCARD_ATC0_Flag = FALSE;                  /* 全ATC完了フラグクリア */
         SDCARD_FPGA_Flag = FALSE;                  /* FPGA処理完了フラグクリア */
         SDCARD_EndFlag = FALSE;                    /* 転送処理完了フラグクリア */
         SDCARD_ErrStatus = SDMC_NORMAL;            /* エラーステータスのクリア */
@@ -2026,6 +2016,16 @@ static SDMC_ERR_CODE SDCARDi_Write(void* buf,u32 bufsize,u32 offset,void(*func)(
 
         /* IPのSD_SECCNTレジスタ有効化、転送セクタ数設定(自動CMD12発行のため) */
         SD_EnableSeccnt( ulSDCARD_RestSectorCount);
+
+      
+#if (SD_FIFO_EMPTY_FLAG_NEW == 1)      
+        if( SDCARD_UseFifoFlag) {                            /*--- FIFOを使うとき ---*/
+            ulSDCARD_RestSectorCount--;
+            MI_CpuSend32( pSDCARD_BufferAddr, SDIF_FI, SDCARD_SectorSize);
+            pSDCARD_BufferAddr += (512/2);
+        }
+#endif
+      
 
         /*--- ライトコマンド発行 ---*/
         if( SDCARD_SDHCFlag) {
@@ -2137,7 +2137,6 @@ static u16 i_sdmcGetResid(u32 *pResid)
     ulSDCARD_RestSectorCount = ulSDCARD_SectorCount = 1;/* 残りセクタサイズ、セクタカウントに１を設定 */
     pSDCARD_BufferAddr = Resid;                         /* データ格納バッファのアドレスを設定 */
 
-    SDCARD_ATC0_Flag = FALSE;                          /* 全ATC完了フラグクリア */
     SDCARD_FPGA_Flag = FALSE;                          /* FPGA処理完了フラグクリア */
     SDCARD_EndFlag   = FALSE;                          /* 転送処理完了フラグクリア */
     SDCARD_ErrStatus = SDMC_NORMAL;                    /* エラーステータスのクリア */
@@ -2417,10 +2416,15 @@ static void SDCARD_Thread( void* arg)
  *---------------------------------------------------------------------------*/
 static void SDCARD_Intr_Thread( void* arg)
 {
+   static i = 0;
     u16        sd_info1;//, sd_info2;
     OSIntrMode enabled;
-    
+
+    OS_EnableInterrupts();
+    OS_EnableIrq();
+  
     while( 1) {
+      i++;
         PRINTDEBUG( "Slp sdIntr\n");
 
         OS_WaitIrq( FALSE, OS_IE_SD);
@@ -2428,37 +2432,42 @@ static void SDCARD_Intr_Thread( void* arg)
         (void)OS_ClearIrqCheckFlag( OS_IE_SD);
         *(vu16*)CTR_INT_IF = CTR_IE_SD_MASK;          /*SD割り込みのIF解除*/
       
-        PRINTDEBUG( "sdIntr waked\n");
+//        OS_TPrintf( "sdIntr waked\n");
       
-
+      while( 1) {
         /*--- FIFOを使うとき ---*/
         if( SDCARD_UseFifoFlag) {
             sd_info1 = SD_INFO1;
-            if( ((*SDIF_CNT & SDIF_CNT_FULL)&&(*SDIF_CNT & SDIF_CNT_FFIE)) ||
-                ((!(*SDIF_CNT & SDIF_CNT_NEMP))&&(*SDIF_CNT & SDIF_CNT_FEIE))) {
+            if( (((*SDIF_CNT & SDIF_CNT_FULL)&&(*SDIF_CNT & SDIF_CNT_FFIE)) ||
+                ((!(*SDIF_CNT & SDIF_CNT_NEMP))&&(*SDIF_CNT & SDIF_CNT_FEIE)))
+                ){
             
-                PRINTDEBUG( ">>>SD Intr(FIFO)\n");// Full or Empty)\n");
+//                OS_TPrintf( ">>>SD Intr(FIFO) %d\n", i);// Full or Empty)\n");
                 OS_DisableIrqMask( OS_IE_SD);
                 SDCARD_FPGA_irq();                        /*カードからのリードライト要求割り込み*/
                 OS_EnableIrqMask( OS_IE_SD);
+//                break;
               
+#if (SD_FIFO_EMPTY_FLAG_NEW == 1)
+#else
             }else{
-
                 /*----- FIFO-EmptyFlag未修正の場合、Writeの1回目はBWE割り込みに頼る必要がある -----*/
                 if( SD_CheckFPGAReg( SD_INFO2, (SD_INFO2_MASK_BRE | SD_INFO2_MASK_BWE))) {
-                    PRINTDEBUG ( ">>>SD Intr(R/W Req)\n");
+//                    OS_TPrintf( ">>>SD Intr(R/W Req)\n");
                     //ここで自動的にラッパーのFIFO<->SD_BUF0間で通信が行われる
                     OS_DisableIrqMask( OS_IE_SD);
                     SDCARD_FPGA_irq();
                     OS_EnableIrqMask( OS_IE_SD);
+                    break;
                 }
                 /*----------*/
-              
+#endif              
             }
           
-            /* FIFO割り込みとALLEND割り込みがほぼ同時の場合に対応 */
-            if( SD_CheckFPGAReg( sd_info1, SD_INFO1_ALL_END)) {
-                PRINTDEBUG( ">>>SD Intr(End or Err)\n");
+            /* ALL_END */
+            sd_info1 = SD_INFO1;
+            if( (SD_CheckFPGAReg( sd_info1, SD_INFO1_ALL_END))&&(ulSDCARD_RestSectorCount<=0)) {
+//                OS_TPrintf( ">>>SD Intr(End or Err) %d\n", i);
                 (void)OS_ClearIrqCheckFlag( OS_IE_SD);
                 *(vu16*)CTR_INT_IF = CTR_IE_SD_MASK;  /*SD割り込みのIF解除*/
                 OS_DisableIrqMask( OS_IE_SD);
@@ -2470,7 +2479,9 @@ static void SDCARD_Intr_Thread( void* arg)
                     PRINTDEBUG( "wakeup\n");
                     OS_WakeupThreadDirect( &sdmc_tsk);
                 }
+                break;
             }
+          break;
         /*--- FIFOを使わないとき ---*/
         }else{
             if( SD_CheckFPGAReg( SD_INFO2, (SD_INFO2_MASK_BRE | SD_INFO2_MASK_BWE))) {
@@ -2490,6 +2501,8 @@ static void SDCARD_Intr_Thread( void* arg)
                     OS_WakeupThreadDirect( &sdmc_tsk);
                 }
             }
+            break;
         }
+      }
     }
 }

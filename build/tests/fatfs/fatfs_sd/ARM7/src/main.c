@@ -23,6 +23,13 @@
  *---------------------------------------------------------------------------*/
 #define PRINTDEBUG  OS_TPrintf
 
+
+#define DEBUG_DECLARE   OSTick begin
+#define DEBUG_BEGIN()   (begin=OS_GetTick())
+#define DEBUG_END(str)  OS_TPrintf( "\n%s was consumed %d msec.\n", #str, (int)OS_TicksToMilliSeconds(OS_GetTick()-begin))
+
+
+
 /*---------------------------------------------------------------------------*
     内部関数定義
  *---------------------------------------------------------------------------*/
@@ -88,6 +95,7 @@ void TwlSpMain(void)
     SdmcResultInfo SdResult;
     PCFD           fd;
     CHKDISK_STATS  dstat;
+    DEBUG_DECLARE;
 
     // OS初期化
     OS_Init();
@@ -192,6 +200,31 @@ void TwlSpMain(void)
     /*----------------------------*/
 
 #else
+
+    sdmcSelect( (u16)SDMC_PORT_CARD);
+    DEBUG_BEGIN();
+    result = sdmcReadFifo( (void*)BlockBuf, 2, 1, NULL, &SdResult);
+    if( result != 0) {
+        PRINTDEBUG( "sdmcReadFifo failed.\n");    
+    }else{
+        DEBUG_END(sdmcReadFifo);
+        PRINTDEBUG( "sdmcReadFifo success.\n");
+    }
+
+    MI_DmaFill32( 2, BlockBuf,  0x55AA55AA, 512*3);
+    MI_DmaFill32( 2, BlockBuf2, 0x00FF00FF, 512*3);
+
+    DEBUG_BEGIN();
+    result = sdmcWriteFifo( (void*)0x02004000, 2, 1, NULL, &SdResult);
+    if( result != 0) {
+        PRINTDEBUG( "sdmcWriteFifo failed.\n");    
+    }else{
+        DEBUG_END(sdmcWriteFifo);
+        PRINTDEBUG( "sdmcWriteFifo success.\n");
+    }
+
+
+  
     /*デバイスドライバの登録*/
     PRINTDEBUG( "attach start\n");
     if( sdmcRtfsAttach( 4) == FALSE) {  //sdmcをEドライブにする
@@ -223,7 +256,9 @@ void TwlSpMain(void)
           PRINTDEBUG( "pc_set_default_drive (E) success\n");
           /**/
           PRINTDEBUG( "pc_check_disk start. please wait.\n");
+          DEBUG_BEGIN();
           pc_check_disk( (byte*)"E:", &dstat, 0, 1, 1);
+          DEBUG_END(pc_check_disk);
           PRINTDEBUG( "pc_check_disk end.\n");
       }else{
           /*NANDからブロックライト／リード*/
@@ -265,12 +300,13 @@ void TwlSpMain(void)
       PRINTDEBUG( "po_close success.\n");
       /*----------*/
 
-
-        if( pc_regression_test( (u8*)"E:", FALSE) == FALSE) {
-            PRINTDEBUG( "pc_regression_test failed.\n");
-        }else{
-            PRINTDEBUG( "pc_regression_test success.\n");
-        }
+      DEBUG_BEGIN();
+      if( pc_regression_test( (u8*)"E:", FALSE) == FALSE) {
+          PRINTDEBUG( "pc_regression_test failed.\n");
+      }else{
+          DEBUG_END(pc_regression_test);
+          PRINTDEBUG( "pc_regression_test success.\n");
+      }
     }
 #endif
 
