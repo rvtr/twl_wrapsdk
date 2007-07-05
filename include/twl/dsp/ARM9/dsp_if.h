@@ -83,8 +83,8 @@ DSPFifoFlag;
 /*---------------------------------------------------------------------------*
   Name:         DSP_PowerOn
 
-  Description:  power DSP block on but DSPR yet.
-                you should call DSP_DSPROff() to boot DSP.
+  Description:  power DSP block on but reset yet.
+                you should call DSP_ResetOff() to boot DSP.
 
   Arguments:    None.
 
@@ -227,7 +227,7 @@ void DSP_EnableFifoInterrupt(DSPFifoIntr type);
 void DSP_DisableFifoInterrupt(DSPFifoIntr type);
 
 /*---------------------------------------------------------------------------*
-  Name:         DSP_SendFifo
+  Name:         DSP_SendFifoEx
 
   Description:  write data into DSP memory space.
 
@@ -238,28 +238,67 @@ void DSP_DisableFifoInterrupt(DSPFifoIntr type);
                 src:    data to send.
                 size:   data length to send (in half words).
                 flags:  bitOR of DSPFifoFlag to specify special mode
+                        without DSP_FIFO_FLAG_RECV_UNIT_*
 
   Returns:      None.
  *---------------------------------------------------------------------------*/
-void DSP_SendFifo(DSPFifoMemSel memsel, u16 dest, const u16 *src, int size, u16 flags);
+void DSP_SendFifoEx(DSPFifoMemSel memsel, u16 dest, const u16 *src, int size, u16 flags);
 
 /*---------------------------------------------------------------------------*
-  Name:         DSP_RecvFifo
+  Name:         DSP_SendFifo
 
-  Description:  read data into DSP memory space.
+  Description:  write data into DSP memory space normally.
 
-  Arguments:    memsel: one of DSPFifoMemSel without PROGRAM area
-                addr:   source address (in half words).
+  Arguments:    memsel: one of DSPFifoMemSel
+                dest:   destination address (in half words).
                         if you want to set high address, ask DSP to set
                         DMA register.
-                bufp:   data to receive.
+                src:    data to send.
+                size:   data length to send (in half words).
+
+  Returns:      None.
+ *---------------------------------------------------------------------------*/
+static inline void DSP_SendFifo(DSPFifoMemSel memsel, u16 dest, const u16 *src, int size)
+{
+    DSP_SendFifoEx(memsel, dest, src, size, 0);
+}
+
+/*---------------------------------------------------------------------------*
+  Name:         DSP_RecvFifoEx
+
+  Description:  read data from DSP memory space.
+
+  Arguments:    memsel: one of DSPFifoMemSel without PROGRAM area
+                dest:   data to receive.
+                src:    source address (in half words).
+                        if you want to set high address, ask DSP to set
+                        DMA register.
                 size:   data length to receive (in half words).
                         ignore unless continuous mode
                 flags:  bitOR of DSPFifoFlag to specify special mode
 
   Returns:      None.
  *---------------------------------------------------------------------------*/
-void DSP_RecvFifo(DSPFifoMemSel memsel, u16 addr, u16 *bufp, int size, u16 flags);
+void DSP_RecvFifoEx(DSPFifoMemSel memsel, u16 *dest, u16 src, int size, u16 flags);
+
+/*---------------------------------------------------------------------------*
+  Name:         DSP_RecvFifo
+
+  Description:  read data from DSP memory space normally.
+
+  Arguments:    memsel: one of DSPFifoMemSel
+                dest:   data to receive.
+                src:    source address (in half words).
+                        if you want to set high address, ask DSP to set
+                        DMA register.
+                size:   data length to receive (in half words).
+
+  Returns:      None.
+ *---------------------------------------------------------------------------*/
+static inline void DSP_RecvFifo(DSPFifoMemSel memsel, u16* dest, u16 src, int size)
+{
+    DSP_RecvFifoEx(memsel, dest, src, size, 0);
+}
 
 /*---------------------------------------------------------------------------*
   Name:         DSP_SetSemaphore

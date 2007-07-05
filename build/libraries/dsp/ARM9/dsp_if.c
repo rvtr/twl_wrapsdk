@@ -44,14 +44,14 @@ static volatile DSPData *const dspData = (DSPData*)REG_APBP_COM0_ADDR;
 /*---------------------------------------------------------------------------*
   Name:         DSP_PowerOn
 
-  Description:  power DSP block on but DSPR yet.
+  Description:  power DSP block on but reset yet.
                 you should call DSP_ResetOff() to boot DSP.
 
   Arguments:    None.
 
   Returns:      None.
  *---------------------------------------------------------------------------*/
-void DSP_PowerOn(void)
+void DSP_PowerOn(void)  // DSP_Init
 {
     reg_CFG_DSP_RST &= ~REG_CFG_DSP_RST_OFF_MASK;   // DSPブロックのリセット確認
     reg_CFG_CLK |= REG_CFG_CLK_DSP_MASK;            // DSPブロックの電源On
@@ -68,7 +68,7 @@ void DSP_PowerOn(void)
 
   Returns:      None.
  *---------------------------------------------------------------------------*/
-void DSP_PowerOff(void)
+void DSP_PowerOff(void) // DSP_End
 {
     reg_CFG_DSP_RST &= ~REG_CFG_DSP_RST_OFF_MASK;   // DSPブロックのリセット設定
     reg_CFG_CLK &= ~REG_CFG_CLK_DSP_MASK;           // DSPブロックの電源Off
@@ -77,7 +77,7 @@ void DSP_PowerOff(void)
 /*---------------------------------------------------------------------------*
   Name:         DSP_ResetOn
 
-  Description:  Reset DSP.
+  Description:  Reset DSP unless Reset state.
 
   Arguments:    None.
 
@@ -85,9 +85,12 @@ void DSP_PowerOff(void)
  *---------------------------------------------------------------------------*/
 void DSP_ResetOn(void)
 {
-    reg_DSP_PCFG |= REG_DSP_PCFG_DSPR_MASK;
-    while ( reg_DSP_PSTS & REG_DSP_PSTS_PRST_MASK )
+    if ((reg_DSP_PCFG & REG_DSP_PCFG_DSPR_MASK) == 0)
     {
+        reg_DSP_PCFG |= REG_DSP_PCFG_DSPR_MASK;
+        while ( reg_DSP_PSTS & REG_DSP_PSTS_PRST_MASK )
+        {
+        }
     }
 }
 /*---------------------------------------------------------------------------*
@@ -119,13 +122,16 @@ void DSP_ResetOff(void)
  *---------------------------------------------------------------------------*/
 void DSP_ResetInterface(void)
 {
-    u16 dummy;
-    reg_DSP_PCFG &= ~REG_DSP_PCFG_RRIE_MASK;
-    reg_DSP_PSEM = 0;
-    reg_DSP_PCLEAR = 0xFFFF;
-    dummy = dspData[0].recv;
-    dummy = dspData[1].recv;
-    dummy = dspData[2].recv;
+    if (reg_DSP_PCFG & REG_DSP_PCFG_DSPR_MASK)
+    {
+        u16 dummy;
+        reg_DSP_PCFG &= ~REG_DSP_PCFG_RRIE_MASK;
+        reg_DSP_PSEM = 0;
+        reg_DSP_PCLEAR = 0xFFFF;
+        dummy = dspData[0].recv;
+        dummy = dspData[1].recv;
+        dummy = dspData[2].recv;
+    }
 }
 
 /*---------------------------------------------------------------------------*
@@ -254,7 +260,7 @@ void DSP_DisableFifoInterrupt(DSPFifoIntr type)
 }
 
 /*---------------------------------------------------------------------------*
-  Name:         DSP_SendFifo
+  Name:         DSP_SendFifoEx
 
   Description:  write data into DSP memory space.
 
@@ -268,7 +274,7 @@ void DSP_DisableFifoInterrupt(DSPFifoIntr type)
 
   Returns:      None.
  *---------------------------------------------------------------------------*/
-void DSP_SendFifo(DSPFifoMemSel memsel, u16 dest, const u16 *src, int size, u16 flags)
+void DSP_SendFifoEx(DSPFifoMemSel memsel, u16 dest, const u16 *src, int size, u16 flags)
 {
     u16 incmode = (u16)((flags & DSP_FIFO_FLAG_SRC_FIX) ? 0 : REG_DSP_PCFG_AIM_MASK);
 
@@ -299,22 +305,22 @@ void DSP_SendFifo(DSPFifoMemSel memsel, u16 dest, const u16 *src, int size, u16 
 }
 
 /*---------------------------------------------------------------------------*
-  Name:         DSP_RecvFifo
+  Name:         DSP_RecvFifoEx
 
   Description:  read data into DSP memory space.
 
   Arguments:    memsel: one of DSPFifoMemSel without PROGRAM area
-                addr:   source address (in half words).
+                dest:   data to receive.
+                src:    source address (in half words).
                         if you want to set high address, ask DSP to set
                         DMA register.
-                bufp:   data to receive.
                 size:   data length to receive (in half words).
                         ignore unless continuous mode
                 flags:  bitOR of DSPFifoFlag to specify special mode
 
   Returns:      None.
  *---------------------------------------------------------------------------*/
-void DSP_RecvFifo(DSPFifoMemSel memsel, u16 addr, u16 *bufp, int size, u16 flags)
+void DSP_RecvFifoEx(DSPFifoMemSel memsel, u16* dest, u16 src, int size, u16 flags)
 {
     DSPFifoRecvLength len;
     u16 incmode = (u16)((flags & DSP_FIFO_FLAG_SRC_FIX) ? 0 : REG_DSP_PCFG_AIM_MASK);
@@ -340,7 +346,7 @@ void DSP_RecvFifo(DSPFifoMemSel memsel, u16 addr, u16 *bufp, int size, u16 flags
         break;
     }
 
-    reg_DSP_PADR = addr;
+    reg_DSP_PADR = src;
     reg_DSP_PCFG = (u16)((reg_DSP_PCFG & ~(REG_DSP_PCFG_MEMSEL_MASK|REG_DSP_PCFG_DRS_MASK|REG_DSP_PCFG_AIM_MASK))
                         | memsel | len | incmode | REG_DSP_PCFG_RS_MASK);
 
@@ -351,7 +357,7 @@ void DSP_RecvFifo(DSPFifoMemSel memsel, u16 addr, u16 *bufp, int size, u16 flags
             while ((reg_DSP_PSTS & REG_DSP_PSTS_RFNEI_MASK) == 0)
             {
             }
-            *bufp = reg_DSP_PDATA;
+            *dest = reg_DSP_PDATA;
         }
     }
     else
@@ -361,7 +367,7 @@ void DSP_RecvFifo(DSPFifoMemSel memsel, u16 addr, u16 *bufp, int size, u16 flags
             while ((reg_DSP_PSTS & REG_DSP_PSTS_RFNEI_MASK) == 0)
             {
             }
-            *bufp++ = reg_DSP_PDATA;
+            *dest++ = reg_DSP_PDATA;
         }
     }
     reg_DSP_PCFG &= ~REG_DSP_PCFG_RS_MASK;

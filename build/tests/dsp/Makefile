@@ -1,6 +1,6 @@
 #! make -f
 #----------------------------------------------------------------------------
-# Project:  TwlDK - tests
+# Project:  TwlSDK - tests - dsp
 # File:     Makefile
 #
 # Copyright 2007 Nintendo.  All rights reserved.
@@ -20,18 +20,8 @@ include	$(TWLSDK_ROOT)/build/buildtools/commondefs
 
 #----------------------------------------------------------------------------
 
-SUBDIRS =    os     \
-             mi     \
-             snd    \
+SUBDIRS =	dsp-jtag \
 
-ifneq	($(TWL_PLATFORM),DSTEG)
-SUBDIRS += \
-             aes    \
-             camera \
-             fatfs  \
-             dsp    \
-
-endif # TWL_PLATFORM != DSTEG
 
 #----------------------------------------------------------------------------
 
