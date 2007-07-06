@@ -49,7 +49,7 @@ void TwlSpMain(void)
     SND_Init(THREAD_PRIO_SND);
 
     // É}ÉCÉNèâä˙âª
-//    MICi_Init();
+    MICi_Init();
 
     OS_TPrintf("\nARM7 starts.\n");
 

@@ -65,13 +65,13 @@ static void MY_SndInit( void )
 
     for (i=0; i<MY_SND_BUF_LEN; i++)
     {
-		wavBuf[0][i] = (mySndType)(sin( 2 * MPI * i / MY_SND_BUF_LEN ) * MY_SND_DATA_MAX);
-	}
+        wavBuf[0][i] = (mySndType)(sin( 2 * MPI * i / MY_SND_BUF_LEN ) * MY_SND_DATA_MAX);
+    }
     for (i=0; i<MY_SND_BUF_LEN-1; i++)
     {
-		wavBuf[1][i] = wavBuf[0][i+1];
-	}
-	wavBuf[1][MY_SND_BUF_LEN-1] = wavBuf[0][0];
+        wavBuf[1][i] = wavBuf[0][i+1];
+    }
+    wavBuf[1][MY_SND_BUF_LEN-1] = wavBuf[0][0];
 
     enabled = OS_DisableInterrupts();
 
@@ -79,10 +79,10 @@ static void MY_SndInit( void )
     SND_SetMasterVolume( SND_MASTER_VOLUME_MAX );
     SND_SetOutputSelector( SND_OUTPUT_MIXER, SND_OUTPUT_MIXER, SND_CHANNEL_OUT_BYPASS, SND_CHANNEL_OUT_BYPASS );
 
-    SND_SetupCapture( SND_CAPTURE_0, MY_SND_CAP_FMT, &capBuf[0], sizeof(capBuf[0])/4, TRUE, 
+    SND_SetupCapture( SND_CAPTURE_0, MY_SND_CAP_FMT, &capBuf[0], sizeof(capBuf[0])/4, TRUE,
                      SND_CAPTURE_IN_MIXER, SND_CAPTURE_OUT_NORMAL );
 
-    SND_SetupCapture( SND_CAPTURE_1, MY_SND_CAP_FMT, &capBuf[1], sizeof(capBuf[1])/4, TRUE, 
+    SND_SetupCapture( SND_CAPTURE_1, MY_SND_CAP_FMT, &capBuf[1], sizeof(capBuf[1])/4, TRUE,
                      SND_CAPTURE_IN_MIXER, SND_CAPTURE_OUT_NORMAL );
     SND_StartCaptureBoth();
 
@@ -94,14 +94,14 @@ static void MY_SndInit( void )
 
 #else  // ENABLE_PCM
 
-    SND_SetupChannelPcm( 1, &capBuf[0], MY_SND_WAVE_FMT, SND_CHANNEL_LOOP_REPEAT, 0, sizeof(capBuf[0])/4, 
+    SND_SetupChannelPcm( 1, &capBuf[0], MY_SND_WAVE_FMT, SND_CHANNEL_LOOP_REPEAT, 0, sizeof(capBuf[0])/4,
                         SND_CHANNEL_VOLUME_MAX, SND_CHANNEL_DATASHIFT_NONE, MY_SND_FREQ, SND_CHANNEL_PAN_MIN );
-    SND_SetupChannelPcm( 3, &capBuf[1], MY_SND_WAVE_FMT, SND_CHANNEL_LOOP_REPEAT, 0, sizeof(capBuf[1])/4, 
+    SND_SetupChannelPcm( 3, &capBuf[1], MY_SND_WAVE_FMT, SND_CHANNEL_LOOP_REPEAT, 0, sizeof(capBuf[1])/4,
                         SND_CHANNEL_VOLUME_MAX, SND_CHANNEL_DATASHIFT_NONE, MY_SND_FREQ, SND_CHANNEL_PAN_MAX );
 
-    SND_SetupChannelPcm( 0, &wavBuf[0], MY_SND_WAVE_FMT, SND_CHANNEL_LOOP_REPEAT, 0, sizeof(wavBuf[0])/4, 
+    SND_SetupChannelPcm( 0, &wavBuf[0], MY_SND_WAVE_FMT, SND_CHANNEL_LOOP_REPEAT, 0, sizeof(wavBuf[0])/4,
                         SND_CHANNEL_VOLUME_MAX, SND_CHANNEL_DATASHIFT_NONE, MY_SND_FREQ, SND_CHANNEL_PAN_MIN );
-    SND_SetupChannelPcm( 2, &wavBuf[1], MY_SND_WAVE_FMT, SND_CHANNEL_LOOP_REPEAT, 0, sizeof(wavBuf[1])/4, 
+    SND_SetupChannelPcm( 2, &wavBuf[1], MY_SND_WAVE_FMT, SND_CHANNEL_LOOP_REPEAT, 0, sizeof(wavBuf[1])/4,
                         SND_CHANNEL_VOLUME_MAX, SND_CHANNEL_DATASHIFT_NONE, MY_SND_FREQ, SND_CHANNEL_PAN_MAX );
 
     SND_StartChannel( 1 );
@@ -121,8 +121,8 @@ static void MY_SndTerminate( void )
     int i;
     OSIntrMode enabled = OS_DisableInterrupts();
 
-	SND_StopCapture( SND_CAPTURE_0 );
-	SND_StopCapture( SND_CAPTURE_1 );
+    SND_StopCapture( SND_CAPTURE_0 );
+    SND_StopCapture( SND_CAPTURE_1 );
 
     for (i=0; i<16; i++)
     {
@@ -134,7 +134,7 @@ static void MY_SndTerminate( void )
 
 static void PrintfCaptureBuf( int startIdx )
 {
-	int i, ii;
+    int i, ii;
 
     for (i=0; i<2; i++)
     {
@@ -170,21 +170,21 @@ static void CheckSound( void )
 
 static void TestFunc( void )
 {
-	MY_SndInit();
+    MY_SndInit();
     OS_TPrintf( "\nSound starts.\n" );
 
-	MICi_Start( MIC_SMP_ALL, MIC_DEFAULT_DMA_NO, micBuf, sizeof(micBuf) );
+    MICi_Start( MIC_SMP_ALL, MIC_DEFAULT_DMA_NO, micBuf, sizeof(micBuf) );
     OS_TPrintf( "\nMIC starts.\n");
 
     OS_SpinWait( OS_MSEC_TO_CPUCYC( 60 ) );
 
-	MICi_Stop();
+    MICi_Stop();
     OS_TPrintf( "\nMIC stops.\n");
 
     MY_SndTerminate();
     OS_TPrintf( "\nSound stops.\n" );
 
-	CheckSound();
+    CheckSound();
 }
 
 void TwlSpMain(void)
@@ -209,26 +209,26 @@ void TwlSpMain(void)
     SND_Init(THREAD_PRIO_SND);
 
     // ƒ}ƒCƒN‰Šú‰»
-//    MICi_Init();
+    MICi_Init();
 
     OS_TPrintf("\nARM7 starts.\n");
 
-	// round robin dma test
+    // round robin dma test
     OS_TPrintf( "\nChange Round Robin Mode.\n" );
 
     MIi_SetExDmaArbitration( MI_EXDMAGBL_ARB_PRIORITY );
 
-	TestFunc();
+    TestFunc();
 
     OS_SpinWait( OS_MSEC_TO_CPUCYC( 60 ) );
 
-	// priority dma test
+    // priority dma test
     OS_TPrintf( "\nChange Priority Mode.\n" );
 
     MIi_SetExDmaArbitration( MI_EXDMAGBL_ARB_ROUND_ROBIN );
     MIi_SetExDmaYieldCycles( MI_EXDMAGBL_YLD_CYCLE_DEFAULT );
 
-	TestFunc();
+    TestFunc();
 
     OS_TPrintf("\nARM7 ends.\n");
     OS_Terminate();
