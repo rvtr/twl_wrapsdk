@@ -2401,7 +2401,7 @@ static void SDCARD_Thread( void* arg)
     while( TRUE) {
         /* メッセージ待ち */
         PRINTDEBUG( "rcv mes sdThread\n");
-        OS_ReceiveMessage( &sdmc_dtq, &current_dat, OS_MESSAGE_BLOCK);
+        OS_ReadMessage( &sdmc_dtq, &current_dat, OS_MESSAGE_BLOCK);
         SdMsg = (SDCARDMsg*)current_dat;
         PRINTDEBUG( "sd task : receive command : %d\n", SdMsg->operation);
 
@@ -2444,6 +2444,7 @@ static void SDCARD_Thread( void* arg)
         /*メッセージ返送*/
         current_dat = (OSMessage)api_result;
         OS_SendMessage( &sdmc_result_dtq, current_dat, OS_MESSAGE_BLOCK);
+        OS_ReceiveMessage( &sdmc_dtq, &current_dat, OS_MESSAGE_BLOCK);
     }
 }
 

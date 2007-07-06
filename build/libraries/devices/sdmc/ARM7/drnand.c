@@ -138,16 +138,7 @@ BOOL nandCheckMedia( void) //TODO:nand partition仕様に対応させること
         (systemid!=0x0B) && (systemid!=0x0C)) {
         return( FALSE);
     }
-    /* Check the System ID of unuse partitions. */
-    for( i=1; i<4; i++) {
-        systemid = bufp[450+(16*i)];
-        if( systemid != 0x00) {
-            return( FALSE);
-        }
-    }
-    /**/
-    /*もっと厳密にチェックするならパーティション0開始位置の
-        正当性も調べる*/
+
     return( TRUE);
 }
 
