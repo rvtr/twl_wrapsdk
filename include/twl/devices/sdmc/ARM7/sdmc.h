@@ -181,9 +181,9 @@ SDMC_ERR_CODE    sdmcReadFifo(void* buf,u32 bufsize,u32 offset,void(*func)(void)
 SDMC_ERR_CODE    sdmcRead(void* buf,u32 bufsize,u32 offset,void(*func)(void),SdmcResultInfo *info);    /* テスト用カードリード */
 
 /*SD I/FのFIFOを使ってライトする（高速）*/
-SDMC_ERR_CODE    sdmcWriteFifo(void* buf,u32 bufsize,u32 offset,void(*func)(void),SdmcResultInfo *info);/* テスト用カードライト */
+SDMC_ERR_CODE    sdmcWriteFifo( const void* buf,u32 bufsize,u32 offset,void(*func)(void),SdmcResultInfo *info);/* テスト用カードライト */
 /*ライトする*/
-SDMC_ERR_CODE    sdmcWrite(void* buf,u32 bufsize,u32 offset,void(*func)(void),SdmcResultInfo *info);    /* テスト用カードライト */
+SDMC_ERR_CODE    sdmcWrite( const void* buf,u32 bufsize,u32 offset,void(*func)(void),SdmcResultInfo *info);    /* テスト用カードライト */
 
 u16           sdmcSelectedNo(void);
 SDMC_ERR_CODE sdmcSelect( u16 select);

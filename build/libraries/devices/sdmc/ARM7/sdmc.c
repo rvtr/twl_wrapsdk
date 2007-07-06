@@ -105,10 +105,10 @@ static void SDCARD_Restore_port0(void);
 static void SDCARD_Restore_port1(void);
 
 static SDMC_ERR_CODE SDCARDi_ReadFifo(void* buf,u32 bufsize,u32 offset,void(*func)(void),SdmcResultInfo *info);
-static SDMC_ERR_CODE SDCARDi_WriteFifo(void* buf,u32 bufsize,u32 offset,void(*func)(),SdmcResultInfo *info);
+static SDMC_ERR_CODE SDCARDi_WriteFifo( const void* buf,u32 bufsize,u32 offset,void(*func)(),SdmcResultInfo *info);
 
 static SDMC_ERR_CODE SDCARDi_Read(void* buf,u32 bufsize,u32 offset,void(*func)(void),SdmcResultInfo *info);
-static SDMC_ERR_CODE SDCARDi_Write(void* buf,u32 bufsize,u32 offset,void(*func)(),SdmcResultInfo *info);
+static SDMC_ERR_CODE SDCARDi_Write( const void* buf,u32 bufsize,u32 offset,void(*func)(),SdmcResultInfo *info);
 
 int     MMCP_SetBusWidth( BOOL b4bit);       /* ビット幅の選択(MMCplus, eMMC, moviNAND) */
 
@@ -199,7 +199,6 @@ SDPortContext SDPort1Context;
 
 u32    ulSDCARD_Size;                    /* カード全セクタ数 */
 
-volatile s16    SDCARD_FPGA_Flag;        /* FPGA処理完了フラグ */
 volatile s16    SDCARD_EndFlag;          /* 転送処理完了フラグ */
 
 SDMC_ERR_CODE   SDCARD_ErrStatus;        /* エラーステータス */
@@ -228,14 +227,14 @@ void (*func_SDCARD_Out)(void);           /* カード排出イベント用コールバック保存
 
   Returns:      None
  *---------------------------------------------------------------------------*/
-static void MyCpuRecv32( u32* src, u32* dest, u16 size)
+static void MyCpuRecv32( const u32* src, u32* dest, u16 size)
 {
     u32 i;
     for( i=0; i<(size/sizeof(u32)); i++) {
         *(u32*)dest++ = *(u32*)src;
     }
 }
-static void MyCpuRecv16( u16* src, u16* dest, u16 size)
+static void MyCpuRecv16( const u16* src, u16* dest, u16 size)
 {
     u32 i;
     for( i=0; i<(size/sizeof(u16)); i++) {
@@ -393,12 +392,13 @@ SDMC_ERR_CODE sdmcInit( SDMC_DMA_NO dma_no, void (*func1)(),void (*func2)())
 {
     SDMC_ERR_CODE    api_result;
 
-    /**/
+    /*--- DMA / CPU 選択 ---*/
     if( (dma_no < 4) || (dma_no == SDMC_NOUSE_DMA)) {
         sdmc_dma_no = dma_no;
     }else{
         return( SDMC_ERR_PARAM);
     }
+    /*----------------------*/
   
     if( sdmc_tsk_created == FALSE) {
         /*---------- OS準備 ----------*/
@@ -411,8 +411,6 @@ SDMC_ERR_CODE sdmcInit( SDMC_DMA_NO dma_no, void (*func1)(),void (*func2)())
         /* メッセージ初期化 */
         OS_InitMessageQueue( &sdmc_dtq,        &sdmc_dtq_array[0],        1);
         OS_InitMessageQueue( &sdmc_result_dtq, &sdmc_result_dtq_array[0], 1);
-
-//        OS_InitThread();	//自分の優先度が16になる
 
         /* SDスレッドの立ち上げ */
         OS_CreateThread( &sdmc_tsk, SDCARD_Thread, NULL,
@@ -529,7 +527,7 @@ SDMC_ERR_CODE sdmcReset( void)
     irq_core_flag = OS_DisableInterrupts();    /* 割込み禁止 */
 
         *SDIF_CNT_L = (SDIF_CNT_FCLR | SDIF_CNT_USEFIFO); //ラッパーレジスタ
-        *SDIF_CNT_L = 0x0000;                  //ラッパーレジスタ
+        *SDIF_CNT_L = 0x0000;
         *SDIF_FDS_L = 0;
         *SDIF_FSC_L = 1;
         SD_Init();                                 /* SD Card I/F 初期化処理 */
@@ -576,7 +574,7 @@ static SDMC_ERR_CODE SDCARD_Layer_Init(void)
     SD_SetFPGA(SD_CLK_CTRL,(SD_CLK_CTRL_128)); /* SDクロックの周波数 261KHz(初期化時は100～400khz) */
     SD_EnableClock();                          /* SDカードのクロックをイネーブルにする */
 
-    /* SD I/F部ダミー80クロック(1mSec)転送待ち（タイマーで待ちを実装しても良い） */
+    /* SD I/F部ダミー80クロック(1mSec)転送待ち */
 #if (TARGET_OS_CTR == 1)
     dly_tsk( 1);
 #else
@@ -880,7 +878,7 @@ static SDMC_ERR_CODE i_sdmcMPInit( void)
         sdmcSelect( (u16)SDMC_PORT_NAND);
         SDCARD_ErrStatus = SDCARD_Layer_Init();
     }
-    SDCARD_OutFlag = FALSE;                 /* 排出フラグをリセット */
+    SDCARD_OutFlag = FALSE;     /* 排出フラグをリセット */
 
     SDCARD_TimerStop();         /* タイムアウト判定用タイマストップ */
     SD_DisableClock();          /* SD-CLK Disable */
@@ -1139,7 +1137,6 @@ static SDMC_ERR_CODE SDCARDi_Read(void* buf,u32 bufsize,u32 offset,void(*func)(v
         ulSDCARD_RestSectorCount = bufsize;     /* 残り転送セクタ数の設定 */
         pSDCARD_BufferAddr = buf;               /* データ格納バッファのアドレスを設定 */
 
-        SDCARD_FPGA_Flag = FALSE;               /* FPGA処理完了フラグクリア */
         SDCARD_EndFlag = FALSE;                 /* 転送処理完了フラグクリア */
         SDCARD_ErrStatus = SDMC_NORMAL;         /* エラーステータスのクリア */
 
@@ -1359,7 +1356,6 @@ static void SYSFPGA_irq(void)
 
     if( SD_INFO_ERROR_VALUE & SD_INFO1_MASK_ALL_END) {          /* R/W access all end 割込み発生か? */
         SD_OrFPGA( SD_INFO1_MASK, SD_INFO1_MASK_ALL_END);       /* INFO1の access all end 割込み禁止 */
-        SDCARD_FPGA_Flag = TRUE;                                /* R/Wアクセス終了(IP処理完了)フラグセット */
 
 //        OS_TPrintf( "SYS\n");
             SDCARD_TimerStop();                                 /* タイムアウト判定用タイマストップ */
@@ -1549,7 +1545,6 @@ static u16 i_sdmcSendSCR(void)
     pSDCARD_BufferAddr = SD_SCR;                         /* データ格納バッファのアドレスを設定 */
 
     /* 転送前の準備処理 */
-    SDCARD_FPGA_Flag = FALSE;                /* FPGA処理完了フラグクリア */
     SDCARD_EndFlag = FALSE;                  /* 転送処理完了フラグクリア */
     SDCARD_ErrStatus = SDMC_NORMAL;          /* エラーステータスのクリア */
 
@@ -1709,7 +1704,6 @@ static u16 SDCARD_SD_Status(void)
     pSDCARD_BufferAddr = SD_SDSTATUS;                    /* データ格納バッファのアドレスを設定 */
 
     /* 転送前の準備処理 */
-    SDCARD_FPGA_Flag = FALSE;                /* FPGA処理完了フラグクリア */
     SDCARD_EndFlag   = FALSE;                /* 転送処理完了フラグクリア */
     SDCARD_ErrStatus = SDMC_NORMAL;          /* エラーステータスのクリア */
 
@@ -1787,7 +1781,6 @@ int MMCP_SetBusWidth( BOOL b4bit)
     pSDCARD_info = NULL;
     ulSDCARD_RestSectorCount = ulSDCARD_SectorCount = 1;
     pSDCARD_BufferAddr = &TestData;            /* データ格納バッファのアドレスを設定 */
-    SDCARD_FPGA_Flag = FALSE;                  /* FPGA処理完了フラグクリア */
     SDCARD_EndFlag   = FALSE;                  /* 転送処理完了フラグクリア */
     SDCARD_ErrStatus = SDMC_NORMAL;            /* エラーステータスのクリア */
     
@@ -1812,7 +1805,6 @@ int MMCP_SetBusWidth( BOOL b4bit)
     /**/
     ulSDCARD_RestSectorCount = ulSDCARD_SectorCount = 1;/* 残りセクタサイズ、セクタカウントに１を設定 */
     pSDCARD_BufferAddr = &Resid;                         /* データ格納バッファのアドレスを設定 */
-    SDCARD_FPGA_Flag = FALSE;                          /* FPGA処理完了フラグクリア */
     SDCARD_EndFlag   = FALSE;                          /* 転送処理完了フラグクリア */
     SDCARD_ErrStatus = SDMC_NORMAL;                    /* エラーステータスのクリア */
 
@@ -1895,7 +1887,7 @@ static u16  i_sdmcCheckWP(void)
   Returns:      0 : success
                 > 0 : error
  *---------------------------------------------------------------------------*/
-SDMC_ERR_CODE sdmcWriteFifo(void* buf,u32 bufsize,u32 offset,void(*func)(),SdmcResultInfo *info)
+SDMC_ERR_CODE sdmcWriteFifo( const void* buf,u32 bufsize,u32 offset,void(*func)(),SdmcResultInfo *info)
 {
     SDCARDMsg     SdMsg;
     OSMessage     recv_dat;
@@ -1905,7 +1897,7 @@ SDMC_ERR_CODE sdmcWriteFifo(void* buf,u32 bufsize,u32 offset,void(*func)(),SdmcR
        return( SDMC_ERR_PARAM);
     }
   
-    SdMsg.buf       = buf;
+    SdMsg.buf       = (void*)buf;
     SdMsg.bufsize   = bufsize;
     SdMsg.offset    = offset;
     SdMsg.func      = func;
@@ -1936,7 +1928,7 @@ SDMC_ERR_CODE sdmcWriteFifo(void* buf,u32 bufsize,u32 offset,void(*func)(),SdmcR
   Returns:      0 : success
                 > 0 : error
  *---------------------------------------------------------------------------*/
-static SDMC_ERR_CODE SDCARDi_WriteFifo(void* buf,u32 bufsize,u32 offset,void(*func)(),SdmcResultInfo *info)
+static SDMC_ERR_CODE SDCARDi_WriteFifo( const void* buf,u32 bufsize,u32 offset,void(*func)(),SdmcResultInfo *info)
 {
     u32* DmaReg;
     SDMC_ERR_CODE result;
@@ -1992,7 +1984,7 @@ static SDMC_ERR_CODE SDCARDi_WriteFifo(void* buf,u32 bufsize,u32 offset,void(*fu
   Returns:      0 : success
                 > 0 : error
  *---------------------------------------------------------------------------*/
-SDMC_ERR_CODE sdmcWrite(void* buf,u32 bufsize,u32 offset,void(*func)(),SdmcResultInfo *info)
+SDMC_ERR_CODE sdmcWrite( const void* buf,u32 bufsize,u32 offset,void(*func)(),SdmcResultInfo *info)
 {
     SDCARDMsg     SdMsg;
     OSMessage     recv_dat;
@@ -2002,7 +1994,7 @@ SDMC_ERR_CODE sdmcWrite(void* buf,u32 bufsize,u32 offset,void(*func)(),SdmcResul
        return( SDMC_ERR_PARAM);
     }
   
-    SdMsg.buf       = buf;
+    SdMsg.buf       = (void*)buf;
     SdMsg.bufsize   = bufsize;
     SdMsg.offset    = offset;
     SdMsg.func      = func;
@@ -2033,7 +2025,7 @@ SDMC_ERR_CODE sdmcWrite(void* buf,u32 bufsize,u32 offset,void(*func)(),SdmcResul
   Returns:      0 : success
                 > 0 : error
  *---------------------------------------------------------------------------*/
-static SDMC_ERR_CODE SDCARDi_Write(void* buf,u32 bufsize,u32 offset,void(*func)(),SdmcResultInfo *info)
+static SDMC_ERR_CODE SDCARDi_Write( const void* buf,u32 bufsize,u32 offset,void(*func)(),SdmcResultInfo *info)
 {
     s16           nRetryCount;
     u32           ulResid;
@@ -2056,9 +2048,8 @@ static SDMC_ERR_CODE SDCARDi_Write(void* buf,u32 bufsize,u32 offset,void(*func)(
 /*    func_SDCARD_CallBack = func;    */
         pSDCARD_info = info;
         ulSDCARD_RestSectorCount = ulSDCARD_SectorCount = bufsize;
-        pSDCARD_BufferAddr = buf;                  /* データ格納バッファのアドレスを設定 */
+        pSDCARD_BufferAddr = (void*)buf;                  /* データ格納バッファのアドレスを設定 */
 
-        SDCARD_FPGA_Flag = FALSE;                  /* FPGA処理完了フラグクリア */
         SDCARD_EndFlag = FALSE;                    /* 転送処理完了フラグクリア */
         SDCARD_ErrStatus = SDMC_NORMAL;            /* エラーステータスのクリア */
 
@@ -2189,7 +2180,6 @@ static u16 i_sdmcGetResid(u32 *pResid)
     ulSDCARD_RestSectorCount = ulSDCARD_SectorCount = 1;/* 残りセクタサイズ、セクタカウントに１を設定 */
     pSDCARD_BufferAddr = Resid;                         /* データ格納バッファのアドレスを設定 */
 
-    SDCARD_FPGA_Flag = FALSE;                          /* FPGA処理完了フラグクリア */
     SDCARD_EndFlag   = FALSE;                          /* 転送処理完了フラグクリア */
     SDCARD_ErrStatus = SDMC_NORMAL;                    /* エラーステータスのクリア */
 

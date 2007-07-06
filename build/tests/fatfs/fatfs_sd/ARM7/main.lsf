@@ -19,7 +19,7 @@
 
 Static $(TARGET_NAME)
 {
-	Address		0x02004000
+	Address		0x0200B000
 	Library		crt0.o
 	StackSize	1024 512
 }
@@ -33,7 +33,7 @@ Static $(TARGET_NAME)
 
 Autoload MAIN
 {
-	Address		0x02020000
+	Address		0x02010000
 	Object		$(OBJS_STATIC)
 	Library		$(LLIBS) $(GLIBS) $(CW_LIBS)
 	Object		* (.wram)

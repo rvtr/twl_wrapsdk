@@ -35,12 +35,15 @@
  *---------------------------------------------------------------------------*/
 static OSHeapHandle InitializeAllocateSystem(void);
 static void VBlankIntr(void);
+void MY_SdTransfer( void* sd_adr, u32 size, BOOL read_flag);
+void MY_SdTransferRewind( void);
 
 /*---------------------------------------------------------------------------*
     
  *---------------------------------------------------------------------------*/
 u32 BlockBuf[(512*3)/4];
 u32 BlockBuf2[(512*3)/4];
+u32 LargeBuf[1*1024*1024/4];
 
 /*バッファオフセット*/
 static u32 my_buf_offset = 0;
@@ -203,11 +206,11 @@ void TwlSpMain(void)
 
     sdmcSelect( (u16)SDMC_PORT_CARD);
     DEBUG_BEGIN();
-    result = sdmcReadFifo( (void*)BlockBuf, 2, 1, NULL, &SdResult);
+    result = sdmcReadFifo( (void*)LargeBuf, 2048, 1, NULL, &SdResult);
+    DEBUG_END(sdmcReadFifo);
     if( result != 0) {
         PRINTDEBUG( "sdmcReadFifo failed.\n");    
     }else{
-        DEBUG_END(sdmcReadFifo);
         PRINTDEBUG( "sdmcReadFifo success.\n");
     }
 
@@ -215,11 +218,11 @@ void TwlSpMain(void)
     MI_DmaFill32( 2, BlockBuf2, 0x00FF00FF, 512*3);
 
     DEBUG_BEGIN();
-    result = sdmcWriteFifo( (void*)0x02004000, 10000, 1, NULL, &SdResult);
+    result = sdmcWriteFifo( (void*)0x02004000, 2048, 1, NULL, &SdResult);
+    DEBUG_END(sdmcWriteFifo);
     if( result != 0) {
         PRINTDEBUG( "sdmcWriteFifo failed.\n");    
     }else{
-        DEBUG_END(sdmcWriteFifo);
         PRINTDEBUG( "sdmcWriteFifo success.\n");
     }
 
