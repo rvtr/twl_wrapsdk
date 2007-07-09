@@ -138,7 +138,7 @@ void CDCi_WriteSpiRegister( u8 reg, u8 data )
     SPI_Wait();
 
     CDCi_ChangeSpiMode( SPI_TRANSMODE_CONTINUOUS );
-    SPI_SendWait( reg << 1 );
+    SPI_SendWait( (u8)(reg << 1) );
 
     CDCi_ChangeSpiMode( SPI_TRANSMODE_1BYTE );
     SPI_Send( data );
@@ -160,10 +160,10 @@ u8 CDCi_ReadSpiRegister( u8 reg )
     SPI_Wait();
 
     CDCi_ChangeSpiMode( SPI_TRANSMODE_CONTINUOUS );
-    SPI_SendWait( reg << 1 );
+    SPI_SendWait( (u8)(reg << 1) );
 
     CDCi_ChangeSpiMode( SPI_TRANSMODE_1BYTE );
-    data = SPI_DummyWaitReceive();
+    data = (u8)SPI_DummyWaitReceive();
     return data;
 }
 
@@ -184,7 +184,7 @@ void CDCi_WriteSpiRegisters( u8 reg, const u8 *bufp, size_t size )
     SPI_Wait();
 
     CDCi_ChangeSpiMode( SPI_TRANSMODE_CONTINUOUS );
-    SPI_SendWait( reg << 1 );
+    SPI_SendWait( (u8)(reg << 1) );
 
     for ( i=0; i<(size-1); i++ )
     {
@@ -212,15 +212,15 @@ void CDCi_ReadSpiRegisters( u8 reg, u8 *bufp, size_t size )
     SPI_Wait();
 
     CDCi_ChangeSpiMode( SPI_TRANSMODE_CONTINUOUS );
-    SPI_SendWait( reg << 1 );
+    SPI_SendWait( (u8)(reg << 1) );
 
     for ( i=0; i<(size-1); i++ )
     {
         SPI_Wait();
-        *bufp++ = SPI_DummyWaitReceive();
+        *bufp++ = (u8)SPI_DummyWaitReceive();
     }
     CDCi_ChangeSpiMode( SPI_TRANSMODE_1BYTE );
-    *bufp++ = SPI_DummyWaitReceive();
+    *bufp++ = (u8)SPI_DummyWaitReceive();
 }
 
 //================================================================================

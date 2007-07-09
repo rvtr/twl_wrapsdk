@@ -128,10 +128,10 @@ u8 CDCi_DsmodeReadSpiRegister( u8 reg )
     SPI_Wait();
 
     CDCi_DsmodeChangeSpiMode( SPI_TRANSMODE_CONTINUOUS );
-    SPI_SendWait( 0x80 | reg );
+    SPI_SendWait( (u8)(0x80 | reg) );
 
     CDCi_DsmodeChangeSpiMode( SPI_TRANSMODE_1BYTE );
-    data = SPI_DummyWaitReceive();
+    data = (u8)SPI_DummyWaitReceive();
     return data;
 }
 
@@ -180,15 +180,15 @@ void CDCi_DsmodeReadSpiRegisters( u8 reg, u8 *bufp, size_t size )
     SPI_Wait();
 
     CDCi_DsmodeChangeSpiMode( SPI_TRANSMODE_CONTINUOUS );
-    SPI_SendWait( 0x80 | reg );
+    SPI_SendWait( (u8)(0x80 | reg) );
 
     for ( i=0; i<(size-1); i++ )
     {
         SPI_Wait();
-        *bufp++ = SPI_DummyWaitReceive();
+        *bufp++ = (u8)SPI_DummyWaitReceive();
     }
     CDCi_DsmodeChangeSpiMode( SPI_TRANSMODE_1BYTE );
-    *bufp++ = SPI_DummyWaitReceive();
+    *bufp++ = (u8)SPI_DummyWaitReceive();
 }
 
 
