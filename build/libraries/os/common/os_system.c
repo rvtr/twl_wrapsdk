@@ -332,7 +332,7 @@ void OS_SpinWaitSysCycles( u32 cycle )
 #else
 void OS_SpinWaitSysCycles(u32 cycle)
 {
-    OS_SpinWait(cycle / 4);
+    SVC_WaitByLoop((s32)cycle / 4);
 }
 #endif
 
