@@ -18,7 +18,7 @@ my $file_head_format =<<'EOF';
   $Log: $
   $NoKeywords: $
  *---------------------------------------------------------------------------*/
-#include <twl/camera/ARM7/i2c.h>
+#include <twl/camera/ARM7/i2c_samsung.h>
 
 //#define PRINT_DEBUG
 
@@ -30,8 +30,8 @@ my $file_head_format =<<'EOF';
 #define DBG_CHAR( c )      ((void)0)
 #endif
 
-BOOL %2$s( void );
-BOOL %2$s( void )
+BOOL %2$s( CameraSelect camera );
+BOOL %2$s( CameraSelect camera )
 {
 EOF
 
@@ -47,7 +47,7 @@ EOF
 
 my $packet_last_format =<<'EOF';
         };
-        if (CAMERAi_WriteRegisters(0x%s, data, %d) == FALSE) {
+        if (CAMERAi_WriteRegisters(camera, 0x%s, data, %d) == FALSE) {
             DBG_PRINTF("Failed to initialize! (%%d)\n", __LINE__);
             return FALSE;
         }
@@ -55,7 +55,7 @@ my $packet_last_format =<<'EOF';
 EOF
 
 my $packet_single_format =<<'EOF';
-    if (CAMERAi_WriteRegister(0x%s, 0x%s) == FALSE) {
+    if (CAMERAi_WriteRegister(camera, 0x%s, 0x%s) == FALSE) {
         DBG_PRINTF("Failed to initialize! (%%d)\n", __LINE__);
         return FALSE;
     }

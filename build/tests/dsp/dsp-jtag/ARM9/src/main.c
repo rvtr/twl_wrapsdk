@@ -63,7 +63,7 @@ void TwlMain()
     reg_MI_WRAM_B0 = WRAM_BNK_PACK(MI_WRAM_B_ARM9, MI_WRAM_B_OFS_0KB,   TRUE);
     {
         vu16* addr = (vu16*)(0x03000000 + (((reg_MI_WRAM_B_MAP & REG_MI_WRAM_B_MAP_START_MASK) >> REG_MI_WRAM_B_MAP_START_SHIFT) << 15));
-        // br ##0000, true
+        // br ##0, true
         *(addr+0) = 0x4180;
         *(addr+1) = 0x0000;
     }

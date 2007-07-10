@@ -18,8 +18,12 @@
 
 #define RETRY_COUNT     8
 
-static u8 I2C_DeviceAddrTable[I2C_SLAVE_NUM] = { I2C_ADDR_CODEC,
-                                                I2C_ADDR_CAMERA,
+static u8 I2C_DeviceAddrTable[I2C_SLAVE_NUM] = {
+                                                I2C_ADDR_CODEC,
+                                                I2C_ADDR_CAMERA_MICRON_IN,
+                                                I2C_ADDR_CAMERA_MICRON_OUT,
+                                                I2C_ADDR_CAMERA_SHARP_IN,
+                                                I2C_ADDR_CAMERA_SHARP_OUT,
                                               };
 
 static OSMutex mutex;
@@ -140,6 +144,30 @@ static inline u8 I2Ci_WaitReceiveLast( void )
     I2Ci_ReceiveLast();
     I2Ci_Wait();
     return I2Ci_GetData();
+}
+
+// 16 bit sequence
+
+static inline BOOL I2Ci_SendMiddle16( u16 data )
+{
+    return I2Ci_SendMiddle( (u8)(data >> 8) )
+        && I2Ci_SendMiddle( (u8)(data && 0xFF) );
+}
+
+static inline BOOL I2Ci_SendLast16( u16 data )
+{
+    return I2Ci_SendMiddle( (u8)(data >> 8) )
+        && I2Ci_SendLast( (u8)(data && 0xFF) );
+}
+
+static inline u16 I2Ci_WaitReceiveMiddle16( void )
+{
+    return (u16)((I2Ci_WaitReceiveMiddle() << 8) | I2Ci_WaitReceiveMiddle());
+}
+
+static inline u16 I2Ci_WaitReceiveLast16( void )
+{
+    return (u16)((I2Ci_WaitReceiveMiddle() << 8) | I2Ci_WaitReceiveLast());
 }
 
 /*---------------------------------------------------------------------------*
@@ -288,6 +316,72 @@ BOOL I2C_ClearFlags( I2CSlave id, u8 reg, u8 clrBits )
     return I2C_SetParams( id, reg, 0, clrBits );
 }
 
+/*---------------------------------------------------------------------------*
+  Name:         I2C_SetParams16
+
+  Description:  set control bit to device register
+
+  Arguments:    reg      : device register
+                setBits  : bits to set
+
+  Returns:      None
+ *---------------------------------------------------------------------------*/
+BOOL I2Ci_SetParams16( I2CSlave id, u16 reg, u16 setBits, u16 maskBits )
+{
+    u16      tmp;
+    tmp = I2Ci_ReadRegister16( id, reg );
+    tmp &= ~maskBits;
+    setBits &= maskBits;
+    tmp |= setBits;
+    return I2Ci_WriteRegister16( id, reg, tmp );
+}
+BOOL I2C_SetParams16( I2CSlave id, u16 reg, u16 setBits, u16 maskBits )
+{
+    BOOL result;
+    (void)I2C_Lock();
+    result = I2Ci_SetParams16( id, reg, setBits, maskBits );
+    (void)I2C_Unlock();
+    return result;
+}
+
+/*---------------------------------------------------------------------------*
+  Name:         I2C_SetFlags16
+
+  Description:  set control bit to device register
+
+  Arguments:    reg      : device register
+                setBits  : bits to set
+
+  Returns:      None
+ *---------------------------------------------------------------------------*/
+BOOL I2Ci_SetFlags16( I2CSlave id, u16 reg, u16 setBits )
+{
+    return I2Ci_SetParams16( id, reg, setBits, setBits );
+}
+BOOL I2C_SetFlags16( I2CSlave id, u16 reg, u16 setBits )
+{
+    return I2C_SetParams16( id, reg, setBits, setBits );
+}
+
+/*---------------------------------------------------------------------------*
+  Name:         I2C_ClearFlags16
+
+  Description:  clear control bit to device register
+
+  Arguments:    reg      : device register
+                clrBits  : bits to set
+
+  Returns:      None
+ *---------------------------------------------------------------------------*/
+BOOL I2Ci_ClearFlags16( I2CSlave id, u16 reg, u16 clrBits )
+{
+    return I2Ci_SetParams16( id, reg, 0, clrBits );
+}
+BOOL I2C_ClearFlags16( I2CSlave id, u16 reg, u16 clrBits )
+{
+    return I2C_SetParams16( id, reg, 0, clrBits );
+}
+
 //================================================================================
 //        DEVICE ACCESS
 //================================================================================
@@ -313,6 +407,30 @@ BOOL I2Ci_WriteRegister( I2CSlave id, u8 reg, u8 data )
         if (I2Ci_SendLast( data ) == FALSE)                 error++;
         if (error == 0) break;
     }
+    return error ? FALSE : TRUE;
+}
+/*---------------------------------------------------------------------------*
+  Name:         I2Ci_WriteRegister16
+
+  Description:  set value to decive register through I2C.
+
+  Arguments:    reg      : decive register
+                data     : value to be written
+
+  Returns:      None
+ *---------------------------------------------------------------------------*/
+BOOL I2Ci_WriteRegister16( I2CSlave id, u16 reg, u16 data )
+{
+    int r;
+    int error;
+    for (r = 0; r < RETRY_COUNT; r++)
+    {
+        error = 0;
+        if (I2Ci_SendStart( id ) == FALSE)                  error++;
+        if (I2Ci_SendMiddle16( reg ) == FALSE)              error++;
+        if (I2Ci_SendLast16( data ) == FALSE)               error++;
+        if (error == 0) break;
+    }OS_TPrintf("%s(%d<%d>, %d, %d); => error = %d, r = %d\n", __func__, id, I2C_DeviceAddrTable[id], reg, data, error, r);
     return error ? FALSE : TRUE;
 }
 
@@ -366,6 +484,31 @@ u8 I2Ci_ReadRegisterSC( I2CSlave id, u8 reg )
     }
     return error ? (u8)0xee : data;
 }
+/*---------------------------------------------------------------------------*
+  Name:         I2Ci_ReadRegister16
+
+  Description:  get value from decive register through I2C.
+
+  Arguments:    reg      : decive register
+
+  Returns:      value which is read from specified decive register
+ *---------------------------------------------------------------------------*/
+u16 I2Ci_ReadRegister16( I2CSlave id, u16 reg )
+{
+    int r;
+    u16 data;
+    int error;
+    for (r = 0; r < RETRY_COUNT; r++)
+    {
+        error = 0;
+        if (I2Ci_SendStart( id ) == FALSE)                  error++;
+        if (I2Ci_SendMiddle16( reg ) == FALSE)              error++;
+        if (I2Ci_ReceiveStart( id ) == FALSE)               error++;
+        data = I2Ci_WaitReceiveLast16();
+        if (error == 0) break;
+    }
+    return error ? (u16)0xeeee : data;
+}
 
 /*---------------------------------------------------------------------------*
   Name:         I2Ci_VerifyRegister
@@ -396,7 +539,6 @@ BOOL I2Ci_VerifyRegister( I2CSlave id, u8 reg, u8 data )
     }
     return error ? FALSE : (result ? TRUE : FALSE);
 }
-
 /*---------------------------------------------------------------------------*
   Name:         I2Ci_VerifyRegisterSC
 
@@ -419,6 +561,35 @@ BOOL I2Ci_VerifyRegisterSC( I2CSlave id, u8 reg, u8 data )
         if (I2Ci_SendLast( reg ) == FALSE)                  error++;
         if (I2Ci_ReceiveStart( id ) == FALSE)               error++;
         if (data != I2Ci_WaitReceiveLast())
+        {
+            result = FALSE;
+        }
+        if (error == 0) break;
+    }
+    return error ? FALSE : (result ? TRUE : FALSE);
+}
+/*---------------------------------------------------------------------------*
+  Name:         I2Ci_VerifyRegister16
+
+  Description:  get and verify value from decive register through I2C.
+
+  Arguments:    reg      : decive register
+
+  Returns:      value which is read from specified decive register
+ *---------------------------------------------------------------------------*/
+BOOL I2Ci_VerifyRegister16( I2CSlave id, u16 reg, u16 data )
+{
+    int r;
+    int error;
+    BOOL result;
+    for (r = 0; r < RETRY_COUNT; r++)
+    {
+        error = 0;
+        result = TRUE;
+        if (I2Ci_SendStart( id ) == FALSE)                  error++;
+        if (I2Ci_SendMiddle16( reg ) == FALSE)              error++;
+        if (I2Ci_ReceiveStart( id ) == FALSE)               error++;
+        if (data != I2Ci_WaitReceiveLast16())
         {
             result = FALSE;
         }
@@ -454,6 +625,37 @@ BOOL I2Ci_WriteRegisters( I2CSlave id, u8 reg, const u8 *bufp, size_t size )
             if (I2Ci_SendMiddle( *ptr++ ) == FALSE)         error++;
         }
         if (I2Ci_SendLast( *ptr++ ) == FALSE)               error++;
+        if (error == 0) break;
+    }
+    return error ? FALSE : TRUE;
+}
+/*---------------------------------------------------------------------------*
+  Name:         I2Ci_WriteRegisters16
+
+  Description:  set value to decive registers through I2C.
+
+  Arguments:    reg      : decive register
+                data     : value to be written
+
+  Returns:      None
+ *---------------------------------------------------------------------------*/
+BOOL I2Ci_WriteRegisters16( I2CSlave id, u16 reg, const u16 *bufp, size_t size )
+{
+    int i;
+    int r;
+    int error;
+    const u16 *ptr;
+    for (r = 0; r < RETRY_COUNT; r++)
+    {
+        error = 0;
+        ptr = bufp;
+        if (I2Ci_SendStart( id ) == FALSE)                  error++;
+        if (I2Ci_SendMiddle16( reg ) == FALSE)              error++;
+        for ( i=0; error==0 && i<(size-1); i++ )
+        {
+            if (I2Ci_SendMiddle16( *ptr++ ) == FALSE)       error++;
+        }
+        if (I2Ci_SendLast16( *ptr++ ) == FALSE)             error++;
         if (error == 0) break;
     }
     return error ? FALSE : TRUE;
@@ -497,7 +699,6 @@ BOOL I2Ci_ReadRegisters( I2CSlave id, u8 reg, u8 *bufp, size_t size )
     }
     return error ? FALSE : TRUE;
 }
-
 /*---------------------------------------------------------------------------*
   Name:         I2Ci_ReadRegistersSC
 
@@ -532,6 +733,44 @@ BOOL I2Ci_ReadRegistersSC( I2CSlave id, u8 reg, u8 *bufp, size_t size )
         else
         {
             (void)I2Ci_WaitReceiveLast();
+        }
+    }
+    return error ? FALSE : TRUE;
+}
+/*---------------------------------------------------------------------------*
+  Name:         I2Ci_ReadRegisters16
+
+  Description:  get value from decive registers through I2C.
+
+  Arguments:    reg      : decive register
+
+  Returns:      value which is read from specified decive register
+ *---------------------------------------------------------------------------*/
+BOOL I2Ci_ReadRegisters16( I2CSlave id, u16 reg, u16 *bufp, size_t size )
+{
+    int i;
+    int r;
+    int error;
+    u16  *ptr;
+    for (r = 0; r < RETRY_COUNT; r++)
+    {
+        error = 0;
+        ptr = bufp;
+        if (I2Ci_SendStart( id ) == FALSE)                  error++;
+        if (I2Ci_SendMiddle16( reg ) == FALSE)              error++;
+        if (I2Ci_ReceiveStart( id ) == FALSE)               error++;
+        for ( i=0; error==0 && i<(size-1); i++ )
+        {
+            *ptr++ = I2Ci_WaitReceiveMiddle16();
+        }
+        if (error == 0)
+        {
+            *ptr++ = I2Ci_WaitReceiveLast16();
+            break;
+        }
+        else
+        {
+            (void)I2Ci_WaitReceiveLast16();
         }
     }
     return error ? FALSE : TRUE;
@@ -575,7 +814,6 @@ BOOL I2Ci_VerifyRegisters( I2CSlave id, u8 reg, const u8 *bufp, size_t size )
     }
     return error ? FALSE : (result ? TRUE : FALSE);
 }
-
 /*---------------------------------------------------------------------------*
   Name:         I2Ci_VerifyRegistersSC
 
@@ -607,6 +845,44 @@ BOOL I2Ci_VerifyRegistersSC( I2CSlave id, u8 reg, const u8 *bufp, size_t size )
             }
         }
         if (*ptr++ != I2Ci_WaitReceiveLast())
+        {
+            result = FALSE;
+        }
+        if (error == 0) break;
+    }
+    return error ? FALSE : (result ? TRUE : FALSE);
+}
+/*---------------------------------------------------------------------------*
+  Name:         I2Ci_VerifyRegisters16
+
+  Description:  get and verify value from decive registers through I2C.
+
+  Arguments:    reg      : decive register
+
+  Returns:      value which is read from specified decive register
+ *---------------------------------------------------------------------------*/
+BOOL I2Ci_VerifyRegisters16( I2CSlave id, u16 reg, const u16 *bufp, size_t size )
+{
+    int i;
+    int r;
+    int error;
+    const u16 *ptr;
+    BOOL result;
+    for (r = 0; r < RETRY_COUNT; r++)
+    {
+        error = 0;
+        ptr = bufp;
+        result = TRUE;
+        if (I2Ci_SendStart( id ) == FALSE)                  error++;
+        if (I2Ci_SendMiddle16( reg ) == FALSE)              error++;
+        if (I2Ci_ReceiveStart( id ) == FALSE)               error++;
+        for ( i=0; error==0 && result!=FALSE && i<(size-1); i++ )
+        {
+            if (*ptr++ != I2Ci_WaitReceiveMiddle16()) {
+                result = FALSE;
+            }
+        }
+        if (*ptr++ != I2Ci_WaitReceiveLast16())
         {
             result = FALSE;
         }

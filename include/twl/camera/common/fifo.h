@@ -47,7 +47,7 @@ extern "C" {
 // PXIコマンド定義
 typedef enum CAMERAPxiCommand
 {
-    CAMERA_PXI_COMMAND_SET_STBYN                    = 0x00, // STBYN操作
+    CAMERA_PXI_COMMAND_SELECT                       = 0x00, // アクティブ選択
     // I2C基本操作
     CAMERA_PXI_COMMAND_WRITE_REGISTERS              = 0x10,
     CAMERA_PXI_COMMAND_READ_REGISTERS               = 0x11,
@@ -71,21 +71,21 @@ CAMERAPxiCommand;
 // PXIコマンドサイズ定義
 typedef enum CAMERAPxiSize
 {
-    CAMERA_PXI_SIZE_SET_STBYN                       = 1, // BOOL
+    CAMERA_PXI_SIZE_SELECT                          = 1,    // camera
     // I2C基本操作
-    CAMERA_PXI_SIZE_WRITE_REGISTERS                 = 3,    // addr, size, data...
-    CAMERA_PXI_SIZE_READ_REGISTERS                  = 2,    // addr, size
-    CAMERA_PXI_SIZE_SET_PARAMS                      = 3,    // addr, bits, mask
-    CAMERA_PXI_SIZE_SET_FLAGS                       = 2,    // addr, bits
-    CAMERA_PXI_SIZE_CLEAR_FLAGS                     = 2,    // addr, bits
+    CAMERA_PXI_SIZE_WRITE_REGISTERS                 = CAMERA_PXI_DATA_SIZE_MAX, // camera, addr, size, data...
+    CAMERA_PXI_SIZE_READ_REGISTERS                  = 3,    // camera, addr, size
+    CAMERA_PXI_SIZE_SET_PARAMS                      = 4,    // camera, addr, bits, mask
+    CAMERA_PXI_SIZE_SET_FLAGS                       = 3,    // camera, addr, bits
+    CAMERA_PXI_SIZE_CLEAR_FLAGS                     = 3,    // camera, addr, bits
     // I2C応用操作
-    CAMERA_PXI_SIZE_I2C_INIT                        = 0,
-    CAMERA_PXI_SIZE_I2C_PRESET                      = 1,    // preset
+    CAMERA_PXI_SIZE_I2C_INIT                        = 1,    // camera
+    CAMERA_PXI_SIZE_I2C_PRESET                      = 2,    // camera, preset
 
     CAMERA_PXI_SIZE_I2C_PRE_SLEEP                   = 0,
     CAMERA_PXI_SIZE_I2C_POST_SLEEP                  = 0,
 
-    CAMERA_PXI_SIZE_I2C_SET_CROPPING                = 8,    // (u16)x_offset, (u16)y_offset, (u16)width, (u16)height
+    CAMERA_PXI_SIZE_I2C_SET_CROPPING                = 9,    // camera, (u16)x_offset, (u16)y_offset, (u16)width, (u16)height
 
     CAMERA_PXI_SIZE_I2C_PAUSE                       = 0,
     CAMERA_PXI_SIZE_I2C_RESUME                      = 0

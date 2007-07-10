@@ -28,75 +28,32 @@
     静的変数定義
  *---------------------------------------------------------------------------*/
 static CameraSelect currentCamera;
-static BOOL prestate;
-
+static BOOL cameraPreSleepState;
 /*---------------------------------------------------------------------------*
     内部関数定義
  *---------------------------------------------------------------------------*/
 
 /*---------------------------------------------------------------------------*
-  Name:         CAMERA_SelectCamera
+  Name:         CAMERA_Select
 
-  Description:  set stbyn
+  Description:  select camera to activate
 
   Arguments:    camera      one of CameraSelect
 
   Returns:      None
  *---------------------------------------------------------------------------*/
-void CAMERA_SelectCamera( CameraSelect camera )
+BOOL CAMERA_Select( CameraSelect camera )
 {
-    if (currentCamera == camera)
+    if (currentCamera == camera || CAMERA_SELECT_BOTH == camera)
     {
-        return;
+        return FALSE;
     }
-
-    switch (camera)
+    if (CAMERA_I2CSelect(camera) != CAMERA_RESULT_SUCCESS)
     {
-    case CAMERA_SELECT_FIRST:
-        CAMERA_SetStbyn2(FALSE);
-        break;
-    case CAMERA_SELECT_SECOND:
-        CAMERA_SetStbyn(FALSE);
-        break;
-    default:
-        return;
+        return FALSE;
     }
     currentCamera = camera;
-}
-
-/*---------------------------------------------------------------------------*
-  Name:         CAMERA_SetStbyn
-
-  Description:  set STBYn for current camera
-
-  Arguments:    BOOL    High/Low
-
-  Returns:      BOOL    last state
- *---------------------------------------------------------------------------*/
-BOOL CAMERA_SetStbyn( BOOL high )
-{
-    static BOOL prev = FALSE;
-    BOOL temp = prev;
-    switch (currentCamera)
-    {
-    case CAMERA_SELECT_FIRST:
-        if (high)
-        {
-            reg_CAM_CAM_MCNT |= REG_CAM_CAM_MCNT_STBYN_MASK;
-        }
-        else
-        {
-            reg_CAM_CAM_MCNT &= ~REG_CAM_CAM_MCNT_STBYN_MASK;
-        }
-        break;
-    case CAMERA_SELECT_SECOND:
-        CAMERA_SetStbyn2(high);
-        break;
-    default:
-        return temp;
-    }
-    prev = high;
-    return temp;
+    return TRUE;
 }
 
 /*---------------------------------------------------------------------------*
@@ -112,22 +69,14 @@ void CAMERA_PowerOn( void )
 {
     reg_CFG_CLK |= REG_CFG_CLK_CAM_MASK;
     if ((reg_CFG_CLK & REG_CFG_CLK_CAM_CKI_MASK) == 0) {
-        reg_CAM_CAM_MCNT |= (REG_CAM_CAM_MCNT_V28_MASK  // VDD2.8 POWER ON
-                       | REG_CAM_CAM_MCNT_INI_MASK);// setup data line after CPU is powered on
-        OS_SpinWaitSysCycles( 4 );              // wait to raise VDD2.8
-        reg_CAM_CAM_MCNT &= ~REG_CAM_CAM_MCNT_V18_MASK; // VDD1.8 POWER ON
-        OS_SpinWaitSysCycles( 4 );              // wait to raise VDD1.8
-        reg_CAM_CAM_MCNT &= ~REG_CAM_CAM_MCNT_VIO_MASK; // VDDIO POWER ON
-        OS_SpinWaitSysCycles( 4 );              // wait to raise VDDIO
-
-        reg_CFG_CLK |= REG_CFG_CLK_CAM_CKI_MASK;// MCLK on
-        OS_SpinWaitSysCycles( 100 );            // wait for over 100 MCLK cycles
-
+        reg_CAM_CAM_MCNT |= REG_CAM_CAM_MCNT_V28_MASK;  // VDD2.8 POWER ON
+        OS_SpinWaitSysCycles( 30 );                     // wait for over 15 MCLK (10-20)
+        reg_CFG_CLK |= REG_CFG_CLK_CAM_CKI_MASK;        // MCLK on
+        OS_SpinWaitSysCycles( 30 );                     // wait for over 15 MCLKs (20-10)
         reg_CAM_CAM_MCNT |= REG_CAM_CAM_MCNT_RSTN_MASK; // RSTN => Hi
-        CAMERA_SetStbyn(TRUE);                  // STBYN => Hi
-        OS_SpinWaitSysCycles( 1800000 );        // wait for over 1800000 MCLK cycles (over 100msec!!!)
+        OS_SpinWaitSysCycles( 12000 );                  // wait for over 6000 MCLKs
 
-        reg_CAM_CAM_CNT = REG_CAM_CAM_CNT_CL_MASK;    // full reset CNT
+        reg_CAM_CAM_CNT = REG_CAM_CAM_CNT_CL_MASK;      // full reset CNT
     }
 }
 
@@ -140,25 +89,18 @@ void CAMERA_PowerOn( void )
 
   Returns:      None
  *---------------------------------------------------------------------------*/
-static inline void CAMERA_PowerOff( void )
+void CAMERA_PowerOff( void )
 {
     if (reg_CFG_CLK & REG_CFG_CLK_CAM_CKI_MASK) {
-        reg_CAM_CAM_CNT &= ~REG_CAM_CAM_CNT_E_MASK; // stop cmaera output
+        reg_CAM_CAM_CNT &= ~REG_CAM_CAM_CNT_E_MASK;     // stop cmaera output
 
-        CAMERA_SetStbyn(FALSE);             // STBYN => Lo
-        OS_SpinWaitSysCycles( 20 );  // wait for over 20 MCLK cycles
-        reg_CAM_CAM_MCNT &= ~REG_CAM_CAM_MCNT_RSTN_MASK;
-        OS_SpinWaitSysCycles( 20 );  // wait for over 20 MCLK cycles
+        reg_CAM_CAM_MCNT &= ~REG_CAM_CAM_MCNT_RSTN_MASK;// RSTN => Lo
+        OS_SpinWaitSysCycles( 10 );                     // wait for over 5 MCLK
 
-        reg_CFG_CLK  &= ~REG_CFG_CLK_CAM_CKI_MASK;  // MCLK off
-        // no wait
+        reg_CFG_CLK  &= ~REG_CFG_CLK_CAM_CKI_MASK;      // MCLK off
 
-        reg_CAM_CAM_MCNT |= REG_CAM_CAM_MCNT_VIO_MASK;  // VDDIO POWER OFF
-        OS_SpinWaitSysCycles( 4 );              // wait a moment
-        reg_CAM_CAM_MCNT |= REG_CAM_CAM_MCNT_V18_MASK;  // VDD1.8 POWER OFF
-        OS_SpinWaitSysCycles( 4 );              // wait a moment
         reg_CAM_CAM_MCNT &= ~REG_CAM_CAM_MCNT_V28_MASK; // VDD2.8 POWER OFF
-        OS_SpinWaitSysCycles( 4 );              // wait a moment
+        OS_SpinWaitSysCycles( 4 );                      // wait a moment
     }
     reg_CFG_CLK &= ~REG_CFG_CLK_CAM_MASK;   /* 必要ある？ */
 }
@@ -175,9 +117,9 @@ static inline void CAMERA_PowerOff( void )
 void CAMERA_PreSleep( void )
 {
     if (reg_CFG_CLK & REG_CFG_CLK_CAM_CKI_MASK) {
-        prestate = CAMERA_SetStbyn(FALSE);
-        OS_SpinWaitSysCycles( 20 );  // wait for over 20 MCLK cycles
-        // MCLK will stop automatically
+        cameraPreSleepState = TRUE;
+        CAMERA_I2CPreSleep();
+        CAMERA_PowerOff();
     }
 }
 
@@ -192,13 +134,10 @@ void CAMERA_PreSleep( void )
  *---------------------------------------------------------------------------*/
 void CAMERA_PostSleep( void )
 {
-    if (reg_CFG_CLK & REG_CFG_CLK_CAM_CKI_MASK) {
-        // MCLK started automatically
-        if (prestate)
-        {
-            CAMERA_SetStbyn(TRUE);
-            OS_SpinWaitSysCycles( 100000 );  // wait for over 100000 MCLK cycles
-        }
+    if (cameraPreSleepState == TRUE) {
+        cameraPreSleepState = FALSE;
+        CAMERA_PowerOn();
+        CAMERA_I2CPostSleep();
     }
 }
 

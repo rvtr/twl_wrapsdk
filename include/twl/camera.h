@@ -22,7 +22,7 @@
 
 #ifdef SDK_ARM7
 
-#include <twl/camera/ARM7/i2c.h>
+#include <twl/camera/ARM7/i2c_common.h>
 #include <twl/camera/ARM7/control.h>
 
 #else

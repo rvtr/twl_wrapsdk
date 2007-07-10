@@ -45,6 +45,8 @@ typedef struct CAMERAWork
     u64     stack[CAMERA_THREAD_STACK_SIZE / sizeof(u64)];
     // CAMERA用スレッドのスタック
 
+    CameraSelect        camera;         // アクティブカメラ
+
     CAMERAPxiCommand    command;        // コマンド種別
     u8      current;                    // 受信済みデータ個数 (バイト単位)
     u8      total;                      // 最終データ個数 (1 + 後続コマンド*3)

@@ -29,7 +29,9 @@ TWL_PROC		= ARM7
 SRCDIR                  = ../common .
 
 SRCS			= \
-			  camera_i2c.c \
+                          camera_i2c_common.c \
+			  camera_i2c_micron.c \
+			  camera_i2c_sharp.c \
 			  camera_control.c \
 
 L_SET_FILE	:= A3AFX_EVT2_20fps_16M_PLLoff_hVGA_070209.set \
@@ -40,9 +42,16 @@ L_SET_FILE	:= A3AFX_EVT2_20fps_16M_PLLoff_hVGA_070209.set \
                    A3AFX_EVT3_30fps_Scaledown_16.7M_50Hz.set \
                    A3AFX_EVT3_30fps_Subsampling_16.7M_50Hz.set \
 
-L_CONVERT_EXE	:= convert.pl
+L_INI_FILE	:= MT9V113-MTM9-2.ini
+
+L_SET_CONVERT_EXE	:= convert_samsung.pl
+L_INI_CONVERT_EXE	:= convert_micron.pl
+
 L_SETC_FILE	:= $(L_SET_FILE:%.set=%.autogen.c)
-SRCS		+= $(L_SETC_FILE)
+#SRCS		+= $(L_SETC_FILE)
+
+L_INIC_FILE	:= $(L_INI_FILE:%.ini=%.autogen.c)
+SRCS		+= $(L_INIC_FILE)
 
 TARGET_LIB		= libcamera_sp$(TWL_LIBSUFFIX).a
 
@@ -68,7 +77,10 @@ do-build:		$(TARGETS)
 
 include	$(TWLSDK_ROOT)/build/buildtools/modulerules
 
-%.autogen.c: %.set $(L_CONVERT_EXE)
-	perl $(L_CONVERT_EXE) $< > $@
 
+%.autogen.c: %.ini $(L_INI_CONVERT_EXE)
+	perl $(L_INI_CONVERT_EXE) $< > $@
+
+%.autogen.c: %.set $(L_SET_CONVERT_EXE)
+	perl $(L_INI_CONVERT_EXE) $< > $@
 #===== End of Makefile =====

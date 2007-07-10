@@ -32,11 +32,6 @@ extern "C" {
 #endif
 
 typedef enum {
-    CAMERA_SELECT_FIRST,
-    CAMERA_SELECT_SECOND
-} CameraSelect;
-
-typedef enum {
     CAMERA_OUTPUT_YUV,
     CAMERA_OUTPUT_RGB
 } CameraOutput;
@@ -48,16 +43,17 @@ typedef enum {
 } CameraIntrVsync;
 
 /*---------------------------------------------------------------------------*
-  Name:         CAMERA_SelectCamera
+  Name:         CAMERA_Select
 
-  Description:  set stbyn
+  Description:  select camera to activate
 
   Arguments:    camera      one of CameraSelect
 
-  Returns:      None
+  Returns:      TRUE if success
  *---------------------------------------------------------------------------*/
-void CAMERA_SelectCamera( CameraSelect camera );
+BOOL CAMERA_Select( CameraSelect camera );
 
+#if 0
 /*---------------------------------------------------------------------------*
   Name:         CAMERA_SetStbyn
 
@@ -68,6 +64,7 @@ void CAMERA_SelectCamera( CameraSelect camera );
   Returns:      BOOL    last state
  *---------------------------------------------------------------------------*/
 BOOL CAMERA_SetStbyn( BOOL high );
+#endif
 
 /*---------------------------------------------------------------------------*
   Name:         CAMERA_PowerOn

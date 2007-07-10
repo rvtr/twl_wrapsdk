@@ -39,6 +39,7 @@ void TwlMain()
 
     // èâä˙âª
     OS_Init();
+    OS_InitThread();
     GX_Init();
     OS_InitTick();
 
@@ -62,18 +63,21 @@ void TwlMain()
 
     // ÉJÉÅÉâèâä˙âª
     CAMERA_Init();
-
-    CAMERA_SelectCamera(CAMERA_SELECT_FIRST);
     CAMERA_PowerOn();
-    result = CAMERA_I2CInit();
-    if (result != CAMERA_RESULT_SUCCESS_TRUE)
-        OS_TPrintf("CAMERA_I2CInit was failed. (%d)\n", result);
-    result = CAMERA_I2CPreset(CAMERA_PRESET_VGA_20);
-    if (result != CAMERA_RESULT_SUCCESS_TRUE)
-        OS_TPrintf("CAMERA_I2CPreset was failed. (%d)\n", result);
-    CAMERA_SetCropping(0, 0, 320, 240);
 
-    CAMERA_SetTrimmingParamsCenter(WIDTH, HEIGHT, 320, 240);    // clipped by camera i/f
+    result = CAMERA_I2CInit(CAMERA_SELECT_BOTH);
+    if (result != CAMERA_RESULT_SUCCESS_TRUE)
+    {
+        OS_TPrintf("CAMERA_I2CInit was failed. (%d)\n", result);
+    }
+    else
+    {
+        OS_TPrintf("CAMERA_I2CInit was done.\n");
+        CAMERA_PowerOff();
+        OS_Terminate();
+    }
+
+    CAMERA_SetTrimmingParamsCenter(WIDTH, HEIGHT, 640, 480);    // clipped by camera i/f
     CAMERA_SetTrimming(TRUE);
     CAMERA_SetOutputFormat(CAMERA_OUTPUT_RGB);
     CAMERA_SetTransferLines(CAMERA_GET_MAX_LINES(WIDTH));

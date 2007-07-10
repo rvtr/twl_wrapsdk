@@ -32,7 +32,10 @@ extern "C" {
 typedef enum
 {
     I2C_SLAVE_CODEC_TP = 0,
-    I2C_SLAVE_CAMERA,
+    I2C_SLAVE_CAMERA_MICRON_IN,
+    I2C_SLAVE_CAMERA_MICRON_OUT,
+    I2C_SLAVE_CAMERA_SHARP_IN,
+    I2C_SLAVE_CAMERA_SHARP_OUT,
     I2C_SLAVE_NUM
 }
 I2CSlave;
@@ -47,9 +50,11 @@ typedef enum
 I2CReadWrite;
 
 
-#define I2C_ADDR_CODEC     (0x18 << 1)
-//#define I2C_ADDR_CAMERA     0x5a       // SAMSUNG 1/8
-#define I2C_ADDR_CAMERA    (0x62 << 1) // SAMSUNG 1/10
+#define I2C_ADDR_CODEC      (0x18 << 1)
+#define I2C_ADDR_CAMERA_MICRON_IN   0x78    // MICRON
+#define I2C_ADDR_CAMERA_MICRON_OUT  0x7A    // MICRON
+#define I2C_ADDR_CAMERA_SHARP_IN    0xE0    // SHARP
+#define I2C_ADDR_CAMERA_SHARP_OUT   0xA0    // SHARP
 
 //----------------------------------------------------------------
 //        subroutine definition
@@ -136,6 +141,45 @@ BOOL I2C_SetFlags( I2CSlave id, u8 reg, u8 setBits );
 BOOL I2Ci_ClearFlags( I2CSlave id, u8 reg, u8 clrBits );
 BOOL I2C_ClearFlags( I2CSlave id, u8 reg, u8 clrBits );
 
+/*---------------------------------------------------------------------------*
+  Name:         I2C_SetParams16
+
+  Description:  set control bit to device register
+
+  Arguments:    reg      : device register
+                setBits  : bits to set
+
+  Returns:      None
+ *---------------------------------------------------------------------------*/
+BOOL I2Ci_SetParams16( I2CSlave id, u16 reg, u16 setBits, u16 maskBits );
+BOOL I2C_SetParams16( I2CSlave id, u16 reg, u16 setBits, u16 maskBits );
+
+/*---------------------------------------------------------------------------*
+  Name:         I2C_SetFlags16
+
+  Description:  set control bit to device register
+
+  Arguments:    reg      : device register
+                setBits  : bits to set
+
+  Returns:      None
+ *---------------------------------------------------------------------------*/
+BOOL I2Ci_SetFlags16( I2CSlave id, u16 reg, u16 setBits );
+BOOL I2C_SetFlags16( I2CSlave id, u16 reg, u16 setBits );
+
+/*---------------------------------------------------------------------------*
+  Name:         I2C_ClearFlags16
+
+  Description:  clear control bit to device register
+
+  Arguments:    reg      : device register
+                setBits  : bits to set
+
+  Returns:      None
+ *---------------------------------------------------------------------------*/
+BOOL I2Ci_ClearFlags16( I2CSlave id, u16 reg, u16 clrBits );
+BOOL I2C_ClearFlags16( I2CSlave id, u16 reg, u16 clrBits );
+
 //================================================================================
 //        DEVICE ACCESS
 //================================================================================
@@ -155,6 +199,26 @@ static inline BOOL I2C_WriteRegister( I2CSlave id, u8 reg, u8 data )
     BOOL result;
     (void)I2C_Lock();
     result = I2Ci_WriteRegister( id, reg, data );
+    (void)I2C_Unlock();
+    return result;
+}
+
+/*---------------------------------------------------------------------------*
+  Name:         I2C_WriteRegister16
+
+  Description:  set value to decive register through I2C.
+
+  Arguments:    reg      : decive register
+                data     : value to be written
+
+  Returns:      None
+ *---------------------------------------------------------------------------*/
+BOOL I2Ci_WriteRegister16( I2CSlave id, u16 reg, u16 data );
+static inline BOOL I2C_WriteRegister16( I2CSlave id, u16 reg, u16 data )
+{
+    BOOL result;
+    (void)I2C_Lock();
+    result = I2Ci_WriteRegister16( id, reg, data );
     (void)I2C_Unlock();
     return result;
 }
@@ -199,6 +263,25 @@ static inline u8 I2C_ReadRegisterSC( I2CSlave id, u8 reg )
 }
 
 /*---------------------------------------------------------------------------*
+  Name:         I2C_ReadRegister16
+
+  Description:  get value from decive register through I2C.
+
+  Arguments:    reg      : decive register
+
+  Returns:      value which is read from specified decive register
+ *---------------------------------------------------------------------------*/
+u16 I2Ci_ReadRegister16( I2CSlave id, u16 reg );
+static inline u16 I2C_ReadRegister16( I2CSlave id, u16 reg )
+{
+    u16 result;
+    (void)I2C_Lock();
+    result = I2Ci_ReadRegister16( id, reg );
+    (void)I2C_Unlock();
+    return result;
+}
+
+/*---------------------------------------------------------------------------*
   Name:         I2C_VerifyRegister
 
   Description:  get and verify value from decive register through I2C.
@@ -236,6 +319,26 @@ static inline BOOL I2C_VerifyRegisterSC( I2CSlave id, u8 reg, u8 data )
     (void)I2C_Unlock();
     return result;
 }
+
+/*---------------------------------------------------------------------------*
+  Name:         I2C_VerifyRegister16
+
+  Description:  get and verify value from decive register through I2C.
+
+  Arguments:    reg      : decive register
+
+  Returns:      value which is read from specified decive register
+ *---------------------------------------------------------------------------*/
+BOOL I2Ci_VerifyRegister16( I2CSlave id, u16 reg, u16 data );
+static inline BOOL I2C_VerifyRegister16( I2CSlave id, u16 reg, u16 data )
+{
+    BOOL result;
+    (void)I2C_Lock();
+    result = I2Ci_VerifyRegister16( id, reg, data );
+    (void)I2C_Unlock();
+    return result;
+}
+
 /*---------------------------------------------------------------------------*
   Name:         I2C_WriteRegisters
 
@@ -252,6 +355,26 @@ static inline BOOL I2C_WriteRegisters( I2CSlave id, u8 reg, const u8 *bufp, size
     BOOL result;
     (void)I2C_Lock();
     result = I2Ci_WriteRegisters( id, reg, bufp, size );
+    (void)I2C_Unlock();
+    return result;
+}
+
+/*---------------------------------------------------------------------------*
+  Name:         I2C_WriteRegisters16
+
+  Description:  set value to decive register through I2C.
+
+  Arguments:    reg      : decive register
+                data     : value to be written
+
+  Returns:      None
+ *---------------------------------------------------------------------------*/
+BOOL I2Ci_WriteRegisters16( I2CSlave id, u16 reg, const u16 *bufp, size_t size );
+static inline BOOL I2C_WriteRegisters16( I2CSlave id, u16 reg, const u16 *bufp, size_t size )
+{
+    BOOL result;
+    (void)I2C_Lock();
+    result = I2Ci_WriteRegisters16( id, reg, bufp, size );
     (void)I2C_Unlock();
     return result;
 }
@@ -296,6 +419,25 @@ static inline BOOL I2C_ReadRegistersSC( I2CSlave id, u8 reg, u8 *bufp, size_t si
 }
 
 /*---------------------------------------------------------------------------*
+  Name:         I2C_ReadRegisters16
+
+  Description:  get value from decive register through I2C.
+
+  Arguments:    reg      : decive register
+
+  Returns:      value which is read from specified decive register
+ *---------------------------------------------------------------------------*/
+BOOL I2Ci_ReadRegisters16( I2CSlave id, u16 reg, u16 *bufp, size_t size );
+static inline BOOL I2C_ReadRegisters16( I2CSlave id, u16 reg, u16 *bufp, size_t size )
+{
+    BOOL result;
+    (void)I2C_Lock();
+    result = I2Ci_ReadRegisters16( id, reg, bufp, size );
+    (void)I2C_Unlock();
+    return result;
+}
+
+/*---------------------------------------------------------------------------*
   Name:         I2C_VerifyRegisters
 
   Description:  get and verify value from decive register through I2C.
@@ -333,6 +475,26 @@ static inline BOOL I2C_VerifyRegistersSC( I2CSlave id, u8 reg, const u8 *bufp, s
     (void)I2C_Unlock();
     return result;
 }
+
+/*---------------------------------------------------------------------------*
+  Name:         I2C_VerifyRegisters16
+
+  Description:  get and verify value from decive register through I2C.
+
+  Arguments:    reg      : decive register
+
+  Returns:      value which is read from specified decive register
+ *---------------------------------------------------------------------------*/
+BOOL I2Ci_VerifyRegisters16( I2CSlave id, u16 reg, const u16 *bufp, size_t size );
+static inline BOOL I2C_VerifyRegisters16( I2CSlave id, u16 reg, const u16 *bufp, size_t size )
+{
+    BOOL result;
+    (void)I2C_Lock();
+    result = I2Ci_VerifyRegisters16( id, reg, bufp, size );
+    (void)I2C_Unlock();
+    return result;
+}
+
 #if 0
 //================================================================================
 //        INTERRUPT

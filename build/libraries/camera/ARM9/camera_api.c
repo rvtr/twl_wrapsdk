@@ -98,24 +98,29 @@ void CAMERA_Init(void)
 }
 
 /*---------------------------------------------------------------------------*
-  Name:         CAMERA_SetStbyn2Async
+  Name:         CAMERA_I2CSelectAsync
 
-  Description:  select STBYN for 2nd CAMERA
+  Description:  select CAMERA to activate
                 async version
 
-  Arguments:    state       - High/Low
+  Arguments:    camera      - one of CameraSelect
                 callback    - 非同期処理が完了した再に呼び出す関数を指定
                 arg         - コールバック関数の呼び出し時の引数を指定。
 
   Returns:      CAMERAResult
  *---------------------------------------------------------------------------*/
-CAMERAResult CAMERA_SetStbyn2Async(BOOL state, CAMERACallback callback, void *arg)
+CAMERAResult CAMERA_I2CSelectAsync(CameraSelect camera, CAMERACallback callback, void *arg)
 {
-    const CAMERAPxiCommand  command = CAMERA_PXI_COMMAND_SET_STBYN;
-    const u8                size    = CAMERA_PXI_SIZE_SET_STBYN;
+    const CAMERAPxiCommand  command = CAMERA_PXI_COMMAND_SELECT;
+    const u8                size    = CAMERA_PXI_SIZE_SELECT;
     OSIntrMode enabled;
 
     SDK_NULL_ASSERT(callback);
+
+    if (CAMERA_SELECT_BOTH == camera)
+    {
+        return CAMERA_RESULT_ILLEGAL_PARAMETER;
+    }
 
     enabled = OS_DisableInterrupts();
     if (cameraWork.lock)
@@ -129,22 +134,22 @@ CAMERAResult CAMERA_SetStbyn2Async(BOOL state, CAMERACallback callback, void *ar
     cameraWork.callback = callback;
     cameraWork.callbackArg = arg;
 
-    return CameraSendPxiCommand(command, size, (u8)state) ? CAMERA_RESULT_SUCCESS : CAMERA_RESULT_SEND_ERROR;
+    return CameraSendPxiCommand(command, size, (u8)camera) ? CAMERA_RESULT_SUCCESS : CAMERA_RESULT_SEND_ERROR;
 }
 
 /*---------------------------------------------------------------------------*
-  Name:         CAMERA_SetStbyn2
+  Name:         CAMERA_I2CSelect
 
-  Description:  select STBYN for 2nd CAMERA
+  Description:  select CAMERA to activate
                 sync version.
 
-  Arguments:    state       - High/Low
+  Arguments:    camera      - one of CameraSelect
 
   Returns:      CAMERAResult
  *---------------------------------------------------------------------------*/
-CAMERAResult CAMERA_SetStbyn2(BOOL state)
+CAMERAResult CAMERA_I2CSelect(CameraSelect camera)
 {
-    cameraWork.result = CAMERA_SetStbyn2Async(state, CameraSyncCallback, 0);
+    cameraWork.result = CAMERA_I2CSelectAsync(camera, CameraSyncCallback, 0);
     if (cameraWork.result == CAMERA_RESULT_SUCCESS)
     {
         CameraWaitBusy();
@@ -159,7 +164,8 @@ CAMERAResult CAMERA_SetStbyn2(BOOL state)
   Description:  write CAMERA registers via I2C.
                 async version.
 
-  Arguments:    addr        - start address
+  Arguments:    camera      - one of CameraSelect
+                addr        - start address
                 bufp        - buffer to write
                 length      - length of bufp
                 callback    - 非同期処理が完了した再に呼び出す関数を指定
@@ -167,7 +173,7 @@ CAMERAResult CAMERA_SetStbyn2(BOOL state)
 
   Returns:      CAMERAResult
  *---------------------------------------------------------------------------*/
-CAMERAResult CAMERA_WriteRegistersAsync(u8 addr, const u8* bufp, size_t length, CAMERACallback callback, void *arg)
+CAMERAResult CAMERA_WriteRegistersAsync(CameraSelect camera, u8 addr, const u8* bufp, size_t length, CAMERACallback callback, void *arg)
 {
     const CAMERAPxiCommand  command = CAMERA_PXI_COMMAND_WRITE_REGISTERS;
     u8 size;    // variable!!
@@ -178,7 +184,11 @@ CAMERAResult CAMERA_WriteRegistersAsync(u8 addr, const u8* bufp, size_t length, 
     SDK_NULL_ASSERT(bufp);
     SDK_NULL_ASSERT(callback);
 
-    if (length + 2 > CAMERA_PXI_DATA_SIZE_MAX)
+    if (CAMERA_SELECT_NONE == camera)
+    {
+        return CAMERA_RESULT_ILLEGAL_PARAMETER;
+    }
+    if (length + 3 > CAMERA_PXI_DATA_SIZE_MAX)
     {
         return CAMERA_RESULT_ILLEGAL_PARAMETER; // too long
     }
@@ -196,10 +206,11 @@ CAMERAResult CAMERA_WriteRegistersAsync(u8 addr, const u8* bufp, size_t length, 
     cameraWork.callbackArg = arg;
 
     // データ作成
-    data[0] = addr;
-    data[1] = (u8)length;
-    MI_CpuCopy8(bufp, &data[2], length);
-    size = (u8)(length + 2);
+    data[0] = (u8)camera;
+    data[1] = addr;
+    data[2] = (u8)length;
+    MI_CpuCopy8(bufp, &data[3], length);
+    size = (u8)(length + 3);
 
     // コマンド送信
     if (CameraSendPxiCommand(command, size, data[0]) == FALSE)
@@ -222,15 +233,16 @@ CAMERAResult CAMERA_WriteRegistersAsync(u8 addr, const u8* bufp, size_t length, 
   Description:  write CAMERA registers via I2C.
                 sync version.
 
-  Arguments:    addr        - start address
+  Arguments:    camera      - one of CameraSelect
+                addr        - start address
                 bufp        - buffer to write
                 length      - length of bufp
 
   Returns:      CAMERAResult
  *---------------------------------------------------------------------------*/
-CAMERAResult CAMERA_WriteRegisters(u8 addr, const u8* bufp, size_t length)
+CAMERAResult CAMERA_WriteRegisters(CameraSelect camera, u8 addr, const u8* bufp, size_t length)
 {
-    cameraWork.result = CAMERA_WriteRegistersAsync(addr, bufp, length, CameraSyncCallback, 0);
+    cameraWork.result = CAMERA_WriteRegistersAsync(camera, addr, bufp, length, CameraSyncCallback, 0);
     if (cameraWork.result == CAMERA_RESULT_SUCCESS)
     {
         CameraWaitBusy();
@@ -243,7 +255,8 @@ CAMERAResult CAMERA_WriteRegisters(u8 addr, const u8* bufp, size_t length)
 
   Description:  read CAMERA registers via I2C.
 
-  Arguments:    addr        - start address
+  Arguments:    camera      - one of CameraSelect
+                addr        - start address
                 bufp        - buffer to read
                 length      - length of bufp
                 callback    - 非同期処理が完了した再に呼び出す関数を指定
@@ -251,7 +264,7 @@ CAMERAResult CAMERA_WriteRegisters(u8 addr, const u8* bufp, size_t length)
 
   Returns:      CAMERAResult
  *---------------------------------------------------------------------------*/
-CAMERAResult CAMERA_ReadRegistersAsync(u8 addr, u8* bufp, size_t length, CAMERACallback callback, void *arg)
+CAMERAResult CAMERA_ReadRegistersAsync(CameraSelect camera, u8 addr, u8* bufp, size_t length, CAMERACallback callback, void *arg)
 {
     const CAMERAPxiCommand  command = CAMERA_PXI_COMMAND_READ_REGISTERS;
     const u8                size    = CAMERA_PXI_SIZE_READ_REGISTERS;
@@ -262,7 +275,11 @@ CAMERAResult CAMERA_ReadRegistersAsync(u8 addr, u8* bufp, size_t length, CAMERAC
     SDK_NULL_ASSERT(bufp);
     SDK_NULL_ASSERT(callback);
 
-    if (length + 2 > CAMERA_PXI_DATA_SIZE_MAX)
+    if (CAMERA_SELECT_NONE == camera)
+    {
+        return CAMERA_RESULT_ILLEGAL_PARAMETER;
+    }
+    if (length + 1 > CAMERA_PXI_DATA_SIZE_MAX)
     {
         return CAMERA_RESULT_ILLEGAL_PARAMETER; // too long
     }
@@ -280,8 +297,9 @@ CAMERAResult CAMERA_ReadRegistersAsync(u8 addr, u8* bufp, size_t length, CAMERAC
     cameraWork.callbackArg = arg;
 
     // データ作成
-    data[0] = addr;
-    data[1] = (u8)length;
+    data[0] = (u8)camera;
+    data[1] = addr;
+    data[2] = (u8)length;
 
     // 引数保存
     cameraWork.data = bufp;
@@ -308,13 +326,16 @@ CAMERAResult CAMERA_ReadRegistersAsync(u8 addr, u8* bufp, size_t length, CAMERAC
   Description:  set CAMERA key normally
                 sync version.
 
-  Arguments:    pKey        - pointer to key data
+  Arguments:    camera      - one of CameraSelect
+                addr        - start address
+                bufp        - buffer to read
+                length      - length of bufp
 
   Returns:      CAMERAResult
  *---------------------------------------------------------------------------*/
-CAMERAResult CAMERA_ReadRegisters(u8 addr, u8* bufp, size_t length)
+CAMERAResult CAMERA_ReadRegisters(CameraSelect camera, u8 addr, u8* bufp, size_t length)
 {
-    cameraWork.result = CAMERA_ReadRegistersAsync(addr, bufp, length, CameraSyncCallback, 0);
+    cameraWork.result = CAMERA_ReadRegistersAsync(camera, addr, bufp, length, CameraSyncCallback, 0);
     if (cameraWork.result == CAMERA_RESULT_SUCCESS)
     {
         CameraWaitBusy();
@@ -327,7 +348,8 @@ CAMERAResult CAMERA_ReadRegisters(u8 addr, u8* bufp, size_t length)
 
   Description:  set register as reg = (reg & ~mask) | (bits & mask);
 
-  Arguments:    addr        - address to access
+  Arguments:    camera      - one of CameraSelect
+                addr        - address to access
                 bits        - bits to set
                 mask        - mask to touch
                 callback    - 非同期処理が完了した再に呼び出す関数を指定
@@ -335,7 +357,7 @@ CAMERAResult CAMERA_ReadRegisters(u8 addr, u8* bufp, size_t length)
 
   Returns:      CAMERAResult
  *---------------------------------------------------------------------------*/
-CAMERAResult CAMERA_SetParamsAsync(u8 addr, u8 bits, u8 mask, CAMERACallback callback, void *arg)
+CAMERAResult CAMERA_SetParamsAsync(CameraSelect camera, u8 addr, u8 bits, u8 mask, CAMERACallback callback, void *arg)
 {
     const CAMERAPxiCommand  command = CAMERA_PXI_COMMAND_SET_PARAMS;
     const u8                size    = CAMERA_PXI_SIZE_SET_PARAMS;
@@ -344,6 +366,11 @@ CAMERAResult CAMERA_SetParamsAsync(u8 addr, u8 bits, u8 mask, CAMERACallback cal
     int i;
 
     SDK_NULL_ASSERT(callback);
+
+    if (CAMERA_SELECT_NONE == camera)
+    {
+        return CAMERA_RESULT_ILLEGAL_PARAMETER;
+    }
 
     enabled = OS_DisableInterrupts();
     if (cameraWork.lock)
@@ -358,9 +385,10 @@ CAMERAResult CAMERA_SetParamsAsync(u8 addr, u8 bits, u8 mask, CAMERACallback cal
     cameraWork.callbackArg = arg;
 
     // データ作成
-    data[0] = addr;
-    data[1] = bits;
-    data[2] = mask;
+    data[0] = (u8)camera;
+    data[1] = addr;
+    data[2] = bits;
+    data[3] = mask;
 
     // コマンド送信
     if (CameraSendPxiCommand(command, size, data[0]) == FALSE)
@@ -382,15 +410,16 @@ CAMERAResult CAMERA_SetParamsAsync(u8 addr, u8 bits, u8 mask, CAMERACallback cal
 
   Description:  set register as reg = (reg & ~mask) | (bits & mask);
 
-  Arguments:    addr        - address to access
+  Arguments:    camera      - one of CameraSelect
+                addr        - address to access
                 bits        - bits to set
                 mask        - mask to touch
 
   Returns:      CAMERAResult
  *---------------------------------------------------------------------------*/
-CAMERAResult CAMERA_SetParams(u8 addr, u8 bits, u8 mask)
+CAMERAResult CAMERA_SetParams(CameraSelect camera, u8 addr, u8 bits, u8 mask)
 {
-    cameraWork.result = CAMERA_SetParamsAsync(addr, bits, mask, CameraSyncCallback, 0);
+    cameraWork.result = CAMERA_SetParamsAsync(camera, addr, bits, mask, CameraSyncCallback, 0);
     if (cameraWork.result == CAMERA_RESULT_SUCCESS)
     {
         CameraWaitBusy();
@@ -403,14 +432,15 @@ CAMERAResult CAMERA_SetParams(u8 addr, u8 bits, u8 mask)
 
   Description:  set register as reg |= bits;
 
-  Arguments:    addr        - address to access
+  Arguments:    camera      - one of CameraSelect
+                addr        - address to access
                 bits        - bits to set
                 callback    - 非同期処理が完了した再に呼び出す関数を指定
                 arg         - コールバック関数の呼び出し時の引数を指定。
 
   Returns:      CAMERAResult
  *---------------------------------------------------------------------------*/
-CAMERAResult CAMERA_SetFlagsAsync(u8 addr, u8 bits, CAMERACallback callback, void *arg)
+CAMERAResult CAMERA_SetFlagsAsync(CameraSelect camera, u8 addr, u8 bits, CAMERACallback callback, void *arg)
 {
     const CAMERAPxiCommand  command = CAMERA_PXI_COMMAND_SET_FLAGS;
     const u8                size    = CAMERA_PXI_SIZE_SET_FLAGS;
@@ -419,6 +449,11 @@ CAMERAResult CAMERA_SetFlagsAsync(u8 addr, u8 bits, CAMERACallback callback, voi
     int i;
 
     SDK_NULL_ASSERT(callback);
+
+    if (CAMERA_SELECT_NONE == camera)
+    {
+        return CAMERA_RESULT_ILLEGAL_PARAMETER;
+    }
 
     enabled = OS_DisableInterrupts();
     if (cameraWork.lock)
@@ -433,8 +468,9 @@ CAMERAResult CAMERA_SetFlagsAsync(u8 addr, u8 bits, CAMERACallback callback, voi
     cameraWork.callbackArg = arg;
 
     // データ作成
-    data[0] = addr;
-    data[1] = bits;
+    data[0] = (u8)camera;
+    data[1] = addr;
+    data[2] = bits;
 
     // コマンド送信
     if (CameraSendPxiCommand(command, size, data[0]) == FALSE)
@@ -456,14 +492,15 @@ CAMERAResult CAMERA_SetFlagsAsync(u8 addr, u8 bits, CAMERACallback callback, voi
 
   Description:  set register as reg |= bits;
 
-  Arguments:    addr        - address to access
+  Arguments:    camera      - one of CameraSelect
+                addr        - address to access
                 bits        - bits to set
 
   Returns:      CAMERAResult
  *---------------------------------------------------------------------------*/
-CAMERAResult CAMERA_SetFlags(u8 addr, u8 bits)
+CAMERAResult CAMERA_SetFlags(CameraSelect camera, u8 addr, u8 bits)
 {
-    cameraWork.result = CAMERA_SetFlagsAsync(addr, bits, CameraSyncCallback, 0);
+    cameraWork.result = CAMERA_SetFlagsAsync(camera, addr, bits, CameraSyncCallback, 0);
     if (cameraWork.result == CAMERA_RESULT_SUCCESS)
     {
         CameraWaitBusy();
@@ -476,14 +513,15 @@ CAMERAResult CAMERA_SetFlags(u8 addr, u8 bits)
 
   Description:  set register as reg &= ~bits;
 
-  Arguments:    addr        - address to access
+  Arguments:    camera      - one of CameraSelect
+                addr        - address to access
                 bits        - bits to clear
                 callback    - 非同期処理が完了した再に呼び出す関数を指定
                 arg         - コールバック関数の呼び出し時の引数を指定。
 
   Returns:      CAMERAResult
  *---------------------------------------------------------------------------*/
-CAMERAResult CAMERA_ClearFlagsAsync(u8 addr, u8 bits, CAMERACallback callback, void *arg)
+CAMERAResult CAMERA_ClearFlagsAsync(CameraSelect camera, u8 addr, u8 bits, CAMERACallback callback, void *arg)
 {
     const CAMERAPxiCommand  command = CAMERA_PXI_COMMAND_CLEAR_FLAGS;
     const u8                size    = CAMERA_PXI_SIZE_CLEAR_FLAGS;
@@ -492,6 +530,11 @@ CAMERAResult CAMERA_ClearFlagsAsync(u8 addr, u8 bits, CAMERACallback callback, v
     int i;
 
     SDK_NULL_ASSERT(callback);
+
+    if (CAMERA_SELECT_NONE == camera)
+    {
+        return CAMERA_RESULT_ILLEGAL_PARAMETER;
+    }
 
     enabled = OS_DisableInterrupts();
     if (cameraWork.lock)
@@ -506,8 +549,9 @@ CAMERAResult CAMERA_ClearFlagsAsync(u8 addr, u8 bits, CAMERACallback callback, v
     cameraWork.callbackArg = arg;
 
     // データ作成
-    data[0] = addr;
-    data[1] = bits;
+    data[0] = (u8)camera;
+    data[1] = addr;
+    data[2] = bits;
 
     // コマンド送信
     if (CameraSendPxiCommand(command, size, data[0]) == FALSE)
@@ -529,14 +573,15 @@ CAMERAResult CAMERA_ClearFlagsAsync(u8 addr, u8 bits, CAMERACallback callback, v
 
   Description:  set register as reg &= ~bits;
 
-  Arguments:    addr        - address to access
+  Arguments:    camera      - one of CameraSelect
+                addr        - address to access
                 bits        - bits to set
 
   Returns:      CAMERAResult
  *---------------------------------------------------------------------------*/
-CAMERAResult CAMERA_ClearFlags(u8 addr, u8 bits)
+CAMERAResult CAMERA_ClearFlags(CameraSelect camera, u8 addr, u8 bits)
 {
-    cameraWork.result = CAMERA_ClearFlagsAsync(addr, bits, CameraSyncCallback, 0);
+    cameraWork.result = CAMERA_ClearFlagsAsync(camera, addr, bits, CameraSyncCallback, 0);
     if (cameraWork.result == CAMERA_RESULT_SUCCESS)
     {
         CameraWaitBusy();
@@ -550,18 +595,24 @@ CAMERAResult CAMERA_ClearFlags(u8 addr, u8 bits)
   Description:  initialize camera registers via I2C
                 async version.
 
-  Arguments:    callback    - 非同期処理が完了した再に呼び出す関数を指定
+  Arguments:    camera      - one of CameraSelect
+                callback    - 非同期処理が完了した再に呼び出す関数を指定
                 arg         - コールバック関数の呼び出し時の引数を指定。
 
   Returns:      CAMERAResult
  *---------------------------------------------------------------------------*/
-CAMERAResult CAMERA_I2CInitAsync(CAMERACallback callback, void *arg)
+CAMERAResult CAMERA_I2CInitAsync(CameraSelect camera, CAMERACallback callback, void *arg)
 {
     const CAMERAPxiCommand  command = CAMERA_PXI_COMMAND_I2C_INIT;
     const u8                size    = CAMERA_PXI_SIZE_I2C_INIT;
     OSIntrMode enabled;
 
     SDK_NULL_ASSERT(callback);
+
+    if (CAMERA_SELECT_NONE == camera)
+    {
+        return CAMERA_RESULT_ILLEGAL_PARAMETER;
+    }
 
     enabled = OS_DisableInterrupts();
     if (cameraWork.lock)
@@ -575,7 +626,7 @@ CAMERAResult CAMERA_I2CInitAsync(CAMERACallback callback, void *arg)
     cameraWork.callback = callback;
     cameraWork.callbackArg = arg;
 
-    return CameraSendPxiCommand(command, size, 0) ? CAMERA_RESULT_SUCCESS : CAMERA_RESULT_SEND_ERROR;
+    return CameraSendPxiCommand(command, size, (u8)camera) ? CAMERA_RESULT_SUCCESS : CAMERA_RESULT_SEND_ERROR;
 }
 
 /*---------------------------------------------------------------------------*
@@ -584,39 +635,47 @@ CAMERAResult CAMERA_I2CInitAsync(CAMERACallback callback, void *arg)
   Description:  initialize camera registers via I2C
                 sync version.
 
-  Arguments:    None.
+  Arguments:    camera      - one of CameraSelect
 
   Returns:      CAMERAResult
  *---------------------------------------------------------------------------*/
-CAMERAResult CAMERA_I2CInit(void)
+CAMERAResult CAMERA_I2CInit(CameraSelect camera)
 {
-    cameraWork.result = CAMERA_I2CInitAsync(CameraSyncCallback, 0);
+    cameraWork.result = CAMERA_I2CInitAsync(camera, CameraSyncCallback, 0);
     if (cameraWork.result == CAMERA_RESULT_SUCCESS)
     {
         CameraWaitBusy();
     }
     return cameraWork.result;
 }
-
+#if 0
 /*---------------------------------------------------------------------------*
   Name:         CAMERA_I2CPresetAsync
 
   Description:  set camera registers with specified preset via I2C
                 async version
 
-  Arguments:    preset      - preset type
+  Arguments:    camera      - one of CameraSelect
+                preset      - preset type
                 callback    - 非同期処理が完了した再に呼び出す関数を指定
                 arg         - コールバック関数の呼び出し時の引数を指定。
 
   Returns:      CAMERAResult
  *---------------------------------------------------------------------------*/
-CAMERAResult CAMERA_I2CPresetAsync(CameraPreset preset, CAMERACallback callback, void *arg)
+CAMERAResult CAMERA_I2CPresetAsync(CameraSelect camera, CameraPreset preset, CAMERACallback callback, void *arg)
 {
     const CAMERAPxiCommand  command = CAMERA_PXI_COMMAND_I2C_PRESET;
     const u8                size    = CAMERA_PXI_SIZE_I2C_PRESET;
     OSIntrMode enabled;
+    u8  data[size];
+    int i;
 
     SDK_NULL_ASSERT(callback);
+
+    if (CAMERA_SELECT_NONE == camera)
+    {
+        return CAMERA_RESULT_ILLEGAL_PARAMETER;
+    }
 
     enabled = OS_DisableInterrupts();
     if (cameraWork.lock)
@@ -630,7 +689,23 @@ CAMERAResult CAMERA_I2CPresetAsync(CameraPreset preset, CAMERACallback callback,
     cameraWork.callback = callback;
     cameraWork.callbackArg = arg;
 
-    return CameraSendPxiCommand(command, size, (u8)preset) ? CAMERA_RESULT_SUCCESS : CAMERA_RESULT_SEND_ERROR;
+    // データ作成
+    data[0] = (u8)camera;
+    data[1] = (u8)preset;
+
+    // コマンド送信
+    if (CameraSendPxiCommand(command, size, data[0]) == FALSE)
+    {
+        return CAMERA_RESULT_SEND_ERROR;
+    }
+    for (i = 1; i < size; i+=3) {
+        if (CameraSendPxiData(&data[i]) == FALSE)
+        {
+            return CAMERA_RESULT_SEND_ERROR;
+        }
+    }
+
+    return CAMERA_RESULT_SUCCESS;
 }
 
 /*---------------------------------------------------------------------------*
@@ -639,20 +714,21 @@ CAMERAResult CAMERA_I2CPresetAsync(CameraPreset preset, CAMERACallback callback,
   Description:  set camera registers with specified preset via I2C
                 sync version.
 
-  Arguments:    preset      - preset type
+  Arguments:    camera      - one of CameraSelect
+                preset      - preset type
 
   Returns:      CAMERAResult
  *---------------------------------------------------------------------------*/
-CAMERAResult CAMERA_I2CPreset(CameraPreset preset)
+CAMERAResult CAMERA_I2CPreset(CameraSelect camera, CameraPreset preset)
 {
-    cameraWork.result = CAMERA_I2CPresetAsync(preset, CameraSyncCallback, 0);
+    cameraWork.result = CAMERA_I2CPresetAsync(camera, preset, CameraSyncCallback, 0);
     if (cameraWork.result == CAMERA_RESULT_SUCCESS)
     {
         CameraWaitBusy();
     }
     return cameraWork.result;
 }
-
+#endif
 /*---------------------------------------------------------------------------*
   Name:         CAMERA_I2CPreSleepAsync
 
@@ -767,7 +843,8 @@ CAMERAResult CAMERA_I2CPostSleep(void)
 
   Description:  set offset and size
 
-  Arguments:    x_off       - x offset to start capturing
+  Arguments:    camera      - one of CameraSelect
+                x_off       - x offset to start capturing
                 y_off       - y offset to start capturing
                 width       - width of image
                 height      - height of image
@@ -776,7 +853,7 @@ CAMERAResult CAMERA_I2CPostSleep(void)
 
   Returns:      CAMERAResult
  *---------------------------------------------------------------------------*/
-CAMERAResult CAMERA_SetCroppingAsync(u16 x_off, u16 y_off, u16 width, u16 height, CAMERACallback callback, void *arg)
+CAMERAResult CAMERA_SetCroppingAsync(CameraSelect camera, u16 x_off, u16 y_off, u16 width, u16 height, CAMERACallback callback, void *arg)
 {
     const CAMERAPxiCommand  command = CAMERA_PXI_COMMAND_I2C_SET_CROPPING;
     const u8                size    = CAMERA_PXI_SIZE_I2C_SET_CROPPING;
@@ -785,6 +862,11 @@ CAMERAResult CAMERA_SetCroppingAsync(u16 x_off, u16 y_off, u16 width, u16 height
     int i;
 
     SDK_NULL_ASSERT(callback);
+
+    if (CAMERA_SELECT_NONE == camera)
+    {
+        return CAMERA_RESULT_ILLEGAL_PARAMETER;
+    }
 
     enabled = OS_DisableInterrupts();
     if (cameraWork.lock)
@@ -799,10 +881,11 @@ CAMERAResult CAMERA_SetCroppingAsync(u16 x_off, u16 y_off, u16 width, u16 height
     cameraWork.callbackArg = arg;
 
     // データ作成
-    CAMERA_PACK_U16(&data[0], &x_off);
-    CAMERA_PACK_U16(&data[2], &y_off);
-    CAMERA_PACK_U16(&data[4], &width);
-    CAMERA_PACK_U16(&data[6], &height);
+    data[0] = (u8)camera;
+    CAMERA_PACK_U16(&data[1], &x_off);
+    CAMERA_PACK_U16(&data[3], &y_off);
+    CAMERA_PACK_U16(&data[5], &width);
+    CAMERA_PACK_U16(&data[7], &height);
 
     // コマンド送信
     if (CameraSendPxiCommand(command, size, data[0]) == FALSE)
@@ -824,16 +907,17 @@ CAMERAResult CAMERA_SetCroppingAsync(u16 x_off, u16 y_off, u16 width, u16 height
 
   Description:  set offset and size
 
-  Arguments:    x_off       - x offset to start capturing
+  Arguments:    camera      - one of CameraSelect
+                x_off       - x offset to start capturing
                 y_off       - y offset to start capturing
                 width       - width of image
                 height      - height of image
 
   Returns:      CAMERAResult
  *---------------------------------------------------------------------------*/
-CAMERAResult CAMERA_SetCropping(u16 x_off, u16 y_off, u16 width, u16 height)
+CAMERAResult CAMERA_SetCropping(CameraSelect camera, u16 x_off, u16 y_off, u16 width, u16 height)
 {
-    cameraWork.result = CAMERA_SetCroppingAsync(x_off, y_off, width, height, CameraSyncCallback, 0);
+    cameraWork.result = CAMERA_SetCroppingAsync(camera, x_off, y_off, width, height, CameraSyncCallback, 0);
     if (cameraWork.result == CAMERA_RESULT_SUCCESS)
     {
         CameraWaitBusy();
