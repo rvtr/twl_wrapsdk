@@ -55,6 +55,13 @@ void TwlSpMain(void)
     // ヒープ領域設定
     heapHandle = InitializeAllocateSystem();
 
+    // 割込み許可
+    (void)OS_SetIrqFunction(OS_IE_V_BLANK, VBlankIntr);
+    (void)OS_EnableIrqMask(OS_IE_V_BLANK);
+    (void)GX_VBlankIntr(TRUE);
+    (void)OS_EnableIrq();
+    (void)OS_EnableInterrupts();
+
     // サウンド初期化
     SND_Init(THREAD_PRIO_SND);
 
@@ -72,13 +79,6 @@ void TwlSpMain(void)
 
     // ボタン入力サーチ初期化
     (void)PAD_InitXYButton();
-
-    // 割込み許可
-    (void)OS_SetIrqFunction(OS_IE_V_BLANK, VBlankIntr);
-    (void)OS_EnableIrqMask(OS_IE_V_BLANK);
-    (void)GX_VBlankIntr(TRUE);
-    (void)OS_EnableIrq();
-    (void)OS_EnableInterrupts();
 
     // SPI初期化
     SPI_Init(THREAD_PRIO_SPI);

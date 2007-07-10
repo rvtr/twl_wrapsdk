@@ -18,8 +18,6 @@
 
 #include "pm_pmic.h"
 
-#define OS_Sleep(msec)  OS_SpinWait(((msec)*(HW_CPU_CLOCK/1000))&~3)
-
 //#define MEASUREMENT_BY_TICK
 #ifdef  MEASUREMENT_BY_TICK
 #include <twl/vlink.h>
