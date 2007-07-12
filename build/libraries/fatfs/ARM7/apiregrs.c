@@ -702,7 +702,7 @@ word i,j, *wbuff;
 }
 
 
-#define FOUR_GIG_BLOCKS 0x80000
+#define FOUR_GIG_BLOCKS 0x800000 //ctr modified
 #define ONE_MEG (dword) 0x100000
 #define ONE_MEG_SHY (0x100000-512)
 #define FILL_TEST_HIT_WRAP 0
@@ -728,7 +728,7 @@ ERTFS_STAT stat_buff;
     }
 
     /*nfree =*/ pc_free(test_drive, &blocks_total, &blocks_free);
-    if (blocks_free <  0x80000) /* Not enough space to do long test */
+    if (blocks_free <  (RTFS_MAX_FILE_SIZE/0x200)) /* Not enough space to do long test */ //ctr modified
         return(TRUE);
 #if (VERBOSE)
     RTFS_PRINT_STRING_1(USTRING_RTFSDEM_17,PRFLG_NL); /* "Performing Large 4GIG File io test" */
