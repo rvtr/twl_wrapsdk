@@ -746,7 +746,7 @@ PRINTDEBUG( "SD_INFO1_MASK : 0x%x\n", (*(vu32 *)(SD_IP_BASE + 0x20)));*/
         return SDCARD_ErrStatus;
     }
 
-#if SCR_ON
+#if (SCR_ON == 1)
     SD_SelectBitWidth(FALSE);                /* CMD55->ACMD6 ビット幅の選択 1bit */
 
     /* ACMD51 発行 SD configuration register (SCR) */
@@ -1453,9 +1453,6 @@ static void    SDCARD_Timer_irq(void* arg)
     u16 tmp;
     
     PRINTDEBUG( ">>>Timer intr(Timeout)\n");
-
-    SDCARD_ErrStatus |= SDMC_ERR_FPGA_TIMEOUT;    /* タイムアウトエラービットの設定 */
-
     tmp = SD_INFO1;
     PRINTDEBUG( "SD_INFO1      : 0x%x\n", tmp);
     tmp = SD_INFO1_MASK;
@@ -1473,8 +1470,9 @@ static void    SDCARD_Timer_irq(void* arg)
     tmp = SD_SECCNT;
     PRINTDEBUG( "SD_SECCNT     : 0x%x\n", tmp);
 #endif
-    
-    
+  
+    SDCARD_ErrStatus |= SDMC_ERR_FPGA_TIMEOUT;    /* タイムアウトエラービットの設定 */
+
     if(SDCARD_EndFlag == FALSE){                    /* 転送処理完了フラグの確認（クリア？）*/
         SDCARD_EndFlag = TRUE;                      /* 転送処理完了フラグをセット */
     /*    SD_TransEndFPGA();    */                  /* カード転送の終了処理 */
@@ -1548,7 +1546,7 @@ static u16 i_sdmcSendSCR(void)
     SDCARD_EndFlag = FALSE;                  /* 転送処理完了フラグクリア */
     SDCARD_ErrStatus = SDMC_NORMAL;          /* エラーステータスのクリア */
 
-#if SCR_ON
+#if (SCR_ON == 1)
     thread_flag = TRUE;
     SD_SendSCR();                            /*    SCRの取得コマンド発行 */
     PRINTDEBUG( "==Slp Tsk==\n");
@@ -2036,7 +2034,7 @@ static SDMC_ERR_CODE SDCARDi_Write( const void* buf,u32 bufsize,u32 offset,void(
         return SDMC_ERR_PARAM;    /* コマンドパラメータエラー */
     }
 
-#if WP_ena
+#if (WP_ena == 1)
     if( i_sdmcCheckWP()) {
         return SDMC_ERR_WP;       /*** ライトプロテクトのチェック    ***/
     }
@@ -2053,7 +2051,7 @@ static SDMC_ERR_CODE SDCARDi_Write( const void* buf,u32 bufsize,u32 offset,void(
         SDCARD_EndFlag = FALSE;                    /* 転送処理完了フラグクリア */
         SDCARD_ErrStatus = SDMC_NORMAL;            /* エラーステータスのクリア */
 
-#if TIMEOUT
+#if (TIMEOUT == 1)
         SDCARD_TimerStart(SDCARD_RW_TIMEOUT);      /* タイムアウト判定用タイマスタート(4000msec) */
 #endif
 
@@ -2167,7 +2165,7 @@ static u16 i_sdmcGetResid(u32 *pResid)
         return SDCARD_ErrStatus;
     }
 
-#if TIMEOUT
+#if (TIMEOUT == 1)
     SDCARD_TimerStart(SDCARD_RW_TIMEOUT);              /* タイムアウト判定用タイマスタート(4000msec) */
 #endif
 
