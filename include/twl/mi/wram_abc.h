@@ -155,12 +155,12 @@ MIImageWramC;
 #endif // TWL_PLATFORM_TS
 
 
-#define REG_WRAM_A_BNK_PACK( b_no, master, ofs, enable )  REG_WRAM_BNK_PACK( A, b_no, (master), (ofs), (enable) )
-#define REG_WRAM_B_BNK_PACK( b_no, master, ofs, enable )  REG_WRAM_BNK_PACK( B, b_no, (master), (ofs), (enable) )
-#define REG_WRAM_C_BNK_PACK( b_no, master, ofs, enable )  REG_WRAM_BNK_PACK( C, b_no, (master), (ofs), (enable) )
-#define REG_WRAM_BNK_PACK( abc, b_no, master, ofs, enable ) \
+#define REG_WRAM_A_BNK_PACK( b_no, master, ofs, enable )  REG_WRAM_BNK_PACK( (master), (ofs), (enable) )
+#define REG_WRAM_B_BNK_PACK( b_no, master, ofs, enable )  REG_WRAM_BNK_PACK( (master), (ofs), (enable) )
+#define REG_WRAM_C_BNK_PACK( b_no, master, ofs, enable )  REG_WRAM_BNK_PACK( (master), (ofs), (enable) )
+#define REG_WRAM_BNK_PACK( master, ofs, enable ) \
 ( \
-    (((enable) != FALSE) * REG_MI_WRAM_##abc##b_no##_E_MASK) \
+    (((enable) != FALSE) * REG_MI_WRAM_A0_E_MASK) \
   | (ofs) \
   | (master) \
 )
