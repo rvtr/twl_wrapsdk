@@ -312,7 +312,7 @@ u16 ELi_LoadObject( ELHandle* ElfHandle, void* obj_offset, void* buf)
             ELi_GetShdr( ElfHandle, i, &(CurrentShdrEx->Shdr));
             CurrentShdrEx->debug_flag = 0;
             shdr_table[i] = section_num;                 /*セクション新旧テーブル作成*/
-            //printf( "shdr_table[0x%x] = 0x%x\n", i, section_num);
+//            printf( "shdr_table[0x%x] = 0x%x\n", i, section_num);
             section_num++;
             /*セクション文字列を取得しておく*/
             CurrentShdrEx->str = (char*)malloc( 128);    //128文字バッファ取得
@@ -511,17 +511,19 @@ u16 ELi_LoadObject( ELHandle* ElfHandle, void* obj_offset, void* buf)
                 CurrentShdrEx->Shdr.sh_offset = (CurrentShdrEx->loaded_adr - (u32)buf);
             }
             /*セクションヘッダをstripped elfイメージへコピー*/
-            CurrentShdrEx->Shdr.sh_link = shdr_table[CurrentShdrEx->Shdr.sh_link]; //セクション番号更新
+            CurrentShdrEx->Shdr.sh_info = shdr_table[CurrentShdrEx->Shdr.sh_info]; //セクション番号更新
             if( CurrentShdrEx->Shdr.sh_type == SHT_SYMTAB) {
                 /*シンボルテーブルのsh_typeはシンボルエントリのインデックスを表す*/
+              //SYMTABの場合は406行目～で既にsh_linkを変換済みなのでここでは必要なし
             }else{
-                CurrentShdrEx->Shdr.sh_info = shdr_table[CurrentShdrEx->Shdr.sh_info]; //セクション番号更新
+                CurrentShdrEx->Shdr.sh_link = shdr_table[CurrentShdrEx->Shdr.sh_link]; //セクション番号更新
             }
             memcpy( (u8*)tmp_buf, &(CurrentShdrEx->Shdr), 
                     sizeof( Elf32_Shdr));
             section_num++;                        /*セクション数更新*/
         }
     }
+
     // コピー終了後
     ElfHandle->process = EL_COPIED;
     /*------------------------------------------------------------*/
