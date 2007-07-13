@@ -52,22 +52,22 @@ u16        unresolved_table_block_flag = 0;
 
 int main(int argc, char *argv[])
 {
-    int         i, j, k;
-    int         n;
-    int         narg;
-    int         t;
+    int         i;
+//    int         n;
+//    int         narg;
+//    int         t;
     FILE        *FHp;
-    u32         *elfbuf;
+//    u32         *elfbuf;
     u32*        newelfbuf;
     u32         elfsize;
-    u32         mainp_malloc_size, subp_malloc_size;
-    size_t      filesize;
+//    u32         mainp_malloc_size, subp_malloc_size;
+//    size_t      filesize;
     ELHandle    ElfH;
-    u32         loadstart, loadend, loadsize, ramadr;
-    u32         entry_address, ram_address;
-    u32         sub_loadstart, sub_loadend, sub_loadsize, sub_ramadr;
-    u32         sub_entry_address, sub_ram_address;;
-    u32         header_buf[DS_ROM_HEADER_SIZE/4];
+//    u32         loadstart, loadend, loadsize, ramadr;
+//    u32         entry_address, ram_address;
+//    u32         sub_loadstart, sub_loadend, sub_loadsize, sub_ramadr;
+//    u32         sub_entry_address, sub_ram_address;;
+//    u32         header_buf[DS_ROM_HEADER_SIZE/4];
     char*       elf_filename;
     u32         elf_namesize;
     char*       slash_pointer;
@@ -122,7 +122,7 @@ int main(int argc, char *argv[])
     fseek( FHp, 0, SEEK_SET);
     newelfbuf = (u32*)malloc( elfsize);
     
-    printf( "input elf size    = 0x%x\n", elfsize);
+    printf( "input elf size    = 0x%x\n", (int)elfsize);
     
     EL_InitHandle( &ElfH);
     result = EL_LoadLibraryfromFile( &ElfH,  FHp, newelfbuf);
@@ -163,7 +163,7 @@ int main(int argc, char *argv[])
         exit( 1);
     }
 
-    printf( "stripped elf size = 0x%x\n", ElfH.newelf_size);
+    printf( "stripped elf size = 0x%x\n", (int)(ElfH.newelf_size));
     fwrite( newelfbuf, 1, ElfH.newelf_size, NewElfFilep);
     
     fclose( NewElfFilep);

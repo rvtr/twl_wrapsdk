@@ -199,15 +199,17 @@ u16 ELi_LoadLibrary( ELHandle* ElfHandle, void* obj_image, u32 obj_len, void* bu
         newarch_size += 8;
         
 
-        ElfHandle->buf_current = new_image_pointer;
+        ElfHandle->buf_current = (void*)new_image_pointer;
         while( image_pointer < obj_len) {
+            ElfHandle->ELi_ReadStub( &ArHdr, ElfHandle->FileStruct, (u32)(obj_image), image_pointer, arch_size);
             ElfHandle->ELi_ReadStub( OBJMAG, ElfHandle->FileStruct, (u32)(obj_image), (image_pointer+arch_size), 4);    /*OBJの文字列を取得*/
             if( strncmp( OBJMAG, ELFMAG, 4) == 0) {
                 elf_num++;
-                ElfHandle->ELi_ReadStub( new_image_pointer, ElfHandle->FileStruct, (u32)(obj_image),
-                                         image_pointer, arch_size); //arヘッダをstripped elfにコピー
+
+                memcpy( (void*)new_image_pointer, (const void*)&ArHdr, arch_size); //arヘッダをstripped elfにコピー
+
                 result = ELi_LoadObject( ElfHandle, (void*)(image_pointer+arch_size),
-                                         new_image_pointer + arch_size);
+                                         (void*)(new_image_pointer + arch_size));
 //                                         (ElfHandle->buf_current + arch_size));
 
                 ELi_SetDecSize( (char*)(((ArchHdr*)new_image_pointer)->ar_size), ElfHandle->newelf_size); //archヘッダのサイズ更新
@@ -222,14 +224,17 @@ u16 ELi_LoadLibrary( ELHandle* ElfHandle, void* obj_image, u32 obj_len, void* bu
                 ElfHandle->SymEx = NULL;
                 ElfHandle->process = EL_INITIALIZED;    /*フラグの設定*/
             }else{
-                ElfHandle->ELi_ReadStub( new_image_pointer, ElfHandle->FileStruct, (u32)(obj_image),
-                                         image_pointer, arch_size+AR_GetEntrySize( &ArHdr)); //arヘッダとエントリをstripped elfにコピー
+                memcpy( (void*)new_image_pointer, (const void*)&ArHdr, arch_size); //arヘッダをstripped elfにコピー
+
+                /*arヘッダの次（エントリ本体）をstripped elfにコピー*/
+                ElfHandle->ELi_ReadStub( (void*)(new_image_pointer+arch_size), ElfHandle->FileStruct,
+                                         (u32)(obj_image),
+                                         (image_pointer+arch_size), AR_GetEntrySize( &ArHdr));
 
                 new_image_pointer += (AR_GetEntrySize( &ArHdr) + arch_size);
                 newarch_size += (AR_GetEntrySize( &ArHdr) + arch_size);
             }
             /*次のエントリへ*/
-            ElfHandle->ELi_ReadStub( &ArHdr, ElfHandle->FileStruct, (u32)(obj_image), image_pointer, arch_size);
             image_pointer += arch_size + AR_GetEntrySize( &ArHdr);
         }
         ElfHandle->newelf_size = newarch_size;
@@ -258,20 +263,19 @@ u16 ELi_LoadLibrary( ELHandle* ElfHandle, void* obj_image, u32 obj_len, void* bu
 u16 ELi_LoadObject( ELHandle* ElfHandle, void* obj_offset, void* buf)
 {
     u16         i, j;
-    u32         num_of_entry;
+//    u32         num_of_entry;
     ELShdrEx*   FwdShdrEx;
     ELShdrEx*   CurrentShdrEx;
     ELShdrEx    DmyShdrEx;
-    char        sym_str[128];     //デバッグプリント用
-    u32         offset;           //デバッグプリント用
+//    char        sym_str[128];     //デバッグプリント用
+//    u32         offset;           //デバッグプリント用
     u32         newelf_shoff = 0; //stripped elfイメージへの書き込みポインタ
     u32         buf_shdr;
     u32         section_num = 0;
-    u32         newelf_size;
+//    u32         newelf_size;
     u32         tmp_buf;
     u32         *shdr_table;      //セクションヘッダ新旧番号対応テーブル
-    u32         *sym_table;       //シンボルエントリ新旧番号対応テーブル
-    
+//    u32         *sym_table;       //シンボルエントリ新旧番号対応テーブル
     /* ELHandleの初期化チェック */
     if( ElfHandle->process != EL_INITIALIZED) {
         return EL_FAILED;
@@ -286,13 +290,12 @@ u16 ELi_LoadObject( ELHandle* ElfHandle, void* obj_offset, void* buf)
 
     /* セクションハンドル構築 */
     ElfHandle->elf_offset = obj_offset;
-    ElfHandle->buf_current = (u32)buf + sizeof( Elf32_Ehdr);
+    ElfHandle->buf_current = (void*)((u32)buf + sizeof( Elf32_Ehdr));
     ElfHandle->shentsize = ElfHandle->CurrentEhdr.e_shentsize;
 
     /*セクションヘッダテーブル構築*/
     shdr_table = (u32*)malloc( 4 * ElfHandle->CurrentEhdr.e_shnum);
-
-    
+  
     /*---------- ELShdrExのリストとshdr_tableを作る ----------*/
     CurrentShdrEx = &DmyShdrEx;
     for( i=0; i<(ElfHandle->CurrentEhdr.e_shnum); i++) {
@@ -309,7 +312,7 @@ u16 ELi_LoadObject( ELHandle* ElfHandle, void* obj_offset, void* buf)
             ELi_GetShdr( ElfHandle, i, &(CurrentShdrEx->Shdr));
             CurrentShdrEx->debug_flag = 0;
             shdr_table[i] = section_num;                 /*セクション新旧テーブル作成*/
-//            printf( "shdr_table[0x%x] = 0x%x\n", i, section_num);
+            //printf( "shdr_table[0x%x] = 0x%x\n", i, section_num);
             section_num++;
             /*セクション文字列を取得しておく*/
             CurrentShdrEx->str = (char*)malloc( 128);    //128文字バッファ取得
@@ -322,7 +325,7 @@ u16 ELi_LoadObject( ELHandle* ElfHandle, void* obj_offset, void* buf)
     ElfHandle->ShdrEx = DmyShdrEx.next;
     /*--------------------------------------------------------*/
 
-    
+   
     /*---------- 全セクションを調べてコピーする ----------*/
 //    printf( "\nLoad to RAM:\n");
     for( i=0; i<(ElfHandle->CurrentEhdr.e_shnum); i++) {
@@ -393,17 +396,23 @@ u16 ELi_LoadObject( ELHandle* ElfHandle, void* obj_offset, void* buf)
                         /*---------------------------------*/
                         symbol_num++;
 
-                        CurrentSymEx->Sym.st_shndx = shdr_table[CurrentSymEx->Sym.st_shndx]; //シンボルエントリの対象セクション番号更新
+                        if( (CurrentSymEx->Sym.st_shndx != SHN_UNDEF) &&
+                            (CurrentSymEx->Sym.st_shndx < SHN_LORESERVE)) {
+                            CurrentSymEx->Sym.st_shndx = shdr_table[CurrentSymEx->Sym.st_shndx]; //シンボルエントリの対象セクション番号更新
+                        }
                         CurrentSymEx = CurrentSymEx->next;
                     }/*-------------------------------------*/
                     
                     /*--- シンボルテーブルセクションヘッダの更新 ---*/
-                    CurrentShdrEx->loaded_adr = ELi_CopySymToBuffer( ElfHandle);
-                    CurrentShdrEx->Shdr.sh_link = shdr_table[CurrentShdrEx->Shdr.sh_link]; //文字列セクション番号更新
+                    CurrentShdrEx->loaded_adr = (u32)(ELi_CopySymToBuffer( ElfHandle));
+                    if( (CurrentShdrEx->Shdr.sh_link != SHN_UNDEF) &&
+                        (CurrentShdrEx->Shdr.sh_link < SHN_LORESERVE)) {
+                            CurrentShdrEx->Shdr.sh_link = shdr_table[CurrentShdrEx->Shdr.sh_link]; //文字列セクション番号更新
+                    }
                     CurrentShdrEx->Shdr.sh_size = symbol_num * sizeof( Elf32_Sym);
                     /*----------------------------------------------*/
                 }
-                ELi_FreeSymList( ElfHandle, CurrentShdrEx->sym_table);    //シンボルリスト開放
+                ELi_FreeSymList( ElfHandle, (u32**)(CurrentShdrEx->sym_table));    //シンボルリスト開放
             }
 
 /*            printf( "section %02x relocated at %08x\n",
@@ -478,10 +487,10 @@ u16 ELi_LoadObject( ELHandle* ElfHandle, void* obj_offset, void* buf)
     
     /*ここまででセクションの中身だけがstripped elfにコピーされた*/
 
-    
+  
     /*---------- セクションヘッダを stripped elfにコピー ----------*/
     buf_shdr = ELi_ALIGN( ((u32)(ElfHandle->buf_current)), 4);
-    ElfHandle->buf_current = buf_shdr;
+    ElfHandle->buf_current = (void*)buf_shdr;
 //    printf( "buf_shdr = 0x%x\n", buf_shdr);
 //    printf( "buf = 0x%x\n", (u32)buf);
     
@@ -528,7 +537,7 @@ u16 ELi_LoadObject( ELHandle* ElfHandle, void* obj_offset, void* buf)
     memcpy( (u8*)buf, &(ElfHandle->CurrentEhdr), sizeof( Elf32_Ehdr)); /*ELFヘッダをstripped elfイメージにコピー*/
     /*-----------------------------------*/
 
-    
+
     /*---------- 再配置 ----------*/
 /*    if( unresolved_table_block_flag == 0) {
         if( dbg_print_flag == 1) {
@@ -659,10 +668,10 @@ u16 EL_ResolveAllLibrary( void)
     ELAdrEntry*           AdrEnt;
     ELUnresolvedEntry*    RemoveUnrEnt;
     ELUnresolvedEntry*    UnrEnt;
-    ELUnresolvedEntry*    CurrentUnrEnt;
-    ELUnresolvedEntry*    FwdUnrEnt;
-    u32                   relocation_val;
-    ELAdrEntry            AddAdrEnt;
+//    ELUnresolvedEntry*    CurrentUnrEnt;
+//    ELUnresolvedEntry*    FwdUnrEnt;
+//    u32                   relocation_val;
+//    ELAdrEntry            AddAdrEnt;
     char                  sym_str[128];
 
     UnrEnt = ELUnrEntStart;
@@ -683,7 +692,7 @@ u16 EL_ResolveAllLibrary( void)
     //                ELi_RemoveUnresolvedEntry( UnrEnt);    //解決したので未解決リストから削除
                 }else{
                     if( dbg_print_flag == 1) {
-                        printf( "\n static symbol found %s : %8x\n", UnrEnt->sym_str, UnrEnt->S_);
+                        printf( "\n static symbol found %s : %8x\n", UnrEnt->sym_str, (int)(UnrEnt->S_));
                     }
                     UnrEnt->AdrEnt = AdrEnt;            //見つけたアドレスエントリをセット
                     UnrEnt->remove_flag = 2;            //マーキング（makelstだけで使用する特別な値）
@@ -836,7 +845,7 @@ void* EL_GetGlobalAdr( char* ent_name)
     return (void*)(adr);
 }
 
-
+#if 0
 /*------------------------------------------------------
   アドレステーブルを解放する（アプリケーションが登録したエントリまで削除しようとするのでＮＧ）
  -----------------------------------------------------*/
@@ -858,12 +867,14 @@ void* EL_FreeAdrTbl( void)
     }
     /*------------------------------------*/
 }
+#endif
 
 /*------------------------------------------------------
   ELFオブジェクトからデータを読み出すスタブ
  -----------------------------------------------------*/
 void ELi_ReadFile( void* buf, void* file_struct, u32 file_base, u32 file_offset, u32 size)
 {
+//  printf( "0x%x, 0x%x\n", file_offset, size);
     fseek( file_struct, file_offset, SEEK_SET);
     fread( buf, 1, size, file_struct);
     

@@ -6,7 +6,7 @@
 /*---------------------------------------------------------
  Archive Header
  --------------------------------------------------------*/
-#define  ARMAG   "!<arch>\n"	/* magic string */
+#define  ARMAG   "!<arch>\n"    /* magic string */
 #define  SARMAG  8              /* length of magic string */
 
 #define  ARFMAG       "\`\n"    /* header trailer string */
@@ -22,7 +22,7 @@ typedef struct    /* archive file member header - printable ascii */
     char    ar_mode[8];     /* file member mode - octal */
     char    ar_size[10];    /* file member size - decimal */
     char    ar_fmag[2];     /* ARFMAG - string to end header */
-}ArchHdr;					/* 計60(0x3C)バイト */
+}ArchHdr;                   /* 計60(0x3C)バイト */
 
 
 

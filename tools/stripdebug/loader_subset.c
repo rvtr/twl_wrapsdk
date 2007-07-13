@@ -52,12 +52,12 @@ u32 ELi_ALIGN( u32 addr, u32 align_size)
  -----------------------------------------------------*/
 void* ELi_CopySymStrToBuffer( ELHandle* ElfHandle, ELShdrEx* SymStrShdrEx)
 {
-    u32 load_start, i;
+    u32 load_start;
 
     /*アラインメントをとる*/
     load_start = ELi_ALIGN( ((u32)(ElfHandle->buf_current)), 4);
 
-    memcpy( load_start, SymStrShdrEx->str_table, SymStrShdrEx->str_table_size);
+    memcpy( (void*)load_start, SymStrShdrEx->str_table, SymStrShdrEx->str_table_size);
 
     /*セクションヘッダのサイズ修正*/
     SymStrShdrEx->Shdr.sh_size = SymStrShdrEx->str_table_size;
@@ -87,7 +87,7 @@ void* ELi_CopyShStrToBuffer( ELHandle* ElfHandle, Elf32_Shdr* Shdr)
         if( CurrentShdrEx->debug_flag == 1) {
         }else{
             CurrentShdrEx->Shdr.sh_name = total_size;
-            strcpy( load_start+total_size, CurrentShdrEx->str);
+            strcpy( (void*)(load_start+total_size), CurrentShdrEx->str);
             total_size += (strlen( CurrentShdrEx->str) + 1);
         }
     }
@@ -292,6 +292,7 @@ void ELi_BuildSymList( ELHandle* elElfDesc, u32 symsh_index, u32** sym_table)
         
         /*シンボルエントリをコピー*/
         ELi_GetEntry( elElfDesc, &SymShdr, i, &TestSym);
+
         /*-- デバッグ情報フラグをセット --*/
         CurrentShdrEx = ELi_GetShdrExfromList( elElfDesc->ShdrEx, TestSym.st_shndx);
         if( CurrentShdrEx) {

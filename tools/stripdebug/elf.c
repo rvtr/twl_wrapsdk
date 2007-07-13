@@ -7,9 +7,10 @@
 #include <string.h>
 
 static int endian;
-static BOOL load_strndx_done = FALSE;
+//static BOOL load_strndx_done = FALSE;
 
 
+#if 0
 /*---------------------------------------------------------
  バイトデータを読み出す
  --------------------------------------------------------*/
@@ -23,6 +24,7 @@ static u8 *load_elf32_byte(u8 *dest, u8 *org, int lsb)
     
   return temp_ptr;
 }
+#endif
 
 /*---------------------------------------------------------
  ハーフワードデータを読み出す
@@ -47,6 +49,7 @@ static u8 *load_elf32_half(Elf32_Half *dest, u8 *org, int lsb)
   return (void *)temp_ptr;
 }
 
+#if 0
 /*---------------------------------------------------------
  ワードデータを読み出す
  --------------------------------------------------------*/
@@ -107,6 +110,7 @@ static u8 *load_elf32_word(Elf32_Word *dest, u8 *org, int lsb)
   } 
   return (void *)temp_ptr;
 }
+#endif
 
 /*---------------------------------------------------------
  ELFヘッダを読み出す
@@ -247,7 +251,7 @@ void *ELF_LoadELFHeader(const void *buf, Elf32_Ehdr *ehdr)
 	return file_ptr;
 }
 
-
+#if 0
 /*---------------------------------------------------------
  Relocation Entry Load
  --------------------------------------------------------*/
@@ -335,6 +339,6 @@ static void *ELF_LoadSectionHeader(const void *buf,Elf32_Shdr *shdr)
     
 	return file_ptr;
 }
-
+#endif
 
 

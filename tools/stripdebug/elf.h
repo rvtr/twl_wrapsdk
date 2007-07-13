@@ -6,25 +6,25 @@
 /*---------------------------------------------------------
  型定義
  --------------------------------------------------------*/
-typedef u32 Elf32_Addr;		/* size:4, align:4	Unsigned program address  */
-typedef u16 Elf32_Half;		/* size:2, align:2	Unsigned medium int */
-typedef u32 Elf32_Off;		/* size:4, align:4	Unsigned file offset */
-typedef s32 Elf32_Sword;	/* size:4, align:4	Signed large int */
-typedef u32 Elf32_Word;		/* size:4, align:4	Unsigned large int */
+typedef u32 Elf32_Addr;    /* size:4, align:4  Unsigned program address  */
+typedef u16 Elf32_Half;    /* size:2, align:2  Unsigned medium int */
+typedef u32 Elf32_Off;     /* size:4, align:4  Unsigned file offset */
+typedef s32 Elf32_Sword;   /* size:4, align:4  Signed large int */
+typedef u32 Elf32_Word;    /* size:4, align:4  Unsigned large int */
 
 /*---------------------------------------------------------
  ELF Header
  --------------------------------------------------------*/
 /* e_identのインデックス */
-#define EI_MAG0		0		/* File identification */
-#define EI_MAG1		1		/* File identification */
-#define EI_MAG2		2		/* File identification */
-#define EI_MAG3		3		/* File identification */
-#define EI_CLASS	4		/* File class 0=invalid, 1=32bit, 2=64bit */
-#define EI_DATA		5		/* Data encoding 0=invalid, 1=LSB, 2=MSB */
-#define EI_VERSION	6		/* File version 現在は1 */
-#define EI_PAD		7		/* Start of padding bytes */
-#define EI_NIDENT	16		/* Size of e_ident[] */
+#define EI_MAG0        0    /* File identification */
+#define EI_MAG1        1    /* File identification */
+#define EI_MAG2        2    /* File identification */
+#define EI_MAG3        3    /* File identification */
+#define EI_CLASS       4    /* File class 0=invalid, 1=32bit, 2=64bit */
+#define EI_DATA        5    /* Data encoding 0=invalid, 1=LSB, 2=MSB */
+#define EI_VERSION     6    /* File version 現在は1 */
+#define EI_PAD         7    /* Start of padding bytes */
+#define EI_NIDENT      16   /* Size of e_ident[] */
 
 typedef struct {
   unsigned char e_ident[EI_NIDENT];
@@ -44,29 +44,29 @@ typedef struct {
 } Elf32_Ehdr;
 
 /* e_ident[EI_*]の中身定義 */
-#define ELFMAG0			0x7f
-#define ELFMAG1			'E'
-#define ELFMAG2			'L'
-#define ELFMAG3			'F'
-#define ELFCLASSNONE	0		/* invalid */
-#define ELFCLASS32		1		/* ARM and Thumb processors use 32-bit ELF. */
-#define ELFCLASS64		2
-#define ELFDATANONE		0		/* invalid */
-#define ELFDATA2LSB		1		/* little-endian */
-#define ELFDATA2MSB		2		/* big-endian */
+#define ELFMAG0        0x7f
+#define ELFMAG1        'E'
+#define ELFMAG2        'L'
+#define ELFMAG3        'F'
+#define ELFCLASSNONE   0    /* invalid */
+#define ELFCLASS32     1    /* ARM and Thumb processors use 32-bit ELF. */
+#define ELFCLASS64     2
+#define ELFDATANONE    0    /* invalid */
+#define ELFDATA2LSB    1    /* little-endian */
+#define ELFDATA2MSB    2    /* big-endian */
 
 
 /* [e_type] */
-#define ET_NONE   0			/* No file type */
-#define ET_REL    1			/* Re-locatable file */
-#define ET_EXEC   2			/* Executable file */
-#define ET_DYN    3			/* Shared object file */
-#define ET_CORE   4			/* Core file */
-#define ET_LOPROC 0xff00	/* Processor-specific */
-#define ET_HIPROC 0xffff	/* Processor-specific */
+#define ET_NONE   0        /* No file type */
+#define ET_REL    1        /* Re-locatable file */
+#define ET_EXEC   2        /* Executable file */
+#define ET_DYN    3        /* Shared object file */
+#define ET_CORE   4        /* Core file */
+#define ET_LOPROC 0xff00   /* Processor-specific */
+#define ET_HIPROC 0xffff   /* Processor-specific */
 
 /* [e_machine] */
-#define EM_NONE         0		/* No machine */
+#define EM_NONE         0  /* No machine */
 #define EM_M32          1
 #define EM_SPARC        2
 #define EM_386          3
@@ -75,12 +75,12 @@ typedef struct {
 #define EM_860          7
 #define EM_MIPS         8
 #define EM_MIPS_RS4_BE 10
-#define EM_ARM         40		/* ARM/Thumb Architecture */
+#define EM_ARM         40  /* ARM/Thumb Architecture */
 
 
 /* [e_version] This member identifies the object file version.*/
-#define EV_NONE    0			/* Invalid version */
-#define EV_CURRENT 1			/* Current version */
+#define EV_NONE    0    /* Invalid version */
+#define EV_CURRENT 1    /* Current version */
 
 
 /*
@@ -147,16 +147,16 @@ enum {
  Section headers
  --------------------------------------------------------*/
 typedef struct {
-  Elf32_Word	sh_name;		/*セクションヘッダ文字列テーブルセクションのエントリのインデックス*/
-  Elf32_Word	sh_type;		/* タイプ（下記定義参照） */
-  Elf32_Word	sh_flags;
-  Elf32_Addr	sh_addr;		/*  */
-  Elf32_Off		sh_offset;		/* ファイルの先頭からのオフセット */
-  Elf32_Word	sh_size;		/* バイト単位のサイズ */
-  Elf32_Word	sh_link;		/* sh_typeによって値の意味が変わる */
-  Elf32_Word	sh_info;		/* sh_typeによって値の意味が変わる */
-  Elf32_Word	sh_addralign;	/* アラインメント制限(0or1で制限なし,4で4ByteAlign) */
-  Elf32_Word	sh_entsize;		/* 固定サイズのエントリテーブルがある場合、1要素のサイズ */
+  Elf32_Word    sh_name;        /*セクションヘッダ文字列テーブルセクションのエントリのインデックス*/
+  Elf32_Word    sh_type;        /* タイプ（下記定義参照） */
+  Elf32_Word    sh_flags;
+  Elf32_Addr    sh_addr;        /*  */
+  Elf32_Off     sh_offset;      /* ファイルの先頭からのオフセット */
+  Elf32_Word    sh_size;        /* バイト単位のサイズ */
+  Elf32_Word    sh_link;        /* sh_typeによって値の意味が変わる */
+  Elf32_Word    sh_info;        /* sh_typeによって値の意味が変わる */
+  Elf32_Word    sh_addralign;   /* アラインメント制限(0or1で制限なし,4で4ByteAlign) */
+  Elf32_Word    sh_entsize;     /* 固定サイズのエントリテーブルがある場合、1要素のサイズ */
 } Elf32_Shdr;
 
 /* sh_addr mod sh_addralign = 0 でなければならない */
@@ -191,13 +191,13 @@ typedef struct {
 
 /*セクションインデックス*/
 //Sym->st_shndxなど
-#define	SHN_UNDEF			0
-#define SHN_LORESERVE		0xff00
-#define SHN_LOPROC			0xff00
-#define SHN_HIPROC			0xff1f
-#define SHN_ABS				0xfff1
-#define SHN_COMMON			0xfff2
-#define SHN_HIRESERVE		0xffff
+#define	SHN_UNDEF               0
+#define SHN_LORESERVE           0xff00
+#define SHN_LOPROC              0xff00
+#define SHN_HIPROC              0xff1f
+#define SHN_ABS                 0xfff1
+#define SHN_COMMON              0xfff2
+#define SHN_HIRESERVE           0xffff
 
 
 //ここからはヘッダでなく実体データ構造
@@ -206,12 +206,12 @@ typedef struct {
  Symbol Table Entry
  --------------------------------------------------------*/
 typedef struct {
-  Elf32_Word	st_name;	/* シンボル文字列テーブルのインデックス */
-  Elf32_Addr	st_value;	/* おそらく関連するセクション内でのオフセット値 */
-  Elf32_Word	st_size;	/* サイズがないか、不明な場合は 0 */
-  unsigned char	st_info;	/* バインド と タイプ */
-  unsigned char	st_other;	/* 現在は 0 が入る */
-  Elf32_Half	st_shndx;	/* 関連するセクションヘッダテーブルのインデックス */
+  Elf32_Word    st_name;    /* シンボル文字列テーブルのインデックス */
+  Elf32_Addr    st_value;   /* おそらく関連するセクション内でのオフセット値 */
+  Elf32_Word    st_size;    /* サイズがないか、不明な場合は 0 */
+  unsigned char st_info;    /* バインド と タイプ */
+  unsigned char st_other;   /* 現在は 0 が入る */
+  Elf32_Half    st_shndx;   /* 関連するセクションヘッダテーブルのインデックス */
 } Elf32_Sym;
 
 
@@ -221,21 +221,21 @@ typedef struct {
 #define ELF32_ST_INFO(b,t) (((b)<<4)+((t)&0xf))
 
 /* st_info の BIND */
-#define STB_LOCAL   	0
-#define STB_GLOBAL  	1
-#define STB_WEAK    	2
-#define STB_LOPROC 		13
-#define STB_MW_SPECIFIC 14	/*NITROアプリで出てくる(例:OS_TPrintf)*/
-#define STB_HIPROC 		15
+#define STB_LOCAL       0
+#define STB_GLOBAL      1
+#define STB_WEAK        2
+#define STB_LOPROC      13
+#define STB_MW_SPECIFIC 14    /*NITROアプリで出てくる(例:OS_TPrintf)*/
+#define STB_HIPROC      15
 
 /* st_info の TYPE */
-#define STT_NOTYPE  	0	/*未定義*/
-#define STT_OBJECT  	1	/*データオブジェクト*/
-#define STT_FUNC    	2
-#define STT_SECTION 	3
-#define STT_FILE    	4
-#define STT_LOPROC 		13
-#define STT_HIPROC 		15
+#define STT_NOTYPE      0    /*未定義*/
+#define STT_OBJECT      1    /*データオブジェクト*/
+#define STT_FUNC        2
+#define STT_SECTION     3
+#define STT_FILE        4
+#define STT_LOPROC      13
+#define STT_HIPROC      15
 
 
 /*---------------------------------------------------------
@@ -317,63 +317,63 @@ typedef struct {
 #define R_ARM_RABS32    253 /* Word ΔS + A For the address of a location in the target segment. */
 #define R_ARM_RPC24     254 /* ARM B/BL (ΔS . ΔP) + A For calls between program segments. */
 #define R_ARM_RBASE     255 /* None None.Identifies the segment being relocated by the following 
-			       relocation directives. The ARM EABI poses two problems for relocating 
-			       executables and shared objects encoded in */
+                               relocation directives. The ARM EABI poses two problems for relocating 
+                               executables and shared objects encoded in */
 
 
 // shirait
-#define R_ARM_LDR_PC_G0		4	//LDR
+#define R_ARM_LDR_PC_G0        4    //LDR
 
-#define R_ARM_ABS12			6	//LDR, STR
+#define R_ARM_ABS12            6    //LDR, STR
 
-#define	R_ARM_THM_CALL		10	//R_ARM_THM_PC22と同じ
+#define	R_ARM_THM_CALL         10    //R_ARM_THM_PC22と同じ
 
-#define R_ARM_CALL			28	//BL/BLX
-#define R_ARM_JUMP24		29	//B/BL<cond>
-#define R_ARM_THM_JUMP24	30
+#define R_ARM_CALL             28    //BL/BLX
+#define R_ARM_JUMP24           29    //B/BL<cond>
+#define R_ARM_THM_JUMP24       30
 
-#define R_ARM_MOVW_ABS_NC	43	//MOVW
-#define R_ARM_MOVT_ABS		44	//MOVT
-#define R_ARM_MOVW_PREL_NC	45	//MOVW
-#define R_ARM_MOVT_PREL		46	//MOVT
+#define R_ARM_MOVW_ABS_NC       43    //MOVW
+#define R_ARM_MOVT_ABS          44    //MOVT
+#define R_ARM_MOVW_PREL_NC      45    //MOVW
+#define R_ARM_MOVT_PREL         46    //MOVT
 
-#define R_ARM_ALU_PC_G0_NC	57	//ADD, SUB
-#define R_ARM_ALU_PC_G0		58	//ADD, SUB
-#define R_ARM_ALU_PC_G1_NC	59	//ADD, SUB
-#define R_ARM_ALU_PC_G1		60	//ADD, SUB
-#define R_ARM_ALU_PC_G2		61	//ADD, SUB
-#define R_ARM_LDR_PC_G1		62	//LDR, STR, LDRB, STRB
-#define R_ARM_LDR_PC_G2		63	//LDR, STR, LDRB, STRB
-#define R_ARM_LDRS_PC_G0	64	//LDRD, STRD, LDRH, STRH, LDRSH, LDRSB
-#define R_ARM_LDRS_PC_G1	65	//LDRD, STRD, LDRH, STRH, LDRSH, LDRSB
-#define R_ARM_LDRS_PC_G2	66	//LDRD, STRD, LDRH, STRH, LDRSH, LDRSB
-#define R_ARM_LDC_PC_G0		67	//LDC, STC
-#define R_ARM_LDC_PC_G1		68	//LDC, STC
-#define R_ARM_LDC_PC_G2		69	//LDC, STC
-#define R_ARM_ALU_SB_G0_NC	70	//ADD, SUB
-#define R_ARM_ALU_SB_G0		71	//ADD, SUB
-#define R_ARM_ALU_SB_G1_NC	72	//ADD, SUB
-#define R_ARM_ALU_SB_G1		73	//ADD, SUB
-#define R_ARM_ALU_SB_G2		74	//ADD, SUB
-#define R_ARM_LDR_SB_G0		75	//LDR, STR, LDRB, STRB
-#define R_ARM_LDR_SB_G1		76	//LDR, STR, LDRB, STRB
-#define R_ARM_LDR_SB_G2		77	//LDR, STR, LDRB, STRB
-#define R_ARM_LDRS_SB_G0	78	//LDRD, STRD, LDRH, STRH, LDRSH, LDRSB
-#define R_ARM_LDRS_SB_G1	79	//LDRD, STRD, LDRH, STRH, LDRSH, LDRSB
-#define R_ARM_LDRS_SB_G2	80	//LDRD, STRD, LDRH, STRH, LDRSH, LDRSB
-#define R_ARM_LDC_SB_G0		81	//LDC, STC
-#define R_ARM_LDC_SB_G1		82	//LDC, STC
-#define R_ARM_LDC_SB_G2		83	//LDC, STC
-#define R_ARM_MOVW_BREL_NC	84	//MOVW
-#define R_ARM_MOVT_BREL		85	//MOVT
-#define R_ARM_MOVW_BREL		86	//MOVW
+#define R_ARM_ALU_PC_G0_NC      57    //ADD, SUB
+#define R_ARM_ALU_PC_G0         58    //ADD, SUB
+#define R_ARM_ALU_PC_G1_NC      59    //ADD, SUB
+#define R_ARM_ALU_PC_G1         60    //ADD, SUB
+#define R_ARM_ALU_PC_G2         61    //ADD, SUB
+#define R_ARM_LDR_PC_G1         62    //LDR, STR, LDRB, STRB
+#define R_ARM_LDR_PC_G2         63    //LDR, STR, LDRB, STRB
+#define R_ARM_LDRS_PC_G0        64    //LDRD, STRD, LDRH, STRH, LDRSH, LDRSB
+#define R_ARM_LDRS_PC_G1        65    //LDRD, STRD, LDRH, STRH, LDRSH, LDRSB
+#define R_ARM_LDRS_PC_G2        66    //LDRD, STRD, LDRH, STRH, LDRSH, LDRSB
+#define R_ARM_LDC_PC_G0         67    //LDC, STC
+#define R_ARM_LDC_PC_G1         68    //LDC, STC
+#define R_ARM_LDC_PC_G2         69    //LDC, STC
+#define R_ARM_ALU_SB_G0_NC      70    //ADD, SUB
+#define R_ARM_ALU_SB_G0         71    //ADD, SUB
+#define R_ARM_ALU_SB_G1_NC      72    //ADD, SUB
+#define R_ARM_ALU_SB_G1         73    //ADD, SUB
+#define R_ARM_ALU_SB_G2         74    //ADD, SUB
+#define R_ARM_LDR_SB_G0         75    //LDR, STR, LDRB, STRB
+#define R_ARM_LDR_SB_G1         76    //LDR, STR, LDRB, STRB
+#define R_ARM_LDR_SB_G2         77    //LDR, STR, LDRB, STRB
+#define R_ARM_LDRS_SB_G0        78    //LDRD, STRD, LDRH, STRH, LDRSH, LDRSB
+#define R_ARM_LDRS_SB_G1        79    //LDRD, STRD, LDRH, STRH, LDRSH, LDRSB
+#define R_ARM_LDRS_SB_G2        80    //LDRD, STRD, LDRH, STRH, LDRSH, LDRSB
+#define R_ARM_LDC_SB_G0         81    //LDC, STC
+#define R_ARM_LDC_SB_G1         82    //LDC, STC
+#define R_ARM_LDC_SB_G2         83    //LDC, STC
+#define R_ARM_MOVW_BREL_NC      84    //MOVW
+#define R_ARM_MOVT_BREL         85    //MOVT
+#define R_ARM_MOVW_BREL         86    //MOVW
 
-#define R_ARM_GOT_BREL12	97	//LDR
-#define R_ARM_GOTOFF12		98	//LDR, STR
+#define R_ARM_GOT_BREL12        97    //LDR
+#define R_ARM_GOTOFF12          98    //LDR, STR
 
-#define R_ARM_TLS_LDO12		109	//LDR, STR
-#define R_ARM_TLS_LE12		110	//LDR, STR
-#define R_ARM_TLS_TE12GP	111	//LDR
+#define R_ARM_TLS_LDO12         109    //LDR, STR
+#define R_ARM_TLS_LE12          110    //LDR, STR
+#define R_ARM_TLS_TE12GP        111    //LDR
 
 
 

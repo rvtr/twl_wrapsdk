@@ -22,17 +22,17 @@
   セクションヘッダ拡張(ロードアドレス等に対応)
  -----------------------------------------------------*/
 typedef struct {
-  void*			next;
-  u16			index;
-  u16			debug_flag;		/*0:デバッグ情報でない、1:デバッグ情報*/
-  u32			loaded_adr;
-  u32			alloc_adr;
-  u32			loaded_size;
-  Elf32_Shdr	Shdr;
-  char*         str;            /*セクション名文字列をコピーしてきたもの*/
-  u32*          sym_table;      /*シンボルセクションのとき有効な新旧対応表*/
-  void*         str_table;      /*STRセクションのとき有効：新文字列テーブル*/
-  u32           str_table_size; /*STRセクションのとき有効：新文字列テーブルのサイズ*/
+  void*        next;
+  u16          index;
+  u16          debug_flag;     /*0:デバッグ情報でない、1:デバッグ情報*/
+  u32          loaded_adr;
+  u32          alloc_adr;
+  u32          loaded_size;
+  Elf32_Shdr   Shdr;
+  char*        str;            /*セクション名文字列をコピーしてきたもの*/
+  u32*         sym_table;      /*シンボルセクションのとき有効な新旧対応表*/
+  void*        str_table;      /*STRセクションのとき有効：新文字列テーブル*/
+  u32          str_table_size; /*STRセクションのとき有効：新文字列テーブルのサイズ*/
 }ELShdrEx;
 
 
@@ -40,11 +40,11 @@ typedef struct {
   シンボルエントリ拡張(ロードアドレス等に対応)
  -----------------------------------------------------*/
 typedef struct {
-  void*		next;
-  u16		debug_flag;			/*0:デバッグ情報でない、1:デバッグ情報*/
-  u16		thumb_flag;
-  u32		relocation_val;
-  Elf32_Sym	Sym;
+  void*        next;
+  u16          debug_flag;    /*0:デバッグ情報でない、1:デバッグ情報*/
+  u16          thumb_flag;
+  u32          relocation_val;
+  Elf32_Sym    Sym;
 }ELSymEx;
 
 
@@ -54,30 +54,30 @@ typedef struct {
  -----------------------------------------------------*/
 typedef void (*ELi_ReadFunc)( void* buf, void* file_struct, u32 file_base, u32 file_offset, u32 size);
 typedef struct {
-  void*			ar_head;		/* ARまたはELFファイルの先頭アドレス */
-  void*			elf_offset;		/* ELFオブジェクトの先頭へのオフセット */
-  void*			buf_current;	/* Loader作業用 */
-  u16			shentsize;		/* 1セクションヘッダのサイズ */
-  u16			process;		/* 再配置状況 */
+  void*        ar_head;        /* ARまたはELFファイルの先頭アドレス */
+  void*        elf_offset;     /* ELFオブジェクトの先頭へのオフセット */
+  void*        buf_current;    /* Loader作業用 */
+  u16          shentsize;      /* 1セクションヘッダのサイズ */
+  u16          process;        /* 再配置状況 */
 
-  ELShdrEx*		ShdrEx;			/* ShdrExリストの先頭 */
+  ELShdrEx*    ShdrEx;         /* ShdrExリストの先頭 */
 
-  Elf32_Ehdr	CurrentEhdr;	/* ELFヘッダ */
+  Elf32_Ehdr   CurrentEhdr;    /* ELFヘッダ */
 
-  Elf32_Rel		Rel;			/* 再配置エントリ */
-  Elf32_Rela	Rela;
-  Elf32_Sym		Sym;			/* シンボルエントリ */
-  Elf32_Shdr	SymShdr;
+  Elf32_Rel    Rel;            /* 再配置エントリ */
+  Elf32_Rela   Rela;
+  Elf32_Sym    Sym;            /* シンボルエントリ */
+  Elf32_Shdr   SymShdr;
 
-  ELSymEx*		SymEx;			/* SymExリストの先頭 */
-  ELSymEx**     SymExTbl;       /* SymExアドレスのテーブル（全シンボル数ぶん）*/
-  u32           SymExTarget;    /* SymExリストを構築したシンボルセクションのセクション番号 */
+  ELSymEx*     SymEx;          /* SymExリストの先頭 */
+  ELSymEx**    SymExTbl;       /* SymExアドレスのテーブル（全シンボル数ぶん）*/
+  u32          SymExTarget;    /* SymExリストを構築したシンボルセクションのセクション番号 */
 
-  ELi_ReadFunc	ELi_ReadStub;	/* リードスタブ関数 */
-  void*			FileStruct;		/* ファイル構造体 */
+  ELi_ReadFunc ELi_ReadStub;   /* リードスタブ関数 */
+  void*        FileStruct;     /* ファイル構造体 */
 
-  u32			mem_adr;		/*最初にロードされたセクションのsh_addrが入る(DSのROMヘッダ用パラメータ)*/
-  u32           newelf_size;
+  u32          mem_adr;        /*最初にロードされたセクションのsh_addrが入る(DSのROMヘッダ用パラメータ)*/
+  u32          newelf_size;
 }ELHandle;
 
 
@@ -86,11 +86,11 @@ typedef struct {
   アドレステーブル
  -----------------------------------------------------*/
 typedef struct {
-  void*		next;				/*次のアドレスエントリ*/
-  char*		name;				/*文字列*/
-  void*		adr;				/*アドレス*/
-  u16		func_flag;			/*0:データ、1:関数*/
-  u16		thumb_flag;			/*0:armコード、1:thumbコード*/
+  void*        next;        /*次のアドレスエントリ*/
+  char*        name;        /*文字列*/
+  void*        adr;         /*アドレス*/
+  u16          func_flag;   /*0:データ、1:関数*/
+  u16          thumb_flag;  /*0:armコード、1:thumbコード*/
 }ELAdrEntry;
 
 
@@ -102,25 +102,25 @@ typedef struct {
   T_ = (u32)(AdrEntry.thumb_flag);
  -----------------------------------------------------*/
 typedef struct {
-  void* next;					/*次のエントリ*/
-  char*	sym_str;				/*未解決の外部参照シンボル名*/
-  u32	r_type;					/*リロケーションタイプ（ELF32_R_TYPE( Rela.r_info)）*/
-  u32	S_;						/*未解決の外部参照シンボルアドレス*/
-  s32	A_;						/*解決済み*/
-  u32	P_;						/*解決済み*/
-  u32	T_;						/*未解決の外部参照シンボルのARM/Thumbフラグ*/
-  u32	sh_type;				/*SHT_REL or SHT_RELA*/
-  u32	remove_flag;			/*解決したときにセットする（消しても良いことを識別する）フラグ*/
-  ELAdrEntry*	AdrEnt;			/*アドレステーブルから探し出したエントリの場所*/
+  void*        next;        /*次のエントリ*/
+  char*        sym_str;     /*未解決の外部参照シンボル名*/
+  u32          r_type;      /*リロケーションタイプ（ELF32_R_TYPE( Rela.r_info)）*/
+  u32          S_;          /*未解決の外部参照シンボルアドレス*/
+  s32          A_;          /*解決済み*/
+  u32          P_;          /*解決済み*/
+  u32          T_;          /*未解決の外部参照シンボルのARM/Thumbフラグ*/
+  u32          sh_type;     /*SHT_REL or SHT_RELA*/
+  u32          remove_flag; /*解決したときにセットする（消しても良いことを識別する）フラグ*/
+  ELAdrEntry*  AdrEnt;      /*アドレステーブルから探し出したエントリの場所*/
 }ELUnresolvedEntry;
 
 
 
 /* ELHandle の process値 */
-#define EL_FAILED			0x00
-#define EL_INITIALIZED		0x5A
-#define EL_COPIED			0xF0
-#define EL_RELOCATED		0xF1
+#define EL_FAILED        0x00
+#define EL_INITIALIZED   0x5A
+#define EL_COPIED        0xF0
+#define EL_RELOCATED     0xF1
 
 
 
