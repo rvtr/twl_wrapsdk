@@ -276,6 +276,9 @@ u16 ELi_LoadObject( ELHandle* ElfHandle, void* obj_offset, void* buf)
     u32         tmp_buf;
     u32         *shdr_table;      //セクションヘッダ新旧番号対応テーブル
 //    u32         *sym_table;       //シンボルエントリ新旧番号対応テーブル
+    u32         last_local_symbol_index = 0xFFFFFFFF;
+
+
     /* ELHandleの初期化チェック */
     if( ElfHandle->process != EL_INITIALIZED) {
         return EL_FAILED;
@@ -364,6 +367,12 @@ u16 ELi_LoadObject( ELHandle* ElfHandle, void* obj_offset, void* buf)
                 CurrentShdrEx->loaded_adr = (u32)
                                 ELi_CopySectionToBuffer( ElfHandle, &(CurrentShdrEx->Shdr));
             }*/
+            //.arm_vfe_header, .ARM.exidx, .ARM.attributesなどもコピーしておく
+            else if( CurrentShdrEx->Shdr.sh_type >= SHT_LOPROC) {
+                //メモリにコピー
+                CurrentShdrEx->loaded_adr = (u32)
+                                ELi_CopySectionToBuffer( ElfHandle, &(CurrentShdrEx->Shdr));
+            }
             //シンボルテーブルセクション
             else if( CurrentShdrEx->Shdr.sh_type == SHT_SYMTAB) {
                 ELi_BuildSymList( ElfHandle, i, &(CurrentShdrEx->sym_table)); //シンボルリスト作成
@@ -393,13 +402,23 @@ u16 ELi_LoadObject( ELHandle* ElfHandle, void* obj_offset, void* buf)
                         CurrentSymEx->Sym.st_name = StrShEx->str_table_size; //シンボルエントリのデータを修正
 
                         StrShEx->str_table_size += ( strlen( symstr) + 1);
+                      
                         /*---------------------------------*/
+                        //最後のSTB_LOCALシンボルを見つける（SYMTABセクションヘッダのsh_infoの値になる）
+                        if( ((ELF32_ST_BIND( (CurrentSymEx->Sym.st_info))) != STB_LOCAL)&&
+                            (last_local_symbol_index == 0xFFFFFFFF)) {
+                            last_local_symbol_index = symbol_num;
+                        }
+                        /*---------------------------------*/
+
                         symbol_num++;
 
+                        /*---------------------------------*/
                         if( (CurrentSymEx->Sym.st_shndx != SHN_UNDEF) &&
                             (CurrentSymEx->Sym.st_shndx < SHN_LORESERVE)) {
                             CurrentSymEx->Sym.st_shndx = shdr_table[CurrentSymEx->Sym.st_shndx]; //シンボルエントリの対象セクション番号更新
                         }
+                        /*---------------------------------*/
                         CurrentSymEx = CurrentSymEx->next;
                     }/*-------------------------------------*/
                     
@@ -410,6 +429,7 @@ u16 ELi_LoadObject( ELHandle* ElfHandle, void* obj_offset, void* buf)
                             CurrentShdrEx->Shdr.sh_link = shdr_table[CurrentShdrEx->Shdr.sh_link]; //文字列セクション番号更新
                     }
                     CurrentShdrEx->Shdr.sh_size = symbol_num * sizeof( Elf32_Sym);
+                    CurrentShdrEx->Shdr.sh_info = last_local_symbol_index; //ARM ELF資料参照
                     /*----------------------------------------------*/
                 }
                 ELi_FreeSymList( ElfHandle, (u32**)(CurrentShdrEx->sym_table));    //シンボルリスト開放
@@ -511,12 +531,13 @@ u16 ELi_LoadObject( ELHandle* ElfHandle, void* obj_offset, void* buf)
                 CurrentShdrEx->Shdr.sh_offset = (CurrentShdrEx->loaded_adr - (u32)buf);
             }
             /*セクションヘッダをstripped elfイメージへコピー*/
-            CurrentShdrEx->Shdr.sh_info = shdr_table[CurrentShdrEx->Shdr.sh_info]; //セクション番号更新
             if( CurrentShdrEx->Shdr.sh_type == SHT_SYMTAB) {
                 /*シンボルテーブルのsh_typeはシンボルエントリのインデックスを表す*/
               //SYMTABの場合は406行目～で既にsh_linkを変換済みなのでここでは必要なし
+              //SYMTABの場合は428行目で既にsh_infoを変換済みなのでここでは必要なし
             }else{
                 CurrentShdrEx->Shdr.sh_link = shdr_table[CurrentShdrEx->Shdr.sh_link]; //セクション番号更新
+                CurrentShdrEx->Shdr.sh_info = shdr_table[CurrentShdrEx->Shdr.sh_info]; //セクション番号更新
             }
             memcpy( (u8*)tmp_buf, &(CurrentShdrEx->Shdr), 
                     sizeof( Elf32_Shdr));
