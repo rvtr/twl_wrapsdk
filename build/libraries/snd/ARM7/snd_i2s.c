@@ -35,7 +35,7 @@ static BOOL isTwl = FALSE;
     static functions
  ******************************************************************************/
 
-static void SNDi_I2SInit(void)
+static void I2Si_Init(void)
 {
     static BOOL isInitialized = FALSE;
     if (isInitialized == FALSE)
@@ -55,9 +55,9 @@ static void SNDi_I2SInit(void)
         {
             isTwl = TRUE;
             // Set default values
-            SND_I2SSetSamplingRatio(TRUE);
-            SND_I2SSetMixingRatio(8);
-            SND_I2SMute(FALSE);
+            I2S_SetSamplingRatio(TRUE);
+            I2S_SetMixingRatio(8);
+            I2S_Mute(FALSE);
         }
     }
 }
@@ -67,7 +67,7 @@ static void SNDi_I2SInit(void)
  ******************************************************************************/
 
 /*---------------------------------------------------------------------------*
-  Name:         SND_I2SEnable
+  Name:         I2S_Enable
 
   Description:  Enable sound master control
 
@@ -75,9 +75,9 @@ static void SNDi_I2SInit(void)
 
   Returns:      None
  *---------------------------------------------------------------------------*/
-void SND_I2SEnable(void)
+void I2S_Enable(void)
 {
-    SNDi_I2SInit();
+    I2Si_Init();
 
     if (isTwl)
     {
@@ -86,7 +86,7 @@ void SND_I2SEnable(void)
 }
 
 /*---------------------------------------------------------------------------*
-  Name:         SND_I2SDisable
+  Name:         I2S_Disable
 
   Description:  Disable sound master control
 
@@ -94,7 +94,7 @@ void SND_I2SEnable(void)
 
   Returns:      None
  *---------------------------------------------------------------------------*/
-void SND_I2SDisable(void)
+void I2S_Disable(void)
 {
     if (isTwl)
     {
@@ -103,7 +103,7 @@ void SND_I2SDisable(void)
 }
 
 /*---------------------------------------------------------------------------*
-  Name:         SND_I2SShutdown
+  Name:         I2S_Shutdown
 
   Description:  shutdown sound system
 
@@ -111,7 +111,7 @@ void SND_I2SDisable(void)
 
   Returns:      None.
  *---------------------------------------------------------------------------*/
-void SND_I2SShutdown(void)
+void I2S_Shutdown(void)
 {
 }
 
@@ -124,7 +124,7 @@ void SND_I2SShutdown(void)
 
   Returns:      None.
  *---------------------------------------------------------------------------*/
-void SND_I2SBeginSleep(void)
+void I2S_BeginSleep(void)
 {
     if (isTwl)
     {
@@ -141,7 +141,7 @@ void SND_I2SBeginSleep(void)
 
   Returns:      None.
  *---------------------------------------------------------------------------*/
-void SND_I2SEndSleep(void)
+void I2S_EndSleep(void)
 {
     if (isTwl)
     {
@@ -150,7 +150,7 @@ void SND_I2SEndSleep(void)
 }
 
 /*---------------------------------------------------------------------------*
-  Name:         SND_I2SMute
+  Name:         I2S_Mute
 
   Description:  Set mute status
 
@@ -158,7 +158,7 @@ void SND_I2SEndSleep(void)
 
   Returns:      None
  *---------------------------------------------------------------------------*/
-void SND_I2SMute(BOOL isMute)
+void I2S_Mute(BOOL isMute)
 {
     if (isTwl)
     {
@@ -174,7 +174,7 @@ void SND_I2SMute(BOOL isMute)
 }
 
 /*---------------------------------------------------------------------------*
-  Name:         SND_I2SIsMute
+  Name:         I2S_IsMute
 
   Description:  Get mute status
 
@@ -182,13 +182,13 @@ void SND_I2SMute(BOOL isMute)
 
   Returns:      TRUE if mute
  *---------------------------------------------------------------------------*/
-BOOL SND_I2SIsMute(void)
+BOOL I2S_IsMute(void)
 {
     return (BOOL)((reg_SND_I2SCNT & REG_SND_I2SCNT_MUTE_MASK) >> REG_SND_I2SCNT_MUTE_SHIFT);
 }
 
 /*---------------------------------------------------------------------------*
-  Name:         SND_I2SSetMixingRatio
+  Name:         I2S_SetMixingRatio
 
   Description:  Set mixing ratio
 
@@ -198,7 +198,7 @@ BOOL SND_I2SIsMute(void)
 
   Returns:      None
  *---------------------------------------------------------------------------*/
-void SND_I2SSetMixingRatio(int nitroRatio)
+void I2S_SetMixingRatio(int nitroRatio)
 {
     if (isTwl)
     {
@@ -211,7 +211,7 @@ void SND_I2SSetMixingRatio(int nitroRatio)
 }
 
 /*---------------------------------------------------------------------------*
-  Name:         SND_I2SGetMixingRatio
+  Name:         I2S_GetMixingRatio
 
   Description:  Set mixing ratio
 
@@ -221,13 +221,13 @@ void SND_I2SSetMixingRatio(int nitroRatio)
                               if 8, nitro sound is all.
                               if 0, DSP sound is all.
  *---------------------------------------------------------------------------*/
-int SND_I2SGetMixingRatio(void)
+int I2S_GetMixingRatio(void)
 {
     return (reg_SND_I2SCNT & REG_SND_I2SCNT_MIX_RATIO_MASK) >> REG_SND_I2SCNT_MIX_RATIO_SHIFT;
 }
 
 /*---------------------------------------------------------------------------*
-  Name:         SND_I2SSetSamplingRatio
+  Name:         I2S_SetSamplingRatio
 
   Description:  Set I2S sampling ratio.
                 It can be called while I2S is disabled.
@@ -236,7 +236,7 @@ int SND_I2SGetMixingRatio(void)
 
   Returns:      None
  *---------------------------------------------------------------------------*/
-void SND_I2SSetSamplingRatio(BOOL is48kHz)
+void I2S_SetSamplingRatio(BOOL is48kHz)
 {
     if (isTwl)
     {
@@ -253,7 +253,7 @@ void SND_I2SSetSamplingRatio(BOOL is48kHz)
 }
 
 /*---------------------------------------------------------------------------*
-  Name:         SND_I2SIsSamplingRatio48kHz
+  Name:         I2S_IsSamplingRatio48kHz
 
   Description:  Get I2S sampling ratio.
 
@@ -261,7 +261,7 @@ void SND_I2SSetSamplingRatio(BOOL is48kHz)
 
   Returns:      TRUE if 48 kHz. otherwise FALSE
  *---------------------------------------------------------------------------*/
-BOOL SND_I2SIsSamplingRatio48kHz(void)
+BOOL I2S_IsSamplingRatio48kHz(void)
 {
     return (BOOL)((reg_SND_I2SCNT & REG_SND_I2SCNT_CODEC_SMP_MASK) >> REG_SND_I2SCNT_CODEC_SMP_SHIFT);
 }

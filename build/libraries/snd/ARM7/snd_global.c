@@ -54,7 +54,7 @@ extern void PMi_ResetControl(u8 sw);
 void SND_Enable(void)
 {
     OSIntrMode enabled = OS_DisableInterrupts();
-    SND_I2SEnable();
+    I2S_Enable();
     reg_SND_SOUNDCNT_8 |= REG_SND_SOUNDCNT_8_E_MASK;
     (void)OS_RestoreInterrupts(enabled);
 }
@@ -71,7 +71,7 @@ void SND_Enable(void)
 void SND_Disable(void)
 {
     OSIntrMode enabled = OS_DisableInterrupts();
-    SND_I2SDisable();
+    I2S_Disable();
     reg_SND_SOUNDCNT_8 &= ~REG_SND_SOUNDCNT_8_E_MASK;
     (void)OS_RestoreInterrupts(enabled);
 }
@@ -111,7 +111,7 @@ void SND_Shutdown(void)
 void SND_BeginSleep(void)
 {
     // adding process for TWL
-    SND_I2SBeginSleep();
+    I2S_BeginSleep();
 
     // stop all sound
     SND_Disable();
@@ -154,7 +154,7 @@ void SND_EndSleep(void)
     SND_Enable();
 
     // adding process for TWL
-    SND_I2SEndSleep();
+    I2S_EndSleep();
 }
 
 /*---------------------------------------------------------------------------*

@@ -25,10 +25,10 @@ extern "C" {
 /******************************************************************************
     public macro variables
  ******************************************************************************/
-#define SND_I2S_MIXING_NITRO_MAX    8
-#define SND_I2S_MIXING_NITRO_MIN    0
-#define SND_I2S_MIXING_DSP_MAX      0
-#define SND_I2S_MIXING_DSP_MIN      8
+#define I2S_MIXING_NITRO_MAX    8
+#define I2S_MIXING_NITRO_MIN    0
+#define I2S_MIXING_DSP_MAX      0
+#define I2S_MIXING_DSP_MIN      8
 
 /******************************************************************************
     public function declaration
@@ -36,22 +36,22 @@ extern "C" {
 
 #ifdef SDK_ARM7
 
-void    SND_I2SEnable(void);
-void    SND_I2SDisable(void);
+void    I2S_Enable(void);
+void    I2S_Disable(void);
 
-void    SND_I2SShutdown(void);
+void    I2S_Shutdown(void);
 
-void    SND_I2SBeginSleep(void);
-void    SND_I2SEndSleep(void);
+void    I2S_BeginSleep(void);
+void    I2S_EndSleep(void);
 
-void    SND_I2SMute(BOOL isMute);
-BOOL    SND_I2SIsMute(void);
+void    I2S_Mute(BOOL isMute);
+BOOL    I2S_IsMute(void);
 
-void    SND_I2SSetMixingRatio(int nitroRatio);
-int     SND_I2SGetMixingRatio(void);
+void    I2S_SetMixingRatio(int nitroRatio);
+int     I2S_GetMixingRatio(void);
 
-void    SND_I2SSetSamplingRatio(BOOL is48kHz);
-BOOL    SND_I2SIsSamplingRatio48kHz( void );
+void    I2S_SetSamplingRatio(BOOL is48kHz);
+BOOL    I2S_IsSamplingRatio48kHz( void );
 
 #endif /* SDK_ARM7 */
 

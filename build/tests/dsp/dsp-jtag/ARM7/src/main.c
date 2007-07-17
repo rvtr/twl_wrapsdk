@@ -64,8 +64,8 @@ void TwlSpMain(void)
     (void)OS_EnableInterrupts();
 
     // ƒTƒEƒ“ƒh‰Šú‰»
-    SND_I2SEnable();
-    SND_I2SSetMixingRatio(0);   // dsp only
+    I2S_Enable();
+    I2S_SetMixingRatio(0);   // dsp only
     MICi_Init();
 
     // SPI‰Šú‰»
