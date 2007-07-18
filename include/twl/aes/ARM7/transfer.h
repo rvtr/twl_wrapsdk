@@ -135,7 +135,7 @@ static inline void AES_DmaRecvAsync(u32 dmaNo, void *dest, u32 length)
 static inline void AES_CpuSend(const void *src, u32 length)
 {
     const u32 *ptr = src;
-    SDK_ASSERT(src && (src & 0x3) == 0);
+    SDK_ASSERT(src && ((u32)src & 0x3) == 0);
     AES_ASSERT_DATA_LENGTH(length);
     while (length > 0) {
         AES_WaitInputFifoNotFull();
@@ -159,7 +159,7 @@ static inline void AES_CpuSend(const void *src, u32 length)
 static inline void AES_CpuRecv(void *dest, u32 length)
 {
     u32 *ptr = dest;
-    SDK_ASSERT(dest && (dest & 0x3) == 0);
+    SDK_ASSERT(dest && ((u32)dest & 0x3) == 0);
     AES_ASSERT_DATA_LENGTH(length);
     while (length > 0) {
         AES_WaitOutputFifoNotEmpty();

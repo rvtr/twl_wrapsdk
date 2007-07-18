@@ -19,6 +19,8 @@
 /*---------------------------------------------------------------------------*
     ASSERT
  *---------------------------------------------------------------------------*/
+#define AES_KEY_MAX_NUM 3
+
 #define AES_ASSERT_KEYNO( keyNo )        SDK_ASSERTMSG( (keyNo) <= AES_KEY_MAX_NUM, "illegal AES Key No." )
 #define AES_ASSERT_DATA_LENGTH( len )    SDK_ASSERTMSG( (len) & 0xFF0000FF, "illegal data length." )
 

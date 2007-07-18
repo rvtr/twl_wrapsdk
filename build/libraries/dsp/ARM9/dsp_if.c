@@ -325,7 +325,7 @@ void DSP_RecvFifoEx(DSPFifoMemSel memsel, u16* dest, u16 src, int size, u16 flag
     DSPFifoRecvLength len;
     u16 incmode = (u16)((flags & DSP_FIFO_FLAG_SRC_FIX) ? 0 : REG_DSP_PCFG_AIM_MASK);
 
-    SDK_ASSERT(memsel != DSP_MEMSEL_PROGRAM);
+    SDK_ASSERT(memsel != DSP_FIFO_MEMSEL_PROGRAM);
 
     switch (flags & DSP_FIFO_FLAG_RECV_MASK)
     {
