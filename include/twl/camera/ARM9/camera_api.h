@@ -29,7 +29,7 @@ extern "C" {
 typedef enum CAMERAResult
 {
     CAMERA_RESULT_SUCCESS = 0,
-    CAMERA_RESULT_SUCCESS_TRUE,
+    CAMERA_RESULT_SUCCESS_TRUE = 0,
     CAMERA_RESULT_SUCCESS_FALSE,
     CAMERA_RESULT_BUSY,
     CAMERA_RESULT_ILLEGAL_PARAMETER,
@@ -56,181 +56,6 @@ typedef void (*CAMERACallback)(CAMERAResult result, void *arg);
 void CAMERA_Init(void);
 
 /*---------------------------------------------------------------------------*
-  Name:         CAMERAi_I2CSelectAsync
-
-  Description:  select CAMERA to activate
-                async version
-
-  Arguments:    camera      - one of CameraSelect
-                callback    - 非同期処理が完了した再に呼び出す関数を指定
-                arg         - コールバック関数の呼び出し時の引数を指定。
-
-  Returns:      CAMERAResult
- *---------------------------------------------------------------------------*/
-CAMERAResult CAMERA_I2CSelectAsync(CameraSelect camera, CAMERACallback callback, void *arg);
-
-/*---------------------------------------------------------------------------*
-  Name:         CAMERAi_I2CSelect
-
-  Description:  select CAMERA to activate
-                sync version.
-
-  Arguments:    camera      - one of CameraSelect
-
-  Returns:      CAMERAResult
- *---------------------------------------------------------------------------*/
-CAMERAResult CAMERA_I2CSelect(CameraSelect camera);
-
-/*---------------------------------------------------------------------------*
-  Name:         CAMERA_WriteRegistersAsync
-
-  Description:  write CAMERA registers via I2C.
-                async version.
-
-  Arguments:    camera      - one of CameraSelect
-                addr        - start address
-                bufp        - buffer to write
-                length      - length of bufp
-                callback    - 非同期処理が完了した再に呼び出す関数を指定
-                arg         - コールバック関数の呼び出し時の引数を指定。
-
-  Returns:      CAMERAResult
- *---------------------------------------------------------------------------*/
-CAMERAResult CAMERA_WriteRegistersAsync(CameraSelect camera, u8 addr, const u8* bufp, size_t length, CAMERACallback callback, void *arg);
-
-/*---------------------------------------------------------------------------*
-  Name:         CAMERA_WriteRegisters
-
-  Description:  write CAMERA registers via I2C.
-                sync version.
-
-  Arguments:    camera      - one of CameraSelect
-                addr        - start address
-                bufp        - buffer to write
-                length      - length of bufp
-
-  Returns:      CAMERAResult
- *---------------------------------------------------------------------------*/
-CAMERAResult CAMERA_WriteRegisters(CameraSelect camera, u8 addr, const u8* bufp, size_t length);
-
-/*---------------------------------------------------------------------------*
-  Name:         CAMERA_ReadRegistersAsync
-
-  Description:  read CAMERA registers via I2C.
-
-  Arguments:    camera      - one of CameraSelect
-                addr        - start address
-                bufp        - buffer to read
-                length      - length of bufp
-                callback    - 非同期処理が完了した再に呼び出す関数を指定
-                arg         - コールバック関数の呼び出し時の引数を指定。
-
-  Returns:      CAMERAResult
- *---------------------------------------------------------------------------*/
-CAMERAResult CAMERA_ReadRegistersAsync(CameraSelect camera, u8 addr, u8* bufp, size_t length, CAMERACallback callback, void *arg);
-
-/*---------------------------------------------------------------------------*
-  Name:         CAMERA_ReadRegisters
-
-  Description:  set CAMERA key normally
-                sync version.
-
-  Arguments:    camera      - one of CameraSelect
-                addr        - start address
-                bufp        - buffer to read
-                length      - length of bufp
-
-  Returns:      CAMERAResult
- *---------------------------------------------------------------------------*/
-CAMERAResult CAMERA_ReadRegisters(CameraSelect camera, u8 addr, u8* bufp, size_t length);
-
-/*---------------------------------------------------------------------------*
-  Name:         CAMERA_SetParamsAsync
-
-  Description:  set register as reg = (reg & ~mask) | (bits & mask);
-
-  Arguments:    camera      - one of CameraSelect
-                addr        - address to access
-                bits        - bits to set
-                mask        - mask to touch
-                callback    - 非同期処理が完了した再に呼び出す関数を指定
-                arg         - コールバック関数の呼び出し時の引数を指定。
-
-  Returns:      CAMERAResult
- *---------------------------------------------------------------------------*/
-CAMERAResult CAMERA_SetParamsAsync(CameraSelect camera, u8 addr, u8 bits, u8 mask, CAMERACallback callback, void *arg);
-
-/*---------------------------------------------------------------------------*
-  Name:         CAMERA_SetParams
-
-  Description:  set register as reg = (reg & ~mask) | (bits & mask);
-
-  Arguments:    camera      - one of CameraSelect
-                addr        - address to access
-                bits        - bits to set
-                mask        - mask to touch
-
-  Returns:      CAMERAResult
- *---------------------------------------------------------------------------*/
-CAMERAResult CAMERA_SetParams(CameraSelect camera, u8 addr, u8 bits, u8 mask);
-
-/*---------------------------------------------------------------------------*
-  Name:         CAMERA_SetFlagsAsync
-
-  Description:  set register as reg |= bits;
-
-  Arguments:    camera      - one of CameraSelect
-                addr        - address to access
-                bits        - bits to set
-                callback    - 非同期処理が完了した再に呼び出す関数を指定
-                arg         - コールバック関数の呼び出し時の引数を指定。
-
-  Returns:      CAMERAResult
- *---------------------------------------------------------------------------*/
-CAMERAResult CAMERA_SetFlagsAsync(CameraSelect camera, u8 addr, u8 bits, CAMERACallback callback, void *arg);
-
-/*---------------------------------------------------------------------------*
-  Name:         CAMERA_SetFlags
-
-  Description:  set register as reg |= bits;
-
-  Arguments:    camera      - one of CameraSelect
-                addr        - address to access
-                bits        - bits to set
-
-  Returns:      CAMERAResult
- *---------------------------------------------------------------------------*/
-CAMERAResult CAMERA_SetFlags(CameraSelect camera, u8 addr, u8 bits);
-
-/*---------------------------------------------------------------------------*
-  Name:         CAMERA_ClearFlagsAsync
-
-  Description:  set register as reg &= ~bits;
-
-  Arguments:    camera      - one of CameraSelect
-                addr        - address to access
-                bits        - bits to clear
-                callback    - 非同期処理が完了した再に呼び出す関数を指定
-                arg         - コールバック関数の呼び出し時の引数を指定。
-
-  Returns:      CAMERAResult
- *---------------------------------------------------------------------------*/
-CAMERAResult CAMERA_ClearFlagsAsync(CameraSelect camera, u8 addr, u8 bits, CAMERACallback callback, void *arg);
-
-/*---------------------------------------------------------------------------*
-  Name:         CAMERA_ClearFlags
-
-  Description:  set register as reg &= ~bits;
-
-  Arguments:    camera      - one of CameraSelect
-                addr        - address to access
-                bits        - bits to set
-
-  Returns:      CAMERAResult
- *---------------------------------------------------------------------------*/
-CAMERAResult CAMERA_ClearFlags(CameraSelect camera, u8 addr, u8 bits);
-
-/*---------------------------------------------------------------------------*
   Name:         CAMERA_I2CInitAsync
 
   Description:  initialize camera registers via I2C
@@ -255,166 +80,146 @@ CAMERAResult CAMERA_I2CInitAsync(CameraSelect camera, CAMERACallback callback, v
   Returns:      CAMERAResult
  *---------------------------------------------------------------------------*/
 CAMERAResult CAMERA_I2CInit(CameraSelect camera);
-#if 0
-/*---------------------------------------------------------------------------*
-  Name:         CAMERA_I2CPresetAsync
 
-  Description:  set camera registers with specified preset via I2C
+/*---------------------------------------------------------------------------*
+  Name:         CAMERA_I2CActivateAsync
+
+  Description:  activate specified CAMERA (goto standby if NONE is specified)
                 async version
 
   Arguments:    camera      - one of CameraSelect
-                preset      - preset type
                 callback    - 非同期処理が完了した再に呼び出す関数を指定
                 arg         - コールバック関数の呼び出し時の引数を指定。
 
   Returns:      CAMERAResult
  *---------------------------------------------------------------------------*/
-CAMERAResult CAMERA_I2CPresetAsync(CameraSelect camera, CameraPreset preset, CAMERACallback callback, void *arg);
+CAMERAResult CAMERA_I2CActivateAsync(CameraSelect camera, CAMERACallback callback, void *arg);
 
 /*---------------------------------------------------------------------------*
-  Name:         CAMERA_I2CPreset
+  Name:         CAMERA_I2CActivate
 
-  Description:  set camera registers with specified preset via I2C
+  Description:  activate specified CAMERA (goto standby if NONE is specified)
                 sync version.
 
   Arguments:    camera      - one of CameraSelect
-                preset      - preset type
 
   Returns:      CAMERAResult
  *---------------------------------------------------------------------------*/
-CAMERAResult CAMERA_I2CPreset(CameraSelect camera, CameraPreset preset);
-#endif
-/*---------------------------------------------------------------------------*
-  Name:         CAMERA_I2CPreSleepAsync
-
-  Description:  pre-sleep process in camera registers via I2C
-                async version.
-
-  Arguments:    callback    - 非同期処理が完了した再に呼び出す関数を指定
-                arg         - コールバック関数の呼び出し時の引数を指定。
-
-  Returns:      CAMERAResult
- *---------------------------------------------------------------------------*/
-CAMERAResult CAMERA_I2CPreSleepAsync(CAMERACallback callback, void *arg);
+CAMERAResult CAMERA_I2CActivate(CameraSelect camera);
 
 /*---------------------------------------------------------------------------*
-  Name:         CAMERA_I2CPreSleep
+  Name:         CAMERAi_I2CResizeAsync
 
-  Description:  pre-sleep process in camera registers via I2C
-                sync version.
+  Description:  resize CAMERA output image
+                async version
 
-  Arguments:    None.
-
-  Returns:      CAMERAResult
- *---------------------------------------------------------------------------*/
-CAMERAResult CAMERA_I2CPreSleep(void);
-
-/*---------------------------------------------------------------------------*
-  Name:         CAMERA_I2CPostSleepAsync
-
-  Description:  post-sleep process in camera registers via I2C
-                async version.
-
-  Arguments:    callback    - 非同期処理が完了した再に呼び出す関数を指定
-                arg         - コールバック関数の呼び出し時の引数を指定。
-
-  Returns:      CAMERAResult
- *---------------------------------------------------------------------------*/
-CAMERAResult CAMERA_I2CPostSleepAsync(CAMERACallback callback, void *arg);
-
-/*---------------------------------------------------------------------------*
-  Name:         CAMERA_I2CPostSleep
-
-  Description:  post-sleep process in camera registers via I2C
-                sync version.
-
-  Arguments:    None.
-
-  Returns:      CAMERAResult
- *---------------------------------------------------------------------------*/
-CAMERAResult CAMERA_I2CPostSleep(void);
-
-/*---------------------------------------------------------------------------*
-  Name:         CAMERA_SetCroppingAsync
-
-  Description:  set offset and size
-
-  Arguments:    camera      - one of CameraSelect
-                x_off       - x offset to start capturing
-                y_off       - y offset to start capturing
-                width       - width of image
-                height      - height of image
+  Arguments:    camera      - one of CameraResize
+                width       - width of the image
+                height      - height of the image
                 callback    - 非同期処理が完了した再に呼び出す関数を指定
                 arg         - コールバック関数の呼び出し時の引数を指定。
 
   Returns:      CAMERAResult
  *---------------------------------------------------------------------------*/
-CAMERAResult CAMERA_SetCroppingAsync(CameraSelect camera, u16 x_off, u16 y_off, u16 width, u16 height, CAMERACallback callback, void *arg);
+CAMERAResult CAMERA_I2CResizeAsync(CameraSelect camera, u16 width, u16 height, CAMERACallback callback, void *arg);
 
 /*---------------------------------------------------------------------------*
-  Name:         CAMERA_SetCropping
+  Name:         CAMERAi_I2CResize
 
-  Description:  set offset and size
+  Description:  resize CAMERA output image
+                sync version.
+
+  Arguments:    camera      - one of CameraResize
+                width       - width of the image
+                height      - height of the image
+
+  Returns:      CAMERAResult
+ *---------------------------------------------------------------------------*/
+CAMERAResult CAMERA_I2CResize(CameraSelect camera, u16 width, u16 height);
+
+/*---------------------------------------------------------------------------*
+  Name:         CAMERA_I2CFrameRateAsync
+
+  Description:  set CAMERA frame rate (0 means automatic)
+                async version
 
   Arguments:    camera      - one of CameraSelect
-                x_off       - x offset to start capturing
-                y_off       - y offset to start capturing
-                width       - width of image
-                height      - height of image
-
-  Returns:      CAMERAResult
- *---------------------------------------------------------------------------*/
-CAMERAResult CAMERA_SetCropping(CameraSelect camera, u16 x_off, u16 y_off, u16 width, u16 height);
-
-/*---------------------------------------------------------------------------*
-  Name:         CAMERA_PauseAsync
-
-  Description:  pause camera via I2C
-                async version.
-
-  Arguments:    callback    - 非同期処理が完了した再に呼び出す関数を指定
+                rate        - frame rate (fps)
+                callback    - 非同期処理が完了した再に呼び出す関数を指定
                 arg         - コールバック関数の呼び出し時の引数を指定。
 
   Returns:      CAMERAResult
  *---------------------------------------------------------------------------*/
-CAMERAResult CAMERA_PauseAsync(CAMERACallback callback, void *arg);
+CAMERAResult CAMERA_I2CFrameRateAsync(CameraSelect camera, int rate, CAMERACallback callback, void *arg);
 
 /*---------------------------------------------------------------------------*
-  Name:         CAMERA_Pause
+  Name:         CAMERA_I2CFrameRate
 
-  Description:  pause camera via I2C
+  Description:  set CAMERA frame rate (0 means automatic)
                 sync version.
 
-  Arguments:    None.
+  Arguments:    camera      - one of CameraSelect
+                rate        - frame rate (fps)
 
   Returns:      CAMERAResult
  *---------------------------------------------------------------------------*/
-CAMERAResult CAMERA_Pause(void);
+CAMERAResult CAMERA_I2CFrameRate(CameraSelect camera, int rate);
 
 /*---------------------------------------------------------------------------*
-  Name:         CAMERA_ResumeAsync
+  Name:         CAMERA_I2CEffectAsync
 
-  Description:  resume camera from pausing via I2C
-                async version.
+  Description:  set CAMERA frame rate (0 means automatic)
+                async version
 
-  Arguments:    callback    - 非同期処理が完了した再に呼び出す関数を指定
+  Arguments:    camera      - one of CameraSelect
+                effect      - one of CameraEffect
+                callback    - 非同期処理が完了した再に呼び出す関数を指定
                 arg         - コールバック関数の呼び出し時の引数を指定。
 
   Returns:      CAMERAResult
  *---------------------------------------------------------------------------*/
-CAMERAResult CAMERA_ResumeAsync(CAMERACallback callback, void *arg);
+CAMERAResult CAMERA_I2CEffectAsync(CameraSelect camera, CameraEffect effect, CAMERACallback callback, void *arg);
 
 /*---------------------------------------------------------------------------*
-  Name:         CAMERA_Resume
+  Name:         CAMERA_I2CEffect
 
-  Description:  resume camera from pausing via I2C
+  Description:  set CAMERA frame rate (0 means automatic)
                 sync version.
 
-  Arguments:    None.
+  Arguments:    camera      - one of CameraSelect
+                effect      - one of CameraEffect
 
   Returns:      CAMERAResult
  *---------------------------------------------------------------------------*/
-CAMERAResult CAMERA_Resume(void);
+CAMERAResult CAMERA_I2CEffect(CameraSelect camera, CameraEffect effect);
+
+/*---------------------------------------------------------------------------*
+  Name:         CAMERA_I2CFlipAsync
+
+  Description:  set CAMERA frame rate (0 means automatic)
+                async version
+
+  Arguments:    camera      - one of CameraSelect
+                flip        - one of CameraFlip
+                callback    - 非同期処理が完了した再に呼び出す関数を指定
+                arg         - コールバック関数の呼び出し時の引数を指定。
+
+  Returns:      CAMERAResult
+ *---------------------------------------------------------------------------*/
+CAMERAResult CAMERA_I2CFlipAsync(CameraSelect camera, CameraFlip flip, CAMERACallback callback, void *arg);
+
+/*---------------------------------------------------------------------------*
+  Name:         CAMERA_I2CFlip
+
+  Description:  set CAMERA frame rate (0 means automatic)
+                sync version.
+
+  Arguments:    camera      - one of CameraSelect
+                flip        - one of CameraFlip
+
+  Returns:      CAMERAResult
+ *---------------------------------------------------------------------------*/
+CAMERAResult CAMERA_I2CFlip(CameraSelect camera, CameraFlip flip);
 
 /*===========================================================================*/
 

@@ -29,29 +29,27 @@ TWL_PROC		= ARM7
 SRCDIR                  = ../common .
 
 SRCS			= \
-                          camera_i2c_common.c \
+                          camera_i2c.c \
 			  camera_i2c_micron.c \
 			  camera_i2c_sharp.c \
 			  camera_control.c \
 
-L_SET_FILE	:= A3AFX_EVT2_20fps_16M_PLLoff_hVGA_070209.set \
-                   A3AFX_EVT2_30fps_16M_QVGA_070206.set \
-                   A3AFX_EVT2_20fps_16M_070206.set \
-                   320x240_noPLL_20fps_070306.set \
-                   320x240_PLL_30fps_070306.set \
-                   A3AFX_EVT3_30fps_Scaledown_16.7M_50Hz.set \
-                   A3AFX_EVT3_30fps_Subsampling_16.7M_50Hz.set \
+MICRON_INI_FILE		:= \
+			  MT9V113-MTM9-2.ini \
+			  MT9V113-MTM10.ini \
+			  MT9V113-nin00.ini \
 
-L_INI_FILE	:= MT9V113-MTM9-2.ini
+MICRON_CONVERT_EXE	:= convert_micron.pl
 
-L_SET_CONVERT_EXE	:= convert_samsung.pl
-L_INI_CONVERT_EXE	:= convert_micron.pl
+MICRON_INIC_FILE	:= $(MICRON_INI_FILE:%.ini=%.autogen.c)
 
-L_SETC_FILE	:= $(L_SET_FILE:%.set=%.autogen.c)
-#SRCS		+= $(L_SETC_FILE)
+SHARP_DAT_FILE		:= \
+			  5030_15fpsFIX_x8_CC_FilterKIM_MatrixOn3_PLL.dat \
+			  5030_15fps_5fps_adjust2_x8_CC_FilterKIM_MatrixOn3_PLL_1676MHz-1676MHz.dat \
 
-L_INIC_FILE	:= $(L_INI_FILE:%.ini=%.autogen.c)
-SRCS		+= $(L_INIC_FILE)
+SHARP_CONVERT_EXE	:= convert_sharp.pl
+
+SHARP_DATC_FILE	:= $(SHARP_DAT_FILE:%.dat=%.autogen.c)
 
 TARGET_LIB		= libcamera_sp$(TWL_LIBSUFFIX).a
 
@@ -77,10 +75,13 @@ do-build:		$(TARGETS)
 
 include	$(TWLSDK_ROOT)/build/buildtools/modulerules
 
+%.autogen.c: %.ini $(MICRON_CONVERT_EXE)
+	perl $(MICRON_CONVERT_EXE) $< $@
 
-%.autogen.c: %.ini $(L_INI_CONVERT_EXE)
-	perl $(L_INI_CONVERT_EXE) $< > $@
+%.autogen.c: %.dat $(SHARP_CONVERT_EXE)
+	perl $(SHARP_CONVERT_EXE) $< $@
 
-%.autogen.c: %.set $(L_SET_CONVERT_EXE)
-	perl $(L_INI_CONVERT_EXE) $< > $@
+$(OBJDIR)/camera_i2c_micron.o: $(MICRON_INIC_FILE)
+$(OBJDIR)/camera_i2c_sharp.o: $(SHARP_DATC_FILE)
+
 #===== End of Makefile =====

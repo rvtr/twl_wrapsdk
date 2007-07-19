@@ -16,11 +16,7 @@
 #ifndef TWL_CAMERA_I2C_SHARP_H_
 #define TWL_CAMERA_I2C_SHARP_H_
 
-#include <twl/types.h>
 #include <twl/i2c/ARM7/i2c.h>
-#include <twl/camera/common/types.h>
-
-#define CAMERA_DOES_NOT_SUPPORT_MULTIPLE_IO
 
 #if 0
     Write時にNONEを指定するとTRUEで返り、Read時にNONEを指定するとFALSEで返る。
@@ -33,12 +29,12 @@ extern "C" {
 #endif
 
 //================================================================================
-//        I2C_ ACCESS
+//        I2C ACCESS
 //================================================================================
 /*---------------------------------------------------------------------------*
-  Name:         CAMERA_S_WriteRegister
+  Name:         CAMERAi_S_WriteRegister
 
-  Description:  set value to decive register through I2C_.
+  Description:  set value to decive register through I2C.
 
   Arguments:    camera  : one of CameraSelect
                 reg     : decive register
@@ -52,11 +48,11 @@ static inline BOOL CAMERAi_S_WriteRegister( CameraSelect camera, u8 reg, u8 data
     BOOL rOut = TRUE;
     if (camera & CAMERA_SELECT_IN)
     {
-        rIn = I2Ci_WriteRegister( I2C_SLAVE_CAMERA_MICRON_IN, reg, data );
+        rIn = I2Ci_WriteRegister( I2C_SLAVE_CAMERA_SHARP_IN, reg, data );
     }
     if (camera & CAMERA_SELECT_OUT)
     {
-        rOut = I2Ci_WriteRegister( I2C_SLAVE_CAMERA_MICRON_OUT, reg, data );
+        rOut = I2Ci_WriteRegister( I2C_SLAVE_CAMERA_SHARP_OUT, reg, data );
     }
     return (rIn && rOut);
 }
@@ -66,19 +62,19 @@ static inline BOOL CAMERA_S_WriteRegister( CameraSelect camera, u8 reg, u8 data 
     BOOL rOut = TRUE;
     if (camera & CAMERA_SELECT_IN)
     {
-        rIn = I2C_WriteRegister( I2C_SLAVE_CAMERA_MICRON_IN, reg, data );
+        rIn = I2C_WriteRegister( I2C_SLAVE_CAMERA_SHARP_IN, reg, data );
     }
     if (camera & CAMERA_SELECT_OUT)
     {
-        rOut = I2C_WriteRegister( I2C_SLAVE_CAMERA_MICRON_OUT, reg, data );
+        rOut = I2C_WriteRegister( I2C_SLAVE_CAMERA_SHARP_OUT, reg, data );
     }
     return (rIn && rOut);
 }
 
 /*---------------------------------------------------------------------------*
-  Name:         CAMERA_S_ReadRegister
+  Name:         CAMERAi_S_ReadRegister
 
-  Description:  get value from decive register through I2C_.
+  Description:  get value from decive register through I2C.
 
   Arguments:    camera  : one of CameraSelect w/o BOTH
                 reg      : decive register
@@ -90,9 +86,9 @@ static inline u8 CAMERAi_S_ReadRegister( CameraSelect camera, u8 reg )
     switch (camera)
     {
     case CAMERA_SELECT_IN:
-        return I2Ci_ReadRegister( I2C_SLAVE_CAMERA_MICRON_IN, reg );
+        return I2Ci_ReadRegister( I2C_SLAVE_CAMERA_SHARP_IN, reg );
     case CAMERA_SELECT_OUT:
-        return I2Ci_ReadRegister( I2C_SLAVE_CAMERA_MICRON_OUT, reg );
+        return I2Ci_ReadRegister( I2C_SLAVE_CAMERA_SHARP_OUT, reg );
     }
     return FALSE;
 }
@@ -101,17 +97,17 @@ static inline u8 CAMERA_S_ReadRegister( CameraSelect camera, u8 reg )
     switch (camera)
     {
     case CAMERA_SELECT_IN:
-        return I2C_ReadRegister( I2C_SLAVE_CAMERA_MICRON_IN, reg );
+        return I2C_ReadRegister( I2C_SLAVE_CAMERA_SHARP_IN, reg );
     case CAMERA_SELECT_OUT:
-        return I2C_ReadRegister( I2C_SLAVE_CAMERA_MICRON_OUT, reg );
+        return I2C_ReadRegister( I2C_SLAVE_CAMERA_SHARP_OUT, reg );
     }
     return FALSE;
 }
 
 /*---------------------------------------------------------------------------*
-  Name:         CAMERA_S_WriteRegisters
+  Name:         CAMERAi_S_WriteRegisters
 
-  Description:  set value to decive registers through I2C_.
+  Description:  set value to decive registers through I2C.
 
   Arguments:    camera  : one of CameraSelect
                 reg      : decive register
@@ -126,35 +122,11 @@ static inline BOOL CAMERAi_S_WriteRegisters( CameraSelect camera, u8 reg, const 
     BOOL rOut = TRUE;
     if (camera & CAMERA_SELECT_IN)
     {
-#ifdef CAMERA_DOES_NOT_SUPPORT_MULTIPLE_IO
-        while ( size > 0 )
-        {
-            if ( FALSE == I2Ci_WriteRegisters( I2C_SLAVE_CAMERA_MICRON_IN, reg++, bufp++, 1 ) )
-            {
-                break;
-            }
-            size--;
-        }
-        rIn = (size == 0 ? TRUE : FALSE);
-#else
-        rIn = I2Ci_WriteRegisters( I2C_SLAVE_CAMERA_MICRON_IN, reg, bufp, size );
-#endif
+        rIn = I2Ci_WriteRegisters( I2C_SLAVE_CAMERA_SHARP_IN, reg, bufp, size );
     }
     if (camera & CAMERA_SELECT_OUT)
     {
-#ifdef CAMERA_DOES_NOT_SUPPORT_MULTIPLE_IO
-        while ( size > 0 )
-        {
-            if ( FALSE == I2Ci_WriteRegisters( I2C_SLAVE_CAMERA_MICRON_OUT, reg++, bufp++, 1 ) )
-            {
-                break;
-            }
-            size--;
-        }
-        rOut = (size == 0 ? TRUE : FALSE);
-#else
-        rOut = I2Ci_WriteRegisters( I2C_SLAVE_CAMERA_MICRON_OUT, reg, bufp, size );
-#endif
+        rOut = I2Ci_WriteRegisters( I2C_SLAVE_CAMERA_SHARP_OUT, reg, bufp, size );
     }
     return (rIn && rOut);
 }
@@ -164,47 +136,19 @@ static inline BOOL CAMERA_S_WriteRegisters( CameraSelect camera, u8 reg, const u
     BOOL rOut = TRUE;
     if (camera & CAMERA_SELECT_IN)
     {
-#ifdef CAMERA_DOES_NOT_SUPPORT_MULTIPLE_IO
-        (void)I2C_Lock();
-        while ( size > 0 )
-        {
-            if ( FALSE == I2Ci_WriteRegisters( I2C_SLAVE_CAMERA_MICRON_IN, reg++, bufp++, 1 ) )
-            {
-                break;
-            }
-            size--;
-        }
-        (void)I2C_Unlock();
-        rIn = (size == 0 ? TRUE : FALSE);
-#else
-        rOut = I2C_WriteRegisters( I2C_SLAVE_CAMERA_MICRON_IN, reg, bufp, size );
-#endif
+        rOut = I2C_WriteRegisters( I2C_SLAVE_CAMERA_SHARP_IN, reg, bufp, size );
     }
     if (camera & CAMERA_SELECT_OUT)
     {
-#ifdef CAMERA_DOES_NOT_SUPPORT_MULTIPLE_IO
-        (void)I2C_Lock();
-        while ( size > 0 )
-        {
-            if ( FALSE == I2Ci_WriteRegisters( I2C_SLAVE_CAMERA_MICRON_OUT, reg++, bufp++, 1 ) )
-            {
-                break;
-            }
-            size--;
-        }
-        (void)I2C_Unlock();
-        rOut = (size == 0 ? TRUE : FALSE);
-#else
-        rOut = I2C_WriteRegisters( I2C_SLAVE_CAMERA_MICRON_OUT, reg, bufp, size );
-#endif
+        rOut = I2C_WriteRegisters( I2C_SLAVE_CAMERA_SHARP_OUT, reg, bufp, size );
     }
     return (rIn && rOut);
 }
 
 /*---------------------------------------------------------------------------*
-  Name:         CAMERA_S_ReadRegisters
+  Name:         CAMERAi_S_ReadRegisters
 
-  Description:  get value from decive registers through I2C_.
+  Description:  get value from decive registers through I2C.
 
   Arguments:    camera  : one of CameraSelect w/o BOTH
                 reg      : decive register
@@ -215,88 +159,32 @@ static inline BOOL CAMERA_S_WriteRegisters( CameraSelect camera, u8 reg, const u
  *---------------------------------------------------------------------------*/
 static inline BOOL CAMERAi_S_ReadRegisters( CameraSelect camera, u8 reg, u8 *bufp, size_t size )
 {
-#ifdef CAMERA_DOES_NOT_SUPPORT_MULTIPLE_IO
     switch (camera)
     {
     case CAMERA_SELECT_IN:
-        while ( size > 0 )
-        {
-            if ( FALSE == I2Ci_ReadRegisters( I2C_SLAVE_CAMERA_MICRON_IN, reg++, bufp++, 1 ) )
-            {
-                break;
-            }
-            size--;
-        }
-        break;
+        return I2Ci_ReadRegisters( I2C_SLAVE_CAMERA_SHARP_IN, reg, bufp, size );
     case CAMERA_SELECT_OUT:
-        while ( size > 0 )
-        {
-            if ( FALSE == I2Ci_ReadRegisters( I2C_SLAVE_CAMERA_MICRON_OUT, reg++, bufp++, 1 ) )
-            {
-                break;
-            }
-            size--;
-        }
-        break;
-    }
-    return (size == 0 ? TRUE : FALSE);
-#else
-    switch (camera)
-    {
-    case CAMERA_SELECT_IN:
-        return I2Ci_ReadRegisters( I2C_SLAVE_CAMERA_MICRON_IN, reg, bufp, size );
-    case CAMERA_SELECT_OUT:
-        return I2Ci_ReadRegisters( I2C_SLAVE_CAMERA_MICRON_OUT, reg, bufp, size );
+        return I2Ci_ReadRegisters( I2C_SLAVE_CAMERA_SHARP_OUT, reg, bufp, size );
     }
     return FALSE;
-#endif
 }
 static inline BOOL CAMERA_S_ReadRegisters( CameraSelect camera, u8 reg, u8 *bufp, size_t size )
 {
-#ifdef CAMERA_DOES_NOT_SUPPORT_MULTIPLE_IO
-    (void)I2C_Lock();
     switch (camera)
     {
     case CAMERA_SELECT_IN:
-        while ( size > 0 )
-        {
-            if ( FALSE == I2Ci_ReadRegisters( I2C_SLAVE_CAMERA_MICRON_IN, reg++, bufp++, 1 ) )
-            {
-                break;
-            }
-            size--;
-        }
-        break;
+        return I2C_ReadRegisters( I2C_SLAVE_CAMERA_SHARP_IN, reg, bufp, size );
     case CAMERA_SELECT_OUT:
-        while ( size > 0 )
-        {
-            if ( FALSE == I2Ci_ReadRegisters( I2C_SLAVE_CAMERA_MICRON_OUT, reg++, bufp++, 1 ) )
-            {
-                break;
-            }
-            size--;
-        }
-        break;
-    }
-    (void)I2C_Unlock();
-    return (size == 0 ? TRUE : FALSE);
-#else
-    switch (camera)
-    {
-    case CAMERA_SELECT_IN:
-        return I2C_ReadRegisters( I2C_SLAVE_CAMERA_MICRON_IN, reg, bufp, size );
-    case CAMERA_SELECT_OUT:
-        return I2C_ReadRegisters( I2C_SLAVE_CAMERA_MICRON_OUT, reg, bufp, size );
+        return I2C_ReadRegisters( I2C_SLAVE_CAMERA_SHARP_OUT, reg, bufp, size );
     }
     return FALSE;
-#endif
 }
 
 //================================================================================
-//        I2C_ BIT CONTROL
+//        I2C BIT CONTROL
 //================================================================================
 /*---------------------------------------------------------------------------*
-  Name:         CAMERA_S_SetParams
+  Name:         CAMERAi_S_SetParams
 
   Description:  set control bit to device register
 
@@ -313,11 +201,11 @@ static inline BOOL CAMERAi_S_SetParams( CameraSelect camera, u8 reg, u8 setBits,
     BOOL rOut = TRUE;
     if (camera & CAMERA_SELECT_IN)
     {
-        rIn = I2Ci_SetParams( I2C_SLAVE_CAMERA_MICRON_IN, reg, setBits, maskBits );
+        rIn = I2Ci_SetParams( I2C_SLAVE_CAMERA_SHARP_IN, reg, setBits, maskBits );
     }
     if (camera & CAMERA_SELECT_OUT)
     {
-        rOut = I2Ci_SetParams( I2C_SLAVE_CAMERA_MICRON_OUT, reg, setBits, maskBits );
+        rOut = I2Ci_SetParams( I2C_SLAVE_CAMERA_SHARP_OUT, reg, setBits, maskBits );
     }
     return (rIn && rOut);
 }
@@ -327,17 +215,17 @@ static inline BOOL CAMERA_S_SetParams( CameraSelect camera, u8 reg, u8 setBits, 
     BOOL rOut = TRUE;
     if (camera & CAMERA_SELECT_IN)
     {
-        rIn = I2C_SetParams( I2C_SLAVE_CAMERA_MICRON_IN, reg, setBits, maskBits );
+        rIn = I2C_SetParams( I2C_SLAVE_CAMERA_SHARP_IN, reg, setBits, maskBits );
     }
     if (camera & CAMERA_SELECT_OUT)
     {
-        rOut = I2C_SetParams( I2C_SLAVE_CAMERA_MICRON_OUT, reg, setBits, maskBits );
+        rOut = I2C_SetParams( I2C_SLAVE_CAMERA_SHARP_OUT, reg, setBits, maskBits );
     }
     return (rIn && rOut);
 }
 
 /*---------------------------------------------------------------------------*
-  Name:         CAMERA_S_SetFlags
+  Name:         CAMERAi_S_SetFlags
 
   Description:  set control bit to device register
 
@@ -357,7 +245,7 @@ static inline BOOL CAMERA_S_SetFlags( CameraSelect camera, u8 reg, u8 setBits )
 }
 
 /*---------------------------------------------------------------------------*
-  Name:         CAMERA_S_ClearFlags
+  Name:         CAMERAi_S_ClearFlags
 
   Description:  clear control bit to device register
 
@@ -378,10 +266,10 @@ static inline BOOL CAMERA_S_ClearFlags( CameraSelect camera, u8 reg, u8 clrBits 
 
 
 //================================================================================
-//        I2C_ API
+//        I2C API
 //================================================================================
 /*---------------------------------------------------------------------------*
-  Name:         CAMERA_S_I2CInit
+  Name:         CAMERAi_S_I2CInit
 
   Description:  initialize CAMERA
 
@@ -389,10 +277,10 @@ static inline BOOL CAMERA_S_ClearFlags( CameraSelect camera, u8 reg, u8 clrBits 
 
   Returns:      TRUE if success
  *---------------------------------------------------------------------------*/
-BOOL CAMERA_S_I2CInit(CameraSelect camera);
+BOOL CAMERAi_S_I2CInit(CameraSelect camera);
 
 /*---------------------------------------------------------------------------*
-  Name:         CAMERA_S_I2CStandby
+  Name:         CAMERAi_S_I2CStandby
 
   Description:  standby or resume CAMERA
 
@@ -401,10 +289,10 @@ BOOL CAMERA_S_I2CInit(CameraSelect camera);
 
   Returns:      TRUE if success
  *---------------------------------------------------------------------------*/
-BOOL CAMERA_S_I2CStandby(CameraSelect camera, BOOL standby);
+BOOL CAMERAi_S_I2CStandby(CameraSelect camera, BOOL standby);
 
 /*---------------------------------------------------------------------------*
-  Name:         CAMERA_S_I2CResize
+  Name:         CAMERAi_S_I2CResize
 
   Description:  resize CAMERA
 
@@ -414,30 +302,44 @@ BOOL CAMERA_S_I2CStandby(CameraSelect camera, BOOL standby);
 
   Returns:      TRUE if success
  *---------------------------------------------------------------------------*/
-BOOL CAMERA_S_I2CResize(CameraSelect camera, u16 width, u16 height);
+BOOL CAMERAi_S_I2CResize(CameraSelect camera, u16 width, u16 height);
+
 
 /*---------------------------------------------------------------------------*
-  Name:         CAMERA_S_I2CPreSleep
+  Name:         CAMERAi_S_I2CFrameRate
 
-  Description:  preset CAMERA registers
+  Description:  set CAMERA frame rate
 
   Arguments:    camera  : one of CameraSelect
+                rate    : fps (0: auto)
 
   Returns:      TRUE if success
  *---------------------------------------------------------------------------*/
-BOOL CAMERA_S_I2CPreSleep(CameraSelect camera);
+BOOL CAMERAi_S_I2CFrameRate(CameraSelect camera, int rate);
 
 /*---------------------------------------------------------------------------*
-  Name:         CAMERA_S_I2CPostSleep
+  Name:         CAMERAi_S_I2CEffect
 
-  Description:  preset CAMERA registers
+  Description:  set CAMERA effect
 
   Arguments:    camera  : one of CameraSelect
+                effect  : one of CameraEffect
 
   Returns:      TRUE if success
  *---------------------------------------------------------------------------*/
-BOOL CAMERA_S_I2CPostSleep(CameraSelect camera);
+BOOL CAMERAi_S_I2CEffect(CameraSelect camera, CameraEffect effect);
 
+/*---------------------------------------------------------------------------*
+  Name:         CAMERAi_S_I2CFlip
+
+  Description:  set CAMERA flip/mirror
+
+  Arguments:    camera  : one of CameraSelect
+                flip    : one of CameraFlip
+
+  Returns:      TRUE if success
+ *---------------------------------------------------------------------------*/
+BOOL CAMERAi_S_I2CFlip(CameraSelect camera, CameraFlip flip);
 
 #ifdef _cplusplus
 } /* extern "C" */

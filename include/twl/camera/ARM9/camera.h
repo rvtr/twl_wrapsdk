@@ -43,30 +43,6 @@ typedef enum {
 } CameraIntrVsync;
 
 /*---------------------------------------------------------------------------*
-  Name:         CAMERA_Select
-
-  Description:  select camera to activate
-
-  Arguments:    camera      one of CameraSelect
-
-  Returns:      TRUE if success
- *---------------------------------------------------------------------------*/
-BOOL CAMERA_Select( CameraSelect camera );
-
-#if 0
-/*---------------------------------------------------------------------------*
-  Name:         CAMERA_SetStbyn
-
-  Description:  set stbyn
-
-  Arguments:    BOOL    High/Low
-
-  Returns:      BOOL    last state
- *---------------------------------------------------------------------------*/
-BOOL CAMERA_SetStbyn( BOOL high );
-#endif
-
-/*---------------------------------------------------------------------------*
   Name:         CAMERA_PowerOn
 
   Description:  power camera on
@@ -87,28 +63,6 @@ void CAMERA_PowerOn( void );
   Returns:      None
  *---------------------------------------------------------------------------*/
 void CAMERA_PowerOff( void );
-
-/*---------------------------------------------------------------------------*
-  Name:         cameraPreSleep
-
-  Description:  pre-sleep process for CAMERA without power off
-
-  Arguments:    None
-
-  Returns:      None
- *---------------------------------------------------------------------------*/
-void CAMERA_PreSleep( void );
-
-/*---------------------------------------------------------------------------*
-  Name:         CAMERA_PostSleep
-
-  Description:  pre-sleep process for CAMERA without power off
-
-  Arguments:    None
-
-  Returns:      None
- *---------------------------------------------------------------------------*/
-void CAMERA_PostSleep( void );
 
 /*---------------------------------------------------------------------------*
   Name:         CAMERA_IsBusy
@@ -144,33 +98,9 @@ void CAMERA_Start( void );
 void CAMERA_Stop( void );
 
 /*---------------------------------------------------------------------------*
-  Name:         CAMERA_SetSyncLowActive
-
-  Description:  set CAMERA sync polarity
-
-  Arguments:    isLowActive     if low active, set TRUE
-
-  Returns:      None
- *---------------------------------------------------------------------------*/
-void CAMERA_SetSyncLowActive( BOOL isLowActive );
-
-/*---------------------------------------------------------------------------*
-  Name:         CAMERA_SetRclkNegativeEdge
-
-  Description:  set CAMERA rclk edge.
-                Should call while master clock is stopping.
-
-  Arguments:    isNegativeEdge      if negative edge, set TRUE
-
-  Returns:      None
- *---------------------------------------------------------------------------*/
-void CAMERA_SetRclkNegativeEdge( BOOL isNegativeEdge );
-
-/*---------------------------------------------------------------------------*
   Name:         CAMERA_SetTrimmingParamsCenter
 
   Description:  set camera trimming parameters by centering
-                expecting original image size is VGA.
                 NOTE: should call CAMERA_SetTrimming to enable trimming
 
   Arguments:    destWidth       width of image to output
@@ -201,7 +131,7 @@ void CAMERA_SetTrimmingParams(u16 x1, u16 y1, u16 x2, u16 y2);
 /*---------------------------------------------------------------------------*
   Name:         CAMERA_SetTrimming
 
-  Description:  set trimming enable/disable
+  Description:  set trimming to be enabled/disabled
 
   Arguments:    enabled     TRUE if set trimming will be enabled
 

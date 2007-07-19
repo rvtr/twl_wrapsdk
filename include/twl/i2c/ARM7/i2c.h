@@ -51,8 +51,8 @@ I2CReadWrite;
 
 
 #define I2C_ADDR_CODEC      (0x18 << 1)
-#define I2C_ADDR_CAMERA_MICRON_IN   0x78    // MICRON
-#define I2C_ADDR_CAMERA_MICRON_OUT  0x7A    // MICRON
+#define I2C_ADDR_CAMERA_MICRON_IN   0x7A    // MICRON
+#define I2C_ADDR_CAMERA_MICRON_OUT  0x78    // MICRON
 #define I2C_ADDR_CAMERA_SHARP_IN    0xE0    // SHARP
 #define I2C_ADDR_CAMERA_SHARP_OUT   0xA0    // SHARP
 
@@ -494,33 +494,6 @@ static inline BOOL I2C_VerifyRegisters16( I2CSlave id, u16 reg, const u16 *bufp,
     (void)I2C_Unlock();
     return result;
 }
-
-#if 0
-//================================================================================
-//        INTERRUPT
-//================================================================================
-/*---------------------------------------------------------------------------*
-  Name:         I2Ci_EnableInterrupt
-
-  Description:  enable I2C interrupt for each device.
-
-  Arguments:    None.
-
-  Returns:      None.
- *---------------------------------------------------------------------------*/
-void I2Ci_EnableInterrupt( void );
-
-/*---------------------------------------------------------------------------*
-  Name:         I2Ci_DisableInterrupt
-
-  Description:  disable I2C interrupt for each device.
-
-  Arguments:    None.
-
-  Returns:      None.
- *---------------------------------------------------------------------------*/
-void I2Ci_DisableInterrupt( void );
-#endif
 
 #ifdef __cplusplus
 } /* extern "C" */

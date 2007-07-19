@@ -1,0 +1,1287 @@
+//**************************************************************************************
+// Copyright 2006 Micron Technology, Inc. All rights reserved.
+//
+//
+// No permission to use, copy, modify, or distribute this software and/or
+// its documentation for any purpose has been granted by Micron Technology, Inc.
+// If any such permission has been granted ( by separate agreement ), it
+// is required that the above copyright notice appear in all copies and
+// that both that copyright notice and this permission notice appear in
+// supporting documentation, and that the name of Micron Technology, Inc. or any
+// of its trademarks may not be used in advertising or publicity pertaining
+// to distribution of the software without specific, written prior permission.
+//
+//
+//      This software and any associated documentation are provided “AS IS” and 
+//      without warranty of any kind.   MICRON TECHNOLOGY, INC. EXPRESSLY DISCLAIMS 
+//      ALL WARRANTIES EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO, NONINFRINGEMENT 
+//      OF THIRD PARTY RIGHTS, AND ANY IMPLIED WARRANTIES OF MERCHANTABILITY OR FITNESS 
+//      FOR A PARTICULAR PURPOSE.  MICRON DOES NOT WARRANT THAT THE FUNCTIONS CONTAINED 
+//      IN THIS SOFTWARE WILL MEET YOUR REQUIREMENTS, OR THAT THE OPERATION OF THIS SOFTWARE 
+//      WILL BE UNINTERRUPTED OR ERROR-FREE.  FURTHERMORE, MICRON DOES NOT WARRANT OR 
+//      MAKE ANY REPRESENTATIONS REGARDING THE USE OR THE RESULTS OF THE USE OF ANY 
+//      ACCOMPANYING DOCUMENTATION IN TERMS OF ITS CORRECTNESS, ACCURACY, RELIABILITY, 
+//      OR OTHERWISE.  
+//*************************************************************************************/
+//
+//$Revision: 1.4 $
+//$Date: 2007/02/28 08:03:26 $
+//
+// The sensor data file should adhere to the following form.  Note that
+// all of the fields in the chip descriptor section are required. 
+// The register section contains certain known registers and additional
+// registers which are not predefined. The current known registers are:
+//     CHIP_VERSION_REG
+//     RESET_REG
+//     GREEN1_GAIN_REG
+//     BLUE_GAIN_REG
+//     RED_GAIN_REG
+//     GREEN2_GAIN_REG
+//     HORZ_BLANK_REG 
+//     INTEG_TIME_REG
+//     VREF_REG 
+//
+// [CHIP_DESCRIPTOR]
+//    SENSORNAME = "string"
+//    WIDTH = integer
+//    HEIGHT = integer
+//    IMAGE_TYPE = BAYER
+//    BITS_PER_CLOCK = integer
+//    CLOCKS_PER_PIXEL = integer
+//    PIXEL_CLOCK_POLARITY = 0/1
+//    SHIP_BASE_ADDRESS = hex 
+// [END]
+//
+// [OPTIONAL]
+//    PART_NUMBER = "string"
+//    EXTRA_DESC_REG = register
+//    SENSOR_VERSION = integer
+// [END]
+//
+// [REGISTERS]
+//    REGDEF = {hex, CORE/IP, int, hex, RW/RO, hex, "string", "string"}
+//      {BITDEF, hex, RW/RO, "string", "string"}
+//      {BITDEF, hex, RW/RO, "string", "string"}
+//      ...
+//      {BITDEF, hex, RW/RO, "string", "string"}
+// [END]
+//
+
+[CHIP_DESCRIPTOR]
+SENSORNAME = "MI-0380SOC"
+WIDTH = 320
+HEIGHT = 240
+IMAGE_TYPE = YCBCR
+BITS_PER_CLOCK = 8
+CLOCKS_PER_PIXEL = 2
+PIXEL_CLOCK_POLARITY = 1
+SHIP_BASE_ADDRESS =( 0x7A 0x78 )
+[END]
+
+[ADDR_SPACE]
+CORE    = {REG, 0, "0: Core Registers"}
+SOC1    = {REG, 1, "1: SOC1 Registers"}
+SOC2    = {REG, 2, "2: SOC2 Registers"}
+SYSCTL  = {REG, 3, "SYSCTL Registers"}
+RX_SS   = {REG, 4, "RX_SS Registers"}
+XDMA    = {REG, 5, "XDMA Registers"}
+MON     = {MCU, 0, "0: Monitor Variables"}
+SEQ     = {MCU, 1, "1: Sequencer Variables"}
+AE      = {MCU, 2, "2: Auto Exposure Variables"}
+AWB     = {MCU, 3, "3: Auto White Balance Variables"}
+FD      = {MCU, 4, "4: Anti-Flicker Variables"}
+MODE    = {MCU, 7, "7: Mode Variables"}
+HG      = {MCU, 11, "11: Histogram Variables"}
+SFR     = {SFR, 0, "GPIO Registers"}
+[END]
+
+[OPTIONAL]
+PART_NUMBER = "MT9V113"
+SENSOR_VERSION = 1
+FULL_WIDTH = 640
+FULL_HEIGHT = 480
+SDAT_VERSION = 2
+REG_ADDR_SIZE = 16
+REG_DATA_SIZE = 16
+VERSION_NAME = "REV1"
+[END]
+
+//REGDEF =                     {ADDR, TYPE, SPAN, MASK,   RW, DEFAULT, DESC, DETAIL}
+//  {BITDEF,                                      MASK,   RW,          DESC, DETAIL}
+//  {BITDEF,                                      MASK,   RW,          DESC, DETAIL}
+//  ...
+//  {BITDEF,                                      MASK,   RW,          DESC, DETAIL}
+
+[REGISTERS]
+CHIP_VERSION_REG =             {0x0000,  SYSCTL, 1, 0xFFFF, RO, 0x2280, "k22a_chip_id", ""}
+RESERVED_SYSCTL_06 =           {0x0006,  SYSCTL, 1, 0xC000, RW, 0x0000, "Reserved", ""}
+PLL_DIVIDERS =                 {0x0010,  SYSCTL, 1, 0x3FFF, RW, 0x0231, "pll_dividers", ""}
+    {M,                                             0x00FF, RW,         "0-7: m", ""}
+    {N,                                             0x3F00, RW,         "8-13: n", ""}
+PLL_P_DIVIDERS =               {0x0012,  SYSCTL, 1, 0x3FFF, RW, 0x0000, "pll_p_dividers", ""}
+    {BITS_0_3,                                      0x000F, RW,         "0-3: Reserved", ""}
+    {BITS_4_7,                                      0x00F0, RW,         "4-7: Reserved", ""}
+    {P3,                                            0x0F00, RW,         "8-11: p3", ""}
+    {WORD_CLOCK_DIVIDER,                            0x3000, RW,         "12-13: word_clock_divider", ""}
+PLL_CONTROL =                  {0x0014,  SYSCTL, 1, 0x7FFF, RW, 0x2145, "pll_control", ""}
+    {PLL_BYPASS,                                    0x0001, RW,         "0: pll_bypass", ""}
+    {PLL_ENABLE,                                    0x0002, RW,         "1: pll_pd", ""}
+    {BITS_2_3,                                      0x000C, RW,         "2-3: Reserved", ""}
+    {BIT_4,                                         0x0010, RW,         "4: Reserved", ""}
+    {RESET_CNTR,                                    0x0100, RW,         "8: reset_cntr", ""}
+    {BIT_9,                                         0x0200, RW,         "9: Reserved", ""}
+    {TEST_BYPASS,                                   0x0400, RW,         "10: test_bypass", ""}
+    {BIT_11,                                        0x0800, RW,         "11: Reserved", ""}
+    {BIT_12,                                        0x1000, RW,         "12: Reserved", ""}
+    {CLOCKIN_HYST_EN,                               0x2000, RW,         "13: clockin_hyst_en", ""}
+    {BIT_14,                                        0x4000, RW,         "14: Reserved", ""}
+    {PLL_LOCK_STATUS,                               0x8000, RO,         "15: pll_lock_status", ""}
+CLOCKS_CONTROL =               {0x0016,  SYSCTL, 1, 0x7FFF, RW, 0x0000, "clocks_control", ""}
+    {BIT_0,                                         0x0001, RW,         "0: Reserved", ""}
+    {BIT_1,                                         0x0002, RW,         "1: Reserved", ""}
+    {BIT_2,                                         0x0004, RW,         "2: Reserved", ""}
+    {BIT_3,                                         0x0008, RW,         "3: Reserved", ""}
+    {BIT_4,                                         0x0010, RW,         "4: Reserved", ""}
+    {BIT_5,                                         0x0020, RW,         "5: Reserved", ""}
+    {BIT_6,                                         0x0040, RW,         "6: Reserved", ""}
+    {BIT_7,                                         0x0080, RW,         "7: Reserved", ""}
+    {BIT_8,                                         0x0100, RW,         "8: Reserved", ""}
+    {CLK_CLKIN_EN,                                  0x0200, RW,         "9: clk_clkin_en", ""}
+    {BIT_10,                                        0x0400, RW,         "10: Reserved", ""}
+    {BITS_11_12,                                    0x1800, RW,         "11-12: Reserved", ""}
+    {BIT_13,                                        0x2000, RW,         "13: Reserved", ""}
+    {INVERT_OUTPUT_CLOCK,                           0x4000, RW,         "14: invert_output_clock", ""}
+STANDBY_CONTROL =              {0x0018,  SYSCTL, 1, 0xC03F, RW, 0x4029, "standby_control_and_status", ""}
+    {SHIP,                                          0x0001, RW,         "0: standby_i2c", ""}
+    {BIT_1,                                         0x0002, RW,         "1: Reserved", ""}
+    {BIT_2,                                         0x0004, RW,         "2: Reserved", ""}
+    {EN_XIRQ,                                       0x0008, RW,         "3: en_xirq", ""}
+    {BIT_4,                                         0x0010, RW,         "4: Reserved", ""}
+    {BIT_5,                                         0x0020, RW,         "5: Reserved", ""}
+    {STANDBY_DONE,                                  0x4000, RW,         "14: standby_done", ""}
+    {BIT_15,                                        0x8000, RO,         "15: Reserved", ""}
+RESET_AND_MISC_CONTROL =       {0x001A,  SYSCTL, 1, 0x033B, RW, 0x0010, "reset_and_misc_control", ""}
+    {RESET_SOC_I2C,                                 0x0001, RW,         "0: reset_soc_i2c", ""}
+    {MIPI_TX_RESET,                                 0x0002, RW,         "1: mipi_tx_reset", ""}
+    {BIT_3,                                         0x0008, RW,         "3: Reserved", ""}
+    {IP_PD_EN,                                      0x0010, RW,         "4: ip_pd_en", ""}
+    {STOP_CLKIN_IP,                                 0x0020, RW,         "5: stop_clkin_ip", ""}
+    {OE_N_ENABLE,                                   0x0100, RW,         "8: oe_n_enable", ""}
+    {PARALLEL_ENABLE,                               0x0200, RW,         "9: parallel_enable", ""}
+MCU_BOOT_MODE =                {0x001C,  SYSCTL, 1, 0xFFFF, RW, 0x0000, "mcu_boot_mode", ""}
+    {RESET_MCU,                                     0x0001, RW,         "0: mcu_soft_rst_i2c", ""}
+    {BIT_1,                                         0x0002, RW,         "1: Reserved", ""}
+    {BIT_2,                                         0x0004, RW,         "2: Reserved", ""}
+    {BIT_3,                                         0x0008, RW,         "3: Reserved", ""}
+    {BITS_4_7,                                      0x00F0, RW,         "4-7: Reserved", ""}
+    {BITS_8_15,                                     0xFF00, RO,         "8-15: Reserved", ""}
+PAD_SLEW =                     {0x001E,  SYSCTL, 1, 0x0777, RW, 0x0400, "pad_slew", ""}
+    {SLEW_IO,                                       0x0007, RW,         "0-2: slew_io", ""}
+    {SLEW_GPIO,                                     0x0070, RW,         "4-6: slew_gpio", ""}
+    {SLEW_PXLCLK,                                   0x0700, RW,         "8-10: slew_pxlclk", ""}
+    {GPIO_OPSRC_CTRL,                               0x1800, RW,         "11-12: gpio_opsrc_ctrl", ""}
+RESERVED_SYSCTL_20 =           {0x0020,  SYSCTL, 1, 0x0001, RW, 0x0000, "Reserved", ""}
+VDD_DIS_COUNTER =              {0x0022,  SYSCTL, 1, 0xFFFF, RW, 0x0438, "vdd_dis_counter", ""}
+GPI_STATUS =                   {0x0024,  SYSCTL, 1, 0x003B, RO, 0x0003, "gpi_status", ""}
+    {GPI_STATUS,                                    0x0003, RW,         "0-1: gpi_status", ""}
+    {MODULE_ID,                                     0x0038, RW,         "3-5: module_id", ""}
+RESERVED_SYSCTL_26 =           {0x0026,  SYSCTL, 1, 0x0001, RW, 0x0001, "Reserved", ""}
+RESERVED_SYSCTL_28 =           {0x0028,  SYSCTL, 1, 0x0001, RW, 0x0001, "Reserved", ""}
+RESERVED_SYSCTL_50 =           {0x0050,  SYSCTL, 1, 0x00FF, RO, 0x0009, "Reserved", ""}
+RESERVED_RX_SS_100 =           {0x0100,   RX_SS, 1, 0x07E7, RW, 0x0000, "Reserved", ""}
+RESERVED_RX_SS_102 =           {0x0102,   RX_SS, 1, 0x03FF, RW, 0x0000, "Reserved", ""}
+RESERVED_RX_SS_104 =           {0x0104,   RX_SS, 1, 0x03FF, RW, 0x0000, "Reserved", ""}
+RESERVED_RX_SS_106 =           {0x0106,   RX_SS, 1, 0x03FF, RW, 0x0000, "Reserved", ""}
+RESERVED_RX_SS_108 =           {0x0108,   RX_SS, 1, 0x03FF, RW, 0x0000, "Reserved", ""}
+RESERVED_RX_SS_10A =           {0x010A,   RX_SS, 1, 0x07FF, RW, 0x0000, "Reserved", ""}
+RESERVED_RX_SS_10C =           {0x010C,   RX_SS, 1, 0x0FFF, RW, 0x0000, "Reserved", ""}
+RESERVED_RX_SS_10E =           {0x010E,   RX_SS, 1, 0x07FF, RW, 0x01E7, "Reserved", ""}
+RESERVED_RX_SS_110 =           {0x0110,   RX_SS, 1, 0x0FFF, RW, 0x0287, "Reserved", ""}
+RESERVED_RX_SS_114 =           {0x0114,   RX_SS, 1, 0x1FFF, RW, 0x0064, "Reserved", ""}
+RESERVED_RX_SS_116 =           {0x0116,   RX_SS, 1, 0x1FFF, RW, 0x000A, "Reserved", ""}
+RESERVED_XDMA_982 =            {0x0982,    XDMA, 1, 0x0003, RW, 0x0000, "Reserved", ""}
+RESERVED_XDMA_984 =            {0x0984,    XDMA, 1, 0xFFFF, RW, 0x0000, "Reserved", ""}
+MCU_ADDRESS =                  {0x098C,    XDMA, 1, 0xFFFF, RW, 0x0000, "mcu_variable_address", ""}
+    {DRIVER_VARIABLE,                               0x00FF, RW,         "0-7: logical_offset", ""}
+    {DRIVER_ID,                                     0x1F00, RW,         "8-12: logical_id", ""}
+    {SELECT_LOGICAL_ACCESS,                         0x6000, RW,         "13-14: logical_select", ""}
+    {ACCESS_8_BIT,                                  0x8000, RW,         "15: access_8bit_mode", ""}
+MCU_DATA_0 =                   {0x0990,    XDMA, 1, 0xFFFF, RW, 0x0000, "mcu_variable_data0", ""}
+MCU_DATA_1 =                   {0x0992,    XDMA, 1, 0xFFFF, RW, 0x0000, "mcu_variable_data1", ""}
+MCU_DATA_2 =                   {0x0994,    XDMA, 1, 0xFFFF, RW, 0x0000, "mcu_variable_data2", ""}
+MCU_DATA_3 =                   {0x0996,    XDMA, 1, 0xFFFF, RW, 0x0000, "mcu_variable_data3", ""}
+MCU_DATA_4 =                   {0x0998,    XDMA, 1, 0xFFFF, RW, 0x0000, "mcu_variable_data4", ""}
+MCU_DATA_5 =                   {0x099A,    XDMA, 1, 0xFFFF, RW, 0x0000, "mcu_variable_data5", ""}
+MCU_DATA_6 =                   {0x099C,    XDMA, 1, 0xFFFF, RW, 0x0000, "mcu_variable_data6", ""}
+MCU_DATA_7 =                   {0x099E,    XDMA, 1, 0xFFFF, RW, 0x0000, "mcu_variable_data7", ""}
+RESERVED_CORE_3000 =           {0x3000,    CORE, 1, 0xFFFF, RW, 0x2280, "Reserved", ""}
+RESERVED_CORE_3002 =           {0x3002,    CORE, 1, 0x07FF, RW, 0x0000, "Reserved", ""}
+RESERVED_CORE_3004 =           {0x3004,    CORE, 1, 0x0FFF, RW, 0x0000, "Reserved", ""}
+RESERVED_CORE_3006 =           {0x3006,    CORE, 1, 0x07FF, RW, 0x01E7, "Reserved", ""}
+RESERVED_CORE_3008 =           {0x3008,    CORE, 1, 0x0FFF, RW, 0x0287, "Reserved", ""}
+RESERVED_CORE_300A =           {0x300A,    CORE, 1, 0xFFFF, RW, 0x020C, "Reserved", ""}
+RESERVED_CORE_300C =           {0x300C,    CORE, 1, 0xFFFF, RW, 0x038D, "Reserved", ""}
+RESERVED_CORE_3010 =           {0x3010,    CORE, 1, 0xFFFF, RW, 0x001A, "Reserved", ""}
+COARSE_INTEGRATION_TIME =      {0x3012,    CORE, 1, 0xFFFF, RW, 0x0010, "coarse_integration_time_", ""}
+FINE_INTEGRATION_TIME =        {0x3014,    CORE, 1, 0xFFFF, RW, 0x006B, "fine_integration_time_", ""}
+RESERVED_CORE_3016 =           {0x3016,    CORE, 1, 0x0007, RW, 0x0001, "Reserved", ""}
+RESERVED_CORE_3018 =           {0x3018,    CORE, 1, 0xFFFF, RW, 0x0000, "Reserved", ""}
+RESERVED_CORE_301A =           {0x301A,    CORE, 1, 0xD7FF, RW, 0x1218, "Reserved", ""}
+RESERVED_CORE_301C =           {0x301C,    CORE, 1, 0x0103, RW, 0x0000, "Reserved", ""}
+DATA_PEDESTAL =                {0x301E,    CORE, 1, 0x03FF, RO, 0x002A, "data_pedestal_", "Read-only. Can be made read/write by clearing R0x301A-B[3]."}
+RESERVED_CORE_3020 =           {0x3020,    CORE, 1, 0x0100, RW, 0x0000, "Reserved", ""}
+RESERVED_CORE_3022 =           {0x3022,    CORE, 1, 0x0101, RW, 0x0001, "Reserved", ""}
+RESERVED_CORE_3024 =           {0x3024,    CORE, 1, 0x0003, RO, 0x0000, "Reserved", ""}
+RESERVED_CORE_3026 =           {0x3026,    CORE, 1, 0xFFFF, RW, 0xFFF0, "Reserved", ""}
+ANALOGUE_GAIN_CODE_GLOBAL =    {0x3028,    CORE, 1, 0x007F, RW, 0x0008, "analogue_gain_code_global_", ""}
+ANALOGUE_GAIN_CODE_GREENR =    {0x302A,    CORE, 1, 0x007F, RW, 0x0008, "analogue_gain_code_greenR_", ""}
+ANALOGUE_GAIN_CODE_RED =       {0x302C,    CORE, 1, 0x007F, RW, 0x0008, "analogue_gain_code_red_", ""}
+ANALOGUE_GAIN_CODE_BLUE =      {0x302E,    CORE, 1, 0x007F, RW, 0x0008, "analogue_gain_code_blue_", ""}
+ANALOGUE_GAIN_CODE_GREENB =    {0x3030,    CORE, 1, 0x007F, RW, 0x0008, "analogue_gain_code_greenB_", ""}
+DIGITAL_GAIN_GREENR =          {0x3032,    CORE, 1, 0x0700, RW, 0x0100, "digital gain greenR", ""}
+DIGITAL_GAIN_RED =             {0x3034,    CORE, 1, 0x0700, RW, 0x0100, "digital gain red", ""}
+DIGITAL_GAIN_BLUE =            {0x3036,    CORE, 1, 0x0700, RW, 0x0100, "digital gain blue", ""}
+DIGITAL_GAIN_GREENB =          {0x3038,    CORE, 1, 0x07FF, RW, 0x0100, "digital gain greenB", ""}
+RESERVED_CORE_303A =           {0x303A,    CORE, 1, 0xFFFF, RO, 0x0AFF, "Reserved", ""}
+RESERVED_CORE_303C =           {0x303C,    CORE, 1, 0x0003, RO, 0x0000, "Reserved", ""}
+RESERVED_CORE_3040 =           {0x3040,    CORE, 1, 0xDEFF, RW, 0x0024, "Reserved", ""}
+RESERVED_CORE_3044 =           {0x3044,    CORE, 1, 0xFF4F, RW, 0x0500, "Reserved", ""}
+RESERVED_CORE_3046 =           {0x3046,    CORE, 1, 0xFF80, RW, 0x0600, "Reserved", ""}
+RESERVED_CORE_3048 =           {0x3048,    CORE, 1, 0x03FF, RW, 0x0008, "Reserved", ""}
+RESERVED_CORE_3056 =           {0x3056,    CORE, 1, 0x0FFF, RW, 0x0220, "Reserved", ""}
+RESERVED_CORE_3058 =           {0x3058,    CORE, 1, 0x0FFF, RW, 0x0220, "Reserved", ""}
+RESERVED_CORE_305A =           {0x305A,    CORE, 1, 0x0FFF, RW, 0x0220, "Reserved", ""}
+RESERVED_CORE_305C =           {0x305C,    CORE, 1, 0x0FFF, RW, 0x0220, "Reserved", ""}
+RESERVED_CORE_305E =           {0x305E,    CORE, 1, 0x0FFF, RW, 0x0220, "Reserved", ""}
+RESERVED_CORE_3070 =           {0x3070,    CORE, 1, 0x0107, RW, 0x0000, "Reserved", ""}
+RESERVED_CORE_3072 =           {0x3072,    CORE, 1, 0x03FF, RW, 0x0000, "Reserved", ""}
+RESERVED_CORE_3074 =           {0x3074,    CORE, 1, 0x03FF, RW, 0x0000, "Reserved", ""}
+RESERVED_CORE_3076 =           {0x3076,    CORE, 1, 0x03FF, RW, 0x0000, "Reserved", ""}
+RESERVED_CORE_3078 =           {0x3078,    CORE, 1, 0x03FF, RW, 0x0000, "Reserved", ""}
+RESERVED_CORE_3080 =           {0x3080,    CORE, 1, 0xFFFF, RW, 0x000A, "Reserved", ""}
+RESERVED_CORE_3082 =           {0x3082,    CORE, 1, 0xFFFF, RW, 0x100D, "Reserved", ""}
+RESERVED_CORE_3084 =           {0x3084,    CORE, 1, 0xFFFF, RW, 0x616A, "Reserved", ""}
+RESERVED_CORE_3086 =           {0x3086,    CORE, 1, 0xFFFF, RW, 0x640E, "Reserved", ""}
+RESERVED_CORE_3088 =           {0x3088,    CORE, 1, 0xFFFF, RW, 0x8060, "Reserved", ""}
+RESERVED_CORE_30A0 =           {0x30A0,    CORE, 1, 0x0001, RO, 0x0001, "Reserved", ""}
+RESERVED_CORE_30A2 =           {0x30A2,    CORE, 1, 0x0007, RW, 0x0001, "Reserved", ""}
+RESERVED_CORE_30A4 =           {0x30A4,    CORE, 1, 0x0001, RO, 0x0001, "Reserved", ""}
+RESERVED_CORE_30A6 =           {0x30A6,    CORE, 1, 0x0007, RW, 0x0001, "Reserved", ""}
+RESERVED_CORE_30B0 =           {0x30B0,    CORE, 1, 0x3F00, RW, 0x0000, "Reserved", ""}
+RESERVED_CORE_30B6 =           {0x30B6,    CORE, 1, 0x00FF, RO, 0x0000, "Reserved", ""}
+RESERVED_CORE_30B8 =           {0x30B8,    CORE, 1, 0x00FF, RO, 0x0000, "Reserved", ""}
+RESERVED_CORE_30BA =           {0x30BA,    CORE, 1, 0x00FF, RO, 0x0000, "Reserved", ""}
+RESERVED_CORE_30BC =           {0x30BC,    CORE, 1, 0x00FF, RO, 0x0000, "Reserved", ""}
+RESERVED_CORE_30C0 =           {0x30C0,    CORE, 1, 0x11F7, RW, 0x0020, "Reserved", ""}
+RESERVED_CORE_30C2 =           {0x30C2,    CORE, 1, 0x01FF, RW, 0x00FF, "Reserved", ""}
+RESERVED_CORE_30C4 =           {0x30C4,    CORE, 1, 0x01FF, RW, 0x00FF, "Reserved", ""}
+RESERVED_CORE_30C6 =           {0x30C6,    CORE, 1, 0x01FF, RW, 0x00FF, "Reserved", ""}
+RESERVED_CORE_30C8 =           {0x30C8,    CORE, 1, 0x01FF, RW, 0x00FF, "Reserved", ""}
+RESERVED_CORE_30DE =           {0x30DE,    CORE, 1, 0x0073, RW, 0x0010, "Reserved", ""}
+RESERVED_CORE_30E0 =           {0x30E0,    CORE, 1, 0xFFFF, RW, 0x5504, "Reserved", ""}
+RESERVED_CORE_30E2 =           {0x30E2,    CORE, 1, 0xFFFF, RW, 0x5504, "Reserved", ""}
+RESERVED_CORE_30F2 =           {0x30F2,    CORE, 1, 0xFFFF, RW, 0x5505, "Reserved", ""}
+RESERVED_CORE_30F4 =           {0x30F4,    CORE, 1, 0xFFFF, RW, 0x5603, "Reserved", ""}
+RESERVED_CORE_30F6 =           {0x30F6,    CORE, 1, 0xFFFF, RW, 0x1605, "Reserved", ""}
+RESERVED_CORE_30FE =           {0x30FE,    CORE, 1, 0xFFFF, RW, 0x412E, "Reserved", ""}
+RESERVED_CORE_3102 =           {0x3102,    CORE, 1, 0xFFFF, RW, 0x5433, "Reserved", ""}
+RESERVED_CORE_3106 =           {0x3106,    CORE, 1, 0xFFFF, RW, 0x2D0A, "Reserved", ""}
+RESERVED_CORE_310A =           {0x310A,    CORE, 1, 0xFFFF, RW, 0x5601, "Reserved", ""}
+RESERVED_CORE_310C =           {0x310C,    CORE, 1, 0xFFFF, RW, 0x5601, "Reserved", ""}
+RESERVED_CORE_310E =           {0x310E,    CORE, 1, 0xFFFF, RW, 0x0905, "Reserved", ""}
+RESERVED_CORE_3110 =           {0x3110,    CORE, 1, 0xFFFF, RW, 0x0400, "Reserved", ""}
+RESERVED_CORE_3112 =           {0x3112,    CORE, 1, 0xFFFF, RW, 0xFF00, "Reserved", ""}
+RESERVED_CORE_312A =           {0x312A,    CORE, 1, 0xFFFF, RW, 0xFFFF, "Reserved", ""}
+RESERVED_CORE_312C =           {0x312C,    CORE, 1, 0x00FF, RW, 0x0055, "Reserved", ""}
+RESERVED_CORE_312E =           {0x312E,    CORE, 1, 0xFFFF, RW, 0x1E56, "Reserved", ""}
+RESERVED_CORE_3130 =           {0x3130,    CORE, 1, 0xFFFF, RW, 0x5607, "Reserved", ""}
+RESERVED_CORE_3132 =           {0x3132,    CORE, 1, 0xFFFF, RW, 0x4231, "Reserved", ""}
+RESERVED_CORE_3134 =           {0x3134,    CORE, 1, 0xFFFF, RW, 0x1708, "Reserved", ""}
+RESERVED_CORE_3136 =           {0x3136,    CORE, 1, 0xFFFF, RW, 0xFFFF, "Reserved", ""}
+RESERVED_CORE_3138 =           {0x3138,    CORE, 1, 0xFFFF, RW, 0x2E0A, "Reserved", ""}
+RESERVED_CORE_313A =           {0x313A,    CORE, 1, 0xFFFF, RW, 0x5601, "Reserved", ""}
+RESERVED_CORE_313C =           {0x313C,    CORE, 1, 0xFFFF, RW, 0x1D06, "Reserved", ""}
+RESERVED_CORE_313E =           {0x313E,    CORE, 1, 0xFFFF, RW, 0x1D06, "Reserved", ""}
+RESERVED_CORE_3140 =           {0x3140,    CORE, 1, 0xFFFF, RW, 0x1E01, "Reserved", ""}
+RESERVED_CORE_3142 =           {0x3142,    CORE, 1, 0xFFFF, RW, 0x1C03, "Reserved", ""}
+RESERVED_CORE_3146 =           {0x3146,    CORE, 1, 0xFFFF, RW, 0x1B03, "Reserved", ""}
+RESERVED_CORE_316A =           {0x316A,    CORE, 1, 0xCFFF, RW, 0x0000, "Reserved", ""}
+RESERVED_CORE_316C =           {0x316C,    CORE, 1, 0xCFFF, RW, 0x0000, "Reserved", ""}
+RESERVED_CORE_316E =           {0x316E,    CORE, 1, 0xCFFF, RW, 0x0000, "Reserved", ""}
+RESERVED_CORE_3170 =           {0x3170,    CORE, 1, 0xFFFF, RW, 0x0DA6, "Reserved", ""}
+RESERVED_CORE_3180 =           {0x3180,    CORE, 1, 0x93FF, RW, 0x81FF, "Reserved", ""}
+RESERVED_CORE_3182 =           {0x3182,    CORE, 1, 0x03FF, RO, 0x0000, "Reserved", ""}
+RESERVED_CORE_3184 =           {0x3184,    CORE, 1, 0x03FF, RO, 0x0000, "Reserved", ""}
+RESERVED_CORE_3186 =           {0x3186,    CORE, 1, 0x03FF, RO, 0x0000, "Reserved", ""}
+RESERVED_CORE_3188 =           {0x3188,    CORE, 1, 0x03FF, RO, 0x0000, "Reserved", ""}
+RESERVED_CORE_31E0 =           {0x31E0,    CORE, 1, 0x8003, RW, 0x0003, "Reserved", ""}
+RESERVED_CORE_31E2 =           {0x31E2,    CORE, 1, 0x0FFF, RW, 0x0000, "Reserved", ""}
+RESERVED_CORE_31E4 =           {0x31E4,    CORE, 1, 0x0FFF, RW, 0x0000, "Reserved", ""}
+RESERVED_CORE_31E8 =           {0x31E8,    CORE, 1, 0x07FF, RW, 0x0000, "Reserved", ""}
+RESERVED_CORE_31EA =           {0x31EA,    CORE, 1, 0x0FFF, RW, 0x0000, "Reserved", ""}
+RESERVED_CORE_31EC =           {0x31EC,    CORE, 1, 0x07FF, RW, 0x0000, "Reserved", ""}
+RESERVED_CORE_31EE =           {0x31EE,    CORE, 1, 0x0FFF, RW, 0x0000, "Reserved", ""}
+RESERVED_CORE_31F4 =           {0x31F4,    CORE, 1, 0xFFFF, RW, 0x0000, "Reserved", ""}
+RESERVED_CORE_31F6 =           {0x31F6,    CORE, 1, 0xFFFF, RW, 0x0000, "Reserved", ""}
+RESERVED_CORE_31F8 =           {0x31F8,    CORE, 1, 0xFFFF, RW, 0x0000, "Reserved", ""}
+RESERVED_CORE_31FA =           {0x31FA,    CORE, 1, 0xFFFF, RW, 0x0000, "Reserved", ""}
+RESERVED_CORE_31FC =           {0x31FC,    CORE, 1, 0xFFFF, RW, 0x3020, "Reserved", ""}
+RESERVED_CORE_31FE =           {0x31FE,    CORE, 1, 0x007F, RO, 0x0000, "Reserved", ""}
+COLOR_PIPELINE_CONTROL =       {0x3210,    SOC1, 1, 0x0DB8, RW, 0x09B0, "Color_Pipeline_Control", ""}
+    {PGA_ENABLE,                                    0x0008, RW,         "3: Enable pixel shading correction.  All coefficients and other configuration settings (including other fields in this register) must be set up before enabling shading correction.", "Enable pixel shading correction.  All coefficients and other configuration settings (including other fields in this register) must be set up before enabling shading correction."}
+    {ENABLE_2D_APERTURE_CORRECTION,                 0x0010, RW,         "4: enable 2D aperture correction", "enable 2D aperture correction"}
+    {COLOR_CORRECTION,                              0x0020, RW,         "5: Enable color correction", "Enable color correction"}
+    {GAMMA_CORRECTION,                              0x0080, RW,         "7: Enable gamma correction.", "Enable gamma correction."}
+    {DECIMATOR,                                     0x0100, RW,         "8: 1=Enable scale", "1=Enable scale"}
+    {BIT_10,                                        0x0400, RW,         "10: Reserved", ""}
+    {BIT_11,                                        0x0800, RW,         "11: Reserved", ""}
+RESERVED_SOC1_3216 =           {0x3216,    SOC1, 1, 0x01FD, RW, 0x0000, "Reserved", ""}
+RESERVED_SOC1_3218 =           {0x3218,    SOC1, 1, 0xFFFF, RW, 0x0000, "Reserved", ""}
+RESERVED_SOC1_321A =           {0x321A,    SOC1, 1, 0xFFFF, RW, 0x0000, "Reserved", ""}
+OFIFO_CONTROL_STATUS =         {0x321C,    SOC1, 1, 0xFF8F, RW, 0x0003, "Ofifo control status 2", "Ofifo control status 2"}
+    {TXFIFO_BYPASS,                                 0x000F, RW,         "0-3: 0000=not bypassed 0001=sensor 0010=sam obs 0011=format 0100=test_walkones", "0000=not bypassed 0001=sensor 0010=sam obs 0011=format 0100=test_walkones"}
+    {SENSOR_BYPASS,                                 0x0080, RW,         "7: 0=normal 1=bypass SOC (Only relevant if txfifo_bypass=0)", "0=normal 1=bypass SOC (Only relevant if txfifo_bypass=0)"}
+    {BIT_8,                                         0x0100, RW,         "8: Reserved", ""}
+    {BIT_9,                                         0x0200, RW,         "9: Reserved", ""}
+    {BIT_10,                                        0x0400, RW,         "10: Reserved", ""}
+    {BIT_11,                                        0x0800, RW,         "11: Reserved", ""}
+    {BIT_12,                                        0x1000, RO,         "12: Reserved", ""}
+    {BIT_13,                                        0x2000, RO,         "13: Reserved", ""}
+    {BIT_14,                                        0x4000, RO,         "14: Reserved", ""}
+    {BIT_15,                                        0x8000, RO,         "15: Reserved", ""}
+OFIFO_CONTROL_STATUS_2 =       {0x321E,    SOC1, 1, 0xFFFF, RW, 0x0010, "Ofifo control status 2", "Ofifo control status 2"}
+    {BITS_0_9,                                      0x03FF, RW,         "0-9: Reserved", ""}
+    {DISABLE_PV_DURING_BLANK,                       0x0400, RW,         "10: 1=disable output clock during blank", "1=disable output clock during blank"}
+    {BITS_11_15,                                    0xF800, RW,         "11-15: Reserved", ""}
+RESERVED_SOC1_3220 =           {0x3220,    SOC1, 1, 0x0FFF, RO, 0x0000, "Reserved", ""}
+RESERVED_SOC1_3222 =           {0x3222,    SOC1, 1, 0x07FF, RW, 0x0000, "Reserved", ""}
+RESERVED_SOC1_3224 =           {0x3224,    SOC1, 1, 0x07FF, RW, 0x027F, "Reserved", ""}
+RESERVED_SOC1_3226 =           {0x3226,    SOC1, 1, 0x07FF, RW, 0x0000, "Reserved", ""}
+RESERVED_SOC1_3228 =           {0x3228,    SOC1, 1, 0x07FF, RW, 0x01DF, "Reserved", ""}
+RESERVED_SOC1_322A =           {0x322A,    SOC1, 1, 0x007E, RW, 0x0000, "Reserved", ""}
+RESERVED_SOC1_322C =           {0x322C,    SOC1, 1, 0x0FFF, RW, 0x0800, "Reserved", ""}
+RESERVED_SOC1_322E =           {0x322E,    SOC1, 1, 0x0FFF, RW, 0x0800, "Reserved", ""}
+RESERVED_SOC1_323E =           {0x323E,    SOC1, 1, 0xFFFF, RW, 0x1A2D, "Reserved", ""}
+RESERVED_SOC1_3240 =           {0x3240,    SOC1, 1, 0xFFFF, RW, 0xC814, "Reserved", ""}
+RESERVED_SOC1_3242 =           {0x3242,    SOC1, 1, 0xFFFF, RW, 0x7F80, "Reserved", ""}
+RESERVED_SOC1_3244 =           {0x3244,    SOC1, 1, 0x03FF, RW, 0x0310, "Reserved", ""}
+RESERVED_SOC1_3254 =           {0x3254,    SOC1, 1, 0x0003, RW, 0x0000, "Reserved", ""}
+RESERVED_SOC1_3256 =           {0x3256,    SOC1, 1, 0x07FF, RW, 0x01E3, "Reserved", ""}
+RESERVED_SOC1_325A =           {0x325A,    SOC1, 1, 0xFFFF, RW, 0x5000, "Reserved", ""}
+RESERVED_SOC1_325C =           {0x325C,    SOC1, 1, 0xFFFF, RW, 0x3C00, "Reserved", ""}
+RESERVED_SOC1_3260 =           {0x3260,    SOC1, 1, 0x00FF, RO, 0x0000, "Reserved", ""}
+RESERVED_SOC1_3262 =           {0x3262,    SOC1, 1, 0x00FF, RO, 0x0000, "Reserved", ""}
+RESERVED_SOC1_3264 =           {0x3264,    SOC1, 1, 0x00FF, RO, 0x0000, "Reserved", ""}
+RESERVED_SOC1_3266 =           {0x3266,    SOC1, 1, 0xFFFF, RO, 0x0000, "Reserved", ""}
+RESERVED_SOC1_326A =           {0x326A,    SOC1, 1, 0x3FFF, RW, 0x1208, "Reserved", ""}
+APERTURE_PARAMETERS =          {0x326C,    SOC1, 1, 0x7FFF, RW, 0x1208, "2D_Aperture_Parameters", ""}
+    {KNEE,                                          0x00FF, RW,         "0-7: 2D aperture threshold", "2D aperture threshold"}
+    {GAIN,                                          0x0700, RW,         "8-10: 2D aperture gain", "2D aperture gain"}
+    {EXP,                                           0x3800, RW,         "11-13: 2D aperture gain's exponent", "2D aperture gain's exponent"}
+    {ABS,                                           0x4000, RW,         "14: force aperture gain be positive, if set to 1", "force aperture gain be positive, if set to 1"}
+RESERVED_SOC1_326E =           {0x326E,    SOC1, 1, 0x00FF, RW, 0x0080, "Reserved", ""}
+RESERVED_SOC1_3270 =           {0x3270,    SOC1, 1, 0x0FFF, RW, 0x07AA, "Reserved", ""}
+RESERVED_SOC1_3272 =           {0x3272,    SOC1, 1, 0x0FFF, RW, 0x07E4, "Reserved", ""}
+RESERVED_SOC1_3274 =           {0x3274,    SOC1, 1, 0x007F, RW, 0x002A, "Reserved", ""}
+BLACK_LEVEL_2ND =              {0x3276,    SOC1, 1, 0x03FF, RW, 0x0000, "Second Black Level prior to CCM", "Second Black Level prior to CCM"}
+BLACK_LEVEL_1ST_RED =          {0x327A,    SOC1, 1, 0x01FF, RW, 0x002A, "Offset subtracted from red pixels.", "Offset subtracted from red pixels."}
+BLACK_LEVEL_1ST_GREEN1 =       {0x327C,    SOC1, 1, 0x01FF, RW, 0x002A, "Offset subtracted from green1 pixels.", "Offset subtracted from green1 pixels."}
+BLACK_LEVEL_1ST_GREEN2 =       {0x327E,    SOC1, 1, 0x01FF, RW, 0x002A, "Offset subtracted from green2 pixels.", "Offset subtracted from green2 pixels."}
+BLACK_LEVEL_1ST_BLUE =         {0x3280,    SOC1, 1, 0x01FF, RW, 0x002A, "Offset subtracted from blue pixels.", "Offset subtracted from blue pixels."}
+THRESH_EDGE_DETECT =           {0x328E,    SOC1, 1, 0x00FF, RW, 0x000C, "Demosaic Edge Threshold.", "Demosaic Edge Threshold."}
+TEST_PATTERN =                 {0x3290,    SOC1, 1, 0x0060, RW, 0x0000, "Test_Pattern", ""}
+    {EN_MOTO_TP,                                    0x0020, RW,         "5: Enable Test Pattern 0= disable 1= enable", "Enable Test Pattern 0= disable 1= enable"}
+    {MOTO_10,                                       0x0040, RW,         "6: Pattern Width 0= 8-bit 1= 10-bit", "Pattern Width 0= 8-bit 1= 10-bit"}
+RESERVED_SOC1_329E =           {0x329E,    SOC1, 1, 0x0003, RW, 0x0000, "Reserved", ""}
+RESERVED_SOC1_32A0 =           {0x32A0,    SOC1, 1, 0xFFFF, RO, 0x0000, "Reserved", ""}
+RESERVED_SOC1_32C0 =           {0x32C0,    SOC1, 1, 0x7FFF, RW, 0x3923, "Reserved", ""}
+RESERVED_SOC1_32C2 =           {0x32C2,    SOC1, 1, 0x0FFF, RW, 0x0724, "Reserved", ""}
+RESERVED_SOC1_32C4 =           {0x32C4,    SOC1, 1, 0xFFFF, RW, 0x7DCC, "Reserved", ""}
+RESERVED_SOC1_32C6 =           {0x32C6,    SOC1, 1, 0xFFFF, RW, 0x2711, "Reserved", ""}
+RESERVED_SOC1_32C8 =           {0x32C8,    SOC1, 1, 0xFFFF, RW, 0x62E5, "Reserved", ""}
+RESERVED_SOC1_32CA =           {0x32CA,    SOC1, 1, 0xFFFF, RW, 0x690D, "Reserved", ""}
+RESERVED_SOC1_32CC =           {0x32CC,    SOC1, 1, 0x3FFF, RW, 0x2DCD, "Reserved", ""}
+RESERVED_SOC1_32D4 =           {0x32D4,    SOC1, 1, 0x03FF, RW, 0x0080, "Reserved", ""}
+RESERVED_SOC1_32D6 =           {0x32D6,    SOC1, 1, 0x03FF, RW, 0x0080, "Reserved", ""}
+RESERVED_SOC1_32D8 =           {0x32D8,    SOC1, 1, 0x03FF, RW, 0x0080, "Reserved", ""}
+RESERVED_SOC1_32DA =           {0x32DA,    SOC1, 1, 0x03FF, RW, 0x0080, "Reserved", ""}
+RESERVED_SOC1_32F4 =           {0x32F4,    SOC1, 1, 0xFFFF, RW, 0x4F00, "Reserved", ""}
+RESERVED_SOC1_32F6 =           {0x32F6,    SOC1, 1, 0xFFFF, RW, 0x1C02, "Reserved", ""}
+RESERVED_SOC1_32F8 =           {0x32F8,    SOC1, 1, 0xFFFF, RW, 0x1400, "Reserved", ""}
+RESERVED_SOC1_32FA =           {0x32FA,    SOC1, 1, 0x00FF, RO, 0x0000, "Reserved", ""}
+RESERVED_SOC1_332C =           {0x332C,    SOC1, 1, 0x0001, RW, 0x0000, "Reserved", ""}
+RESERVED_SOC1_332E =           {0x332E,    SOC1, 1, 0x07FF, RW, 0x0000, "Reserved", ""}
+OUTPUT_FORMAT_TEST =           {0x3330,    SOC1, 1, 0x0FFF, RW, 0x0000, "Output_Format_Test", ""}
+    {CR,                                            0x0001, RW,         "0: Disable Cr channel", "Disable Cr channel"}
+    {Y,                                             0x0002, RW,         "1: Disable Y channel", "Disable Y channel"}
+    {CB,                                            0x0004, RW,         "2: Disable Cb channel", "Disable Cb channel"}
+    {RAMP,                                          0x0038, RW,         "3-5: Test ramp output", "Test ramp output"}
+    {BYPASS_8_2,                                    0x0040, RW,         "6: 8+2 bypass", "8+2 bypass"}
+    {BIT_7,                                         0x0080, RW,         "7: Reserved", ""}
+    {USE_LC,                                        0x0100, RW,         "8: Enable Lens Correction Bypass", "Enable Lens Correction Bypass"}
+    {BIT_9,                                         0x0200, RW,         "9: Reserved", ""}
+    {BIT_10,                                        0x0400, RW,         "10: Reserved", ""}
+    {BIT_11,                                        0x0800, RW,         "11: Reserved", ""}
+RESERVED_SOC1_3332 =           {0x3332,    SOC1, 1, 0x0FFF, RO, 0x0000, "Reserved", ""}
+RESERVED_SOC1_3334 =           {0x3334,    SOC1, 1, 0xFFFF, RO, 0x0000, "Reserved", ""}
+RESERVED_SOC1_3346 =           {0x3346,    SOC1, 1, 0x000F, RW, 0x0002, "Reserved", ""}
+RESERVED_SOC1_3348 =           {0x3348,    SOC1, 1, 0xFF7F, RW, 0x6440, "Reserved", ""}
+RESERVED_SOC1_334A =           {0x334A,    SOC1, 1, 0xFFFF, RW, 0xB023, "Reserved", ""}
+YUV_YCBCR_CONTROL =            {0x337C,    SOC1, 1, 0x000F, RW, 0x0006, "YUV_YCbCr_Control", ""}
+    {MULT_Y_UV,                                     0x0001, RW,         "0: normalize Y in 16-235; U and V in 16-240", "normalize Y in 16-235; U and V in 16-240"}
+    {BIT_1,                                         0x0002, RW,         "1: Reserved", ""}
+    {ADD_128,                                       0x0004, RW,         "2: add 128 to U and V", "add 128 to U and V"}
+    {CLIP,                                          0x0008, RW,         "3: clip Y in 16-235; U and V in 16-240", "clip Y in 16-235; U and V in 16-240"}
+RESERVED_SOC1_337E =           {0x337E,    SOC1, 1, 0xFFFF, RW, 0x0000, "Reserved", ""}
+RESERVED_SOC1_33E6 =           {0x33E6,    SOC1, 1, 0x00FF, RW, 0x0000, "Reserved", ""}
+RESERVED_SOC1_33E8 =           {0x33E8,    SOC1, 1, 0x7FFF, RW, 0x4401, "Reserved", ""}
+RESERVED_SOC1_33EA =           {0x33EA,    SOC1, 1, 0x07FF, RW, 0x0000, "Reserved", ""}
+RESERVED_SOC1_33EC =           {0x33EC,    SOC1, 1, 0xFFFF, RO, 0x0000, "Reserved", ""}
+RESERVED_SOC1_33EE =           {0x33EE,    SOC1, 1, 0x000F, RO, 0x0000, "Reserved", ""}
+KERNEL_CONFIG =                {0x33F4,    SOC1, 1, 0x01FF, RW, 0x0003, "KERNEL_CONFIG", ""}
+    {DC_ENABLE,                                     0x0001, RW,         "0: Defect correction enable.", "Defect correction enable."}
+    {BIT_1,                                         0x0002, RW,         "1: Reserved", ""}
+    {BIT_2,                                         0x0004, RW,         "2: Reserved", ""}
+    {NR_ENABLE,                                     0x0008, RW,         "3: Noise reduction enable.", "Noise reduction enable."}
+    {BIT_4,                                         0x0010, RW,         "4: Reserved", ""}
+    {BIT_5,                                         0x0020, RW,         "5: Reserved", ""}
+    {BIT_6,                                         0x0040, RW,         "6: Reserved", ""}
+    {BIT_7,                                         0x0080, RW,         "7: Reserved", ""}
+    {BIT_8,                                         0x0100, RW,         "8: Reserved", ""}
+RESERVED_SOC1_33F6 =           {0x33F6,    SOC1, 1, 0x00FF, RW, 0x0020, "Reserved", ""}
+RESERVED_SOC1_33F8 =           {0x33F8,    SOC1, 1, 0x00FF, RW, 0x0020, "Reserved", ""}
+RESERVED_SOC1_33FA =           {0x33FA,    SOC1, 1, 0x00FF, RW, 0x0020, "Reserved", ""}
+RESERVED_SOC1_33FC =           {0x33FC,    SOC1, 1, 0x00FF, RW, 0x00FF, "Reserved", ""}
+MIPI_CONTROL =                 {0x3400,    SOC2, 1, 0xFFFF, RW, 0x782E, "MIPI_Control", "MIPI_Control"}
+    {RESTART_EN,                                    0x0001, RW,         "0: MIPI restart enable", "MIPI restart enable"}
+    {STANDBY_EN,                                    0x0002, RW,         "1: MIPI standby", "MIPI standby"}
+    {CONT_MIPI_CLK,                                 0x0004, RW,         "2: Continuous MIPI clock", "Continuous MIPI clock"}
+    {REG_FRAME_SYNC,                                0x0008, RO,         "3: Frame boundary sync bit", "Frame boundary sync bit"}
+    {STANDBY_EOF,                                   0x0010, RW,         "4: Wait until eof to react to standby", "Wait until eof to react to standby"}
+    {BIT_5,                                         0x0020, RW,         "5: Reserved", ""}
+    {CHAN_NUM,                                      0x01C0, RW,         "6-8: MIPI channel number", "MIPI channel number"}
+    {MIPI_EN,                                       0x0200, RW,         "9: MIPI enable", "MIPI enable"}
+    {DATA_TYPE,                                     0xFC00, RW,         "10-15: See Data Sheet for values", "See Data Sheet for values"}
+MIPI_STATUS =                  {0x3402,    SOC2, 1, 0x1E31, RW, 0x0011, "MIPI_Status", "MIPI_Status"}
+    {MIPI_STDBY,                                    0x0001, RO,         "0: MIPI in standby", "MIPI in standby"}
+    {MIPICCP_IDLE,                                  0x0010, RO,         "4: MIPI idle", "MIPI idle"}
+    {MIPI_RDY_FOR_DATA,                             0x0020, RO,         "5: MIPI ready to receive data", "MIPI ready to receive data"}
+    {BIT_9,                                         0x0200, RO,         "9: Reserved", ""}
+    {BIT_10,                                        0x0400, RO,         "10: Reserved", ""}
+    {BIT_11,                                        0x0800, RW,         "11: Reserved", ""}
+    {BIT_12,                                        0x1000, RW,         "12: Reserved", ""}
+CUSTOM_SHORT_PKT =             {0x3404,    SOC2, 1, 0x3FC0, RW, 0x0000, "MIPI_Custom_Short_Packet", "MIPI_Custom_Short_Packet"}
+    {FRAME_CNT_RST,                                 0x0040, RW,         "6: Reset the frame count sent in the frame start/end short packets.", "Reset the frame count sent in the frame start/end short packets."}
+    {FRAME_CNT_EN,                                  0x0080, RW,         "7: Insert frame counter value in WC field", "Insert frame counter value in WC field"}
+    {CUSTOM_SHORT_PKT_DATA_TYPE,                    0x0700, RW,         "8-10: Custom short packet data type", "Custom short packet data type"}
+    {CUSTOM_SHORT_PKT_REQ,                          0x0800, RW,         "11: Custom short packet request", "Custom short packet request"}
+    {CUSTOM_SHORT_PKT_FRAME_SYNC,                   0x1000, RW,         "12: Frame synch for custom short packet", "Frame synch for custom short packet"}
+    {CUSTOM_SHORT_PKT_RST,                          0x2000, RO,         "13: Reset for custom short packet", "Reset for custom short packet"}
+LINE_BYTE_CNT =                {0x3408,    SOC2, 1, 0xFFFF, RW, 0x0200, "MIPI line byte count", "MIPI line byte count"}
+CUSTOM_SHORT_PKT_WC =          {0x340C,    SOC2, 1, 0xFFFF, RW, 0x0000, "The contents of the WC field of a custom short packet", "The contents of the WC field of a custom short packet"}
+RESERVED_SOC2_340E =           {0x340E,    SOC2, 1, 0x1E37, RW, 0x0000, "Reserved", ""}
+RESERVED_SOC2_3410 =           {0x3410,    SOC2, 1, 0x0F00, RW, 0x0800, "Reserved", ""}
+RESERVED_SOC2_3412 =           {0x3412,    SOC2, 1, 0x3F0F, RW, 0x0705, "Reserved", ""}
+RESERVED_SOC2_3414 =           {0x3414,    SOC2, 1, 0x3F3F, RW, 0x0B01, "Reserved", ""}
+RESERVED_SOC2_3416 =           {0x3416,    SOC2, 1, 0x0F3F, RW, 0x0509, "Reserved", ""}
+RESERVED_SOC2_3418 =           {0x3418,    SOC2, 1, 0x003F, RW, 0x0004, "Reserved", ""}
+RESERVED_SOC2_341A =           {0x341A,    SOC2, 1, 0x7F7F, RW, 0x0608, "Reserved", ""}
+AE_ZONE_X =                    {0x3580,    SOC2, 1, 0xFFFF, RW, 0x1300, "ae_zone_x", ""}
+    {AE_ZONE_X_START,                               0x00FF, RW,         "0-7: Start of AE window divided by 8", "Start of AE window divided by 8"}
+    {AE_ZONE_X_WIDTH,                               0xFF00, RW,         "8-15: Width of each AE zone in x direction divided by 8, minus 1.", "Width of each AE zone in x direction divided by 8, minus 1."}
+AE_ZONE_Y =                    {0x3582,    SOC2, 1, 0xFFFF, RW, 0x0E00, "ae_zone_y", ""}
+    {AE_ZONE_Y_START,                               0x00FF, RW,         "0-7: Start of AE window divided by 8", "Start of AE window divided by 8"}
+    {AE_ZONE_Y_WIDTH,                               0xFF00, RW,         "8-15: Width of each AE zone in y direction divided by 8, minus 1.", "Width of each AE zone in y direction divided by 8, minus 1."}
+AE_WINDOW_SIZE_LO =            {0x3584,    SOC2, 1, 0xFFFF, RW, 0x4B00, "Least significant bits of the size of each AE zone in terms of number of pixels.", "Least significant bits of the size of each AE zone in terms of number of pixels."}
+AE_WINDOW_SIZE_HI =            {0x3586,    SOC2, 1, 0x0001, RW, 0x0000, "Most significant bit of the size of each AE zone in terms of number of pixels.", "Most significant bit of the size of each AE zone in terms of number of pixels."}
+RESERVED_SOC2_3588 =           {0x3588,    SOC2, 1, 0xFFFF, RW, 0x0000, "Reserved", ""}
+RESERVED_SOC2_358A =           {0x358A,    SOC2, 1, 0xFFFF, RW, 0x0000, "Reserved", ""}
+RESERVED_SOC2_358C =           {0x358C,    SOC2, 1, 0xFFFF, RW, 0x0000, "Reserved", ""}
+RESERVED_SOC2_358E =           {0x358E,    SOC2, 1, 0xFFFF, RW, 0x0000, "Reserved", ""}
+RESERVED_SOC2_3590 =           {0x3590,    SOC2, 1, 0xFFFF, RW, 0x0000, "Reserved", ""}
+RESERVED_SOC2_3592 =           {0x3592,    SOC2, 1, 0xFFFF, RW, 0x0000, "Reserved", ""}
+RESERVED_SOC2_3594 =           {0x3594,    SOC2, 1, 0xFFFF, RW, 0x0000, "Reserved", ""}
+RESERVED_SOC2_3596 =           {0x3596,    SOC2, 1, 0xFFFF, RW, 0x0000, "Reserved", ""}
+RESERVED_SOC2_35A2 =           {0x35A2,    SOC2, 1, 0x00FF, RW, 0x0014, "Reserved", ""}
+RESERVED_SOC2_35A4 =           {0x35A4,    SOC2, 1, 0x07FF, RW, 0x0594, "Reserved", ""}
+RESERVED_SOC2_35A6 =           {0x35A6,    SOC2, 1, 0xFFFF, RW, 0x8000, "Reserved", ""}
+RESERVED_SOC2_35A8 =           {0x35A8,    SOC2, 1, 0xFFFF, RW, 0xA000, "Reserved", ""}
+RESERVED_SOC2_35AA =           {0x35AA,    SOC2, 1, 0x1FFF, RW, 0x030A, "Reserved", ""}
+RESERVED_SOC2_35AC =           {0x35AC,    SOC2, 1, 0x1FFF, RW, 0x030A, "Reserved", ""}
+RESERVED_SOC2_35AE =           {0x35AE,    SOC2, 1, 0x3FFF, RW, 0x000A, "Reserved", ""}
+RESERVED_SOC2_35B0 =           {0x35B0,    SOC2, 1, 0xFFFF, RW, 0x05FA, "Reserved", ""}
+RESERVED_SOC2_35B2 =           {0x35B2,    SOC2, 1, 0x01FF, RW, 0x0001, "Reserved", ""}
+RESERVED_SOC2_35B4 =           {0x35B4,    SOC2, 1, 0xFFFF, RW, 0x0000, "Reserved", ""}
+RESERVED_SOC2_35B6 =           {0x35B6,    SOC2, 1, 0xFFFF, RW, 0x0000, "Reserved", ""}
+RESERVED_SOC2_35B8 =           {0x35B8,    SOC2, 1, 0xFFFF, RW, 0x0000, "Reserved", ""}
+RESERVED_SOC2_35BA =           {0x35BA,    SOC2, 1, 0xFFFF, RW, 0x0000, "Reserved", ""}
+RESERVED_SOC2_35BC =           {0x35BC,    SOC2, 1, 0xFFFF, RW, 0x0000, "Reserved", ""}
+RESERVED_SOC2_35BE =           {0x35BE,    SOC2, 1, 0xFFFF, RW, 0x0000, "Reserved", ""}
+RESERVED_SOC2_35C0 =           {0x35C0,    SOC2, 1, 0xFFFF, RW, 0x0000, "Reserved", ""}
+RESERVED_SOC2_35C2 =           {0x35C2,    SOC2, 1, 0xFFFF, RW, 0x0000, "Reserved", ""}
+RESERVED_SOC2_35C4 =           {0x35C4,    SOC2, 1, 0xFFFF, RO, 0x0000, "Reserved", ""}
+RESERVED_SOC2_35C6 =           {0x35C6,    SOC2, 1, 0xFFFF, RO, 0x0000, "Reserved", ""}
+RESERVED_SOC2_35C8 =           {0x35C8,    SOC2, 1, 0xFFFF, RO, 0x0000, "Reserved", ""}
+RESERVED_SOC2_35CA =           {0x35CA,    SOC2, 1, 0xFFFF, RO, 0x0000, "Reserved", ""}
+RESERVED_SOC2_35CC =           {0x35CC,    SOC2, 1, 0xFFFF, RO, 0x0000, "Reserved", ""}
+RESERVED_SOC2_35CE =           {0x35CE,    SOC2, 1, 0xFFFF, RO, 0x0000, "Reserved", ""}
+RESERVED_SOC2_35D0 =           {0x35D0,    SOC2, 1, 0xFFFF, RO, 0x0000, "Reserved", ""}
+RESERVED_SOC2_35D2 =           {0x35D2,    SOC2, 1, 0xFFFF, RO, 0x0000, "Reserved", ""}
+RESERVED_SOC2_35D4 =           {0x35D4,    SOC2, 1, 0xFFFF, RO, 0x0000, "Reserved", ""}
+RESERVED_SOC2_35D6 =           {0x35D6,    SOC2, 1, 0xFFFF, RO, 0x0000, "Reserved", ""}
+RESERVED_SOC2_35D8 =           {0x35D8,    SOC2, 1, 0xFFFF, RO, 0x0000, "Reserved", ""}
+RESERVED_SOC2_35DA =           {0x35DA,    SOC2, 1, 0xFFFF, RO, 0x0000, "Reserved", ""}
+RESERVED_SOC2_35DC =           {0x35DC,    SOC2, 1, 0xFFFF, RO, 0x0000, "Reserved", ""}
+RESERVED_SOC2_35DE =           {0x35DE,    SOC2, 1, 0xFFFF, RO, 0x0000, "Reserved", ""}
+RESERVED_SOC2_35E0 =           {0x35E0,    SOC2, 1, 0xFFFF, RO, 0x0000, "Reserved", ""}
+RESERVED_SOC2_35E2 =           {0x35E2,    SOC2, 1, 0xFFFF, RO, 0x0000, "Reserved", ""}
+RESERVED_SOC2_35E4 =           {0x35E4,    SOC2, 1, 0xFFFF, RO, 0x0000, "Reserved", ""}
+RESERVED_SOC2_35E6 =           {0x35E6,    SOC2, 1, 0xFFFF, RO, 0x0000, "Reserved", ""}
+RESERVED_SOC2_35E8 =           {0x35E8,    SOC2, 1, 0xFFFF, RO, 0x0000, "Reserved", ""}
+RESERVED_SOC2_35EA =           {0x35EA,    SOC2, 1, 0xFFFF, RO, 0x0000, "Reserved", ""}
+RESERVED_SOC2_35EC =           {0x35EC,    SOC2, 1, 0xFFFF, RO, 0x0000, "Reserved", ""}
+RESERVED_SOC2_35EE =           {0x35EE,    SOC2, 1, 0xFFFF, RO, 0x0000, "Reserved", ""}
+RESERVED_SOC2_35F0 =           {0x35F0,    SOC2, 1, 0xFFFF, RO, 0x0000, "Reserved", ""}
+RESERVED_SOC2_35F2 =           {0x35F2,    SOC2, 1, 0xFFFF, RO, 0x0000, "Reserved", ""}
+RESERVED_SOC2_35F4 =           {0x35F4,    SOC2, 1, 0xFFFF, RO, 0x0000, "Reserved", ""}
+RESERVED_SOC2_35F6 =           {0x35F6,    SOC2, 1, 0xFFFF, RO, 0x0000, "Reserved", ""}
+RESERVED_SOC2_35F8 =           {0x35F8,    SOC2, 1, 0xFFFF, RO, 0x0000, "Reserved", ""}
+RESERVED_SOC2_35FA =           {0x35FA,    SOC2, 1, 0xFFFF, RO, 0x0000, "Reserved", ""}
+RESERVED_SOC2_35FC =           {0x35FC,    SOC2, 1, 0xFFFF, RO, 0x0000, "Reserved", ""}
+RESERVED_SOC2_35FE =           {0x35FE,    SOC2, 1, 0xFFFF, RO, 0x0000, "Reserved", ""}
+RESERVED_SOC2_3600 =           {0x3600,    SOC2, 1, 0xFFFF, RO, 0x0000, "Reserved", ""}
+RESERVED_SOC2_3602 =           {0x3602,    SOC2, 1, 0xFFFF, RO, 0x0000, "Reserved", ""}
+RESERVED_SOC2_3604 =           {0x3604,    SOC2, 1, 0xFFFF, RW, 0x1B00, "Reserved", ""}
+RESERVED_SOC2_3606 =           {0x3606,    SOC2, 1, 0xFFFF, RW, 0x4C2E, "Reserved", ""}
+RESERVED_SOC2_3608 =           {0x3608,    SOC2, 1, 0xFFFF, RW, 0x9878, "Reserved", ""}
+RESERVED_SOC2_360A =           {0x360A,    SOC2, 1, 0xFFFF, RW, 0xC1B0, "Reserved", ""}
+RESERVED_SOC2_360C =           {0x360C,    SOC2, 1, 0xFFFF, RW, 0xD9CF, "Reserved", ""}
+RESERVED_SOC2_360E =           {0x360E,    SOC2, 1, 0xFFFF, RW, 0xE8E1, "Reserved", ""}
+RESERVED_SOC2_3610 =           {0x3610,    SOC2, 1, 0xFFFF, RW, 0xF2EE, "Reserved", ""}
+RESERVED_SOC2_3612 =           {0x3612,    SOC2, 1, 0xFFFF, RW, 0xF9F6, "Reserved", ""}
+RESERVED_SOC2_3614 =           {0x3614,    SOC2, 1, 0xFFFF, RW, 0xFDFB, "Reserved", ""}
+RESERVED_SOC2_3616 =           {0x3616,    SOC2, 1, 0x00FF, RW, 0x00FF, "Reserved", ""}
+RESERVED_SOC2_3618 =           {0x3618,    SOC2, 1, 0xFFFF, RW, 0x1B00, "Reserved", ""}
+RESERVED_SOC2_361A =           {0x361A,    SOC2, 1, 0xFFFF, RW, 0x4C2E, "Reserved", ""}
+RESERVED_SOC2_361C =           {0x361C,    SOC2, 1, 0xFFFF, RW, 0x9878, "Reserved", ""}
+RESERVED_SOC2_361E =           {0x361E,    SOC2, 1, 0xFFFF, RW, 0xC1B0, "Reserved", ""}
+RESERVED_SOC2_3620 =           {0x3620,    SOC2, 1, 0xFFFF, RW, 0xD9CF, "Reserved", ""}
+RESERVED_SOC2_3622 =           {0x3622,    SOC2, 1, 0xFFFF, RW, 0xE8E1, "Reserved", ""}
+RESERVED_SOC2_3624 =           {0x3624,    SOC2, 1, 0xFFFF, RW, 0xF2EE, "Reserved", ""}
+RESERVED_SOC2_3626 =           {0x3626,    SOC2, 1, 0xFFFF, RW, 0xF9F6, "Reserved", ""}
+RESERVED_SOC2_3628 =           {0x3628,    SOC2, 1, 0xFFFF, RW, 0xFDFB, "Reserved", ""}
+RESERVED_SOC2_362A =           {0x362A,    SOC2, 1, 0x00FF, RW, 0x00FF, "Reserved", ""}
+RESERVED_SOC2_362C =           {0x362C,    SOC2, 1, 0xFFFF, RW, 0x1B00, "Reserved", ""}
+RESERVED_SOC2_362E =           {0x362E,    SOC2, 1, 0xFFFF, RW, 0x4C2E, "Reserved", ""}
+RESERVED_SOC2_3630 =           {0x3630,    SOC2, 1, 0xFFFF, RW, 0x9878, "Reserved", ""}
+RESERVED_SOC2_3632 =           {0x3632,    SOC2, 1, 0xFFFF, RW, 0xC1B0, "Reserved", ""}
+RESERVED_SOC2_3634 =           {0x3634,    SOC2, 1, 0xFFFF, RW, 0xD9CF, "Reserved", ""}
+RESERVED_SOC2_3636 =           {0x3636,    SOC2, 1, 0xFFFF, RW, 0xE8E1, "Reserved", ""}
+RESERVED_SOC2_3638 =           {0x3638,    SOC2, 1, 0xFFFF, RW, 0xF2EE, "Reserved", ""}
+RESERVED_SOC2_363A =           {0x363A,    SOC2, 1, 0xFFFF, RW, 0xF9F6, "Reserved", ""}
+RESERVED_SOC2_363C =           {0x363C,    SOC2, 1, 0xFFFF, RW, 0xFDFB, "Reserved", ""}
+RESERVED_SOC2_363E =           {0x363E,    SOC2, 1, 0x00FF, RW, 0x00FF, "Reserved", ""}
+RESERVED_SOC2_3640 =           {0x3640,    SOC2, 1, 0x01FF, RW, 0x0049, "Reserved", ""}
+POLY_ORIGIN_R =                {0x3642,    SOC2, 1, 0x07FF, RW, 0x00F4, "Center Row", "Center Row"}
+POLY_ORIGIN_C =                {0x3644,    SOC2, 1, 0x07FF, RW, 0x0144, "Center Column", "Center Column"}
+RESERVED_SOC2_3646 =           {0x3646,    SOC2, 1, 0x07FF, RW, 0x0000, "Reserved", ""}
+RESERVED_SOC2_3648 =           {0x3648,    SOC2, 1, 0x07FF, RW, 0x01E7, "Reserved", ""}
+RESERVED_SOC2_364A =           {0x364A,    SOC2, 1, 0x07FF, RW, 0x0000, "Reserved", ""}
+RESERVED_SOC2_364C =           {0x364C,    SOC2, 1, 0x07FF, RW, 0x0287, "Reserved", ""}
+P_GR_P0Q0 =                    {0x364E,    SOC2, 1, 0xFFFF, RW, 0x0010, "P0 coefficients for Green1.", "P0 coefficients for Green1."}
+P_GR_P0Q1 =                    {0x3650,    SOC2, 1, 0xFFFF, RW, 0x0000, "P0 coefficients for Green1.", "P0 coefficients for Green1."}
+P_GR_P0Q2 =                    {0x3652,    SOC2, 1, 0xFFFF, RW, 0x0000, "P0 coefficients for Green1.", "P0 coefficients for Green1."}
+P_GR_P0Q3 =                    {0x3654,    SOC2, 1, 0xFFFF, RW, 0x0000, "P0 coefficients for Green1.", "P0 coefficients for Green1."}
+P_GR_P0Q4 =                    {0x3656,    SOC2, 1, 0xFFFF, RW, 0x0000, "P0 coefficients for Green1.", "P0 coefficients for Green1."}
+P_RD_P0Q0 =                    {0x3658,    SOC2, 1, 0xFFFF, RW, 0x0010, "P0 coefficients for Red.", "P0 coefficients for Red."}
+P_RD_P0Q1 =                    {0x365A,    SOC2, 1, 0xFFFF, RW, 0x0000, "P0 coefficients for Red.", "P0 coefficients for Red."}
+P_RD_P0Q2 =                    {0x365C,    SOC2, 1, 0xFFFF, RW, 0x0000, "P0 coefficients for Red.", "P0 coefficients for Red."}
+P_RD_P0Q3 =                    {0x365E,    SOC2, 1, 0xFFFF, RW, 0x0000, "P0 coefficients for Red.", "P0 coefficients for Red."}
+P_RD_P0Q4 =                    {0x3660,    SOC2, 1, 0xFFFF, RW, 0x0000, "P0 coefficients for Red.", "P0 coefficients for Red."}
+P_BL_P0Q0 =                    {0x3662,    SOC2, 1, 0xFFFF, RW, 0x0010, "P0 coefficients for Blue.", "P0 coefficients for Blue."}
+P_BL_P0Q1 =                    {0x3664,    SOC2, 1, 0xFFFF, RW, 0x0000, "P0 coefficients for Blue.", "P0 coefficients for Blue."}
+P_BL_P0Q2 =                    {0x3666,    SOC2, 1, 0xFFFF, RW, 0x0000, "P0 coefficients for Blue.", "P0 coefficients for Blue."}
+P_BL_P0Q3 =                    {0x3668,    SOC2, 1, 0xFFFF, RW, 0x0000, "P0 coefficients for Blue.", "P0 coefficients for Blue."}
+P_BL_P0Q4 =                    {0x366A,    SOC2, 1, 0xFFFF, RW, 0x0000, "P0 coefficients for Blue.", "P0 coefficients for Blue."}
+P_GB_P0Q0 =                    {0x366C,    SOC2, 1, 0xFFFF, RW, 0x0010, "P0 coefficients for Green2.", "P0 coefficients for Green2."}
+P_GB_P0Q1 =                    {0x366E,    SOC2, 1, 0xFFFF, RW, 0x0000, "P0 coefficients for Green2.", "P0 coefficients for Green2."}
+P_GB_P0Q2 =                    {0x3670,    SOC2, 1, 0xFFFF, RW, 0x0000, "P0 coefficients for Green2.", "P0 coefficients for Green2."}
+P_GB_P0Q3 =                    {0x3672,    SOC2, 1, 0xFFFF, RW, 0x0000, "P0 coefficients for Green2.", "P0 coefficients for Green2."}
+P_GB_P0Q4 =                    {0x3674,    SOC2, 1, 0xFFFF, RW, 0x0000, "P0 coefficients for Green2.", "P0 coefficients for Green2."}
+P_GR_P1Q0 =                    {0x3676,    SOC2, 1, 0xFFFF, RW, 0x0000, "P1 coefficients for Green1.", "P1 coefficients for Green1."}
+P_GR_P1Q1 =                    {0x3678,    SOC2, 1, 0xFFFF, RW, 0x0000, "P1 coefficients for Green1.", "P1 coefficients for Green1."}
+P_GR_P1Q2 =                    {0x367A,    SOC2, 1, 0xFFFF, RW, 0x0000, "P1 coefficients for Green1.", "P1 coefficients for Green1."}
+P_GR_P1Q3 =                    {0x367C,    SOC2, 1, 0xFFFF, RW, 0x0000, "P1 coefficients for Green1.", "P1 coefficients for Green1."}
+P_GR_P1Q4 =                    {0x367E,    SOC2, 1, 0xFFFF, RW, 0x0000, "P1 coefficients for Green1.", "P1 coefficients for Green1."}
+P_RD_P1Q0 =                    {0x3680,    SOC2, 1, 0xFFFF, RW, 0x0000, "P1 coefficients for Red.", "P1 coefficients for Red."}
+P_RD_P1Q1 =                    {0x3682,    SOC2, 1, 0xFFFF, RW, 0x0000, "P1 coefficients for Red.", "P1 coefficients for Red."}
+P_RD_P1Q2 =                    {0x3684,    SOC2, 1, 0xFFFF, RW, 0x0000, "P1 coefficients for Red.", "P1 coefficients for Red."}
+P_RD_P1Q3 =                    {0x3686,    SOC2, 1, 0xFFFF, RW, 0x0000, "P1 coefficients for Red.", "P1 coefficients for Red."}
+P_RD_P1Q4 =                    {0x3688,    SOC2, 1, 0xFFFF, RW, 0x0000, "P1 coefficients for Red.", "P1 coefficients for Red."}
+P_BL_P1Q0 =                    {0x368A,    SOC2, 1, 0xFFFF, RW, 0x0000, "P1 coefficients for Blue.", "P1 coefficients for Blue."}
+P_BL_P1Q1 =                    {0x368C,    SOC2, 1, 0xFFFF, RW, 0x0000, "P1 coefficients for Blue.", "P1 coefficients for Blue."}
+P_BL_P1Q2 =                    {0x368E,    SOC2, 1, 0xFFFF, RW, 0x0000, "P1 coefficients for Blue.", "P1 coefficients for Blue."}
+P_BL_P1Q3 =                    {0x3690,    SOC2, 1, 0xFFFF, RW, 0x0000, "P1 coefficients for Blue.", "P1 coefficients for Blue."}
+P_BL_P1Q4 =                    {0x3692,    SOC2, 1, 0xFFFF, RW, 0x0000, "P1 coefficients for Blue.", "P1 coefficients for Blue."}
+P_GB_P1Q0 =                    {0x3694,    SOC2, 1, 0xFFFF, RW, 0x0000, "P1 coefficients for Green2.", "P1 coefficients for Green2."}
+P_GB_P1Q1 =                    {0x3696,    SOC2, 1, 0xFFFF, RW, 0x0000, "P1 coefficients for Green2.", "P1 coefficients for Green2."}
+P_GB_P1Q2 =                    {0x3698,    SOC2, 1, 0xFFFF, RW, 0x0000, "P1 coefficients for Green2.", "P1 coefficients for Green2."}
+P_GB_P1Q3 =                    {0x369A,    SOC2, 1, 0xFFFF, RW, 0x0000, "P1 coefficients for Green2.", "P1 coefficients for Green2."}
+P_GB_P1Q4 =                    {0x369C,    SOC2, 1, 0xFFFF, RW, 0x0000, "P1 coefficients for Green2.", "P1 coefficients for Green2."}
+P_GR_P2Q0 =                    {0x369E,    SOC2, 1, 0xFFFF, RW, 0x0000, "P2 coefficients for Green1.", "P2 coefficients for Green1."}
+P_GR_P2Q1 =                    {0x36A0,    SOC2, 1, 0xFFFF, RW, 0x0000, "P2 coefficients for Green1.", "P2 coefficients for Green1."}
+P_GR_P2Q2 =                    {0x36A2,    SOC2, 1, 0xFFFF, RW, 0x0000, "P2 coefficients for Green1.", "P2 coefficients for Green1."}
+P_GR_P2Q3 =                    {0x36A4,    SOC2, 1, 0xFFFF, RW, 0x0000, "P2 coefficients for Green1.", "P2 coefficients for Green1."}
+P_GR_P2Q4 =                    {0x36A6,    SOC2, 1, 0xFFFF, RW, 0x0000, "P2 coefficients for Green1.", "P2 coefficients for Green1."}
+P_RD_P2Q0 =                    {0x36A8,    SOC2, 1, 0xFFFF, RW, 0x0000, "P2 coefficients for Red.", "P2 coefficients for Red."}
+P_RD_P2Q1 =                    {0x36AA,    SOC2, 1, 0xFFFF, RW, 0x0000, "P2 coefficients for Red.", "P2 coefficients for Red."}
+P_RD_P2Q2 =                    {0x36AC,    SOC2, 1, 0xFFFF, RW, 0x0000, "P2 coefficients for Red.", "P2 coefficients for Red."}
+P_RD_P2Q3 =                    {0x36AE,    SOC2, 1, 0xFFFF, RW, 0x0000, "P2 coefficients for Red.", "P2 coefficients for Red."}
+P_RD_P2Q4 =                    {0x36B0,    SOC2, 1, 0xFFFF, RW, 0x0000, "P2 coefficients for Red.", "P2 coefficients for Red."}
+P_BL_P2Q0 =                    {0x36B2,    SOC2, 1, 0xFFFF, RW, 0x0000, "P2 coefficients for Blue.", "P2 coefficients for Blue."}
+P_BL_P2Q1 =                    {0x36B4,    SOC2, 1, 0xFFFF, RW, 0x0000, "P2 coefficients for Blue.", "P2 coefficients for Blue."}
+P_BL_P2Q2 =                    {0x36B6,    SOC2, 1, 0xFFFF, RW, 0x0000, "P2 coefficients for Blue.", "P2 coefficients for Blue."}
+P_BL_P2Q3 =                    {0x36B8,    SOC2, 1, 0xFFFF, RW, 0x0000, "P2 coefficients for Blue.", "P2 coefficients for Blue."}
+P_BL_P2Q4 =                    {0x36BA,    SOC2, 1, 0xFFFF, RW, 0x0000, "P2 coefficients for Blue.", "P2 coefficients for Blue."}
+P_GB_P2Q0 =                    {0x36BC,    SOC2, 1, 0xFFFF, RW, 0x0000, "P2 coefficients for Green2.", "P2 coefficients for Green2."}
+P_GB_P2Q1 =                    {0x36BE,    SOC2, 1, 0xFFFF, RW, 0x0000, "P2 coefficients for Green2.", "P2 coefficients for Green2."}
+P_GB_P2Q2 =                    {0x36C0,    SOC2, 1, 0xFFFF, RW, 0x0000, "P2 coefficients for Green2.", "P2 coefficients for Green2."}
+P_GB_P2Q3 =                    {0x36C2,    SOC2, 1, 0xFFFF, RW, 0x0000, "P2 coefficients for Green2.", "P2 coefficients for Green2."}
+P_GB_P2Q4 =                    {0x36C4,    SOC2, 1, 0xFFFF, RW, 0x0000, "P2 coefficients for Green2.", "P2 coefficients for Green2."}
+P_GR_P3Q0 =                    {0x36C6,    SOC2, 1, 0xFFFF, RW, 0x0000, "P3 coefficients for Green1.", "P3 coefficients for Green1."}
+P_GR_P3Q1 =                    {0x36C8,    SOC2, 1, 0xFFFF, RW, 0x0000, "P3 coefficients for Green1.", "P3 coefficients for Green1."}
+P_GR_P3Q2 =                    {0x36CA,    SOC2, 1, 0xFFFF, RW, 0x0000, "P3 coefficients for Green1.", "P3 coefficients for Green1."}
+P_GR_P3Q3 =                    {0x36CC,    SOC2, 1, 0xFFFF, RW, 0x0000, "P3 coefficients for Green1.", "P3 coefficients for Green1."}
+P_GR_P3Q4 =                    {0x36CE,    SOC2, 1, 0xFFFF, RW, 0x0000, "P3 coefficients for Green1.", "P3 coefficients for Green1."}
+P_RD_P3Q0 =                    {0x36D0,    SOC2, 1, 0xFFFF, RW, 0x0000, "P3 coefficients for Red.", "P3 coefficients for Red."}
+P_RD_P3Q1 =                    {0x36D2,    SOC2, 1, 0xFFFF, RW, 0x0000, "P3 coefficients for Red.", "P3 coefficients for Red."}
+P_RD_P3Q2 =                    {0x36D4,    SOC2, 1, 0xFFFF, RW, 0x0000, "P3 coefficients for Red.", "P3 coefficients for Red."}
+P_RD_P3Q3 =                    {0x36D6,    SOC2, 1, 0xFFFF, RW, 0x0000, "P3 coefficients for Red.", "P3 coefficients for Red."}
+P_RD_P3Q4 =                    {0x36D8,    SOC2, 1, 0xFFFF, RW, 0x0000, "P3 coefficients for Red.", "P3 coefficients for Red."}
+P_BL_P3Q0 =                    {0x36DA,    SOC2, 1, 0xFFFF, RW, 0x0000, "P3 coefficients for Blue.", "P3 coefficients for Blue."}
+P_BL_P3Q1 =                    {0x36DC,    SOC2, 1, 0xFFFF, RW, 0x0000, "P3 coefficients for Blue.", "P3 coefficients for Blue."}
+P_BL_P3Q2 =                    {0x36DE,    SOC2, 1, 0xFFFF, RW, 0x0000, "P3 coefficients for Blue.", "P3 coefficients for Blue."}
+P_BL_P3Q3 =                    {0x36E0,    SOC2, 1, 0xFFFF, RW, 0x0000, "P3 coefficients for Blue.", "P3 coefficients for Blue."}
+P_BL_P3Q4 =                    {0x36E2,    SOC2, 1, 0xFFFF, RW, 0x0000, "P3 coefficients for Blue.", "P3 coefficients for Blue."}
+P_GB_P3Q0 =                    {0x36E4,    SOC2, 1, 0xFFFF, RW, 0x0000, "P3 coefficients for Green2.", "P3 coefficients for Green2."}
+P_GB_P3Q1 =                    {0x36E6,    SOC2, 1, 0xFFFF, RW, 0x0000, "P3 coefficients for Green2.", "P3 coefficients for Green2."}
+P_GB_P3Q2 =                    {0x36E8,    SOC2, 1, 0xFFFF, RW, 0x0000, "P3 coefficients for Green2.", "P3 coefficients for Green2."}
+P_GB_P3Q3 =                    {0x36EA,    SOC2, 1, 0xFFFF, RW, 0x0000, "P3 coefficients for Green2.", "P3 coefficients for Green2."}
+P_GB_P3Q4 =                    {0x36EC,    SOC2, 1, 0xFFFF, RW, 0x0000, "P3 coefficients for Green2.", "P3 coefficients for Green2."}
+P_GR_P4Q0 =                    {0x36EE,    SOC2, 1, 0xFFFF, RW, 0x0000, "P4 coefficients for Green1.", "P4 coefficients for Green1."}
+P_GR_P4Q1 =                    {0x36F0,    SOC2, 1, 0xFFFF, RW, 0x0000, "P4 coefficients for Green1.", "P4 coefficients for Green1."}
+P_GR_P4Q2 =                    {0x36F2,    SOC2, 1, 0xFFFF, RW, 0x0000, "P4 coefficients for Green1.", "P4 coefficients for Green1."}
+P_GR_P4Q3 =                    {0x36F4,    SOC2, 1, 0xFFFF, RW, 0x0000, "P4 coefficients for Green1.", "P4 coefficients for Green1."}
+P_GR_P4Q4 =                    {0x36F6,    SOC2, 1, 0xFFFF, RW, 0x0000, "P4 coefficients for Green1.", "P4 coefficients for Green1."}
+P_RD_P4Q0 =                    {0x36F8,    SOC2, 1, 0xFFFF, RW, 0x0000, "P4 coefficients for Red.", "P4 coefficients for Red."}
+P_RD_P4Q1 =                    {0x36FA,    SOC2, 1, 0xFFFF, RW, 0x0000, "P4 coefficients for Red.", "P4 coefficients for Red."}
+P_RD_P4Q2 =                    {0x36FC,    SOC2, 1, 0xFFFF, RW, 0x0000, "P4 coefficients for Red.", "P4 coefficients for Red."}
+P_RD_P4Q3 =                    {0x36FE,    SOC2, 1, 0xFFFF, RW, 0x0000, "P4 coefficients for Red.", "P4 coefficients for Red."}
+P_RD_P4Q4 =                    {0x3700,    SOC2, 1, 0xFFFF, RW, 0x0000, "P4 coefficients for Red.", "P4 coefficients for Red."}
+P_BL_P4Q0 =                    {0x3702,    SOC2, 1, 0xFFFF, RW, 0x0000, "P4 coefficients for Blue.", "P4 coefficients for Blue."}
+P_BL_P4Q1 =                    {0x3704,    SOC2, 1, 0xFFFF, RW, 0x0000, "P4 coefficients for Blue.", "P4 coefficients for Blue."}
+P_BL_P4Q2 =                    {0x3706,    SOC2, 1, 0xFFFF, RW, 0x0000, "P4 coefficients for Blue.", "P4 coefficients for Blue."}
+P_BL_P4Q3 =                    {0x3708,    SOC2, 1, 0xFFFF, RW, 0x0000, "P4 coefficients for Blue.", "P4 coefficients for Blue."}
+P_BL_P4Q4 =                    {0x370A,    SOC2, 1, 0xFFFF, RW, 0x0000, "P4 coefficients for Blue.", "P4 coefficients for Blue."}
+P_GB_P4Q0 =                    {0x370C,    SOC2, 1, 0xFFFF, RW, 0x0000, "P4 coefficients for Green2.", "P4 coefficients for Green2."}
+P_GB_P4Q1 =                    {0x370E,    SOC2, 1, 0xFFFF, RW, 0x0000, "P4 coefficients for Green2.", "P4 coefficients for Green2."}
+P_GB_P4Q2 =                    {0x3710,    SOC2, 1, 0xFFFF, RW, 0x0000, "P4 coefficients for Green2.", "P4 coefficients for Green2."}
+P_GB_P4Q3 =                    {0x3712,    SOC2, 1, 0xFFFF, RW, 0x0000, "P4 coefficients for Green2.", "P4 coefficients for Green2."}
+P_GB_P4Q4 =                    {0x3714,    SOC2, 1, 0xFFFF, RW, 0x0000, "P4 coefficients for Green2.", "P4 coefficients for Green2."}
+RESERVED_SOC2_3716 =           {0x3716,    SOC2, 1, 0xFFFF, RO, 0x0010, "Reserved", ""}
+RESERVED_SOC2_3718 =           {0x3718,    SOC2, 1, 0xFFFF, RO, 0x0000, "Reserved", ""}
+RESERVED_SOC2_371A =           {0x371A,    SOC2, 1, 0xFFFF, RO, 0x0000, "Reserved", ""}
+RESERVED_SOC2_371C =           {0x371C,    SOC2, 1, 0xFFFF, RO, 0x0000, "Reserved", ""}
+RESERVED_SOC2_371E =           {0x371E,    SOC2, 1, 0xFFFF, RO, 0x0000, "Reserved", ""}
+RESERVED_SOC2_3720 =           {0x3720,    SOC2, 1, 0xFFFF, RO, 0x0010, "Reserved", ""}
+RESERVED_SOC2_3722 =           {0x3722,    SOC2, 1, 0xFFFF, RO, 0x0000, "Reserved", ""}
+RESERVED_SOC2_3724 =           {0x3724,    SOC2, 1, 0xFFFF, RO, 0x0000, "Reserved", ""}
+RESERVED_SOC2_3726 =           {0x3726,    SOC2, 1, 0xFFFF, RO, 0x0000, "Reserved", ""}
+RESERVED_SOC2_3728 =           {0x3728,    SOC2, 1, 0xFFFF, RO, 0x0000, "Reserved", ""}
+RESERVED_CORE_3E00 =           {0x3E00,    CORE, 1, 0xFFFF, RO, 0x0000, "Reserved", ""}
+RESERVED_CORE_3F00 =           {0x3F00,    CORE, 1, 0xFFFF, RO, 0x0000, "Reserved", ""}
+RESERVED_MON_00 =              {0x0000,     MON, 1, 0xFFFF, RW, 0xE8CD, "Reserved", ""}
+RESERVED_MON_02 =              {0x0002,     MON, 1, 0x00FF, RO, 0x0000, "Reserved", ""}
+RESERVED_MON_03 =              {0x0003,     MON, 1, 0x00FF, RO, 0x0000, "Reserved", ""}
+RESERVED_MON_04 =              {0x0004,     MON, 1, 0x00FF, RO, 0x0000, "Reserved", ""}
+RESERVED_MON_05 =              {0x0005,     MON, 1, 0x00FF, RW, 0x0000, "Reserved", ""}
+RESERVED_MON_06 =              {0x0006,     MON, 1, 0xFFFF, RW, 0x0000, "Reserved", ""}
+RESERVED_MON_08 =              {0x0008,     MON, 1, 0xFFFF, RW, 0x0000, "Reserved", ""}
+RESERVED_MON_0A =              {0x000A,     MON, 1, 0x00FF, RW, 0x0000, "Reserved", ""}
+RESERVED_MON_0B =              {0x000B,     MON, 1, 0xFFFF, RW, 0x0000, "Reserved", ""}
+RESERVED_MON_0D =              {0x000D,     MON, 1, 0xFFFF, RW, 0x0000, "Reserved", ""}
+RESERVED_MON_0F =              {0x000F,     MON, 1, 0x00FF, RW, 0x0000, "Reserved", ""}
+RESERVED_MON_10 =              {0x0010,     MON, 1, 0xFFFF, RW, 0x0000, "Reserved", ""}
+RESERVED_MON_12 =              {0x0012,     MON, 1, 0xFFFF, RW, 0x0000, "Reserved", ""}
+RESERVED_MON_14 =              {0x0014,     MON, 1, 0xFFFF, RW, 0x0000, "Reserved", ""}
+RESERVED_MON_16 =              {0x0016,     MON, 1, 0xFFFF, RW, 0x0000, "Reserved", ""}
+RESERVED_MON_18 =              {0x0018,     MON, 1, 0xFFFF, RW, 0x0000, "Reserved", ""}
+RESERVED_MON_1A =              {0x001A,     MON, 1, 0xFFFF, RW, 0x0000, "Reserved", ""}
+RESERVED_MON_1C =              {0x001C,     MON, 1, 0xFFFF, RW, 0x0000, "Reserved", ""}
+RESERVED_MON_1E =              {0x001E,     MON, 1, 0xFFFF, RW, 0x0000, "Reserved", ""}
+RESERVED_MON_20 =              {0x0020,     MON, 1, 0xFFFF, RW, 0x0000, "Reserved", ""}
+RESERVED_MON_22 =              {0x0022,     MON, 1, 0xFFFF, RW, 0x0000, "Reserved", ""}
+RESERVED_SEQ_00 =              {0x0000,     SEQ, 1, 0xFFFF, RW, 0xF035, "Reserved", ""}
+SEQ_MODE =                     {0x0002,     SEQ, 1, 0x00FF, RW, 0x000F, "mode", "Setting bit enables corresponding driver"}
+    {AE,                                            0x0001, RW,         "0: AutoExposure", "ID=2"}
+    {FD,                                            0x0002, RW,         "1: Flicker Detection", "ID=4"}
+    {AWB,                                           0x0004, RW,         "2: Auto White Balance", "ID=3"}
+    {HG,                                            0x0008, RW,         "3: Histogram", "ID=11"}
+SEQ_CMD =                      {0x0003,     SEQ, 1, 0x00FF, RW, 0x0000, "cmd", "0-Run;1-Preview;2-Capture;3-Standby;4-Lock;5-Refresh;6-Refresh Mode"}
+SEQ_STATE =                    {0x0004,     SEQ, 1, 0x00FF, RW, 0x0003, "state", "0-Run;1-ToPreview;2-Enter;3-Preview;4-Leave;5-ToCapture;6-Enter;7-Capture;8-Leave;9-Standby"}
+RESERVED_SEQ_05 =              {0x0005,     SEQ, 1, 0x00FF, RW, 0x0000, "Reserved", ""}
+SEQ_FLASHTYPE =                {0x0006,     SEQ, 1, 0x00FF, RW, 0x0000, "sharedParams.flashType", ""}
+    {FLASHTYPE,                                     0x007F, RW,         "0-6: FlashType", "0-None;1-LED;2-Xenon;3-XenonBurst"}
+    {FLASH_ON_LOCK,                                 0x0080, RW,         "7: flash On in Lock mode", ""}
+RESERVED_SEQ_07 =              {0x0007,     SEQ, 1, 0x00FF, RW, 0x0008, "Reserved", ""}
+RESERVED_SEQ_08 =              {0x0008,     SEQ, 1, 0x00FF, RW, 0x0002, "Reserved", ""}
+SEQ_AE_FASTBUFF =              {0x0009,     SEQ, 1, 0x00FF, RW, 0x0020, "sharedParams.aeFastBuff", ""}
+SEQ_AE_FASTSTEP =              {0x000A,     SEQ, 1, 0x00FF, RW, 0x0001, "sharedParams.aeFastStep", ""}
+SEQ_AWB_CONTBUFF =             {0x000B,     SEQ, 1, 0x00FF, RW, 0x0008, "sharedParams.awbContBuff", ""}
+SEQ_AWB_CONTSTEP =             {0x000C,     SEQ, 1, 0x00FF, RW, 0x0002, "sharedParams.awbContStep", ""}
+RESERVED_SEQ_0D =              {0x000D,     SEQ, 1, 0x00FF, RW, 0x0020, "Reserved", ""}
+RESERVED_SEQ_0E =              {0x000E,     SEQ, 1, 0x00FF, RW, 0x0001, "Reserved", ""}
+RESERVED_SEQ_0F =              {0x000F,     SEQ, 1, 0x00FF, RW, 0x0000, "Reserved", ""}
+RESERVED_SEQ_10 =              {0x0010,     SEQ, 1, 0x00FF, RW, 0x0000, "Reserved", ""}
+SEQ_OPTIONS =                  {0x0011,     SEQ, 1, 0x00FF, RW, 0x00A8, "sharedParams.options", ""}
+    {BIT_0,                                         0x0001, RW,         "0: Reserved", ""}
+    {BIT_1,                                         0x0002, RW,         "1: Reserved", ""}
+    {BIT_2,                                         0x0004, RW,         "2: Reserved", ""}
+    {SEQ_CROP_WIN_AE,                               0x0008, RW,         "3: use crop window for AE statistic", ""}
+    {SEQ_CROP_WIN_AWB,                              0x0010, RW,         "4: use crop window for AWB statistic", ""}
+    {BIT_7,                                         0x0080, RW,         "7: Reserved", ""}
+RESERVED_SEQ_12 =              {0x0012,     SEQ, 1, 0x00FF, RW, 0x0010, "Reserved", ""}
+SEQ_FLASH_TH =                 {0x0013,     SEQ, 1, 0xFFFF, RW, 0x0000, "sharedParams.flashTH", ""}
+SEQ_CAP_MODE =                 {0x0015,     SEQ, 1, 0x00FF, RW, 0x0000, "captureParams.mode", ""}
+    {XENON_FLASH,                                   0x0001, RW,         "0: Capture w/ Xenon Flash", "Still Only"}
+    {VIDEO,                                         0x0002, RW,         "1: Capture Video", ""}
+    {FLASH_OFF_LAST_FRAME,                          0x0004, RW,         "2: turn flash off before last frame in capture state", "Turn flash off before last frame in capture state"}
+    {VIDEO_AE_ON,                                   0x0010, RW,         "4: AE On in Capture and Video modes", ""}
+    {VIDEO_AWB_ON,                                  0x0020, RW,         "5: AWB On in Capture and Video mode", ""}
+    {VIDEO_HG_ON,                                   0x0040, RW,         "6: HG On in Capture and Video mode", ""}
+SEQ_CAP_NUMFRAMES =            {0x0016,     SEQ, 1, 0x00FF, RW, 0x0003, "captureParams.numFrames", "Number of still frames captured"}
+SEQ_PREVIEW_0_AE =             {0x0017,     SEQ, 1, 0x00FF, RW, 0x0000, "previewParEnter.ae", "0-Off;1-Fast;2-Manual;3-Continuous;4-MDR"}
+SEQ_PREVIEW_0_FD =             {0x0018,     SEQ, 1, 0x00FF, RW, 0x0000, "previewParEnter.fd", "0-Off;1-Continuous;2-Manual"}
+SEQ_PREVIEW_0_AWB =            {0x0019,     SEQ, 1, 0x00FF, RW, 0x0000, "previewParEnter.awb", "0-Off;1-Fast;2-Manual;3-Continuous"}
+SEQ_PREVIEW_0_HG =             {0x001A,     SEQ, 1, 0x00FF, RW, 0x0000, "previewParEnter.hg", "0-Off;1-Fast;2-Manual;3-Continuous"}
+SEQ_PREVIEW_0_FLASH =          {0x001B,     SEQ, 1, 0x00FF, RW, 0x0000, "previewParEnter.flash", "0-Off;1-On;2-Locked;3-AutoEvaluate;7-User defined"}
+    {FLASH_CONFIG,                                  0x007F, RW,         "0-6: Flash Configuration", ""}
+    {BIT_7,                                         0x0080, RW,         "7: Reserved", ""}
+SEQ_PREVIEW_0_SKIPFRAME =      {0x001C,     SEQ, 1, 0x00FF, RW, 0x0040, "previewParEnter.skipframe", ""}
+    {SKIP_LED_ON,                                   0x0020, RW,         "5: Skip 1st when LED On", ""}
+    {SKIP_STATE,                                    0x0040, RW,         "6: Skip State", ""}
+    {TURN_OFF_FEN,                                  0x0080, RW,         "7: Turn off fen", ""}
+SEQ_PREVIEW_1_AE =             {0x001D,     SEQ, 1, 0x00FF, RW, 0x0003, "previewPar.ae", "0-Off;1-Fast;2-Manual;3-Continuous"}
+SEQ_PREVIEW_1_FD =             {0x001E,     SEQ, 1, 0x00FF, RW, 0x0002, "previewPar.fd", "0-Off;1-Continuous;2-Manual"}
+SEQ_PREVIEW_1_AWB =            {0x001F,     SEQ, 1, 0x00FF, RW, 0x0003, "previewPar.awb", "0-Off;1-Fast;2-Manual;3-Continuous"}
+SEQ_PREVIEW_1_HG =             {0x0020,     SEQ, 1, 0x00FF, RW, 0x0003, "previewPar.hg", "0-Off;1-Fast;2-Manual;3-Continuous"}
+SEQ_PREVIEW_1_FLASH =          {0x0021,     SEQ, 1, 0x00FF, RW, 0x0000, "previewPar.flash", "0-Off;1-On;2-Locked;3-AutoEvaluate;7-User defined"}
+    {FLASH_CONFIG,                                  0x007F, RW,         "0-6: Flash Configuration", ""}
+    {BIT_7,                                         0x0080, RW,         "7: Reserved", ""}
+SEQ_PREVIEW_1_SKIPFRAME =      {0x0022,     SEQ, 1, 0x00FF, RW, 0x0000, "previewPar.skipframe", ""}
+    {SKIP_LED_ON,                                   0x0020, RW,         "5: Skip 1st when LED On", ""}
+    {SKIP_STATE,                                    0x0040, RW,         "6: Skip State", ""}
+    {TURN_OFF_FEN,                                  0x0080, RW,         "7: Turn off fen", ""}
+SEQ_PREVIEW_2_AE =             {0x0023,     SEQ, 1, 0x00FF, RW, 0x0004, "previewParLeave.ae", "0-Off;1-Fast;2-Manual;3-Continuous;4-MDR"}
+SEQ_PREVIEW_2_FD =             {0x0024,     SEQ, 1, 0x00FF, RW, 0x0000, "previewParLeave.fd", "0-Off;1-Continuous;2-Manual"}
+SEQ_PREVIEW_2_AWB =            {0x0025,     SEQ, 1, 0x00FF, RW, 0x0001, "previewParLeave.awb", "0-Off;1-Fast;2-Manual;3-Continuous"}
+SEQ_PREVIEW_2_HG =             {0x0026,     SEQ, 1, 0x00FF, RW, 0x0001, "previewParLeave.hg", "0-Off;1-Fast;2-Manual;3-Continuous"}
+SEQ_PREVIEW_2_FLASH =          {0x0027,     SEQ, 1, 0x00FF, RW, 0x0000, "previewParLeave.flash", "0-Off;1-On;2-Locked;3-AutoEvaluate;7-User defined"}
+    {FLASH_CONFIG,                                  0x007F, RW,         "0-6: Flash Configuration", ""}
+    {BIT_7,                                         0x0080, RW,         "7: Reserved", ""}
+SEQ_PREVIEW_2_SKIPFRAME =      {0x0028,     SEQ, 1, 0x00FF, RW, 0x0010, "previewParLeave.skipframe", ""}
+    {BIT_4,                                         0x0010, RW,         "4: Reserved", ""}
+    {SKIP_LED_ON,                                   0x0020, RW,         "5: Skip 1st when LED On", ""}
+    {SKIP_STATE,                                    0x0040, RW,         "6: Skip State", ""}
+    {TURN_OFF_FEN,                                  0x0080, RW,         "7: Turn off fen", ""}
+SEQ_PREVIEW_3_AE =             {0x0029,     SEQ, 1, 0x00FF, RW, 0x0000, "capParEnter.ae", "0-Off;1-Fast;2-Manual;3-Continuous;4-MDR"}
+SEQ_PREVIEW_3_FD =             {0x002A,     SEQ, 1, 0x00FF, RW, 0x0000, "capParEnter.fd", "0-Off;1-Continuous;2-Manual"}
+SEQ_PREVIEW_3_AWB =            {0x002B,     SEQ, 1, 0x00FF, RW, 0x0000, "capParEnter.awb", "0-Off;1-Fast;2-Manual;3-Continuous"}
+SEQ_PREVIEW_3_HG =             {0x002C,     SEQ, 1, 0x00FF, RW, 0x0000, "capParEnter.hg", "0-Off;1-Fast;2-Manual;3-Continuous"}
+SEQ_PREVIEW_3_FLASH =          {0x002D,     SEQ, 1, 0x00FF, RW, 0x0000, "capParEnter.flash", "0-Off;1-On;2-Locked;3-AutoEvaluate;7-User defined"}
+    {FLASH_CONFIG,                                  0x007F, RW,         "0-6: Flash Configuration", ""}
+    {BIT_7,                                         0x0080, RW,         "7: Reserved", ""}
+SEQ_PREVIEW_3_SKIPFRAME =      {0x002E,     SEQ, 1, 0x00FF, RW, 0x0040, "capParEnter.skipframe", ""}
+    {SKIP_LED_ON,                                   0x0020, RW,         "5: Skip 1st when LED On", ""}
+    {SKIP_STATE,                                    0x0040, RW,         "6: Skip State", ""}
+    {TURN_OFF_FEN,                                  0x0080, RW,         "7: Turn off fen", ""}
+RESERVED_SEQ_2F =              {0x002F,     SEQ, 1, 0x00FF, RW, 0x0000, "Reserved", ""}
+RESERVED_SEQ_30 =              {0x0030,     SEQ, 1, 0xFFFF, RW, 0x0000, "Reserved", ""}
+RESERVED_SEQ_32 =              {0x0032,     SEQ, 1, 0xFFFF, RW, 0x0338, "Reserved", ""}
+RESERVED_SEQ_34 =              {0x0034,     SEQ, 1, 0x00FF, RW, 0x0000, "Reserved", ""}
+RESERVED_SEQ_35 =              {0x0035,     SEQ, 1, 0xFFFF, RW, 0x0000, "Reserved", ""}
+RESERVED_SEQ_37 =              {0x0037,     SEQ, 1, 0xFFFF, RW, 0x0000, "Reserved", ""}
+RESERVED_SEQ_39 =              {0x0039,     SEQ, 1, 0xFFFF, RW, 0x0000, "Reserved", ""}
+RESERVED_SEQ_3B =              {0x003B,     SEQ, 1, 0xFFFF, RW, 0x0000, "Reserved", ""}
+RESERVED_SEQ_3D =              {0x003D,     SEQ, 1, 0xFFFF, RW, 0x0000, "Reserved", ""}
+RESERVED_SEQ_3F =              {0x003F,     SEQ, 1, 0xFFFF, RW, 0x0000, "Reserved", ""}
+RESERVED_SEQ_41 =              {0x0041,     SEQ, 1, 0xFFFF, RW, 0x0000, "Reserved", ""}
+RESERVED_SEQ_43 =              {0x0043,     SEQ, 1, 0xFFFF, RW, 0x0000, "Reserved", ""}
+RESERVED_SEQ_45 =              {0x0045,     SEQ, 1, 0xFFFF, RW, 0x0000, "Reserved", ""}
+RESERVED_SEQ_47 =              {0x0047,     SEQ, 1, 0xFFFF, RW, 0x0000, "Reserved", ""}
+RESERVED_SEQ_49 =              {0x0049,     SEQ, 1, 0xFFFF, RW, 0x0000, "Reserved", ""}
+RESERVED_SEQ_4B =              {0x004B,     SEQ, 1, 0xFFFF, RW, 0x0000, "Reserved", ""}
+RESERVED_SEQ_4D =              {0x004D,     SEQ, 1, 0xFFFF, RW, 0x0000, "Reserved", ""}
+RESERVED_SEQ_4F =              {0x004F,     SEQ, 1, 0xFFFF, RW, 0x0000, "Reserved", ""}
+RESERVED_SEQ_51 =              {0x0051,     SEQ, 1, 0xFFFF, RW, 0x0000, "Reserved", ""}
+RESERVED_SEQ_53 =              {0x0053,     SEQ, 1, 0xFFFF, RW, 0x0000, "Reserved", ""}
+RESERVED_SEQ_55 =              {0x0055,     SEQ, 1, 0xFFFF, RW, 0x0000, "Reserved", ""}
+RESERVED_SEQ_57 =              {0x0057,     SEQ, 1, 0xFFFF, RW, 0x0000, "Reserved", ""}
+RESERVED_SEQ_59 =              {0x0059,     SEQ, 1, 0xFFFF, RW, 0x0000, "Reserved", ""}
+RESERVED_AE_00 =               {0x0000,      AE, 1, 0xFFFF, RW, 0xE6FD, "Reserved", ""}
+AE_WINDOW_POS =                {0x0002,      AE, 1, 0x00FF, RW, 0x0022, "windowPos", "Y0 and X0 (1/16 frame size)"}
+    {AE_X0,                                         0x000F, RW,         "0-3: X0", ""}
+    {AE_Y0,                                         0x00F0, RW,         "4-7: Y0", ""}
+AE_WINDOW_SIZE =               {0x0003,      AE, 1, 0x00FF, RW, 0x00BB, "windowSize", "Height and Width"}
+    {AE_WIDTH,                                      0x000F, RW,         "0-3: width", ""}
+    {AE_HEIGHT,                                     0x00F0, RW,         "4-7: height", ""}
+RESERVED_AE_04 =               {0x0004,      AE, 1, 0xFFFF, RW, 0x0215, "Reserved", ""}
+RESERVED_AE_06 =               {0x0006,      AE, 1, 0x00FF, RW, 0x0032, "Reserved", ""}
+AE_GATE =                      {0x0007,      AE, 1, 0x00FF, RW, 0x000A, "Gate.", "AE sensitivity"}
+RESERVED_AE_08 =               {0x0008,      AE, 1, 0x00FF, RW, 0x0000, "Reserved", ""}
+RESERVED_AE_09 =               {0x0009,      AE, 1, 0x00FF, RW, 0x0002, "Reserved", ""}
+RESERVED_AE_0A =               {0x000A,      AE, 1, 0x00FF, RW, 0x0008, "Reserved", ""}
+AE_MIN_INDEX =                 {0x000B,      AE, 1, 0x00FF, RW, 0x0000, "minIndex", ""}
+AE_MAX_INDEX =                 {0x000C,      AE, 1, 0x00FF, RW, 0x0018, "maxIndex", "Max allowed zone number"}
+AE_MIN_VIRTGAIN =              {0x000D,      AE, 1, 0x00FF, RW, 0x0010, "minVirtGain", "Min allowed virtual gain"}
+AE_MAX_VIRTGAIN =              {0x000E,      AE, 1, 0x00FF, RW, 0x0080, "maxVirtGain", "Max allowed virtual gain"}
+RESERVED_AE_0F =               {0x000F,      AE, 1, 0x00FF, RW, 0x000D, "Reserved", ""}
+RESERVED_AE_10 =               {0x0010,      AE, 1, 0x00FF, RW, 0x000B, "Reserved", ""}
+RESERVED_AE_11 =               {0x0011,      AE, 1, 0x00FF, RW, 0x0007, "Reserved", ""}
+RESERVED_AE_12 =               {0x0012,      AE, 1, 0xFFFF, RW, 0x0080, "Reserved", ""}
+RESERVED_AE_14 =               {0x0014,      AE, 1, 0x00FF, RW, 0x0020, "Reserved", ""}
+RESERVED_AE_15 =               {0x0015,      AE, 1, 0x00FF, RW, 0x0008, "Reserved", ""}
+RESERVED_AE_16 =               {0x0016,      AE, 1, 0x00FF, RW, 0x0078, "Reserved", ""}
+AE_STATUS =                    {0x0017,      AE, 1, 0x00FF, RO, 0x0084, "status", ""}
+    {BIT_0,                                         0x0001, RW,         "0: Reserved", ""}
+    {R9_CHANGED,                                    0x0002, RW,         "1: R9 changed", "1- Need to skip frame"}
+    {READY,                                         0x0004, RW,         "2: Ready", ""}
+AE_CURRENT_Y =                 {0x0018,      AE, 1, 0x00FF, RO, 0x0000, "CurrentY", "Last measured luminance"}
+AE_R12 =                       {0x0019,      AE, 1, 0xFFFF, RO, 0x0279, "R12", "Current shutter delay value"}
+AE_INDEX =                     {0x001B,      AE, 1, 0x00FF, RO, 0x0004, "Index", "Current zone - integration time"}
+AE_VIRTGAIN =                  {0x001C,      AE, 1, 0x00FF, RO, 0x0010, "VirtGain", ""}
+RESERVED_AE_1D =               {0x001D,      AE, 1, 0x00FF, RW, 0x000B, "Reserved", ""}
+RESERVED_AE_1E =               {0x001E,      AE, 1, 0x00FF, RW, 0x0009, "Reserved", ""}
+RESERVED_AE_1F =               {0x001F,      AE, 1, 0xFFFF, RW, 0x0080, "Reserved", ""}
+RESERVED_AE_21 =               {0x0021,      AE, 1, 0x00FF, RW, 0x0020, "Reserved", ""}
+AE_R9 =                        {0x0022,      AE, 1, 0xFFFF, RO, 0x0010, "R9", "Current R9:0 value"}
+RESERVED_AE_24 =               {0x0024,      AE, 1, 0xFFFF, RW, 0x070D, "Reserved", ""}
+RESERVED_AE_26 =               {0x0026,      AE, 1, 0xFFFF, RW, 0x0000, "Reserved", ""}
+RESERVED_AE_28 =               {0x0028,      AE, 1, 0x00FF, RW, 0x0080, "Reserved", ""}
+RESERVED_AE_29 =               {0x0029,      AE, 1, 0x00FF, RW, 0x0000, "Reserved", ""}
+RESERVED_AE_2A =               {0x002A,      AE, 1, 0xFFFF, RW, 0x0000, "Reserved", ""}
+RESERVED_AE_2C =               {0x002C,      AE, 1, 0x00FF, RW, 0x0000, "Reserved", ""}
+AE_R9_STEP =                   {0x002D,      AE, 1, 0xFFFF, RW, 0x009D, "R9_step", "Integration time of one zone"}
+RESERVED_AE_2F =               {0x002F,      AE, 1, 0x00FF, RW, 0x0002, "Reserved", ""}
+RESERVED_AE_30 =               {0x0030,      AE, 1, 0x00FF, RW, 0x000A, "Reserved", ""}
+RESERVED_AE_31 =               {0x0031,      AE, 1, 0xFFFF, RW, 0x0010, "Reserved", ""}
+RESERVED_AE_33 =               {0x0033,      AE, 1, 0xFFFF, RW, 0x0010, "Reserved", ""}
+RESERVED_AE_35 =               {0x0035,      AE, 1, 0xFFFF, RW, 0x0010, "Reserved", ""}
+RESERVED_AE_37 =               {0x0037,      AE, 1, 0xFFFF, RW, 0x0080, "Reserved", ""}
+RESERVED_AE_39 =               {0x0039,      AE, 1, 0xFFFF, RW, 0x03C0, "Reserved", ""}
+RESERVED_AE_3B =               {0x003B,      AE, 1, 0xFFFF, RW, 0x0C00, "Reserved", ""}
+RESERVED_AE_3D =               {0x003D,      AE, 1, 0x00FF, RW, 0x000A, "Reserved", ""}
+RESERVED_AE_3E =               {0x003E,      AE, 1, 0x00FF, RW, 0x000E, "Reserved", ""}
+RESERVED_AE_3F =               {0x003F,      AE, 1, 0x00FF, RW, 0x0000, "Reserved", ""}
+RESERVED_AE_40 =               {0x0040,      AE, 1, 0xFFFF, RW, 0x0000, "Reserved", ""}
+RESERVED_AE_42 =               {0x0042,      AE, 1, 0xFFFF, RW, 0x0000, "Reserved", ""}
+RESERVED_AE_44 =               {0x0044,      AE, 1, 0x00FF, RW, 0x0000, "Reserved", ""}
+RESERVED_AE_45 =               {0x0045,      AE, 1, 0xFFFF, RW, 0x0000, "Reserved", ""}
+RESERVED_AE_47 =               {0x0047,      AE, 1, 0xFFFF, RW, 0x0000, "Reserved", ""}
+RESERVED_AE_49 =               {0x0049,      AE, 1, 0x00FF, RW, 0x0000, "Reserved", ""}
+AE_TARGETMIN =                 {0x004A,      AE, 1, 0x00FF, RW, 0x0000, "TargetMin", ""}
+AE_TARGETMAX =                 {0x004B,      AE, 1, 0x00FF, RW, 0x0000, "TargetMax", ""}
+AE_TARGETBUFFERSPEED =         {0x004C,      AE, 1, 0x00FF, RW, 0x0000, "TargetBufferSpeed", ""}
+RESERVED_AE_4D =               {0x004D,      AE, 1, 0xFFFF, RW, 0x0000, "Reserved", ""}
+AE_BASETARGET =                {0x004F,      AE, 1, 0x00FF, RW, 0x0020, "Exposure BaseTarget", "Values >64 may cause oscillation"}
+RESERVED_AE_50 =               {0x0050,      AE, 1, 0xFFFF, RW, 0x0000, "Reserved", ""}
+RESERVED_AE_52 =               {0x0052,      AE, 1, 0xFFFF, RW, 0x0000, "Reserved", ""}
+RESERVED_AE_54 =               {0x0054,      AE, 1, 0x00FF, RW, 0x0000, "Reserved", ""}
+RESERVED_AE_55 =               {0x0055,      AE, 1, 0x00FF, RW, 0x0000, "Reserved", ""}
+RESERVED_AE_56 =               {0x0056,      AE, 1, 0x00FF, RW, 0x0000, "Reserved", ""}
+AE_EXPCOMPCENTER =             {0x0057,      AE, 1, 0xFFFF, RW, 0x0000, "Exposure Correction Center", ""}
+AE_EXPCOMPLOWLIGHT =           {0x0059,      AE, 1, 0x00FF, RW, 0x0000, "ExpCompLowLight", ""}
+AE_EXPCOMPBRIGHTLIGHT =        {0x005A,      AE, 1, 0x00FF, RW, 0x0000, "ExpCompBrightLight", ""}
+RESERVED_AE_5B =               {0x005B,      AE, 1, 0x00FF, RW, 0x0000, "Reserved", ""}
+RESERVED_AE_5C =               {0x005C,      AE, 1, 0x00FF, RW, 0x0000, "Reserved", ""}
+RESERVED_AE_5D =               {0x005D,      AE, 1, 0xFFFF, RW, 0x0000, "Reserved", ""}
+RESERVED_AE_5F =               {0x005F,      AE, 1, 0x00FF, RW, 0x0000, "Reserved", ""}
+RESERVED_AE_60 =               {0x0060,      AE, 1, 0x00FF, RW, 0x0000, "Reserved", ""}
+RESERVED_AE_61 =               {0x0061,      AE, 1, 0x00FF, RW, 0x0000, "Reserved", ""}
+RESERVED_AWB_00 =              {0x0000,     AWB, 1, 0xFFFF, RW, 0xE7A3, "Reserved", ""}
+AWB_WINDOW_POS =               {0x0002,     AWB, 1, 0x00FF, RW, 0x0000, "windowPos", "Y0 and X0"}
+    {X0,                                            0x000F, RW,         "0-3: X0", ""}
+    {Y0,                                            0x00F0, RW,         "4-7: Y0", ""}
+AWB_WINDOW_SIZE =              {0x0003,     AWB, 1, 0x00FF, RW, 0x00EF, "windowSize", "Height and width"}
+    {WIDTH,                                         0x000F, RW,         "0-3: Width", ""}
+    {HEIGHT,                                        0x00F0, RW,         "4-7: Height", ""}
+RESERVED_AWB_04 =              {0x0004,     AWB, 1, 0xFFFF, RW, 0x023C, "Reserved", ""}
+AWB_CCM_L_0 =                  {0x0006,     AWB, 1, 0xFFFF, RW, 0x01B3, "ccmL[0]", "Left CCM K11"}
+AWB_CCM_L_1 =                  {0x0008,     AWB, 1, 0xFFFF, RW, 0xFF1A, "ccmL[1]", "Left CCM K12"}
+AWB_CCM_L_2 =                  {0x000A,     AWB, 1, 0xFFFF, RW, 0x0033, "ccmL[2]", "Left CCM K13"}
+AWB_CCM_L_3 =                  {0x000C,     AWB, 1, 0xFFFF, RW, 0xFF8D, "ccmL[3]", "Left CCM K21"}
+AWB_CCM_L_4 =                  {0x000E,     AWB, 1, 0xFFFF, RW, 0x0200, "ccmL[4]", "Left CCM K22"}
+AWB_CCM_L_5 =                  {0x0010,     AWB, 1, 0xFFFF, RW, 0xFF73, "ccmL[5]", "Left CCM K23"}
+AWB_CCM_L_6 =                  {0x0012,     AWB, 1, 0xFFFF, RW, 0xFF9A, "ccmL[6]", "Left CCM K31"}
+AWB_CCM_L_7 =                  {0x0014,     AWB, 1, 0xFFFF, RW, 0xFD1A, "ccmL[7]", "Left CCM K32"}
+AWB_CCM_L_8 =                  {0x0016,     AWB, 1, 0xFFFF, RW, 0x024D, "ccmL[8]", "Left CCM K33"}
+AWB_CCM_L_9 =                  {0x0018,     AWB, 1, 0xFFFF, RW, 0x001C, "ccmL[9]", "Left CCM Red/Green gain"}
+AWB_CCM_L_10 =                 {0x001A,     AWB, 1, 0xFFFF, RW, 0x003A, "ccmL[10]", "Left CCM Blue/Green gain"}
+AWB_CCM_RL_0 =                 {0x001C,     AWB, 1, 0xFFFF, RW, 0x000D, "ccmRL[0]", "Delta CCM D11"}
+AWB_CCM_RL_1 =                 {0x001E,     AWB, 1, 0xFFFF, RW, 0x0033, "ccmRL[1]", "Delta CCM D12"}
+AWB_CCM_RL_2 =                 {0x0020,     AWB, 1, 0xFFFF, RW, 0xFFDA, "ccmRL[2]", "Delta CCM D13"}
+AWB_CCM_RL_3 =                 {0x0022,     AWB, 1, 0xFFFF, RW, 0x000D, "ccmRL[3]", "Delta CCM D21"}
+AWB_CCM_RL_4 =                 {0x0024,     AWB, 1, 0xFFFF, RW, 0xFFCD, "ccmRL[4]", "Delta CCM D22"}
+AWB_CCM_RL_5 =                 {0x0026,     AWB, 1, 0xFFFF, RW, 0x0026, "ccmRL[5]", "Delta CCM D23"}
+AWB_CCM_RL_6 =                 {0x0028,     AWB, 1, 0xFFFF, RW, 0x004D, "ccmRL[6]", "Delta CCM D31"}
+AWB_CCM_RL_7 =                 {0x002A,     AWB, 1, 0xFFFF, RW, 0x001A, "ccmRL[7]", "Delta CCM D32"}
+AWB_CCM_RL_8 =                 {0x002C,     AWB, 1, 0xFFFF, RW, 0x009A, "ccmRL[8]", "Delta CCM D33"}
+AWB_CCM_RL_9 =                 {0x002E,     AWB, 1, 0xFFFF, RW, 0x000C, "ccmRL[9]", "Delta CCM Red/Green gain"}
+AWB_CCM_RL_10 =                {0x0030,     AWB, 1, 0xFFFF, RW, 0xFFEC, "ccmRL[10]", "Delta CCM Blue/Green gain"}
+AWB_CCM_0 =                    {0x0032,     AWB, 1, 0xFFFF, RW, 0x01BA, "ccm[0]", "Current CCM C11"}
+AWB_CCM_1 =                    {0x0034,     AWB, 1, 0xFFFF, RW, 0xFF5B, "ccm[1]", "Current CCM C12"}
+AWB_CCM_2 =                    {0x0036,     AWB, 1, 0xFFFF, RW, 0xFFF1, "ccm[2]", "Current CCM C13"}
+AWB_CCM_3 =                    {0x0038,     AWB, 1, 0xFFFF, RW, 0xFFC7, "ccm[3]", "Current CCM C21"}
+AWB_CCM_4 =                    {0x003A,     AWB, 1, 0xFFFF, RW, 0x01B9, "ccm[4]", "Current CCM C22"}
+AWB_CCM_5 =                    {0x003C,     AWB, 1, 0xFFFF, RW, 0xFF87, "ccm[5]", "Current CCM C23"}
+AWB_CCM_6 =                    {0x003E,     AWB, 1, 0xFFFF, RW, 0xFFF9, "ccm[6]", "Current CCM C31"}
+AWB_CCM_7 =                    {0x0040,     AWB, 1, 0xFFFF, RW, 0xFF32, "ccm[7]", "Current CCM C32"}
+AWB_CCM_8 =                    {0x0042,     AWB, 1, 0xFFFF, RW, 0x01DC, "ccm[8]", "Current CCM C33"}
+AWB_CCM_9 =                    {0x0044,     AWB, 1, 0xFFFF, RW, 0x003C, "ccm[9]", "Current CCM Red/Green gain"}
+AWB_CCM_10 =                   {0x0046,     AWB, 1, 0xFFFF, RW, 0x002B, "ccm[10]", "Current CCM Blue/Green gain"}
+AWB_GAIN_BUFFER_SPEED =        {0x0048,     AWB, 1, 0x00FF, RW, 0x0008, "GainBufferSpeed", "32=fastest; 1=slowest"}
+AWB_JUMP_DIVISOR =             {0x0049,     AWB, 1, 0x00FF, RW, 0x0002, "JumpDivisor", "1=fastest"}
+AWB_GAIN_MIN =                 {0x004A,     AWB, 1, 0x00FF, RW, 0x0059, "GainMin_R", "Min AWB digital red gain"}
+AWB_GAIN_MAX =                 {0x004B,     AWB, 1, 0x00FF, RW, 0x00A6, "GainMax_R", "Max allowed digital red gain"}
+AWB_GAINMIN_B =                {0x004C,     AWB, 1, 0x00FF, RW, 0x0059, "GainMin_B", "Min AWB digital gain"}
+AWB_GAINMAX_B =                {0x004D,     AWB, 1, 0x00FF, RW, 0x00A6, "GainMax_B", "Max allowed digital gain"}
+AWB_GAIN_R =                   {0x004E,     AWB, 1, 0x00FF, RW, 0x0080, "GainR", "Current R digital gain"}
+AWB_GAIN_G =                   {0x004F,     AWB, 1, 0x00FF, RW, 0x0080, "GainG", "Current G digital gain"}
+AWB_GAIN_B =                   {0x0050,     AWB, 1, 0x00FF, RW, 0x0080, "GainB", "Current B digital gain"}
+AWB_CCM_POSITION_MIN =         {0x0051,     AWB, 1, 0x00FF, RW, 0x0000, "CCMpositionMin", "leftmost - incandescent"}
+AWB_CCM_POSITION_MAX =         {0x0052,     AWB, 1, 0x00FF, RW, 0x007F, "CCMpositionMax", "rightmost - daylight"}
+AWB_CCM_POSITION =             {0x0053,     AWB, 1, 0x00FF, RW, 0x0040, "CCMposition", "0=incandescent 127=daylight"}
+AWB_SATURATION =               {0x0054,     AWB, 1, 0x00FF, RW, 0x0080, "saturation", "128=100%"}
+AWB_MODE =                     {0x0055,     AWB, 1, 0x00FF, RW, 0x0000, "mode", ""}
+    {BIT_0,                                         0x0001, RW,         "0: Reserved", ""}
+    {BIT_1,                                         0x0002, RW,         "1: Reserved", ""}
+    {BIT_2,                                         0x0004, RW,         "2: Reserved", ""}
+    {BIT_3,                                         0x0008, RW,         "3: Reserved", ""}
+    {BIT_4,                                         0x0010, RW,         "4: Reserved", ""}
+    {FORCE_UNIT_DGAINS,                             0x0020, RW,         "5: Force unit gains", ""}
+    {NORMCCM_OFF,                                   0x0040, RW,         "6: normccm_off", ""}
+AWB_GAINR_BUF =                {0x0056,     AWB, 1, 0xFFFF, RW, 0x0000, "GainR_buf", "Time-buffered R gain"}
+AWB_GAINB_BUF =                {0x0058,     AWB, 1, 0xFFFF, RW, 0x0000, "GainB_buf", "Time-buffered B gain"}
+RESERVED_AWB_5A =              {0x005A,     AWB, 1, 0x00FF, RW, 0x0000, "Reserved", ""}
+RESERVED_AWB_5B =              {0x005B,     AWB, 1, 0x00FF, RW, 0x0000, "Reserved", ""}
+RESERVED_AWB_5C =              {0x005C,     AWB, 1, 0x00FF, RW, 0x0000, "Reserved", ""}
+AWB_STEADY_BGAIN_OUT_MIN =     {0x005D,     AWB, 1, 0x00FF, RW, 0x0078, "steadyBGainOutMin", ""}
+AWB_STEADY_BGAIN_OUT_MAX =     {0x005E,     AWB, 1, 0x00FF, RW, 0x0086, "steadyBGainOutMax", ""}
+AWB_STEADY_BGAIN_IN_MIN =      {0x005F,     AWB, 1, 0x00FF, RW, 0x007E, "steadyBGainInMin", ""}
+AWB_STEADY_BGAIN_IN_MAX =      {0x0060,     AWB, 1, 0x00FF, RW, 0x0082, "steadyBGainInMax", ""}
+RESERVED_AWB_61 =              {0x0061,     AWB, 1, 0xFFFF, RW, 0x0040, "Reserved", ""}
+RESERVED_AWB_63 =              {0x0063,     AWB, 1, 0x00FF, RW, 0x00D2, "Reserved", ""}
+RESERVED_AWB_64 =              {0x0064,     AWB, 1, 0x00FF, RW, 0x00F6, "Reserved", ""}
+AWB_X0 =                       {0x0065,     AWB, 1, 0x00FF, RW, 0x0010, "X0", ""}
+AWB_KR_L =                     {0x0066,     AWB, 1, 0x00FF, RW, 0x00AA, "kR_L", ""}
+AWB_KG_L =                     {0x0067,     AWB, 1, 0x00FF, RW, 0x0096, "kG_L", ""}
+AWB_KB_L =                     {0x0068,     AWB, 1, 0x00FF, RW, 0x0080, "kB_L", ""}
+AWB_KR_R =                     {0x0069,     AWB, 1, 0x00FF, RW, 0x0091, "kR_R", ""}
+AWB_KG_R =                     {0x006A,     AWB, 1, 0x00FF, RW, 0x0082, "kG_R", ""}
+AWB_KB_R =                     {0x006B,     AWB, 1, 0x00FF, RW, 0x0082, "kB_R", ""}
+RESERVED_AWB_6C =              {0x006C,     AWB, 1, 0x00FF, RW, 0x0018, "Reserved", ""}
+RESERVED_AWB_6D =              {0x006D,     AWB, 1, 0x00FF, RW, 0x0008, "Reserved", ""}
+RESERVED_AWB_6E =              {0x006E,     AWB, 1, 0x00FF, RW, 0x0018, "Reserved", ""}
+RESERVED_FD_00 =               {0x0000,      FD, 1, 0xFFFF, RW, 0xE824, "Reserved", ""}
+FD_WINDOW_POSH =               {0x0002,      FD, 1, 0x00FF, RW, 0x001D, "windowPosH", ""}
+    {WIDTH,                                         0x000F, RW,         "0-3: width", ""}
+    {X0,                                            0x00F0, RW,         "4-7: x0", ""}
+FD_WINDOW_HEIGHT =             {0x0003,      FD, 1, 0x00FF, RW, 0x0004, "windowHeight", ""}
+    {FD_B24,                                        0x003F, RW,         "0-5: flicker measurement window height in rows", ""}
+FD_MODE =                      {0x0004,      FD, 1, 0x00FF, RW, 0x0000, "mode", ""}
+    {BITS_0_3,                                      0x000F, RO,         "0-3: Reserved", ""}
+    {BIT_4,                                         0x0010, RW,         "4: Reserved", ""}
+    {CURR_FLICKER_STATE,                            0x0020, RO,         "5: Current Flicker State", "0=60Hz 1=50Hz"}
+    {CURR_SETTINGS,                                 0x0040, RW,         "6: Manual Flicker Mode Setting", "0=60Hz 1=50Hz"}
+    {MANUAL_MODE,                                   0x0080, RW,         "7: Manual Mode", "0=disable 1=enable"}
+RESERVED_FD_05 =               {0x0005,      FD, 1, 0xFFFF, RW, 0x0040, "Reserved", ""}
+RESERVED_FD_07 =               {0x0007,      FD, 1, 0x00FF, RW, 0x0005, "Reserved", ""}
+FD_SEARCH_F1_50 =              {0x0008,      FD, 1, 0x00FF, RW, 0x001E, "search_f1_50", ""}
+FD_SEARCH_F2_50 =              {0x0009,      FD, 1, 0x00FF, RW, 0x0020, "search_f2_50", ""}
+FD_SEARCH_F1_60 =              {0x000A,      FD, 1, 0x00FF, RW, 0x0025, "search_f1_60", ""}
+FD_SEARCH_F2_60 =              {0x000B,      FD, 1, 0x00FF, RW, 0x0027, "search_f2_60", ""}
+RESERVED_FD_0C =               {0x000C,      FD, 1, 0x00FF, RW, 0x0000, "Reserved", ""}
+FD_STAT_MIN =                  {0x000D,      FD, 1, 0x00FF, RW, 0x0003, "stat_min", ""}
+FD_STAT_MAX =                  {0x000E,      FD, 1, 0x00FF, RW, 0x0005, "stat_max", ""}
+RESERVED_FD_0F =               {0x000F,      FD, 1, 0x00FF, RW, 0x0000, "Reserved", ""}
+FD_MIN_AMPLITUDE =             {0x0010,      FD, 1, 0x00FF, RW, 0x0005, "minAmplitude", ""}
+FD_R9_STEP_F60_A =             {0x0011,      FD, 1, 0xFFFF, RW, 0x009D, "R9_step_0_f60", ""}
+FD_R9_STEP_F50_A =             {0x0013,      FD, 1, 0xFFFF, RW, 0x00BC, "R9_step_0_f50", ""}
+FD_R9_STEP_F60_B =             {0x0015,      FD, 1, 0xFFFF, RW, 0x0000, "R9_step_1_f60", ""}
+FD_R9_STEP_F50_B =             {0x0017,      FD, 1, 0xFFFF, RW, 0x00E0, "R9_step_1_f50", ""}
+RESERVED_FD_19 =               {0x0019,      FD, 1, 0x00FF, RW, 0x0000, "Reserved", ""}
+RESERVED_FD_1A =               {0x001A,      FD, 1, 0x00FF, RW, 0x0000, "Reserved", ""}
+RESERVED_FD_1B =               {0x001B,      FD, 1, 0x00FF, RW, 0x0000, "Reserved", ""}
+RESERVED_FD_1C =               {0x001C,      FD, 1, 0x00FF, RW, 0x0000, "Reserved", ""}
+RESERVED_FD_1D =               {0x001D,      FD, 1, 0x00FF, RW, 0x0000, "Reserved", ""}
+RESERVED_FD_1E =               {0x001E,      FD, 1, 0x00FF, RW, 0x0000, "Reserved", ""}
+RESERVED_FD_1F =               {0x001F,      FD, 1, 0x00FF, RW, 0x0000, "Reserved", ""}
+RESERVED_FD_20 =               {0x0020,      FD, 1, 0x00FF, RW, 0x0000, "Reserved", ""}
+RESERVED_FD_21 =               {0x0021,      FD, 1, 0x00FF, RW, 0x0000, "Reserved", ""}
+RESERVED_FD_22 =               {0x0022,      FD, 1, 0x00FF, RW, 0x0000, "Reserved", ""}
+RESERVED_FD_23 =               {0x0023,      FD, 1, 0x00FF, RW, 0x0000, "Reserved", ""}
+RESERVED_FD_24 =               {0x0024,      FD, 1, 0x00FF, RW, 0x0000, "Reserved", ""}
+RESERVED_FD_25 =               {0x0025,      FD, 1, 0x00FF, RW, 0x0000, "Reserved", ""}
+RESERVED_FD_26 =               {0x0026,      FD, 1, 0x00FF, RW, 0x0000, "Reserved", ""}
+RESERVED_FD_27 =               {0x0027,      FD, 1, 0x00FF, RW, 0x0000, "Reserved", ""}
+RESERVED_FD_28 =               {0x0028,      FD, 1, 0x00FF, RW, 0x0000, "Reserved", ""}
+RESERVED_FD_29 =               {0x0029,      FD, 1, 0x00FF, RW, 0x0000, "Reserved", ""}
+RESERVED_FD_2A =               {0x002A,      FD, 1, 0x00FF, RW, 0x0000, "Reserved", ""}
+RESERVED_FD_2B =               {0x002B,      FD, 1, 0x00FF, RW, 0x0000, "Reserved", ""}
+RESERVED_FD_2C =               {0x002C,      FD, 1, 0x00FF, RW, 0x0000, "Reserved", ""}
+RESERVED_FD_2D =               {0x002D,      FD, 1, 0x00FF, RW, 0x0000, "Reserved", ""}
+RESERVED_FD_2E =               {0x002E,      FD, 1, 0x00FF, RW, 0x0000, "Reserved", ""}
+RESERVED_FD_2F =               {0x002F,      FD, 1, 0x00FF, RW, 0x0000, "Reserved", ""}
+RESERVED_FD_30 =               {0x0030,      FD, 1, 0x00FF, RW, 0x0000, "Reserved", ""}
+RESERVED_FD_31 =               {0x0031,      FD, 1, 0x00FF, RW, 0x0000, "Reserved", ""}
+RESERVED_FD_32 =               {0x0032,      FD, 1, 0x00FF, RW, 0x0000, "Reserved", ""}
+RESERVED_FD_33 =               {0x0033,      FD, 1, 0x00FF, RW, 0x0000, "Reserved", ""}
+RESERVED_FD_34 =               {0x0034,      FD, 1, 0x00FF, RW, 0x0000, "Reserved", ""}
+RESERVED_FD_35 =               {0x0035,      FD, 1, 0x00FF, RW, 0x0000, "Reserved", ""}
+RESERVED_FD_36 =               {0x0036,      FD, 1, 0x00FF, RW, 0x0000, "Reserved", ""}
+RESERVED_FD_37 =               {0x0037,      FD, 1, 0x00FF, RW, 0x0000, "Reserved", ""}
+RESERVED_FD_38 =               {0x0038,      FD, 1, 0x00FF, RW, 0x0000, "Reserved", ""}
+RESERVED_FD_39 =               {0x0039,      FD, 1, 0x00FF, RW, 0x0000, "Reserved", ""}
+RESERVED_FD_3A =               {0x003A,      FD, 1, 0x00FF, RW, 0x0000, "Reserved", ""}
+RESERVED_FD_3B =               {0x003B,      FD, 1, 0x00FF, RW, 0x0000, "Reserved", ""}
+RESERVED_FD_3C =               {0x003C,      FD, 1, 0x00FF, RW, 0x0000, "Reserved", ""}
+RESERVED_FD_3D =               {0x003D,      FD, 1, 0x00FF, RW, 0x0000, "Reserved", ""}
+RESERVED_FD_3E =               {0x003E,      FD, 1, 0x00FF, RW, 0x0000, "Reserved", ""}
+RESERVED_FD_3F =               {0x003F,      FD, 1, 0x00FF, RW, 0x0000, "Reserved", ""}
+RESERVED_FD_40 =               {0x0040,      FD, 1, 0x00FF, RW, 0x0000, "Reserved", ""}
+RESERVED_FD_41 =               {0x0041,      FD, 1, 0x00FF, RW, 0x0000, "Reserved", ""}
+RESERVED_FD_42 =               {0x0042,      FD, 1, 0x00FF, RW, 0x0000, "Reserved", ""}
+RESERVED_FD_43 =               {0x0043,      FD, 1, 0x00FF, RW, 0x0000, "Reserved", ""}
+RESERVED_FD_44 =               {0x0044,      FD, 1, 0x00FF, RW, 0x0000, "Reserved", ""}
+RESERVED_FD_45 =               {0x0045,      FD, 1, 0x00FF, RW, 0x0000, "Reserved", ""}
+RESERVED_FD_46 =               {0x0046,      FD, 1, 0x00FF, RW, 0x0000, "Reserved", ""}
+RESERVED_FD_47 =               {0x0047,      FD, 1, 0x00FF, RW, 0x0000, "Reserved", ""}
+RESERVED_FD_48 =               {0x0048,      FD, 1, 0x00FF, RW, 0x0000, "Reserved", ""}
+RESERVED_MODE_00 =             {0x0000,    MODE, 1, 0xFFFF, RW, 0xE86E, "Reserved", ""}
+RESERVED_MODE_02 =             {0x0002,    MODE, 1, 0x00FF, RW, 0x0000, "Reserved", ""}
+MODE_OUTPUT_WIDTH_A =          {0x0003,    MODE, 1, 0xFFFF, RW, 0x0140, "Output Width A", ""}
+MODE_OUTPUT_HEIGHT_A =         {0x0005,    MODE, 1, 0xFFFF, RW, 0x00F0, "Output Height A", ""}
+MODE_OUTPUT_WIDTH_B =          {0x0007,    MODE, 1, 0xFFFF, RW, 0x0280, "Output Width B", ""}
+MODE_OUTPUT_HEIGHT_B =         {0x0009,    MODE, 1, 0xFFFF, RW, 0x01E0, "Output Height B", ""}
+RESERVED_MODE_0B =             {0x000B,    MODE, 1, 0xFFFF, RW, 0x00C8, "Reserved", ""}
+MODE_SENSOR_ROW_START_A =      {0x000D,    MODE, 1, 0xFFFF, RW, 0x0000, "sensor_row_start_A", ""}
+MODE_SENSOR_COL_START_A =      {0x000F,    MODE, 1, 0xFFFF, RW, 0x0000, "sensor_col_start_A", ""}
+MODE_SENSOR_ROW_END_A =        {0x0011,    MODE, 1, 0xFFFF, RW, 0x01E7, "sensor_row_end_A", ""}
+MODE_SENSOR_COL_END_A =        {0x0013,    MODE, 1, 0xFFFF, RW, 0x0287, "sensor_col_end_A", ""}
+MODE_SENSOR_ROW_SPEED_A =      {0x0015,    MODE, 1, 0xFFFF, RW, 0x0111, "sensor_row_speed_A", ""}
+    {PIXCLK_SPEED,                                  0x0007, RW,         "0-2: Pixel clock speed in mclk periods", "1ADC: Pclk = 2 mclks* bits[0:2]; 2ADC: bits[0:2]"}
+    {BIT_3,                                         0x0008, RW,         "3: Reserved", ""}
+    {BITS_4_7,                                      0x00F0, RW,         "4-7: Reserved", ""}
+    {BITS_8_9,                                      0x0300, RW,         "8-9: Reserved", ""}
+    {BITS_13_15,                                    0xE000, RW,         "13-15: Reserved", ""}
+MODE_SENSOR_READ_MODE_A =      {0x0017,    MODE, 1, 0xFFFF, RW, 0x0424, "Read Mode A", ""}
+    {HORIZ_MIRROR,                                  0x0001, RW,         "0: Horizontal Mirror", ""}
+    {VERT_FLIP,                                     0x0002, RW,         "1: Vertical Flip", ""}
+    {Y_ODD_INC,                                     0x001C, RW,         "2-4: Y odd increment", ""}
+    {X_ODD_INC,                                     0x00E0, RW,         "5-7: X odd increment", ""}
+    {MODE_SENSOR_READ_MODE_A_LOW_POWER_ENABLE,      0x0200, RW,         "9: Enable/Disable Low Power Mode", ""}
+    {XY_BIN_EN,                                     0x0400, RW,         "10: xy bin enable", ""}
+    {X_BIN_EN,                                      0x0800, RW,         "11: x bin enable", ""}
+MODE_SENSOR_FINE_CORRECTION_A = {0x0019,    MODE, 1, 0xFFFF, RW, 0x007B, "sensor_fine_correction_A", ""}
+MODE_SENSOR_FINE_IT_MIN_A =    {0x001B,    MODE, 1, 0xFFFF, RW, 0x0408, "sensor_fine_IT_min_A", ""}
+MODE_SENSOR_FINE_IT_MAX_MARGIN_A = {0x001D,    MODE, 1, 0xFFFF, RW, 0x00AB, "sensor_fine_IT_max_margin_A", ""}
+MODE_SENSOR_FRAME_LENGTH_A =   {0x001F,    MODE, 1, 0xFFFF, RW, 0x0293, "sensor_frameLengthLines_A", ""}
+MODE_SENSOR_LINE_LENGTH_PCK_A = {0x0021,    MODE, 1, 0xFFFF, RW, 0x07D0, "sensor_lineLengthPck:_A", ""}
+MODE_SENSOR_ROW_START_B =      {0x0023,    MODE, 1, 0xFFFF, RW, 0x0000, "sensor_row_start_B", ""}
+MODE_SENSOR_COL_START_B =      {0x0025,    MODE, 1, 0xFFFF, RW, 0x0000, "sensor_col_start_B", ""}
+MODE_SENSOR_ROW_END_B =        {0x0027,    MODE, 1, 0xFFFF, RW, 0x01E7, "sensor_row_end_B", ""}
+MODE_SENSOR_COL_END_B =        {0x0029,    MODE, 1, 0xFFFF, RW, 0x0287, "sensor_col_end_B", ""}
+MODE_SENSOR_ROW_SPEED_B =      {0x002B,    MODE, 1, 0xFFFF, RW, 0x2111, "sensor_row_speed_B", ""}
+    {PIXCLK_SPEED,                                  0x0007, RW,         "0-2: Pixel clock speed in mclk periods", "1ADC: Pclk = 2 mclks* bits[0:2]; 2ADC: bits[0:2]"}
+    {BIT_3,                                         0x0008, RW,         "3: Reserved", ""}
+    {BITS_4_7,                                      0x00F0, RW,         "4-7: Reserved", ""}
+    {BITS_8_9,                                      0x0300, RW,         "8-9: Reserved", ""}
+    {BITS_13_15,                                    0xE000, RW,         "13-15: Reserved", ""}
+MODE_SENSOR_READ_MODE_B =      {0x002D,    MODE, 1, 0xFFFF, RW, 0x0024, "Read Mode B", ""}
+    {HORIZ_MIRROR,                                  0x0001, RW,         "0: Horizontal Mirror", ""}
+    {VERT_FLIP,                                     0x0002, RW,         "1: Vertical Flip", ""}
+    {Y_ODD_INC,                                     0x001C, RW,         "2-4: Y odd increment", ""}
+    {X_ODD_INC,                                     0x00E0, RW,         "5-7: X odd increment", ""}
+    {MODE_SENSOR_READ_MODE_B_LOW_POWER_MODE,        0x0200, RW,         "9: Enable/Disable Low Power Mode", ""}
+    {XY_BIN_EN,                                     0x0400, RW,         "10: xy bin enable", ""}
+    {X_BIN_EN,                                      0x0800, RW,         "11: x bin enable", ""}
+MODE_SENSOR_FINE_CORRECTION_B = {0x002F,    MODE, 1, 0xFFFF, RW, 0x00A4, "sensor_fine_correction_B", ""}
+MODE_SENSOR_FINE_IT_MIN_B =    {0x0031,    MODE, 1, 0xFFFF, RW, 0x0408, "sensor_fine_IT_min_B", ""}
+MODE_SENSOR_FINE_IT_MAX_MARGIN_B = {0x0033,    MODE, 1, 0xFFFF, RW, 0x00A4, "sensor_fine_IT_max_margin_B", ""}
+MODE_SENSOR_FRAME_LENGTH_B =   {0x0035,    MODE, 1, 0xFFFF, RW, 0x04ED, "sensor_frameLengthLines_B", ""}
+MODE_SENSOR_LINE_LENGTH_PCK_B = {0x0037,    MODE, 1, 0xFFFF, RW, 0x0D06, "sensor_lineLengthPck:_B", ""}
+MODE_CROP_X0_A =               {0x0039,    MODE, 1, 0xFFFF, RW, 0x0000, "crop_X0_A", ""}
+MODE_CROP_X1_A =               {0x003B,    MODE, 1, 0xFFFF, RW, 0x027F, "crop_X1_A", ""}
+MODE_CROP_Y0_A =               {0x003D,    MODE, 1, 0xFFFF, RW, 0x0000, "crop_Y0_A", ""}
+MODE_CROP_Y1_A =               {0x003F,    MODE, 1, 0xFFFF, RW, 0x01DF, "crop_Y1_A", ""}
+RESERVED_MODE_41 =             {0x0041,    MODE, 1, 0xFFFF, RW, 0x0000, "Reserved", ""}
+RESERVED_MODE_43 =             {0x0043,    MODE, 1, 0xFFFF, RW, 0x0800, "Reserved", ""}
+RESERVED_MODE_45 =             {0x0045,    MODE, 1, 0xFFFF, RW, 0x0800, "Reserved", ""}
+MODE_CROP_X0_B =               {0x0047,    MODE, 1, 0xFFFF, RW, 0x0000, "crop_X0_B", ""}
+MODE_CROP_X1_B =               {0x0049,    MODE, 1, 0xFFFF, RW, 0x027F, "crop_X1_B", ""}
+MODE_CROP_Y0_B =               {0x004B,    MODE, 1, 0xFFFF, RW, 0x0000, "crop_Y0_B", ""}
+MODE_CROP_Y1_B =               {0x004D,    MODE, 1, 0xFFFF, RW, 0x01DF, "crop_Y1_B", ""}
+RESERVED_MODE_4F =             {0x004F,    MODE, 1, 0xFFFF, RW, 0x0000, "Reserved", ""}
+RESERVED_MODE_51 =             {0x0051,    MODE, 1, 0xFFFF, RW, 0x0800, "Reserved", ""}
+RESERVED_MODE_53 =             {0x0053,    MODE, 1, 0xFFFF, RW, 0x0800, "Reserved", ""}
+MODE_OUTPUT_FORMAT_A =         {0x0055,    MODE, 1, 0xFFFF, RW, 0x0000, "output_format_A", ""}
+    {SWAP_CHANNELS,                                 0x0001, RW,         "0: Swap Channels", "swaps Cb Cr in YUV and R B in RGB"}
+    {SWAP_CHROMINANCE_LUMA,                         0x0002, RW,         "1: Swaps chrominance byte with luminance byte in YUV output.", ""}
+    {BAYER_OUT,                                     0x0004, RW,         "2: Progressive Bayer", ""}
+    {MONOCHROME,                                    0x0008, RW,         "3: Monochrome output", ""}
+    {CCIR656,                                       0x0010, RW,         "4: Use CCIR656 codes when bypassing FIFO", ""}
+    {OUTPUT_MODE,                                   0x0020, RW,         "5: RGB/YUV output", "0: YUV; 1: RGB"}
+    {RGB_FORMAT,                                    0x00C0, RW,         "6-7: RGB output format", "0: 565; 1: 555; 2: 444x; 3: x444"}
+    {PROCESSED_BAYER,                               0x0100, RW,         "8: Turn on processed Bayer mode", ""}
+MODE_OUTPUT_FORMAT_B =         {0x0057,    MODE, 1, 0xFFFF, RW, 0x0000, "output_format_B", ""}
+    {SWAP_CHANNELS,                                 0x0001, RW,         "0: Swap Channels", "swaps Cb Cr in YUV and R B in RGB"}
+    {SWAP_CHROMINANCE_LUMA,                         0x0002, RW,         "1: Swaps chrominance byte with luminance byte in YUV output.", ""}
+    {BAYER_OUT,                                     0x0004, RW,         "2: Progressive Bayer", ""}
+    {MONOCHROME,                                    0x0008, RW,         "3: Monochrome output", ""}
+    {CCIR656,                                       0x0010, RW,         "4: Use ITU-R BT.656 codes when bypassing FIFO", ""}
+    {OUTPUT_MODE,                                   0x0020, RW,         "5: RGB/YUV output", "0: YUV; 1: RGB"}
+    {RGB_FORMAT,                                    0x00C0, RW,         "6-7: RGB output format", "0: 565; 1: 555; 2: 444x; 3: x444"}
+    {PROCESSED_BAYER,                               0x0100, RW,         "8: Turn on processed Bayer mode", ""}
+MODE_SPEC_EFFECTS_A =          {0x0059,    MODE, 1, 0xFFFF, RW, 0x6440, "spec_effects_A", ""}
+    {SELECTION,                                     0x0007, RW,         "0-2: Special effect selection bits", "1: mono; 2: sepia; 3: negative; 4: solarization 5: solarization w/ UV"}
+    {DITHER_BITWIDTH,                               0x0038, RW,         "3-5: Bit width of dither", ""}
+    {DITHER_LUMA,                                   0x0040, RW,         "6: Dither Luma only", ""}
+    {SOLARIZATION_THRESH,                           0xFF00, RW,         "8-15: Solarization threshhold", ""}
+MODE_SPEC_EFFECTS_B =          {0x005B,    MODE, 1, 0xFFFF, RW, 0x6440, "spec_effects_B", ""}
+    {SELECTION,                                     0x0007, RW,         "0-2: Special effect selection bits", "1: mono; 2: sepia; 3: negative; 4: solarization 5: solarization w/ UV"}
+    {DITHER_BITWIDTH,                               0x0038, RW,         "3-5: Bit width of dither", ""}
+    {DITHER_LUMA,                                   0x0040, RW,         "6: Dither Luma only", ""}
+    {SOLARIZATION_THRESH,                           0xFF00, RW,         "8-15: Solarization threshhold", ""}
+MODE_Y_RGB_OFFSET_A =          {0x005D,    MODE, 1, 0x00FF, RW, 0x0000, "y_rgb_offset_A", ""}
+MODE_Y_RGB_OFFSET_B =          {0x005E,    MODE, 1, 0x00FF, RW, 0x0000, "y_rgb_offset_B", ""}
+RESERVED_MODE_5F =             {0x005F,    MODE, 1, 0xFFFF, RW, 0x0000, "Reserved", ""}
+RESERVED_MODE_61 =             {0x0061,    MODE, 1, 0xFFFF, RW, 0x0000, "Reserved", ""}
+MODE_COMMONMODESETTINGS_FX_SEPIA_SETTINGS = {0x0063,    MODE, 1, 0xFFFF, RW, 0x0000, "CommonModeSettings_FX_Sepia_Settings", ""}
+RESERVED_MODE_65 =             {0x0065,    MODE, 1, 0x00FF, RW, 0x0000, "Reserved", ""}
+MODE_COMMONMODESETTINGS_TEST_MODE = {0x0066,    MODE, 1, 0x00FF, RW, 0x0000, "CommonModeSettings_Test_Mode", ""}
+RESERVED_MODE_67 =             {0x0067,    MODE, 1, 0x00FF, RW, 0x0001, "Reserved", ""}
+RESERVED_HG_00 =               {0x0000,      HG, 1, 0xFFFF, RW, 0x2480, "Reserved", ""}
+RESERVED_HG_02 =               {0x0002,      HG, 1, 0x00FF, RW, 0x0000, "Reserved", ""}
+RESERVED_HG_03 =               {0x0003,      HG, 1, 0x00FF, RW, 0x0000, "Reserved", ""}
+HG_MAX_DLEVEL =                {0x0004,      HG, 1, 0x00FF, RW, 0x0000, "MaxDarkLevel", ""}
+RESERVED_HG_05 =               {0x0005,      HG, 1, 0x00FF, RW, 0x0000, "Reserved", ""}
+HG_PERCENT =                   {0x0006,      HG, 1, 0x00FF, RW, 0x0003, "BlackClipPercent", ""}
+RESERVED_HG_07 =               {0x0007,      HG, 1, 0x00FF, RW, 0x0000, "Reserved", ""}
+HG_DLEVEL =                    {0x0008,      HG, 1, 0x00FF, RW, 0x0000, "DarkLevel", ""}
+RESERVED_HG_09 =               {0x0009,      HG, 1, 0xFFFF, RW, 0x0000, "Reserved", ""}
+RESERVED_HG_0B =               {0x000B,      HG, 1, 0xFFFF, RW, 0x0000, "Reserved", ""}
+RESERVED_HG_0D =               {0x000D,      HG, 1, 0xFFFF, RW, 0x0000, "Reserved", ""}
+RESERVED_HG_0F =               {0x000F,      HG, 1, 0xFFFF, RW, 0x0000, "Reserved", ""}
+RESERVED_HG_11 =               {0x0011,      HG, 1, 0xFFFF, RW, 0x0000, "Reserved", ""}
+RESERVED_HG_13 =               {0x0013,      HG, 1, 0xFFFF, RW, 0x0000, "Reserved", ""}
+RESERVED_HG_15 =               {0x0015,      HG, 1, 0x00FF, RW, 0x0000, "Reserved", ""}
+RESERVED_HG_16 =               {0x0016,      HG, 1, 0x00FF, RW, 0x0000, "Reserved", ""}
+RESERVED_HG_17 =               {0x0017,      HG, 1, 0x00FF, RW, 0x0000, "Reserved", ""}
+RESERVED_HG_18 =               {0x0018,      HG, 1, 0x00FF, RW, 0x0000, "Reserved", ""}
+RESERVED_HG_19 =               {0x0019,      HG, 1, 0x00FF, RW, 0x0000, "Reserved", ""}
+RESERVED_HG_1A =               {0x001A,      HG, 1, 0x00FF, RW, 0x0000, "Reserved", ""}
+HG_BRIGHTNESSMETRIC =          {0x001B,      HG, 1, 0xFFFF, RW, 0x0000, "BrightnessMetric", ""}
+RESERVED_HG_1D =               {0x001D,      HG, 1, 0xFFFF, RW, 0x0000, "Reserved", ""}
+RESERVED_HG_1F =               {0x001F,      HG, 1, 0x00FF, RW, 0x00E0, "Reserved", ""}
+RESERVED_HG_20 =               {0x0020,      HG, 1, 0x00FF, RW, 0x0043, "Reserved", ""}
+RESERVED_HG_21 =               {0x0021,      HG, 1, 0x00FF, RW, 0x0008, "Reserved", ""}
+RESERVED_HG_22 =               {0x0022,      HG, 1, 0x00FF, RW, 0x0002, "Reserved", ""}
+RESERVED_HG_23 =               {0x0023,      HG, 1, 0x00FF, RW, 0x0000, "Reserved", ""}
+RESERVED_HG_24 =               {0x0024,      HG, 1, 0x00FF, RW, 0x000C, "Reserved", ""}
+RESERVED_HG_25 =               {0x0025,      HG, 1, 0x00FF, RW, 0x0014, "Reserved", ""}
+RESERVED_HG_26 =               {0x0026,      HG, 1, 0x00FF, RW, 0x0000, "Reserved", ""}
+RESERVED_HG_27 =               {0x0027,      HG, 1, 0x00FF, RW, 0x0004, "Reserved", ""}
+HG_LL_BRIGHTNESSSTART =        {0x0028,      HG, 1, 0xFFFF, RW, 0x157C, "LL_BrightnessStart", ""}
+HG_LL_BRIGHTNESSSTOP =         {0x002A,      HG, 1, 0xFFFF, RW, 0x1B58, "LL_BrightnessStop", ""}
+RESERVED_HG_2C =               {0x002C,      HG, 1, 0x00FF, RW, 0x0006, "Reserved", ""}
+RESERVED_HG_2D =               {0x002D,      HG, 1, 0x00FF, RW, 0x000E, "Reserved", ""}
+RESERVED_HG_2E =               {0x002E,      HG, 1, 0x00FF, RW, 0x0006, "Reserved", ""}
+RESERVED_HG_2F =               {0x002F,      HG, 1, 0x00FF, RW, 0x0006, "Reserved", ""}
+RESERVED_HG_30 =               {0x0030,      HG, 1, 0x00FF, RW, 0x001E, "Reserved", ""}
+RESERVED_HG_31 =               {0x0031,      HG, 1, 0x00FF, RW, 0x000E, "Reserved", ""}
+RESERVED_HG_32 =               {0x0032,      HG, 1, 0x00FF, RW, 0x001E, "Reserved", ""}
+RESERVED_HG_33 =               {0x0033,      HG, 1, 0x00FF, RW, 0x001E, "Reserved", ""}
+RESERVED_HG_34 =               {0x0034,      HG, 1, 0x00FF, RW, 0x0008, "Reserved", ""}
+RESERVED_HG_35 =               {0x0035,      HG, 1, 0x00FF, RW, 0x0080, "Reserved", ""}
+RESERVED_HG_36 =               {0x0036,      HG, 1, 0x00FF, RW, 0x0028, "Reserved", ""}
+HG_GAMMA_MORPH_CTRL =          {0x0037,      HG, 1, 0x00FF, RW, 0x0003, "GammaMorphCTRL", ""}
+    {ENABLE_GAMMAMORPH,                             0x0003, RW,         "0-1: Gamma Morph Enable", "0=Disable, 1=Use Table A, 2=Use Table B, 3=Auto-Morph between Table A and B based on Brightness Metric"}
+HG_GAMMASTARTMORPH =           {0x0038,      HG, 1, 0xFFFF, RW, 0x157C, "GammaStartMorph", ""}
+HG_GAMMASTOPMORPH =            {0x003A,      HG, 1, 0xFFFF, RW, 0x1B58, "GammaStopMorph", ""}
+HG_GAMMA_TABLE_A_0 =           {0x003C,      HG, 1, 0x00FF, RW, 0x0000, "gamma_table_A_0", ""}
+HG_GAMMA_TABLE_A_1 =           {0x003D,      HG, 1, 0x00FF, RW, 0x001B, "gamma_table_A_1", ""}
+HG_GAMMA_TABLE_A_2 =           {0x003E,      HG, 1, 0x00FF, RW, 0x002E, "gamma_table_A_2", ""}
+HG_GAMMA_TABLE_A_3 =           {0x003F,      HG, 1, 0x00FF, RW, 0x004C, "gamma_table_A_3", ""}
+HG_GAMMA_TABLE_A_4 =           {0x0040,      HG, 1, 0x00FF, RW, 0x0078, "gamma_table_A_4", ""}
+HG_GAMMA_TABLE_A_5 =           {0x0041,      HG, 1, 0x00FF, RW, 0x0098, "gamma_table_A_5", ""}
+HG_GAMMA_TABLE_A_6 =           {0x0042,      HG, 1, 0x00FF, RW, 0x00B0, "gamma_table_A_6", ""}
+HG_GAMMA_TABLE_A_7 =           {0x0043,      HG, 1, 0x00FF, RW, 0x00E8, "gamma_table_A_7", ""}
+HG_GAMMA_TABLE_A_8 =           {0x0044,      HG, 1, 0x00FF, RW, 0x00CF, "gamma_table_A_8", ""}
+HG_GAMMA_TABLE_A_9 =           {0x0045,      HG, 1, 0x00FF, RW, 0x00D9, "gamma_table_A_9", ""}
+HG_GAMMA_TABLE_A_10 =          {0x0046,      HG, 1, 0x00FF, RW, 0x00E1, "gamma_table_A_10", ""}
+HG_GAMMA_TABLE_A_11 =          {0x0047,      HG, 1, 0x00FF, RW, 0x00E8, "gamma_table_A_11", ""}
+HG_GAMMA_TABLE_A_12 =          {0x0048,      HG, 1, 0x00FF, RW, 0x00EE, "gamma_table_A_12", ""}
+HG_GAMMA_TABLE_A_13 =          {0x0049,      HG, 1, 0x00FF, RW, 0x00F2, "gamma_table_A_13", ""}
+HG_GAMMA_TABLE_A_14 =          {0x004A,      HG, 1, 0x00FF, RW, 0x00F6, "gamma_table_A_14", ""}
+HG_GAMMA_TABLE_A_15 =          {0x004B,      HG, 1, 0x00FF, RW, 0x00F9, "gamma_table_A_15", ""}
+HG_GAMMA_TABLE_A_16 =          {0x004C,      HG, 1, 0x00FB, RW, 0x00FB, "gamma_table_A_16", ""}
+HG_GAMMA_TABLE_A_17 =          {0x004D,      HG, 1, 0x00FF, RW, 0x00FD, "gamma_table_A_17", ""}
+HG_GAMMA_TABLE_A_18 =          {0x004E,      HG, 1, 0x00FF, RW, 0x00FF, "gamma_table_A_18", ""}
+HG_GAMMA_TABLE_B_0 =           {0x004F,      HG, 1, 0x00FF, RW, 0x0000, "gamma_table_B_0", ""}
+HG_GAMMA_TABLE_B_1 =           {0x0050,      HG, 1, 0x00FF, RW, 0x000F, "gamma_table_B_1", ""}
+HG_GAMMA_TABLE_B_2 =           {0x0051,      HG, 1, 0x00FF, RW, 0x001A, "gamma_table_B_2", ""}
+HG_GAMMA_TABLE_B_3 =           {0x0052,      HG, 1, 0x00FF, RW, 0x002E, "gamma_table_B_3", ""}
+HG_GAMMA_TABLE_B_4 =           {0x0053,      HG, 1, 0x00FF, RW, 0x0050, "gamma_table_B_4", ""}
+HG_GAMMA_TABLE_B_5 =           {0x0054,      HG, 1, 0x00FF, RW, 0x006A, "gamma_table_B_5", ""}
+HG_GAMMA_TABLE_B_6 =           {0x0055,      HG, 1, 0x00FF, RW, 0x0080, "gamma_table_B_6", ""}
+HG_GAMMA_TABLE_B_7 =           {0x0056,      HG, 1, 0x00FF, RW, 0x0091, "gamma_table_B_7", ""}
+HG_GAMMA_TABLE_B_8 =           {0x0057,      HG, 1, 0x00FF, RW, 0x00A1, "gamma_table_B_8", ""}
+HG_GAMMA_TABLE_B_9 =           {0x0058,      HG, 1, 0x00FF, RW, 0x00AF, "gamma_table_B_9", ""}
+HG_GAMMA_TABLE_B_10 =          {0x0059,      HG, 1, 0x00FF, RW, 0x00BB, "gamma_table_B_10", ""}
+HG_GAMMA_TABLE_B_11 =          {0x005A,      HG, 1, 0x00FF, RW, 0x00C6, "gamma_table_B_11", ""}
+HG_GAMMA_TABLE_B_12 =          {0x005B,      HG, 1, 0x00FF, RW, 0x00D0, "gamma_table_B_12", ""}
+HG_GAMMA_TABLE_B_13 =          {0x005C,      HG, 1, 0x00FF, RW, 0x00D9, "gamma_table_B_13", ""}
+HG_GAMMA_TABLE_B_14 =          {0x005D,      HG, 1, 0x00FF, RW, 0x00E2, "gamma_table_B_14", ""}
+HG_GAMMA_TABLE_B_15 =          {0x005E,      HG, 1, 0x00FF, RW, 0x00EA, "gamma_table_B_15", ""}
+HG_GAMMA_TABLE_B_16 =          {0x005F,      HG, 1, 0x00FF, RW, 0x00F1, "gamma_table_B_16", ""}
+HG_GAMMA_TABLE_B_17 =          {0x0060,      HG, 1, 0x00FF, RW, 0x00F9, "gamma_table_B_17", ""}
+HG_GAMMA_TABLE_B_18 =          {0x0061,      HG, 1, 0x00FF, RW, 0x00FF, "gamma_table_B_18", ""}
+RESERVED_SFR_1040 =            {0x1040,     SFR, 1, 0xFFFF, RW, 0x0000, "Reserved", ""}
+RESERVED_SFR_1042 =            {0x1042,     SFR, 1, 0xFFFF, RW, 0x0000, "Reserved", ""}
+RESERVED_SFR_1044 =            {0x1044,     SFR, 1, 0xFFFF, RW, 0x0000, "Reserved", ""}
+RESERVED_SFR_1046 =            {0x1046,     SFR, 1, 0xFFFF, RW, 0x0000, "Reserved", ""}
+RESERVED_SFR_1048 =            {0x1048,     SFR, 1, 0xFFFF, RW, 0x0000, "Reserved", ""}
+RESERVED_SFR_104A =            {0x104A,     SFR, 1, 0xFFFF, RW, 0x0000, "Reserved", ""}
+RESERVED_SFR_104C =            {0x104C,     SFR, 1, 0x00FF, RW, 0x0000, "Reserved", ""}
+RESERVED_SFR_104D =            {0x104D,     SFR, 1, 0x00FF, RW, 0x0000, "Reserved", ""}
+RESERVED_SFR_104E =            {0x104E,     SFR, 1, 0x00FF, RW, 0x0000, "Reserved", ""}
+RESERVED_SFR_104F =            {0x104F,     SFR, 1, 0x00FF, RW, 0x0000, "Reserved", ""}
+RESERVED_SFR_1050 =            {0x1050,     SFR, 1, 0xFFFF, RW, 0x0000, "Reserved", ""}
+GPIO_DATA =                    {0x1070,     SFR, 1, 0x0300, RW, 0x0000, "GPIO Data", ""}
+    {GPIO_1_0_DATA,                                 0x0300, RW,         "8-9: GPIO Data", ""}
+RESERVED_SFR_1072 =            {0x1072,     SFR, 1, 0x0300, RW, 0x0000, "Reserved", ""}
+GPIO_OUTPUT_SET =              {0x1074,     SFR, 1, 0x0300, RW, 0x0000, "GPIO Output Set", "(write only)"}
+    {GPIO_1_0_OUTPUT_SET,                           0x0300, RW,         "8-9: GPIO Output Set", ""}
+GPIO_OUTPUT_CLEAR =            {0x1076,     SFR, 1, 0x0300, RW, 0x0000, "GPIO Output Clear", "(write only)"}
+    {GPIO_1_0_OUTPUT_CLEAR,                         0x0300, RW,         "8-9: GPIO Output Clear", ""}
+GPIO_DIR =                     {0x1078,     SFR, 1, 0x0300, RW, 0x0300, "GPIO Direction", "Clear the bit for an output; Set the bit for an input"}
+    {GPIO_1_0_DIR,                                  0x0300, RW,         "8-9: GPIO Direction", ""}
+RESERVED_SFR_107A =            {0x107A,     SFR, 1, 0x0300, RW, 0x0000, "Reserved", ""}
+RESERVED_SFR_107C =            {0x107C,     SFR, 1, 0x0300, RW, 0x0000, "Reserved", ""}
+RESERVED_SFR_107E =            {0x107E,     SFR, 1, 0x0300, RW, 0x0000, "Reserved", ""}
+RESERVED_SFR_10B8 =            {0x10B8,     SFR, 1, 0x00FF, RW, 0x0000, "Reserved", ""}
+RESERVED_SFR_10B9 =            {0x10B9,     SFR, 1, 0x0FFF, RW, 0x0000, "Reserved", ""}
+RESERVED_SFR_10BB =            {0x10BB,     SFR, 1, 0x0FFF, RW, 0x0FFF, "Reserved", ""}
+RESERVED_SFR_10FD =            {0x10FD,     SFR, 1, 0xFFFF, RW, 0x0000, "Reserved", ""}
+[END]
+

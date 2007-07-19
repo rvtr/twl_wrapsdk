@@ -47,48 +47,32 @@ extern "C" {
 // PXIコマンド定義
 typedef enum CAMERAPxiCommand
 {
-    CAMERA_PXI_COMMAND_SELECT                       = 0x00, // アクティブ選択
-    // I2C基本操作
-    CAMERA_PXI_COMMAND_WRITE_REGISTERS              = 0x10,
-    CAMERA_PXI_COMMAND_READ_REGISTERS               = 0x11,
-    CAMERA_PXI_COMMAND_SET_PARAMS                   = 0x12,
-    CAMERA_PXI_COMMAND_SET_FLAGS                    = 0x13,
-    CAMERA_PXI_COMMAND_CLEAR_FLAGS                  = 0x14,
-    // I2C応用操作
-    CAMERA_PXI_COMMAND_I2C_INIT                     = 0x20, // 汎用初期化
-    CAMERA_PXI_COMMAND_I2C_PRESET                   = 0x21, // 各種プリセット
+    CAMERA_PXI_COMMAND_INIT                         = 0x00, // 初期化
 
-    CAMERA_PXI_COMMAND_I2C_PRE_SLEEP                = 0x28, // スリープ前処理
-    CAMERA_PXI_COMMAND_I2C_POST_SLEEP               = 0x29, // スリープ後処理
+    CAMERA_PXI_COMMAND_ACTIVATE                     = 0x10, // アクティブ選択
 
-    CAMERA_PXI_COMMAND_I2C_SET_CROPPING             = 0x30, // 位置とサイズ設定
+    CAMERA_PXI_COMMAND_RESIZE                       = 0x30, // サイズ設定
+    CAMERA_PXI_COMMAND_FRAME_RATE                   = 0x31, // フレームレート設定
+    CAMERA_PXI_COMMAND_EFFECT                       = 0x32, // エフェクト設定
+    CAMERA_PXI_COMMAND_FLIP                         = 0x33, // 反転設定
 
-    CAMERA_PXI_COMMAND_I2C_PAUSE                    = 0x38, // 一時停止
-    CAMERA_PXI_COMMAND_I2C_RESUME                   = 0x39  // 復帰
+    CAMERA_PXI_COMMAND_UNKNOWN
 }
 CAMERAPxiCommand;
 
 // PXIコマンドサイズ定義
 typedef enum CAMERAPxiSize
 {
-    CAMERA_PXI_SIZE_SELECT                          = 1,    // camera
-    // I2C基本操作
-    CAMERA_PXI_SIZE_WRITE_REGISTERS                 = CAMERA_PXI_DATA_SIZE_MAX, // camera, addr, size, data...
-    CAMERA_PXI_SIZE_READ_REGISTERS                  = 3,    // camera, addr, size
-    CAMERA_PXI_SIZE_SET_PARAMS                      = 4,    // camera, addr, bits, mask
-    CAMERA_PXI_SIZE_SET_FLAGS                       = 3,    // camera, addr, bits
-    CAMERA_PXI_SIZE_CLEAR_FLAGS                     = 3,    // camera, addr, bits
-    // I2C応用操作
-    CAMERA_PXI_SIZE_I2C_INIT                        = 1,    // camera
-    CAMERA_PXI_SIZE_I2C_PRESET                      = 2,    // camera, preset
+    CAMERA_PXI_SIZE_INIT                            = 1,    // camera
 
-    CAMERA_PXI_SIZE_I2C_PRE_SLEEP                   = 0,
-    CAMERA_PXI_SIZE_I2C_POST_SLEEP                  = 0,
+    CAMERA_PXI_SIZE_ACTIVATE                        = 1,    // camera
 
-    CAMERA_PXI_SIZE_I2C_SET_CROPPING                = 9,    // camera, (u16)x_offset, (u16)y_offset, (u16)width, (u16)height
+    CAMERA_PXI_SIZE_RESIZE                          = 5,    // camera, (u16)width, (u16)height
+    CAMERA_PXI_SIZE_FRAME_RATE                      = 2,    // camera, rate
+    CAMERA_PXI_SIZE_EFFECT                          = 2,    // camera, effect
+    CAMERA_PXI_SIZE_FLIP                            = 2,    // camera, flip
 
-    CAMERA_PXI_SIZE_I2C_PAUSE                       = 0,
-    CAMERA_PXI_SIZE_I2C_RESUME                      = 0
+    CAMERA_PXI_SIZE_UNKNOWN
 }
 CAMERAPxiSize;
 

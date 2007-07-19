@@ -19,6 +19,8 @@
 /*---------------------------------------------------------------------------*
     定数定義
  *---------------------------------------------------------------------------*/
+#define SYNC_TYPE   (0 << REG_CAM_CAM_MCNT_SYNC_SHIFT)  // 1 if low active
+#define RCLK_TYPE   (1 << REG_CAM_CAM_MCNT_IRCLK_SHIFT) // 1 if negative edge
 
 /*---------------------------------------------------------------------------*
     型定義
@@ -27,33 +29,13 @@
 /*---------------------------------------------------------------------------*
     静的変数定義
  *---------------------------------------------------------------------------*/
-static CameraSelect currentCamera;
-static BOOL cameraPreSleepState;
+
 /*---------------------------------------------------------------------------*
     内部関数定義
  *---------------------------------------------------------------------------*/
-
-/*---------------------------------------------------------------------------*
-  Name:         CAMERA_Select
-
-  Description:  select camera to activate
-
-  Arguments:    camera      one of CameraSelect
-
-  Returns:      None
- *---------------------------------------------------------------------------*/
-BOOL CAMERA_Select( CameraSelect camera )
+static inline void CAMERAi_Wait(u32 clocks)
 {
-    if (currentCamera == camera || CAMERA_SELECT_BOTH == camera)
-    {
-        return FALSE;
-    }
-    if (CAMERA_I2CSelect(camera) != CAMERA_RESULT_SUCCESS)
-    {
-        return FALSE;
-    }
-    currentCamera = camera;
-    return TRUE;
+    OS_SpinWaitSysCycles(clocks << 1);
 }
 
 /*---------------------------------------------------------------------------*
@@ -68,13 +50,16 @@ BOOL CAMERA_Select( CameraSelect camera )
 void CAMERA_PowerOn( void )
 {
     reg_CFG_CLK |= REG_CFG_CLK_CAM_MASK;
-    if ((reg_CFG_CLK & REG_CFG_CLK_CAM_CKI_MASK) == 0) {
+    if ((reg_CFG_CLK & REG_CFG_CLK_CAM_CKI_MASK) == 0)
+    {
+        reg_CAM_CAM_MCNT |= (SYNC_TYPE | RCLK_TYPE);  // set polarities
+
         reg_CAM_CAM_MCNT |= REG_CAM_CAM_MCNT_V28_MASK;  // VDD2.8 POWER ON
-        OS_SpinWaitSysCycles( 30 );                     // wait for over 15 MCLK (10-20)
+        CAMERAi_Wait( 10 );                             // wait for over 10 MCLKs (M:10-20)(S:10ns?)
         reg_CFG_CLK |= REG_CFG_CLK_CAM_CKI_MASK;        // MCLK on
-        OS_SpinWaitSysCycles( 30 );                     // wait for over 15 MCLKs (20-10)
+        CAMERAi_Wait( 32 );                             // wait for over 32 MCLKs (M:20-10)(S:32)
         reg_CAM_CAM_MCNT |= REG_CAM_CAM_MCNT_RSTN_MASK; // RSTN => Hi
-        OS_SpinWaitSysCycles( 12000 );                  // wait for over 6000 MCLKs
+        CAMERAi_Wait( 6000 );                           // wait for over 6000 MCLKs
 
         reg_CAM_CAM_CNT = REG_CAM_CAM_CNT_CL_MASK;      // full reset CNT
     }
@@ -91,54 +76,19 @@ void CAMERA_PowerOn( void )
  *---------------------------------------------------------------------------*/
 void CAMERA_PowerOff( void )
 {
-    if (reg_CFG_CLK & REG_CFG_CLK_CAM_CKI_MASK) {
+    if (reg_CFG_CLK & REG_CFG_CLK_CAM_CKI_MASK)
+    {
         reg_CAM_CAM_CNT &= ~REG_CAM_CAM_CNT_E_MASK;     // stop cmaera output
 
         reg_CAM_CAM_MCNT &= ~REG_CAM_CAM_MCNT_RSTN_MASK;// RSTN => Lo
-        OS_SpinWaitSysCycles( 10 );                     // wait for over 5 MCLK
+        CAMERAi_Wait( 10 );                             // wait for over 10 MCLKs (M:10)(S:10ns?)
 
         reg_CFG_CLK  &= ~REG_CFG_CLK_CAM_CKI_MASK;      // MCLK off
+        CAMERAi_Wait( 20 );                             // wait for over 20 MCLKs (M:20)(S:0?)
 
         reg_CAM_CAM_MCNT &= ~REG_CAM_CAM_MCNT_V28_MASK; // VDD2.8 POWER OFF
-        OS_SpinWaitSysCycles( 4 );                      // wait a moment
     }
-    reg_CFG_CLK &= ~REG_CFG_CLK_CAM_MASK;   /* 必要ある？ */
-}
-
-/*---------------------------------------------------------------------------*
-  Name:         CAMERA_PreSleep
-
-  Description:  pre-sleep process for CAMERA without power off
-
-  Arguments:    None
-
-  Returns:      None
- *---------------------------------------------------------------------------*/
-void CAMERA_PreSleep( void )
-{
-    if (reg_CFG_CLK & REG_CFG_CLK_CAM_CKI_MASK) {
-        cameraPreSleepState = TRUE;
-        CAMERA_I2CPreSleep();
-        CAMERA_PowerOff();
-    }
-}
-
-/*---------------------------------------------------------------------------*
-  Name:         CAMERA_PostSleep
-
-  Description:  pre-sleep process for CAMERA without power off
-
-  Arguments:    None
-
-  Returns:      None
- *---------------------------------------------------------------------------*/
-void CAMERA_PostSleep( void )
-{
-    if (cameraPreSleepState == TRUE) {
-        cameraPreSleepState = FALSE;
-        CAMERA_PowerOn();
-        CAMERA_I2CPostSleep();
-    }
+    reg_CFG_CLK &= ~REG_CFG_CLK_CAM_MASK;
 }
 
 /*---------------------------------------------------------------------------*
@@ -152,7 +102,7 @@ void CAMERA_PostSleep( void )
  *---------------------------------------------------------------------------*/
 BOOL CAMERA_IsBusy( void )
 {
-    return (reg_CAM_CAM_CNT & REG_CAM_CAM_CNT_E_MASK) ? TRUE : FALSE;
+    return (reg_CAM_CAM_CNT & REG_CAM_CAM_CNT_E_MASK) >> REG_CAM_CAM_CNT_E_SHIFT;
 }
 
 /*---------------------------------------------------------------------------*
@@ -184,49 +134,10 @@ void CAMERA_Stop( void )
 }
 
 /*---------------------------------------------------------------------------*
-  Name:         CAMERA_SetSyncLowActive
-
-  Description:  set CAMERA sync polarity
-
-  Arguments:    isLowActive     if low active, set TRUE
-
-  Returns:      None
- *---------------------------------------------------------------------------*/
-void CAMERA_SetSyncLowActive( BOOL isLowActive )
-{
-    if (isLowActive) {
-        reg_CAM_CAM_CNT |= (1 << REG_CAM_CAM_MCNT_SYNC_SHIFT);
-    } else {
-        reg_CAM_CAM_CNT &= ~(1 << REG_CAM_CAM_MCNT_SYNC_SHIFT);
-    }
-}
-
-/*---------------------------------------------------------------------------*
-  Name:         CAMERA_SetRclkNegativeEdge
-
-  Description:  set CAMERA rclk edge.
-                Should call while master clock is stopping.
-
-  Arguments:    isNegativeEdge      if negative edge, set TRUE
-
-  Returns:      None
- *---------------------------------------------------------------------------*/
-void CAMERA_SetRclkNegativeEdge( BOOL isNegativeEdge )
-{
-    if ((reg_CFG_CLK & REG_CFG_CLK_CAM_CKI_MASK) == 0) {
-        if (isNegativeEdge) {
-            reg_CAM_CAM_CNT |= (1 << REG_CAM_CAM_MCNT_IRCLK_SHIFT);
-        } else {
-            reg_CAM_CAM_CNT &= ~(1 << REG_CAM_CAM_MCNT_IRCLK_SHIFT);
-        }
-    }
-}
-
-/*---------------------------------------------------------------------------*
   Name:         CAMERA_SetTrimmingParamsCenter
 
-  Description:  set camera trimming by centering
-                expecting original image size is VGA.
+  Description:  set camera trimming parameters by centering
+                NOTE: should call CAMERA_SetTrimming to enable trimming
 
   Arguments:    destWidth       width of image to output
                 destHeight      height of image to output
@@ -248,8 +159,9 @@ void CAMERA_SetTrimmingParamsCenter(u16 destWidth, u16 destHeight, u16 srcWidth,
 /*---------------------------------------------------------------------------*
   Name:         CAMERA_SetTrimmingParams
 
-  Description:  set camera trimming
+  Description:  set camera trimming parameters
                 NOTE: widht = x2 - x1;  height = y2 - y1;
+                NOTE: should call CAMERA_SetTrimming to enable trimming
 
   Arguments:    x1      X of top-left trimming point (multiple of 2)
                 y1      Y of top-left trimming point
@@ -269,7 +181,7 @@ void CAMERA_SetTrimmingParams(u16 x1, u16 y1, u16 x2, u16 y2)
 /*---------------------------------------------------------------------------*
   Name:         CAMERA_SetTrimming
 
-  Description:  set trimming enable/disable
+  Description:  set trimming to be enabled/disabled
 
   Arguments:    enabled     TRUE if set trimming will be enabled
 
@@ -277,11 +189,9 @@ void CAMERA_SetTrimmingParams(u16 x1, u16 y1, u16 x2, u16 y2)
  *---------------------------------------------------------------------------*/
 void CAMERA_SetTrimming( BOOL enabled )
 {
-    if (enabled) {
-        reg_CAM_CAM_CNT |= REG_CAM_CAM_CNT_T_MASK;
-    } else {
-        reg_CAM_CAM_CNT &= ~REG_CAM_CAM_CNT_T_MASK;
-    }
+    u16 value = reg_CAM_CAM_CNT;
+    reg_CAM_CAM_CNT = enabled ? (u16)(value | REG_CAM_CAM_CNT_T_MASK)
+                              : (u16)(value & ~REG_CAM_CAM_CNT_T_MASK);
 }
 
 /*---------------------------------------------------------------------------*
@@ -295,14 +205,14 @@ void CAMERA_SetTrimming( BOOL enabled )
  *---------------------------------------------------------------------------*/
 void CAMERA_SetOutputFormat( CameraOutput output )
 {
-    switch (output) {
+    u16 value = reg_CAM_CAM_CNT;
+    switch (output)
+    {
     case CAMERA_OUTPUT_YUV:
-        reg_CAM_CAM_CNT &= ~(1 << REG_CAM_CAM_CNT_F_SHIFT);
+        reg_CAM_CAM_CNT = (u16)(value & ~REG_CAM_CAM_CNT_F_MASK);
         break;
     case CAMERA_OUTPUT_RGB:
-        reg_CAM_CAM_CNT |= (1 << REG_CAM_CAM_CNT_F_SHIFT);
-        break;
-    default:
+        reg_CAM_CAM_CNT = (u16)(value | REG_CAM_CAM_CNT_F_MASK);
         break;
     }
 }
@@ -318,7 +228,7 @@ void CAMERA_SetOutputFormat( CameraOutput output )
  *---------------------------------------------------------------------------*/
 BOOL CAMERA_GetErrorStatus( void )
 {
-    return (reg_CAM_CAM_CNT & REG_CAM_CAM_CNT_ERR_MASK) ? TRUE : FALSE;
+    return (reg_CAM_CAM_CNT & REG_CAM_CAM_CNT_ERR_MASK) >> REG_CAM_CAM_CNT_ERR_SHIFT;
 }
 
 /*---------------------------------------------------------------------------*
@@ -346,11 +256,9 @@ void CAMERA_ClearBuffer( void )
  *---------------------------------------------------------------------------*/
 void CAMERA_SetMasterIntrrupt( BOOL enabled )
 {
-    if (enabled) {
-        reg_CAM_CAM_CNT |= REG_CAM_CAM_CNT_IREQ_I_MASK;
-    } else {
-        reg_CAM_CAM_CNT &= ~REG_CAM_CAM_CNT_IREQ_I_MASK;
-    }
+    u16 value = reg_CAM_CAM_CNT;
+    reg_CAM_CAM_CNT = enabled ? (u16)(value | REG_CAM_CAM_CNT_IREQ_I_MASK)
+                              : (u16)(value & ~REG_CAM_CAM_CNT_IREQ_I_MASK);
 }
 
 /*---------------------------------------------------------------------------*
@@ -378,11 +286,9 @@ void CAMERA_SetVsyncIntrrupt( CameraIntrVsync type )
  *---------------------------------------------------------------------------*/
 void CAMERA_SetBufferErrorIntrrupt( BOOL enabled )
 {
-    if (enabled) {
-        reg_CAM_CAM_CNT |= REG_CAM_CAM_CNT_IREQ_BE_MASK;
-    } else {
-        reg_CAM_CAM_CNT &= ~REG_CAM_CAM_CNT_IREQ_BE_MASK;
-    }
+    u16 value = reg_CAM_CAM_CNT;
+    reg_CAM_CAM_CNT = enabled ? (u16)(value | REG_CAM_CAM_CNT_IREQ_BE_MASK)
+                              : (u16)(value & ~REG_CAM_CAM_CNT_IREQ_BE_MASK);
 }
 
 /*---------------------------------------------------------------------------*

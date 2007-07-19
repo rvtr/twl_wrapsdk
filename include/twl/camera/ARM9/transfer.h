@@ -21,7 +21,7 @@
 #include <twl/mi/exDma.h>
 
 #define CAMERA_DMA_BLOCK_SIZE      MI_EXDMA_BLOCK_64B
-#define CAMERA_DMA_INTERVAL        8
+#define CAMERA_DMA_INTERVAL        2
 #define CAMERA_DMA_PRESCALER       MI_EXDMA_PRESCALER_1
 
 #ifdef __cplusplus
@@ -73,22 +73,22 @@ static inline void CAMERA_DmaRecvAsync(u32 dmaNo, void *dest, u32 unit, u32 leng
 }
 
 /*---------------------------------------------------------------------------*
-  Name:         CAMERA_DmaRecvInfinity
+  Name:         CAMERA_DmaPipeInfinity
 
   Description:  receiving data from CAMERA buffer.
-                Once starting DMA, it will transfer every frame automatically.
+                Once starting DMA, it will transfer every unit data to same
+                destination address.
                 You should call MIi_StopExDma(dmaNo) to stop
 
   Arguments:    dmaNo   : DMA channel No. (4 - 7)
                 dest    : destination address
                 unit    : transfer length at once (byte)(width * lines at once)
-                length  : transfer length (byte) (frame size)
 
   Returns:      None
  *---------------------------------------------------------------------------*/
-static inline void CAMERA_DmaRecvInfinity(u32 dmaNo, void *dest, u32 unit, u32 length)
+static inline void CAMERA_DmaPipeInfinity(u32 dmaNo, void *dest, u32 unit)
 {
-    MIi_ExDmaRecvAsyncCore( dmaNo, (void*)REG_CAM_DAT_ADDR, dest, length, unit,
+    MIi_ExDmaRecvAsyncCore( dmaNo, (void*)REG_CAM_DAT_ADDR, dest, unit, unit,
                 CAMERA_DMA_BLOCK_SIZE, CAMERA_DMA_INTERVAL, CAMERA_DMA_PRESCALER,
                 MI_EXDMA_CONTINUOUS_ON, MI_EXDMA_SRC_RLD_OFF, MI_EXDMA_DEST_RLD_ON,
                 MI_EXDMA_TIMING_CAMERA );

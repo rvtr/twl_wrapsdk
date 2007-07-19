@@ -132,23 +132,12 @@ static void CameraPxiCallback(PXIFifoTag tag, u32 data, BOOL err)
         switch (cameraWork.command)
         {
             // 既知のコマンド群
-        case CAMERA_PXI_COMMAND_SELECT:
-            // I2C基本操作
-        case CAMERA_PXI_COMMAND_WRITE_REGISTERS:
-        case CAMERA_PXI_COMMAND_READ_REGISTERS:
-        case CAMERA_PXI_COMMAND_SET_PARAMS:
-        case CAMERA_PXI_COMMAND_SET_FLAGS:
-        case CAMERA_PXI_COMMAND_CLEAR_FLAGS:
-            // I2C応用操作
-        case CAMERA_PXI_COMMAND_I2C_INIT:
-        case CAMERA_PXI_COMMAND_I2C_PRESET:
-
-        case CAMERA_PXI_COMMAND_I2C_PRE_SLEEP:
-        case CAMERA_PXI_COMMAND_I2C_POST_SLEEP:
-
-        case CAMERA_PXI_COMMAND_I2C_SET_CROPPING:
-        case CAMERA_PXI_COMMAND_I2C_PAUSE:
-        case CAMERA_PXI_COMMAND_I2C_RESUME:
+        case CAMERA_PXI_COMMAND_INIT:
+        case CAMERA_PXI_COMMAND_ACTIVATE:
+        case CAMERA_PXI_COMMAND_RESIZE:
+        case CAMERA_PXI_COMMAND_FRAME_RATE:
+        case CAMERA_PXI_COMMAND_EFFECT:
+        case CAMERA_PXI_COMMAND_FLIP:
             // スレッドを再開
             if (!OS_SendMessage(&cameraWork.msgQ, NULL, OS_MESSAGE_NOBLOCK))
             {
@@ -230,13 +219,8 @@ static void CameraThread(void *arg)
 
     OSMessage msg;
     BOOL result;
-#if 0
     u16 data16a;
     u16 data16b;
-    u16 data16c;
-    u16 data16d;
-    u8  dataArray[CAMERA_PXI_DATA_SIZE_MAX];    // 不定長データ格納用
-#endif
 
     while (TRUE)
     {
@@ -246,8 +230,14 @@ static void CameraThread(void *arg)
         // コマンドに従って各種処理を実行
         switch (cameraWork.command)
         {
-        case CAMERA_PXI_COMMAND_SELECT:
-            CAMERA_PXI_SIZE_CHECK(CAMERA_PXI_SIZE_SELECT);
+        case CAMERA_PXI_COMMAND_INIT:
+            CAMERA_PXI_SIZE_CHECK(CAMERA_PXI_SIZE_INIT);
+            result = CAMERA_I2CInit((CameraSelect)cameraWork.data[0]);
+            CameraReturnResult(cameraWork.command, result ? CAMERA_PXI_RESULT_SUCCESS_TRUE : CAMERA_PXI_RESULT_SUCCESS_FALSE);  // ARM9に処理の成功を通達
+            break;
+
+        case CAMERA_PXI_COMMAND_ACTIVATE:
+            CAMERA_PXI_SIZE_CHECK(CAMERA_PXI_SIZE_ACTIVATE);
             if (cameraWork.camera != cameraWork.data[0])
             {
                 if (cameraWork.camera != CAMERA_SELECT_NONE)
@@ -260,103 +250,40 @@ static void CameraThread(void *arg)
                 cameraWork.camera = (CameraSelect)cameraWork.data[0];
                 if (cameraWork.camera != CAMERA_SELECT_NONE)
                 {
-                    if (FALSE == CAMERA_I2CStandby(cameraWork.camera, FALSE))    // set ?XXXXXXXXX
+                    if (FALSE == CAMERA_I2CStandby(cameraWork.camera, FALSE))
                     {
                         CameraReturnResult(cameraWork.command, CAMERA_PXI_RESULT_SUCCESS_FALSE);    // ARM9に処理の失敗を通達
                     }
                 }
             }
-            CameraReturnResult(cameraWork.command, CAMERA_PXI_RESULT_SUCCESS);     // ARM9に処理の成功を通達
-            break;
-#if 0
-        // I2C基本操作
-        case CAMERA_PXI_COMMAND_WRITE_REGISTERS:    // IN: camera, addr, data...  OUT: TRUE/FALSE
-            if (cameraWork.total <= 2)
-            {
-                CameraReturnResult(cameraWork.command, CAMERA_PXI_RESULT_INVALID_PARAMETER);
-                break;
-            }
-            result = CAMERA_WriteRegisters((CameraSelect)cameraWork.data[0], cameraWork.data[1], &cameraWork.data[2], (size_t)(cameraWork.total-2));
-            CameraReturnResult(cameraWork.command, result ? CAMERA_PXI_RESULT_SUCCESS_TRUE : CAMERA_PXI_RESULT_SUCCESS_FALSE);  // ARM9に処理の成功を通達
+            CameraReturnResult(cameraWork.command, CAMERA_PXI_RESULT_SUCCESS_TRUE);     // ARM9に処理の成功を通達
             break;
 
-        case CAMERA_PXI_COMMAND_READ_REGISTERS:     // IN: camera, addr, size  OUT: TRUE/FALSE, data...
-            CAMERA_PXI_SIZE_CHECK(CAMERA_PXI_SIZE_READ_REGISTERS);
-            result = CAMERA_ReadRegisters((CameraSelect)cameraWork.data[0], cameraWork.data[1], dataArray, cameraWork.data[2]);
-            if (result)
-            {
-                CameraReturnResultEx(cameraWork.command, CAMERA_PXI_RESULT_SUCCESS_TRUE, cameraWork.data[2], dataArray);
-            }
-            else
-            {
-                CameraReturnResult(cameraWork.command, CAMERA_PXI_RESULT_SUCCESS_FALSE);    // ARM9に処理の失敗を通達
-            }
-            break;
-
-        case CAMERA_PXI_COMMAND_SET_PARAMS:
-            CAMERA_PXI_SIZE_CHECK(CAMERA_PXI_SIZE_SET_PARAMS);
-            result = CAMERA_SetParams((CameraSelect)cameraWork.data[0], cameraWork.data[1], cameraWork.data[2], cameraWork.data[3]);
-            CameraReturnResult(cameraWork.command, result ? CAMERA_PXI_RESULT_SUCCESS_TRUE : CAMERA_PXI_RESULT_SUCCESS_FALSE);  // ARM9に処理の成功を通達
-            break;
-
-        case CAMERA_PXI_COMMAND_SET_FLAGS:
-            CAMERA_PXI_SIZE_CHECK(CAMERA_PXI_SIZE_SET_FLAGS);
-            result = CAMERA_SetFlags((CameraSelect)cameraWork.data[0], cameraWork.data[1], cameraWork.data[2]);
-            CameraReturnResult(cameraWork.command, result ? CAMERA_PXI_RESULT_SUCCESS_TRUE : CAMERA_PXI_RESULT_SUCCESS_FALSE);  // ARM9に処理の成功を通達
-            break;
-
-        case CAMERA_PXI_COMMAND_CLEAR_FLAGS:
-            CAMERA_PXI_SIZE_CHECK(CAMERA_PXI_SIZE_CLEAR_FLAGS);
-            result = CAMERA_ClearFlags((CameraSelect)cameraWork.data[0], cameraWork.data[1], cameraWork.data[2]);
-            CameraReturnResult(cameraWork.command, result ? CAMERA_PXI_RESULT_SUCCESS_TRUE : CAMERA_PXI_RESULT_SUCCESS_FALSE);  // ARM9に処理の成功を通達
-            break;
-#endif
-        case CAMERA_PXI_COMMAND_I2C_INIT:
-            CAMERA_PXI_SIZE_CHECK(CAMERA_PXI_SIZE_I2C_INIT);
-            result = CAMERA_I2CInit((CameraSelect)cameraWork.data[0]);
-            CameraReturnResult(cameraWork.command, result ? CAMERA_PXI_RESULT_SUCCESS_TRUE : CAMERA_PXI_RESULT_SUCCESS_FALSE);  // ARM9に処理の成功を通達
-            break;
-#if 0
-        case CAMERA_PXI_COMMAND_I2C_PRESET:
-            CAMERA_PXI_SIZE_CHECK(CAMERA_PXI_SIZE_I2C_PRESET);
-            result = CAMERA_I2CPreset((CameraSelect)cameraWork.data[0], (CameraPreset)cameraWork.data[1]);
-            CameraReturnResult(cameraWork.command, result ? CAMERA_PXI_RESULT_SUCCESS_TRUE : CAMERA_PXI_RESULT_SUCCESS_FALSE);  // ARM9に処理の成功を通達
-            break;
-#endif
-        case CAMERA_PXI_COMMAND_I2C_PRE_SLEEP:
-            CAMERA_PXI_SIZE_CHECK(CAMERA_PXI_SIZE_I2C_PRE_SLEEP);
-            result = CAMERA_I2CPreSleep(cameraWork.camera);
-            CameraReturnResult(cameraWork.command, result ? CAMERA_PXI_RESULT_SUCCESS_TRUE : CAMERA_PXI_RESULT_SUCCESS_FALSE);  // ARM9に処理の成功を通達
-            break;
-
-        case CAMERA_PXI_COMMAND_I2C_POST_SLEEP:
-            CAMERA_PXI_SIZE_CHECK(CAMERA_PXI_SIZE_I2C_POST_SLEEP);
-            result = CAMERA_I2CPostSleep(cameraWork.camera);
-            CameraReturnResult(cameraWork.command, result ? CAMERA_PXI_RESULT_SUCCESS_TRUE : CAMERA_PXI_RESULT_SUCCESS_FALSE);  // ARM9に処理の成功を通達
-            break;
-#if 0
-        case CAMERA_PXI_COMMAND_I2C_SET_CROPPING:
-            CAMERA_PXI_SIZE_CHECK(CAMERA_PXI_SIZE_I2C_SET_CROPPING);
+        case CAMERA_PXI_COMMAND_RESIZE:
+            CAMERA_PXI_SIZE_CHECK(CAMERA_PXI_SIZE_RESIZE);
             CAMERA_UNPACK_U16(&data16a, &cameraWork.data[1]);
             CAMERA_UNPACK_U16(&data16b, &cameraWork.data[3]);
-            CAMERA_UNPACK_U16(&data16c, &cameraWork.data[5]);
-            CAMERA_UNPACK_U16(&data16d, &cameraWork.data[7]);
-            result = CAMERA_I2CSetCropping((CameraSelect)cameraWork.data[0], data16a, data16b, data16c, data16d);
+            result = CAMERA_I2CResize((CameraSelect)cameraWork.data[0], data16a, data16b);
             CameraReturnResult(cameraWork.command, result ? CAMERA_PXI_RESULT_SUCCESS_TRUE : CAMERA_PXI_RESULT_SUCCESS_FALSE);  // ARM9に処理の成功を通達
             break;
 
-        case CAMERA_PXI_COMMAND_I2C_PAUSE:
-            CAMERA_PXI_SIZE_CHECK(CAMERA_PXI_SIZE_I2C_PAUSE);
-            result = CAMERA_I2CPause(cameraWork.camera);
+        case CAMERA_PXI_COMMAND_FRAME_RATE:
+            CAMERA_PXI_SIZE_CHECK(CAMERA_PXI_SIZE_FRAME_RATE);
+            result = CAMERA_I2CFrameRate((CameraSelect)cameraWork.data[0], cameraWork.data[1]);
             CameraReturnResult(cameraWork.command, result ? CAMERA_PXI_RESULT_SUCCESS_TRUE : CAMERA_PXI_RESULT_SUCCESS_FALSE);  // ARM9に処理の成功を通達
             break;
 
-        case CAMERA_PXI_COMMAND_I2C_RESUME:
-            CAMERA_PXI_SIZE_CHECK(CAMERA_PXI_SIZE_I2C_RESUME);
-            result = CAMERA_I2CResume(cameraWork.camera);
+        case CAMERA_PXI_COMMAND_EFFECT:
+            CAMERA_PXI_SIZE_CHECK(CAMERA_PXI_SIZE_EFFECT);
+            result = CAMERA_I2CEffect((CameraSelect)cameraWork.data[0], (CameraEffect)cameraWork.data[1]);
             CameraReturnResult(cameraWork.command, result ? CAMERA_PXI_RESULT_SUCCESS_TRUE : CAMERA_PXI_RESULT_SUCCESS_FALSE);  // ARM9に処理の成功を通達
             break;
-#endif
+
+        case CAMERA_PXI_COMMAND_FLIP:
+            CAMERA_PXI_SIZE_CHECK(CAMERA_PXI_SIZE_FLIP);
+            result = CAMERA_I2CFlip((CameraSelect)cameraWork.data[0], (CameraFlip)cameraWork.data[1]);
+            CameraReturnResult(cameraWork.command, result ? CAMERA_PXI_RESULT_SUCCESS_TRUE : CAMERA_PXI_RESULT_SUCCESS_FALSE);  // ARM9に処理の成功を通達
+            break;
 
             // サポートしないコマンド
         default:

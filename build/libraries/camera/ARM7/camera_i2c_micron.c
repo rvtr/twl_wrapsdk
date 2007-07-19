@@ -2,7 +2,7 @@
   Project:  TwlSDK - libraties - camera
   File:     camera_i2c_micron.c
 
-  Copyright 2006 Nintendo.  All rights reserved.
+  Copyright 2007 Nintendo.  All rights reserved.
 
   These coded instructions, statements, and computer programs contain
   proprietary information of Nintendo of America Inc. and/or Nintendo
@@ -14,47 +14,15 @@
   $NoKeywords: $
  *---------------------------------------------------------------------------*/
 #include <twl.h>
-#include <twl/camera.h>
+#include <twl/camera/ARM7/i2c_micron.h>
 
-//#define USE_MULTIPLE_IO   // use [Read|Write]Registers();
-
-// for micron
-BOOL CAMERAi_M_Default_Registers( CameraSelect camera );
-BOOL CAMERAi_M_Initialize_Camera( CameraSelect camera );
-BOOL CAMERAi_M_Image_Setting_ExtClk_6_75MHz_Op_Pix_27_5MHz_15fps( CameraSelect camera );
-BOOL CAMERAi_M_Image_Setting_ExtClk_16_76MHz_Op_Pix_27_5MHz_15fps( CameraSelect camera );
-BOOL CAMERAi_M_Viewfinder_ON( CameraSelect camera );
-BOOL CAMERAi_M_Viewfinder_OFF( CameraSelect camera );
-BOOL CAMERAi_M_Video_Capture_ON( CameraSelect camera );
-BOOL CAMERAi_M_Video_Capture_OFF( CameraSelect camera );
-BOOL CAMERAi_M_Lens_Calibration_Setup( CameraSelect camera );
-BOOL CAMERAi_M_Lens_Calibration_Exit( CameraSelect camera );
-BOOL CAMERAi_M_Fixed_15fps( CameraSelect camera );
-BOOL CAMERAi_M_Refresh( CameraSelect camera );
-BOOL CAMERAi_M_Auto_Exposure( CameraSelect camera );
-BOOL CAMERAi_M_Gamma_Correction( CameraSelect camera );
-BOOL CAMERAi_M_Auto_White_Balance( CameraSelect camera );
-BOOL CAMERAi_M_Lens_Correction( CameraSelect camera );
-BOOL CAMERAi_M_Image_Size_VGA( CameraSelect camera );
-BOOL CAMERAi_M_Image_Size_QVGA( CameraSelect camera );
-BOOL CAMERAi_M_Image_Size_CIF( CameraSelect camera );
-BOOL CAMERAi_M_Image_Size_QCIF( CameraSelect camera );
-BOOL CAMERAi_M_Effect_Off( CameraSelect camera );
-BOOL CAMERAi_M_Effect_Mono( CameraSelect camera );
-BOOL CAMERAi_M_Effect_Sepia( CameraSelect camera );
-BOOL CAMERAi_M_Manual_WB_To_Auto_WB( CameraSelect camera );
-BOOL CAMERAi_M_Manual_White_Balance_P1( CameraSelect camera );
-BOOL CAMERAi_M_Manual_White_Balance_P2( CameraSelect camera );
-BOOL CAMERAi_M_Manual_White_Balance_P3( CameraSelect camera );
-BOOL CAMERAi_M_Manual_White_Balance_P4( CameraSelect camera );
-BOOL CAMERAi_M_Manual_White_Balance_P5( CameraSelect camera );
-BOOL CAMERAi_M_Manual_White_Balance_P6( CameraSelect camera );
-BOOL CAMERAi_M_Manual_White_Balance_P7( CameraSelect camera );
-BOOL CAMERAi_M_Manual_White_Balance_P8( CameraSelect camera );
-BOOL CAMERAi_M_Sharpness_0( CameraSelect camera );
+// insert auto-generated code
+#include "MT9V113-MTM10.autogen.c"
+//#include "MT9V113-MTM9-2.autogen.c"
+//#include "MT9V113-nin00.autogen.c"
 
 /*---------------------------------------------------------------------------*
-  Name:         CAMERA_M_I2CInit
+  Name:         CAMERAi_M_I2CInit
 
   Description:  initialize CAMERA
 
@@ -62,13 +30,26 @@ BOOL CAMERAi_M_Sharpness_0( CameraSelect camera );
 
   Returns:      TRUE if success
  *---------------------------------------------------------------------------*/
-BOOL CAMERA_M_I2CInit(CameraSelect camera)
+BOOL CAMERAi_M_I2CInit(CameraSelect camera)
 {
-    return CAMERAi_M_Default_Registers(camera);
+    BOOL rIn = TRUE;
+    BOOL rOut = TRUE;
+    // should not send init command same time
+    if (camera & CAMERA_SELECT_IN)
+    {
+        rIn = CAMERAi_M_Default_Registers(CAMERA_SELECT_IN)
+           && CAMERAi_M_I2CStandby(CAMERA_SELECT_IN, TRUE);
+    }
+    if (camera & CAMERA_SELECT_OUT)
+    {
+        rOut = CAMERAi_M_Default_Registers(CAMERA_SELECT_OUT)
+            && CAMERAi_M_I2CStandby(CAMERA_SELECT_OUT, TRUE);
+    }
+    return (rIn && rOut);
 }
 
 /*---------------------------------------------------------------------------*
-  Name:         CAMERA_M_I2CStandby
+  Name:         CAMERAi_M_I2CStandby
 
   Description:  standby or resume CAMERA
 
@@ -77,20 +58,22 @@ BOOL CAMERA_M_I2CInit(CameraSelect camera)
 
   Returns:      TRUE if success
  *---------------------------------------------------------------------------*/
-BOOL CAMERA_M_I2CStandby(CameraSelect camera, BOOL standby)
+BOOL CAMERAi_M_I2CStandby(CameraSelect camera, BOOL standby)
 {
     if (standby)
     {
+        return CAMERAi_M_ClearFlags(camera, 0x001A, 0x0200) // stop to output
+            && CAMERAi_M_SetFlags(camera, 0x0018, 0x0001);  // go to standby
     }
     else
     {
+        return CAMERAi_M_ClearFlags(camera, 0x0018, 0x0001) // leave standby
+            && CAMERAi_M_SetFlags(camera, 0x001A, 0x0200);  // start to output
     }
-    (void)camera;
-    return TRUE;
 }
 
 /*---------------------------------------------------------------------------*
-  Name:         CAMERA_M_I2CResize
+  Name:         CAMERAi_M_I2CResize
 
   Description:  resize CAMERA
 
@@ -100,45 +83,155 @@ BOOL CAMERA_M_I2CStandby(CameraSelect camera, BOOL standby)
 
   Returns:      TRUE if success
  *---------------------------------------------------------------------------*/
-BOOL CAMERA_M_I2CResize(CameraSelect camera, u16 width, u16 height)
+BOOL CAMERAi_M_I2CResize(CameraSelect camera, u16 width, u16 height)
 {
-    return CAMERAi_M_WriteRegister(camera, 0x98c, 0x2703)   // width (A)
-        && CAMERAi_M_WriteRegister(camera, 0x990, width)
-        && CAMERAi_M_WriteRegister(camera, 0x98c, 0x2705)   // height (A)
-        && CAMERAi_M_WriteRegister(camera, 0x990, height)
-        && CAMERAi_M_WriteRegister(camera, 0x98c, 0x2707)   // width (B)
-        && CAMERAi_M_WriteRegister(camera, 0x990, width)
-        && CAMERAi_M_WriteRegister(camera, 0x98c, 0x2709)   // height (B)
-        && CAMERAi_M_WriteRegister(camera, 0x990, height);
-    // anyone else???
+    return CAMERAi_M_WriteMCU(camera, 0x2703, width)    // width (A)
+        && CAMERAi_M_WriteMCU(camera, 0x2705, height)   // height (A)
+//        && CAMERAi_M_WriteMCU(camera, 0x2707, width)    // width (B)
+//        && CAMERAi_M_WriteMCU(camera, 0x2709, height)   // height (B)
+        && CAMERAi_M_Refresh(camera);
 }
 
 /*---------------------------------------------------------------------------*
-  Name:         CAMERA_M_I2CPreSleep
+  Name:         CAMERAi_M_I2CFrameRate
 
-  Description:  preset CAMERA registers
+  Description:  set CAMERA frame rate
 
   Arguments:    camera  : one of CameraSelect
+                rate    : fps (0: auto)
 
   Returns:      TRUE if success
  *---------------------------------------------------------------------------*/
-BOOL CAMERA_M_I2CPreSleep(CameraSelect camera)
+BOOL CAMERAi_M_I2CFrameRate(CameraSelect camera, int rate)
 {
     (void)camera;
+    if (rate == 0)
+    {
+    }
+    else if (rate > 0 && rate <= 30)
+    {
+    }
     return FALSE;
 }
 
 /*---------------------------------------------------------------------------*
-  Name:         CAMERA_M_I2CPostSleep
+  Name:         CAMERAi_M_I2CEffect
 
-  Description:  preset CAMERA registers
+  Description:  set CAMERA effect
 
   Arguments:    camera  : one of CameraSelect
+                effect  : one of CameraEffect
 
   Returns:      TRUE if success
  *---------------------------------------------------------------------------*/
-BOOL CAMERA_M_I2CPostSleep(CameraSelect camera)
+BOOL CAMERAi_M_I2CEffect(CameraSelect camera, CameraEffect effect)
 {
-    (void)camera;
+#if 0
+    SEPIAでガンマコレクションを変更しているので、それら以外はデフォルトの
+    ガンマコレクションを適用する必要がある。
+    直前がSEPIAかどうかを覚えておく(IN/OUT別)か、毎回再設定するか、最初にReadするか・・・
+    ほかにガンマコレクションを変更するものがないなら、(B)をセピア用としても良い。
+#endif
+    switch (effect)
+    {
+    case CAMERA_EFFECT_NONE:
+        return CAMERAi_M_Effect_Off(camera);
+    case CAMERA_EFFECT_MONO:
+        return CAMERAi_M_Effect_Mono(camera);
+    case CAMERA_EFFECT_SEPIA:
+        return CAMERAi_M_Effect_Sepia(camera);
+    case CAMERA_EFFECT_NEGATIVE:
+        return CAMERAi_M_WriteMCU(camera, 0x2759, 0x6443)  //NEVATIVE_SPEC_EFFECTS_A
+            && CAMERAi_M_WriteMCU(camera, 0x275B, 0x6443)  //NEVATIVE_SPEC_EFFECTS_B
+            && CAMERAi_M_Refresh(camera);
+    }
     return FALSE;
 }
+
+/*---------------------------------------------------------------------------*
+  Name:         CAMERAi_M_I2CFlip
+
+  Description:  set CAMERA flip/mirror
+
+  Arguments:    camera  : one of CameraSelect
+                flip    : one of CameraFlip
+
+  Returns:      TRUE if success
+ *---------------------------------------------------------------------------*/
+BOOL CAMERAi_M_I2CFlip(CameraSelect camera, CameraFlip flip)
+{
+    (void)camera;
+    switch (flip)
+    {
+    case CAMERA_FLIP_NONE:      // normal
+    case CAMERA_FLIP_VERTICAL:  // vertical flip
+    case CAMERA_FLIP_HORIZONTAL:// horizontal mirror
+    case CAMERA_FLIP_REVERSE:   // turn over
+        return FALSE;
+    }
+    return FALSE;
+}
+#if 0
+/*---------------------------------------------------------------------------*
+  Name:         CAMERAi_M_I2CWhiteBalance
+
+  Description:  set CAMERA white balance
+
+  Arguments:    camera  : one of CameraSelect
+                type    : preset number (0: auto)
+
+  Returns:      TRUE if success
+ *---------------------------------------------------------------------------*/
+BOOL CAMERAi_M_I2CWhiteBalance(CameraSelect camera, int type)
+{
+    switch (type)
+    {
+    case 0:
+        return CAMERAi_M_Manual_WB_To_Auto_WB(camera);
+    case 1:
+        return CAMERAi_M_Manual_White_Balance_P1(camera);
+    case 2:
+        return CAMERAi_M_Manual_White_Balance_P2(camera);
+    case 3:
+        return CAMERAi_M_Manual_White_Balance_P3(camera);
+    case 4:
+        return CAMERAi_M_Manual_White_Balance_P4(camera);
+    case 5:
+        return CAMERAi_M_Manual_White_Balance_P5(camera);
+    case 6:
+        return CAMERAi_M_Manual_White_Balance_P6(camera);
+    case 7:
+        return CAMERAi_M_Manual_White_Balance_P7(camera);
+    case 8:
+        return CAMERAi_M_Manual_White_Balance_P8(camera);
+    }
+    return FALSE;
+}
+/*---------------------------------------------------------------------------*
+  Name:         CAMERAi_M_I2CExposure
+
+  Description:  set CAMERA exposure
+
+  Arguments:    camera  : one of CameraSelect
+                type    : preset number (0: auto)
+
+  Returns:      TRUE if success
+ *---------------------------------------------------------------------------*/
+BOOL CAMERAi_M_I2CExposure(CameraSelect camera, int type)
+{
+    switch (type)
+    {
+    case 0:
+    case 1:
+    case 2:
+    case 3:
+    case 4:
+    case 5:
+    case 6:
+    case 7:
+    case 8:
+        return TRUE;
+    }
+    return FALSE;
+}
+#endif
