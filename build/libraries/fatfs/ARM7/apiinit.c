@@ -208,7 +208,6 @@
 */
 #include <twl.h>
 #include <rtfs_target_os.h> /* twl modified */
-//#include <ctr/rtc/rtc.h> /* ctr modified */
 #include <rtfs.h>
 #include <portconf.h>   /* For included devices */
 

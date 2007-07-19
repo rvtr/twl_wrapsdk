@@ -691,9 +691,9 @@ byte *unicode_make_printable(byte *p)
 {
 int i;
 byte c;
-int is_unicode;
+//int is_unicode;    //ctr modified
 
-    is_unicode = 0;
+//    is_unicode = 0;  //ctr modified
 
     if (*(p+BYTE_LOW)!=0) /* Most likely it is ascii */
     {
