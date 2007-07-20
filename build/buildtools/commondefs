@@ -181,6 +181,7 @@ TWL_LIBS_BASE	?= \
 			   libaes \
 			   libcamera \
 			   libdsp \
+			   libspi \
 
 ifdef		TWL_PROFILE_TYPE
 TWL_LIBS_BASE	+= libos.$(TWL_PROFILE_TYPE)
