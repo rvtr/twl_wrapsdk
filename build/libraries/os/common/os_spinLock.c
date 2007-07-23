@@ -260,9 +260,11 @@ void OS_InitLock(void)
 
         // ロックバッファ クリア（カートリッジ領域以外）
         MI_CpuClear32((void *)HW_SHARED_LOCK_BUF, HW_CTRDG_LOCK_BUF - HW_SHARED_LOCK_BUF);
+        *(u64*)HW_CARD_B_LOCK_BUF = 0;
 
         // NITRO カードアクセス権 → サブプロセッサ
         MIi_SetCardProcessor(MI_PROCESSOR_ARM7);
+        MIi_SetExCardProcessor(MI_PROCESSOR_ARM7);
 
         // カートリッジアクセス権   → サブプロセッサ
         MIi_SetCartridgeProcessor(MI_PROCESSOR_ARM7);
