@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*
-  Project:  CTR - ELF Loader
+  Project:  TWL - ELF Loader
   File:     loader_subset.c
 
   Copyright 2006,2007 Nintendo.  All rights reserved.
@@ -485,9 +485,15 @@ void ELi_DiscriminateGlobalSym( ELHandle* ElfHandle, u32 symsh_index)
             //MI_CpuCopy8( sym_str, ExportAdrEntry->name, copy_size);
             memcpy( ExportAdrEntry->name, sym_str, copy_size);
 
-            CurrentShdrEx = ELi_GetShdrExfromList( ElfHandle->ShdrEx, CurrentSymEx->Sym.st_shndx);
-            //Sym.st_valueは偶数/奇数でARM/Thumbを判別できるように調整されている場合があるので、その調整を削除して正味の値を出す
-            ExportAdrEntry->adr = (void*)(CurrentShdrEx->loaded_adr + ((CurrentSymEx->Sym.st_value)&0xFFFFFFFE));
+            if( (CurrentSymEx->Sym.st_shndx) < SHN_LORESERVE) { //関連セクションがある場合
+                if( (CurrentSymEx->Sym.st_shndx == SHN_ABS)) {
+                    //Sym.st_valueは偶数/奇数でARM/Thumbを判別できるように調整されている場合があるので、その調整を削除して正味の値を出す
+                    ExportAdrEntry->adr = (void*)((CurrentSymEx->Sym.st_value)&0xFFFFFFFE);
+                }else{
+                    CurrentShdrEx = ELi_GetShdrExfromList( ElfHandle->ShdrEx, CurrentSymEx->Sym.st_shndx);
+                    //Sym.st_valueは偶数/奇数でARM/Thumbを判別できるように調整されている場合があるので、その調整を削除して正味の値を出す
+                    ExportAdrEntry->adr = (void*)(CurrentShdrEx->loaded_adr + ((CurrentSymEx->Sym.st_value)&0xFFFFFFFE));
+                }
             ExportAdrEntry->func_flag = (u16)(ELF32_ST_TYPE( CurrentSymEx->Sym.st_info));
             ExportAdrEntry->thumb_flag = CurrentSymEx->thumb_flag;
 
@@ -500,6 +506,7 @@ void ELi_DiscriminateGlobalSym( ELHandle* ElfHandle, u32 symsh_index)
                                 ExportAdrEntry->thumb_flag);
                 }            
                 EL_AddAdrEntry( ExportAdrEntry);    //登録
+            }
             }
         }
     }
@@ -582,13 +589,13 @@ u32    ELi_DoRelocate( ELUnresolvedEntry* UnresolvedInfo)
         signed_val = (( (s32)(_S_) + _A_) | (s32)(_T_)) - (s32)(_P_);
         signed_val >>= 1;
         if( _T_) {    /*BL命令でThumbからThumbに飛ぶ*/
-            relocation_val = (*(vu16*)relocation_adr & 0xF800) | ((signed_val>>11) & 0x07FF) +
+            relocation_val = ((*(vu16*)relocation_adr & 0xF800) | ((signed_val>>11) & 0x07FF)) +
                                    ((((*((vu16*)(relocation_adr)+1)) & 0xF800) | (signed_val & 0x07FF)) << 16);
         }else{        /*BLX命令でThumbからARMに飛ぶ(v5未満だとBL→ベニアでBXという仕組みが必要)*/
             if( (signed_val & 0x1)) {    //_P_が4バイトアラインされていないとここに来る
                 signed_val += 1;
             }
-            relocation_val = (*(vu16*)relocation_adr & 0xF800) | ((signed_val>>11) & 0x07FF) +
+            relocation_val = ((*(vu16*)relocation_adr & 0xF800) | ((signed_val>>11) & 0x07FF)) +
                                    ((((*((vu16*)(relocation_adr)+1)) & 0xE800) | (signed_val & 0x07FF)) << 16);
         }
         *(vu16*)relocation_adr = (vu16)relocation_val;

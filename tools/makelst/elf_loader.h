@@ -1,8 +1,8 @@
 /*---------------------------------------------------------------------------*
-  Project:  CTR - ELF Loader
+  Project:  TWL - ELF Loader
   File:     elf_loader.h
 
-  Copyright 2006 Nintendo.  All rights reserved.
+  Copyright 2006,2007 Nintendo.  All rights reserved.
 
   These coded instructions, statements, and computer programs contain
   proprietary information of Nintendo of America Inc. and/or Nintendo
@@ -151,11 +151,11 @@ u16 EL_ResolveAllLibrary( void);
 /*------------------------------------------------------
   マーキングされたシンボルを公開用ファイルに構造体として書き出す
  -----------------------------------------------------*/
-u16 EL_ExtractStaticSym1( void);
+void EL_ExtractStaticSym1( void);
 /*------------------------------------------------------
   マーキングされたシンボルを公開用ファイルにAPIとして書き出す
  -----------------------------------------------------*/
-u16 EL_ExtractStaticSym2( void);
+void EL_ExtractStaticSym2( void);
 
 
 /*------------------------------------------------------

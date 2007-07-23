@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*
-  Project:  CTR - ELF Loader
+  Project:  TWL - ELF Loader
   File:     elf_loader.c
 
   Copyright 2006,2007 Nintendo.  All rights reserved.
@@ -25,12 +25,14 @@ ELAdrEntry*           ELAdrEntStart = NULL;
 ELUnresolvedEntry*    ELUnrEntStart = NULL;
 
 extern u16        dbg_print_flag;
-extern u32        unresolved_table_block_flag;
+extern u16        unresolved_table_block_flag;
 
 #define MAKELST_DS_API        "    elAddAdrEntry"    //DS上でアドレステーブルに追加するAPI関数名
 
 extern char     c_source_line_str[256];
 extern FILE*    CSourceFilep;
+
+extern void file_write( char* c_str, FILE* Fp);
 
 
 /*------------------------------------------------------
@@ -522,7 +524,7 @@ u16 EL_ResolveAllLibrary( void)
 /*------------------------------------------------------
   マーキングされたシンボルを公開用ファイルに構造体として書き出す
  -----------------------------------------------------*/
-u16 EL_ExtractStaticSym1( void)
+void EL_ExtractStaticSym1( void)
 {
 //    ELAdrEntry*            AdrEnt;
 //    ELUnresolvedEntry*    RemoveUnrEnt;
@@ -608,7 +610,7 @@ u16 EL_ExtractStaticSym1( void)
 /*------------------------------------------------------
   マーキングされたシンボルを公開用ファイルにAPIとして書き出す
  -----------------------------------------------------*/
-u16 EL_ExtractStaticSym2( void)
+void EL_ExtractStaticSym2( void)
 {
 //    ELAdrEntry*            AdrEnt;
 //    ELUnresolvedEntry*    RemoveUnrEnt;

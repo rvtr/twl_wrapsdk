@@ -1,8 +1,8 @@
 /*---------------------------------------------------------------------------*
-  Project:  CTR - ELF Loader
+  Project:  TWL - ELF Loader
   File:     loader_subset.h
 
-  Copyright 2006 Nintendo.  All rights reserved.
+  Copyright 2006,2007 Nintendo.  All rights reserved.
 
   These coded instructions, statements, and computer programs contain
   proprietary information of Nintendo of America Inc. and/or Nintendo
