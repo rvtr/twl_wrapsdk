@@ -263,8 +263,9 @@ extern "C" {
 #define HW_ARENA_INFO_BUF               (HW_MAIN_MEM_SYSTEM + 0x1a0)    // アリーナ情報構造体(27F_FDA0～27F_FDE7) (END-0x260)
 #define HW_REAL_TIME_CLOCK_BUF          (HW_MAIN_MEM_SYSTEM + 0x1e8)    // RTC
 
-#define HW_DMA_CLEAR_DATA_BUF           (HW_MAIN_MEM_SYSTEM + 0x1f0)    // DMAクリアデータ・バッファ (END-0x210)
-#define HW_DMA_CLEAR_DATA_BUF_END       (HW_MAIN_MEM_SYSTEM + 0x200)    //  (この領域は ARM9-TEG にのみ使用する)
+#define HW_CARD_B_LOCK_BUF              (HW_MAIN_MEM_SYSTEM + 0x1f0)    // カードB・ロックバッファ (END-0x210)
+
+// 0x027ffdf8-0x027ffdff:(8byte):UNUSED
 
 #define HW_ROM_HEADER_BUF               (HW_MAIN_MEM_SYSTEM + 0x200)    // ＲＯＭ内登録エリアデータ・バッファ (END-0x200)
 #define HW_ROM_HEADER_BUF_END           (HW_MAIN_MEM_SYSTEM + 0x360)    //                                    (END-0x0a0)

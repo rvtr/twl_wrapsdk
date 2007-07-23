@@ -167,6 +167,8 @@ static void OSi_FreeCartridgeBus(void);
 
 static void OSi_AllocateCardBus(void);
 static void OSi_FreeCardBus(void);
+static void OSi_AllocateExCardBus(void);
+static void OSi_FreeExCardBus(void);
 
 static void OSi_WaitByLoop(void);
 
@@ -715,6 +717,13 @@ s32 OS_LockCard(u16 lockID)
 #endif
 }
 
+s32 OS_LockExCard(u16 lockID)
+{
+    OSi_ASSERT_ID(lockID);
+
+    return OS_LockByWord(lockID, (OSLockWord *)HW_CARD_B_LOCK_BUF, OSi_AllocateExCardBus);
+}
+
 /*---------------------------------------------------------------------------*
   Name:         OS_UnlockCard
 
@@ -734,6 +743,13 @@ s32 OS_UnlockCard(u16 lockID)
 #else
     return OS_UnlockByWord(lockID, (OSLockWord *)HW_CARD_LOCK_BUF, OSi_FreeCardBus);
 #endif
+}
+
+s32 OS_UnlockExCard(u16 lockID)
+{
+    OSi_ASSERT_ID(lockID);
+
+    return OS_UnlockByWord(lockID, (OSLockWord *)HW_CARD_B_LOCK_BUF, OSi_FreeExCardBus);
 }
 
 //---- for compatibility to old name ('UnLock' <-> 'Unlock')
@@ -762,6 +778,11 @@ s32 OS_TryLockCard(u16 lockID)
 #endif
 }
 
+s32 OS_TryLockExCard(u16 lockID)
+{
+    return OS_TryLockByWord(lockID, (OSLockWord *)HW_CARD_B_LOCK_BUF, OSi_AllocateExCardBus);
+}
+
 //---------------- 
 static void OSi_AllocateCardBus(void)
 {
@@ -770,11 +791,25 @@ static void OSi_AllocateCardBus(void)
 #endif
 }
 
+static void OSi_AllocateExCardBus(void)
+{
+#ifdef  SDK_ARM9
+    MIi_SetExCardProcessor(MI_PROCESSOR_ARM9);    // Card for MAIN
+#endif
+}
+
 //---------------- 
 static void OSi_FreeCardBus(void)
 {
 #ifdef  SDK_ARM9
     MIi_SetCardProcessor(MI_PROCESSOR_ARM7);    // Card for SUB
+#endif
+}
+
+static void OSi_FreeExCardBus(void)
+{
+#ifdef  SDK_ARM9
+    MIi_SetExCardProcessor(MI_PROCESSOR_ARM7);    // Card for SUB
 #endif
 }
 
