@@ -28,6 +28,7 @@
 static void VBlankIntr(void);
 static void CameraIntr(void);
 
+static BOOL startRequest = FALSE;
 /*---------------------------------------------------------------------------*
   Name:         TwlMain
 
@@ -63,17 +64,7 @@ void TwlMain()
     GX_DispOn();
 
     // カメラ初期化
-    CAMERA_Init();      // create camera thread
-    CAMERA_PowerOn();   // wakeup camera module
-
-    result = CAMERA_I2CInit(CAMERA_SELECT_IN);
-    if (result != CAMERA_RESULT_SUCCESS_TRUE)
-    {
-        OS_TPrintf("CAMERA_I2CInit was failed. (%d)\n", result);
-        CAMERA_PowerOff();
-        OS_Terminate();
-    }
-    OS_TPrintf("CAMERA_I2CInit was done successfully.\n");
+    CAMERA_Init();      // wakeup camera module
 
     result = CAMERA_I2CActivate(CAMERA_SELECT_IN);
     if (result != CAMERA_RESULT_SUCCESS_TRUE)
@@ -100,10 +91,8 @@ void TwlMain()
     OS_SetIrqFunction(OS_IE_CAM, CameraIntr);
     (void)OS_EnableIrqMask(OS_IE_CAM);
 
-    // カメラスタート (DMAはここで開始してもしなくても良い)
-    CAMERA_ClearBuffer();
-    CAMERA_DmaRecvAsync(DMA_NO, (void *)HW_LCDC_VRAM_A, BYTES_PER_LINE * LINES_AT_ONCE, BYTES_PER_LINE * HEIGHT);
-    CAMERA_Start();
+    // カメラスタート (リクエストのみ)
+    startRequest = TRUE;
     OS_TPrintf("Camera is shooting a movie...\n");
 
     while (1)
@@ -136,65 +125,51 @@ void TwlMain()
             result = CAMERA_I2CActivate(CAMERA_SELECT_NONE);
             OS_TPrintf("%s\n", result == CAMERA_RESULT_SUCCESS_TRUE ? "SUCCESS" : "FAILED");
         }
-        if (trg & PAD_BUTTON_START) // start/stop to capture
+        if (trg & PAD_BUTTON_START) // start/stop to capture w/o Activate API
         {
-            if (OS_GetIrqMask() & OS_IE_CAM)
+            if (CAMERA_IsBusy())
             {
-                // clear the handler
-                (void)OS_DisableIrqMask(OS_IE_CAM);
                 OS_TPrintf("call CAMERA_Stop()... ");
-                CAMERA_Stop();
+                CAMERA_StopCapture();
                 while (CAMERA_IsBusy())
                 {
                 }
                 OS_TPrintf("Camera was stopped.\n");
+                MIi_StopExDma(DMA_NO);
             }
             else
             {
-                // set the handler
-                OS_SetIrqFunction(OS_IE_CAM, CameraIntr);
-                (void)OS_EnableIrqMask(OS_IE_CAM);
-
-                CAMERA_ClearBuffer();
-                CAMERA_Start();
+                startRequest = TRUE;
                 OS_TPrintf("Camera is shooting a movie...\n");
+                while (CAMERA_IsBusy() == FALSE)
+                {
+                }
             }
         }
         if (trg & PAD_BUTTON_SELECT)    // power on/off
         {
             if (reg_CFG_CLK & REG_CFG_CLK_CAM_CKI_MASK)
             {
-                OS_TPrintf("call CAMERA_I2CActivate(CAMERA_SELECT_NONE)... ");
-                result = CAMERA_I2CActivate(CAMERA_SELECT_NONE);
-                OS_TPrintf("%s\n", result == CAMERA_RESULT_SUCCESS_TRUE ? "SUCCESS" : "FAILED");
-                OS_TPrintf("call CAMERA_PowerOff()... ");
-                CAMERA_PowerOff();
+                OS_TPrintf("call CAMERA_End()... ");
+                CAMERA_End();
                 OS_TPrintf("Done.\n");
+                MIi_StopExDma(DMA_NO);
             }
             else
             {
-                OS_TPrintf("call CAMERA_PowerOn()... ");
-                CAMERA_PowerOn();
+                OS_TPrintf("call CAMERA_Init()... ");
+                CAMERA_Init();
                 OS_TPrintf("Done.\n");
-                OS_TPrintf("call CAMERA_I2CInit(CAMERA_SELECT_IN)... ");
-                result = CAMERA_I2CInit(CAMERA_SELECT_IN);
-                OS_TPrintf("%s\n", result == CAMERA_RESULT_SUCCESS_TRUE ? "SUCCESS" : "FAILED");
+#if 0
                 // resize
                 OS_TPrintf("call CAMERA_I2CResize(CAMERA_SELECT_IN)... ");
                 result = CAMERA_I2CResize(CAMERA_SELECT_IN, 320, 240);
                 OS_TPrintf("%s\n", result == CAMERA_RESULT_SUCCESS_TRUE ? "SUCCESS" : "FAILED");
+#endif
                 // activate inside camera first
                 OS_TPrintf("call CAMERA_I2CActivate(CAMERA_SELECT_IN)... ");
                 result = CAMERA_I2CActivate(CAMERA_SELECT_IN);
                 OS_TPrintf("%s\n", result == CAMERA_RESULT_SUCCESS_TRUE ? "SUCCESS" : "FAILED");
-                // set misc registers
-                CAMERA_SetTrimmingParamsCenter(WIDTH, HEIGHT, 320, 240);    // clipped by camera i/f
-                CAMERA_SetTrimming(TRUE);
-                CAMERA_SetOutputFormat(CAMERA_OUTPUT_RGB);
-                CAMERA_SetTransferLines(CAMERA_GET_MAX_LINES(WIDTH));
-                CAMERA_SetVsyncIntrrupt(CAMERA_INTR_VSYNC_POSITIVE_EDGE);   // almost end of vblank
-                CAMERA_SetBufferErrorIntrrupt(TRUE);
-                CAMERA_SetMasterIntrrupt(TRUE);
             }
         }
     }
@@ -215,42 +190,54 @@ void VBlankIntr(void)
     Start時にDMAを開始しない場合、Startのタイミングによっては、最初にエラー検知から始まる。
     Start時にDMAを開始している場合、Startのタイミングによっては、DMAが停止していないから始まる。
     DMA周りの管理をカメラのVsyncからDMA割り込みに変えても良いかも。
+
+    カメラのVsync自体はCAMERA_Start/Stopとは関係なく発生している。(Acitavate(NONE)で停止する)
+    StartやStopはメインルーチンではフラグを立てるだけとし、実際の処理はすべて割り込みハンドラで
+    実行するというのもあり。(とりあえずStartだけフラグとして実装している)
+    たとえAcitivate(NONE) でも I2CInit中はVsyncが発生するので注意！
+
+    カメラ動作中にActivate(NONE)とした場合、Stopを呼んでもずっとBUSYのままとなるので注意。
+    (Vsyncで状態が切り替わるのに、Vsyncがこなくなるので (未確認だけど))
+
+    このサンプルでは、カメラ停止時に、DMAが動いている場合と止まっている場合がある。
 #endif
 #define PRINT_RATE  32
 void CameraIntr(void)
 {
-    OS_TPrintf(".");
     OS_SetIrqCheckFlag(OS_IE_CAM); // checking camera interrupt
 
     if (CAMERA_GetErrorStatus())    // error?
     {
         OS_TPrintf("Error was occurred.\n");
         // 停止処理
-        CAMERA_Stop();          // カメラ停止
+        CAMERA_StopCapture();   // カメラ停止
+        CAMERA_ClearBuffer();   // クリア (すぐにできる？)
         MIi_StopExDma(DMA_NO);  // DMA停止
-        while (CAMERA_IsBusy()) //        待ち
-        {
-        }
-        // カメラ再開
-        CAMERA_ClearBuffer();
-        CAMERA_Start();
-        return; // waiting next frame (skip current frame)
+        startRequest = TRUE;    // カメラ再開要求
+        return;     // waiting next frame (skip current frame)
     }
 
     // 以降はVsync時の処理
 
-    if (MIi_IsExDmaBusy(DMA_NO))    // NOT done to capture last frame?
+    if (startRequest)
     {
-        OS_TPrintf("DMA was not done until VBlank.\n");
-        return; // waiting next frame (skip current frame)
+        CAMERA_ClearBuffer();
+        CAMERA_StartCapture();
+        startRequest = FALSE;
     }
+
     if (CAMERA_IsBusy() == FALSE)   // done to execute stop command?
     {
-        OS_TPrintf("Finished receiving final frame.\n");
-        // disable this handler?
+        //OS_TPrintf("while stopping the capture or just finished\n");
     }
     else
     {
+        OS_TPrintf(".");
+        if (MIi_IsExDmaBusy(DMA_NO))    // NOT done to capture last frame?
+        {
+            OS_TPrintf("DMA was not done until VBlank.\n");
+            return; // waiting next frame (skip current frame)
+        }
         // start to capture for next frame
         CAMERA_DmaRecvAsync(DMA_NO, (void *)HW_LCDC_VRAM_A, BYTES_PER_LINE * LINES_AT_ONCE, BYTES_PER_LINE * HEIGHT);
     }
@@ -266,7 +253,8 @@ void CameraIntr(void)
         else if (++count == PRINT_RATE)
         {
             OSTick uspf = OS_TicksToMicroSeconds(OS_GetTick() - begin) / count;
-            OS_TPrintf("%2d.%03d fps\n", (int)(1000000LL / uspf), (int)(1000000000LL / uspf) % 1000);
+            int mfps = (int)(1000000000LL / uspf);
+            OS_TPrintf("%2d.%03d fps\n", mfps / 1000, mfps % 1000);
             count = 0;
             begin = OS_GetTick();
         }

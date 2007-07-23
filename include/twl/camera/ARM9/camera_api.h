@@ -56,6 +56,41 @@ typedef void (*CAMERACallback)(CAMERAResult result, void *arg);
 void CAMERA_Init(void);
 
 /*---------------------------------------------------------------------------*
+  Name:         CAMERA_End
+
+  Description:  CAMERAライブラリを終了する。
+
+  Arguments:    None.
+
+  Returns:      None.
+ *---------------------------------------------------------------------------*/
+void CAMERA_End(void);
+
+/*---------------------------------------------------------------------------*
+  Name:         CAMERA_Start
+
+  Description:  キャプチャを開始する上位API。切り替えにも使える。
+                sync version only
+
+  Arguments:    camera      - one of CameraSelect
+
+  Returns:      CAMERAResult
+ *---------------------------------------------------------------------------*/
+CAMERAResult CAMERA_Start(CameraSelect camera);
+
+/*---------------------------------------------------------------------------*
+  Name:         CAMERA_Stop
+
+  Description:  キャプチャを停止する上位API。
+                sync version only
+
+  Arguments:    None
+
+  Returns:      CAMERAResult
+ *---------------------------------------------------------------------------*/
+CAMERAResult CAMERA_Stop(void);
+
+/*---------------------------------------------------------------------------*
   Name:         CAMERA_I2CInitAsync
 
   Description:  initialize camera registers via I2C

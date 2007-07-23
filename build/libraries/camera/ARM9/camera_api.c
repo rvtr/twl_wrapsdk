@@ -95,6 +95,91 @@ void CAMERA_Init(void)
     {
     }
     PXI_SetFifoRecvCallback(PXI_FIFO_TAG_CAMERA, CameraPxiCallback);
+
+    // 電源On
+    CAMERA_PowerOn();
+
+    // カメラ初期化
+    //CAMERA_I2CInit(CAMERA_SELECT_BOTH);
+    CAMERA_I2CInit(CAMERA_SELECT_IN);
+}
+
+/*---------------------------------------------------------------------------*
+  Name:         CAMERA_End
+
+  Description:  CAMERAライブラリを終了する。
+
+  Arguments:    None.
+
+  Returns:      None.
+ *---------------------------------------------------------------------------*/
+void CAMERA_End(void)
+{
+    // 初期化済みを確認
+    if (cameraInitialized == 0)
+    {
+        return;
+    }
+    cameraInitialized = 0;
+
+    // カメラ停止
+    CAMERA_Stop();
+
+    // PXI関連停止
+    PXI_SetFifoRecvCallback(PXI_FIFO_TAG_CAMERA, NULL);
+
+    // 電源Off
+    CAMERA_PowerOff();
+}
+
+/*---------------------------------------------------------------------------*
+  Name:         CAMERA_Start
+
+  Description:  キャプチャを開始する上位API。切り替えにも使える。
+                sync version only
+
+  Arguments:    camera      - one of CameraSelect
+
+  Returns:      CAMERAResult
+ *---------------------------------------------------------------------------*/
+CAMERAResult CAMERA_Start(CameraSelect camera)
+{
+    CAMERAResult result;
+    if (camera == CAMERA_SELECT_NONE || camera == CAMERA_SELECT_BOTH)
+    {
+        return CAMERA_RESULT_ILLEGAL_PARAMETER;
+    }
+    result = CAMERA_I2CActivate(camera);
+    if (result != CAMERA_RESULT_SUCCESS_TRUE)
+    {
+        return result;
+    }
+    CAMERA_StopCapture();
+    while ( CAMERA_IsBusy() != FALSE)
+    {
+    }
+    CAMERA_ClearBuffer();
+    CAMERA_StartCapture();
+    return CAMERA_RESULT_SUCCESS_TRUE;
+}
+
+/*---------------------------------------------------------------------------*
+  Name:         CAMERA_Stop
+
+  Description:  キャプチャを停止する上位API。
+                sync version only
+
+  Arguments:    None
+
+  Returns:      CAMERAResult
+ *---------------------------------------------------------------------------*/
+CAMERAResult CAMERA_Stop(void)
+{
+    CAMERA_StopCapture();
+    while ( CAMERA_IsBusy() != FALSE)
+    {
+    }
+    return CAMERA_I2CActivate(CAMERA_SELECT_NONE);
 }
 
 /*---------------------------------------------------------------------------*

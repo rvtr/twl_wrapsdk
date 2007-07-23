@@ -20,7 +20,7 @@
     íËêîíËã`
  *---------------------------------------------------------------------------*/
 #define SYNC_TYPE   (0 << REG_CAM_CAM_MCNT_SYNC_SHIFT)  // 1 if low active
-#define RCLK_TYPE   (1 << REG_CAM_CAM_MCNT_IRCLK_SHIFT) // 1 if negative edge
+#define RCLK_TYPE   (0 << REG_CAM_CAM_MCNT_IRCLK_SHIFT) // 1 if negative edge
 
 /*---------------------------------------------------------------------------*
     å^íËã`
@@ -52,7 +52,9 @@ void CAMERA_PowerOn( void )
     reg_CFG_CLK |= REG_CFG_CLK_CAM_MASK;
     if ((reg_CFG_CLK & REG_CFG_CLK_CAM_CKI_MASK) == 0)
     {
-        reg_CAM_CAM_MCNT |= (SYNC_TYPE | RCLK_TYPE);  // set polarities
+        // (re)set polarities first
+        reg_CAM_CAM_MCNT = (u16)((reg_CAM_CAM_MCNT & ~(REG_CAM_CAM_MCNT_SYNC_MASK | REG_CAM_CAM_MCNT_IRCLK_MASK))
+                                 | SYNC_TYPE | RCLK_TYPE);
 
         reg_CAM_CAM_MCNT |= REG_CAM_CAM_MCNT_V28_MASK;  // VDD2.8 POWER ON
         CAMERAi_Wait( 10 );                             // wait for over 10 MCLKs (M:10-20)(S:10ns?)
@@ -61,7 +63,11 @@ void CAMERA_PowerOn( void )
         reg_CAM_CAM_MCNT |= REG_CAM_CAM_MCNT_RSTN_MASK; // RSTN => Hi
         CAMERAi_Wait( 6000 );                           // wait for over 6000 MCLKs
 
-        reg_CAM_CAM_CNT = REG_CAM_CAM_CNT_CL_MASK;      // full reset CNT
+        CAMERA_StopCapture();                           // stop cmaera output
+        while (CAMERA_IsBusy() != FALSE)
+        {
+        }
+        CAMERA_ClearBuffer();                           // clear buffer and error
     }
 }
 
@@ -78,7 +84,10 @@ void CAMERA_PowerOff( void )
 {
     if (reg_CFG_CLK & REG_CFG_CLK_CAM_CKI_MASK)
     {
-        reg_CAM_CAM_CNT &= ~REG_CAM_CAM_CNT_E_MASK;     // stop cmaera output
+        CAMERA_StopCapture();                           // stop cmaera output
+        while (CAMERA_IsBusy() != FALSE)
+        {
+        }
 
         reg_CAM_CAM_MCNT &= ~REG_CAM_CAM_MCNT_RSTN_MASK;// RSTN => Lo
         CAMERAi_Wait( 10 );                             // wait for over 10 MCLKs (M:10)(S:10ns?)
@@ -106,7 +115,7 @@ BOOL CAMERA_IsBusy( void )
 }
 
 /*---------------------------------------------------------------------------*
-  Name:         CAMERA_Start
+  Name:         CAMERA_StartCapture
 
   Description:  start to receive camera data
 
@@ -114,13 +123,13 @@ BOOL CAMERA_IsBusy( void )
 
   Returns:      None
  *---------------------------------------------------------------------------*/
-void CAMERA_Start( void )
+void CAMERA_StartCapture( void )
 {
     reg_CAM_CAM_CNT |= REG_CAM_CAM_CNT_E_MASK;
 }
 
 /*---------------------------------------------------------------------------*
-  Name:         CAMERA_Stop
+  Name:         CAMERA_StopCapture
 
   Description:  stop to receive camera data
 
@@ -128,7 +137,7 @@ void CAMERA_Start( void )
 
   Returns:      None
  *---------------------------------------------------------------------------*/
-void CAMERA_Stop( void )
+void CAMERA_StopCapture( void )
 {
     reg_CAM_CAM_CNT &= ~REG_CAM_CAM_CNT_E_MASK;
 }

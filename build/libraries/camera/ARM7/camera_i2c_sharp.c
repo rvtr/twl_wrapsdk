@@ -17,9 +17,8 @@
 #include <twl/camera/ARM7/i2c_sharp.h>
 
 // insert auto-generated code
-//#include "5030_15fpsFIX_x8_CC_FilterKIM_MatrixOn3_PLL.autogen.c"
-#include "5030_15fps_5fps_adjust2_x8_CC_FilterKIM_MatrixOn3_PLL_1676MHz-1676MHz.autogen.c"
-
+//#include "VGA_15fps_5fps_x8_CC_FilterKIM_MatrixOn3_PLL_QVGA_23Jul07_1676MHz.autogen.c"
+#include "VGA_15fps_5fps_x8_CC_FilterKIM_MatrixOn3_PLL_QVGA_23Jul07_1676MHz_Improve.autogen.c"
 
 #define BANK_ADDR   0x03
 typedef enum
@@ -43,17 +42,24 @@ BOOL CAMERAi_S_I2CInit(CameraSelect camera)
 {
     BOOL rIn = TRUE;
     BOOL rOut = TRUE;
+//    const u8 data[] = { 0xD2, 0x02, 0x03 };   // PLL parameters from 16 MHz to 16 MHz
     // should not send init command same time
     if (camera & CAMERA_SELECT_IN)
     {
         rIn = CAMERAi_S_Initialize(CAMERA_SELECT_IN)
+           && CAMERAi_S_WriteRegister(CAMERA_SELECT_IN, BANK_ADDR, BANK_GROUP_B)
+           && CAMERAi_S_SetFlags(CAMERA_SELECT_IN, 0x1A, 0x08)          // reverse RCLK polarity
            && CAMERAi_S_WriteRegister(CAMERA_SELECT_IN, 0x18, 0x02)     // force to order YUYV
+//           && CAMERAi_S_WriteRegisters(CAMERA_SELECT_IN, 0x09, data, 3) // force to set PLL
            && CAMERAi_S_I2CStandby(CAMERA_SELECT_IN, TRUE);
     }
     if (camera & CAMERA_SELECT_OUT)
     {
         rOut = CAMERAi_S_Initialize(CAMERA_SELECT_OUT)
-           && CAMERAi_S_WriteRegister(CAMERA_SELECT_OUT, 0x18, 0x02)    // force to order YUYV
+            && CAMERAi_S_WriteRegister(CAMERA_SELECT_OUT, BANK_ADDR, BANK_GROUP_B)
+            && CAMERAi_S_SetFlags(CAMERA_SELECT_OUT, 0x1A, 0x08)        // reverse RCLK polarity
+            && CAMERAi_S_WriteRegister(CAMERA_SELECT_OUT, 0x18, 0x02)   // force to order YUYV
+//            && CAMERAi_S_WriteRegisters(CAMERA_SELECT_OUT, 0x09, data, 3) // force to set PLL
             && CAMERAi_S_I2CStandby(CAMERA_SELECT_OUT, TRUE);
     }
     return (rIn && rOut);
@@ -96,24 +102,16 @@ BOOL CAMERAi_S_I2CStandby(CameraSelect camera, BOOL standby)
  *---------------------------------------------------------------------------*/
 BOOL CAMERAi_S_I2CResize(CameraSelect camera, u16 width, u16 height)
 {
-    u8 data[2] = { 0, 0 };
-    switch (width)
+    u8 data[2];
+    if ( width <= 80 || width > 640 || height <= 60 || height > 480
+      || (640*32) % width != 0 || (480*32) % height != 0 )
     {
-    case 640:   data[0] = 32;   break;
-    case 320:   data[0] = 64;   break;
-    case 160:   data[0] = 128;  break;
+        return FALSE;   // cannnot match for scale-down parameters
     }
-    switch (height)
-    {
-    case 480:   data[1] = 32;   break;
-    case 240:   data[1] = 64;   break;
-    case 120:   data[1] = 128;  break;
-    }
-    if (data[0] && data[1])
-    {
-        return CAMERAi_S_WriteRegister(camera, BANK_ADDR, BANK_GROUP_B)
+    data[0] = (u8)((640*32) / width);
+    data[1] = (u8)((480*32) / height);
+    return CAMERAi_S_WriteRegister(camera, BANK_ADDR, BANK_GROUP_B)
             && CAMERAi_S_WriteRegisters(camera, 0x3D, data, 2);
-    }
     return FALSE;
 }
 
@@ -129,8 +127,13 @@ BOOL CAMERAi_S_I2CResize(CameraSelect camera, u16 width, u16 height)
  *---------------------------------------------------------------------------*/
 BOOL CAMERAi_S_I2CFrameRate(CameraSelect camera, int rate)
 {
-    (void)rate;
     (void)camera;
+    if (rate == 0)
+    {
+    }
+    else if (rate > 0 && rate <= 30)
+    {
+    }
     return FALSE;
 }
 
@@ -146,8 +149,15 @@ BOOL CAMERAi_S_I2CFrameRate(CameraSelect camera, int rate)
  *---------------------------------------------------------------------------*/
 BOOL CAMERAi_S_I2CEffect(CameraSelect camera, CameraEffect effect)
 {
-    (void)effect;
     (void)camera;
+    switch (effect)
+    {
+    case CAMERA_EFFECT_NONE:
+    case CAMERA_EFFECT_MONO:
+    case CAMERA_EFFECT_SEPIA:
+    case CAMERA_EFFECT_NEGATIVE:
+        return FALSE;
+    }
     return FALSE;
 }
 
@@ -163,7 +173,14 @@ BOOL CAMERAi_S_I2CEffect(CameraSelect camera, CameraEffect effect)
  *---------------------------------------------------------------------------*/
 BOOL CAMERAi_S_I2CFlip(CameraSelect camera, CameraFlip flip)
 {
-    (void)flip;
-    (void)camera;
-    return FALSE;
+    u8 data = 0;
+    switch (flip)
+    {
+    case CAMERA_FLIP_NONE:      data = 0x00;    break;
+    case CAMERA_FLIP_VERTICAL:  data = 0x02;    break;
+    case CAMERA_FLIP_HORIZONTAL:data = 0x01;    break;
+    case CAMERA_FLIP_REVERSE:   data = 0x03;    break;
+    }
+    return CAMERAi_S_WriteRegister(camera, BANK_ADDR, BANK_GROUP_B)
+        && CAMERAi_S_SetParams(camera, 0x0F, data, 0x03);
 }

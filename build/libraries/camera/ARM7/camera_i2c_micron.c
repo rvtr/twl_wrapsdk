@@ -17,9 +17,8 @@
 #include <twl/camera/ARM7/i2c_micron.h>
 
 // insert auto-generated code
-#include "MT9V113-MTM10.autogen.c"
-//#include "MT9V113-MTM9-2.autogen.c"
-//#include "MT9V113-nin00.autogen.c"
+#include "MT9V113-MTM10-3.autogen.c"
+//#include "MT9V113-MTM11.autogen.c"
 
 /*---------------------------------------------------------------------------*
   Name:         CAMERAi_M_I2CInit
@@ -38,11 +37,15 @@ BOOL CAMERAi_M_I2CInit(CameraSelect camera)
     if (camera & CAMERA_SELECT_IN)
     {
         rIn = CAMERAi_M_Default_Registers(CAMERA_SELECT_IN)
+           && CAMERAi_M_WriteMCU(CAMERA_SELECT_IN, 0x2755, 0x0002)  // YUYV format (required to refresh)
+           && CAMERAi_M_I2CResize(CAMERA_SELECT_IN, 320, 240)
            && CAMERAi_M_I2CStandby(CAMERA_SELECT_IN, TRUE);
     }
     if (camera & CAMERA_SELECT_OUT)
     {
         rOut = CAMERAi_M_Default_Registers(CAMERA_SELECT_OUT)
+            && CAMERAi_M_WriteMCU(CAMERA_SELECT_OUT, 0x2755, 0x0002)    // YUYV format (required to refresh)
+            && CAMERAi_M_I2CResize(CAMERA_SELECT_OUT, 320, 240)
             && CAMERAi_M_I2CStandby(CAMERA_SELECT_OUT, TRUE);
     }
     return (rIn && rOut);
@@ -63,12 +66,14 @@ BOOL CAMERAi_M_I2CStandby(CameraSelect camera, BOOL standby)
     if (standby)
     {
         return CAMERAi_M_ClearFlags(camera, 0x001A, 0x0200) // stop to output
+//      return CAMERAi_M_Stop(camera)
             && CAMERAi_M_SetFlags(camera, 0x0018, 0x0001);  // go to standby
     }
     else
     {
         return CAMERAi_M_ClearFlags(camera, 0x0018, 0x0001) // leave standby
             && CAMERAi_M_SetFlags(camera, 0x001A, 0x0200);  // start to output
+//          && CAMERAi_M_Start(camera);
     }
 }
 
@@ -126,20 +131,17 @@ BOOL CAMERAi_M_I2CFrameRate(CameraSelect camera, int rate)
  *---------------------------------------------------------------------------*/
 BOOL CAMERAi_M_I2CEffect(CameraSelect camera, CameraEffect effect)
 {
-#if 0
-    SEPIAでガンマコレクションを変更しているので、それら以外はデフォルトの
-    ガンマコレクションを適用する必要がある。
-    直前がSEPIAかどうかを覚えておく(IN/OUT別)か、毎回再設定するか、最初にReadするか・・・
-    ほかにガンマコレクションを変更するものがないなら、(B)をセピア用としても良い。
-#endif
     switch (effect)
     {
     case CAMERA_EFFECT_NONE:
         return CAMERAi_M_Effect_Off(camera);
+//        return CAMERAi_M_Option_Effect_Off(camera);
     case CAMERA_EFFECT_MONO:
         return CAMERAi_M_Effect_Mono(camera);
+//        return CAMERAi_M_Option_Effect_Mono(camera);
     case CAMERA_EFFECT_SEPIA:
         return CAMERAi_M_Effect_Sepia(camera);
+//        return CAMERAi_M_Option_Effect_Sepia(camera);
     case CAMERA_EFFECT_NEGATIVE:
         return CAMERAi_M_WriteMCU(camera, 0x2759, 0x6443)  //NEVATIVE_SPEC_EFFECTS_A
             && CAMERAi_M_WriteMCU(camera, 0x275B, 0x6443)  //NEVATIVE_SPEC_EFFECTS_B

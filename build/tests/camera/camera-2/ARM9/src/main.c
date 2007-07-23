@@ -35,11 +35,9 @@ static void VBlankIntr(void);
 static void CameraDmaIntr(void);
 static void CameraErrIntr(void);
 
-#include <nitro/dtcm_begin.h>
-volatile int lineNumber = 0;
-#include <nitro/dtcm_end.h>
-static BOOL effect = FALSE;
-static u16 pipeBuffer[BYTES_PER_LINE * LINES_AT_ONCE / sizeof(u16)] ATTRIBUTE_ALIGN(4);
+static int lineNumber = 0;
+static BOOL effectFlag = FALSE;
+static u16 pipeBuffer[BYTES_PER_LINE * LINES_AT_ONCE / sizeof(u16)] ATTRIBUTE_ALIGN(32);
 /*---------------------------------------------------------------------------*
   Name:         TwlMain
 
@@ -75,17 +73,7 @@ void TwlMain()
     GX_DispOn();
 
     // カメラ初期化
-    CAMERA_Init();      // create camera thread
-    CAMERA_PowerOn();   // wakeup camera module
-
-    result = CAMERA_I2CInit(CAMERA_SELECT_IN);
-    if (result != CAMERA_RESULT_SUCCESS_TRUE)
-    {
-        OS_TPrintf("CAMERA_I2CInit was failed. (%d)\n", result);
-        CAMERA_PowerOff();
-        OS_Terminate();
-    }
-    OS_TPrintf("CAMERA_I2CInit was done successfully.\n");
+    CAMERA_Init();      // wakeup camera module
 
     result = CAMERA_I2CActivate(CAMERA_SELECT_IN);
     if (result != CAMERA_RESULT_SUCCESS_TRUE)
@@ -121,14 +109,14 @@ void TwlMain()
     // カメラスタート
     lineNumber = 0;
     CAMERA_ClearBuffer();
-    CAMERA_Start();
+    CAMERA_StartCapture();
     OS_TPrintf("Camera is shooting a movie...\n");
 
     while (1)
     {
         u16 pad;
         u16 trg;
-        static u16 old = 0;//0xffff;    // ignore the trigger by first data
+        static u16 old = 0xffff;    // ignore the trigger by first data
 
         OS_WaitVBlankIntr();
 
@@ -138,9 +126,8 @@ void TwlMain()
 
         if (trg & PAD_BUTTON_A)
         {
-            effect ^= 1;
-            DC_StoreRange(&effect, sizeof(effect));
-            OS_TPrintf("Effect %s\n", effect ? "ON" : "OFF");
+            effectFlag ^= 1;
+            OS_TPrintf("Effect %s\n", effectFlag ? "ON" : "OFF");
         }
     }
 }
@@ -159,7 +146,7 @@ void VBlankIntr(void)
 #define PRINT_RATE  32
 void CameraDmaIntr(void)
 {
-    int line = lineNumber;
+    static BOOL effect = FALSE;
     OS_SetIrqCheckFlag(DMA_IE); // checking dma interrupt
 
     // 必要な処理をしてフレームバッファにコピーする
@@ -167,24 +154,26 @@ void CameraDmaIntr(void)
     {
         int i;
         u32 *src = (u32*)pipeBuffer;
-        u32 *dest = (u32*)HW_LCDC_VRAM_A + line * WIDTH / 2;
+        u32 *dest = (u32*)HW_LCDC_VRAM_A + lineNumber * WIDTH / 2;
         for (i = 0; i < WIDTH * LINES_AT_ONCE / 2; i++) // pack 2 pixel data
         {
-            dest[i] = ~src[i];  // reverse (if using RGBA format, set bitOR with 0x10001000)
+            dest[i] = ~src[i];  // reverse (if using RGBA format, should bitORed with 0x10001000)
         }
     }
     else
     {
-        MI_CpuCopy8(pipeBuffer, (u16*)HW_LCDC_VRAM_A + line * WIDTH, sizeof(pipeBuffer));
+        MI_CpuCopy8(pipeBuffer, (u16*)HW_LCDC_VRAM_A + lineNumber * WIDTH, sizeof(pipeBuffer));
     }
     DC_InvalidateRange(pipeBuffer, sizeof(pipeBuffer));
 
-    line += LINES_AT_ONCE;
-    if (line >= HEIGHT)
+    lineNumber += LINES_AT_ONCE;
+    if (lineNumber >= HEIGHT)
     {
         static OSTick begin = 0;
         static int count = 0;
-        // 必要ならdestFrameのスワップなど
+        // 必要ならフレームバッファのスワップなど
+
+        effect = effectFlag;    // このタイミングで反映
 
         // debug print
         OS_TPrintf(".");
@@ -195,18 +184,13 @@ void CameraDmaIntr(void)
         else if (++count == PRINT_RATE)
         {
             OSTick uspf = OS_TicksToMicroSeconds(OS_GetTick() - begin) / count;
-            OS_TPrintf("%2d.%03d fps\n", (int)(1000000LL / uspf), (int)(1000000000LL / uspf) % 1000);
+            int mfps = (int)(1000000000LL / uspf);
+            OS_TPrintf("%2d.%03d fps\n", mfps / 1000, mfps % 1000);
             count = 0;
             begin = OS_GetTick();
         }
-        DC_StoreRange(&begin, sizeof(begin));
-        DC_StoreRange(&count, sizeof(count));
 
         lineNumber = 0;
-    }
-    else
-    {
-        lineNumber = line;
     }
 }
 
@@ -223,10 +207,10 @@ void CameraErrIntr(void)
     OS_TPrintf("Error was occurred.\n");
 
     // カメラ停止
-    CAMERA_Stop();
+    CAMERA_StopCapture();
     lineNumber = 0;
 
     // カメラ再開
     CAMERA_ClearBuffer();
-    CAMERA_Start();
+    CAMERA_StartCapture();
 }

@@ -62,26 +62,7 @@ my $multi_foot_format =<<'EOF';
     }
 EOF
 
-sub print_data {
-	my $result = "";
-	for (my $i = 0; $i < @_; $i++)
-	{
-		if (($i % 16) == 0) {
-			$result .= "            " ;
-		} else {
-			$result .= " " ;
-		}
-		$result .= sprintf("0x%02X,", $_[$i]);
-		if (($i % 16) == 15) {
-			$result .= "\r\n";
-		}
-	}
-	if ((@_ % 16) != 0) {
-		$result .= "\r\n";
-	}
-	return $result;
-}
-
+my $row_nums = 8;
 sub print_command {
 	my($addr, @value) = @_;
 	if (@value == 1) {
@@ -90,17 +71,17 @@ sub print_command {
 	my $result = $multi_head_format;
 	for (my $i = 0; $i < @value; $i++)
 	{
-		if (($i % 16) == 0) {
+		if (($i % $row_nums) == 0) {
 			$result .= "            " ;
 		} else {
 			$result .= " " ;
 		}
 		$result .= sprintf("0x%02X,", $value[$i]);
-		if (($i % 16) == 15) {
+		if (($i % $row_nums) == ($row_nums-1) ) {
 			$result .= "\r\n";
 		}
 	}
-	if ((@value % 16) != 0) {
+	if ((@value % $row_nums) != 0) {
 		$result .= "\r\n";
 	}
 	$result .= sprintf($multi_foot_format, $addr, scalar(@value));

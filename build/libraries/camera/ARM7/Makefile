@@ -35,17 +35,16 @@ SRCS			= \
 			  camera_control.c \
 
 MICRON_INI_FILE		:= \
-			  MT9V113-MTM9-2.ini \
-			  MT9V113-MTM10.ini \
-			  MT9V113-nin00.ini \
+			  MT9V113-MTM10-3.ini \
+			  MT9V113-MTM11.ini \
 
 MICRON_CONVERT_EXE	:= convert_micron.pl
 
 MICRON_INIC_FILE	:= $(MICRON_INI_FILE:%.ini=%.autogen.c)
 
 SHARP_DAT_FILE		:= \
-			  5030_15fpsFIX_x8_CC_FilterKIM_MatrixOn3_PLL.dat \
-			  5030_15fps_5fps_adjust2_x8_CC_FilterKIM_MatrixOn3_PLL_1676MHz-1676MHz.dat \
+			  VGA_15fps_5fps_x8_CC_FilterKIM_MatrixOn3_PLL_QVGA_23Jul07_1676MHz.dat \
+			  VGA_15fps_5fps_x8_CC_FilterKIM_MatrixOn3_PLL_QVGA_23Jul07_1676MHz_Improve.dat \
 
 SHARP_CONVERT_EXE	:= convert_sharp.pl
 

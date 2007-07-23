@@ -232,6 +232,15 @@ static void CameraThread(void *arg)
         {
         case CAMERA_PXI_COMMAND_INIT:
             CAMERA_PXI_SIZE_CHECK(CAMERA_PXI_SIZE_INIT);
+            // NONEÇ≈Ç»ÇØÇÍÇŒNONEèÛë‘Ç…Ç∑ÇÈ
+            if (cameraWork.camera != CAMERA_SELECT_NONE)
+            {
+                if (FALSE == CAMERA_I2CStandby(cameraWork.camera, TRUE))
+                {
+                    CameraReturnResult(cameraWork.command, CAMERA_PXI_RESULT_SUCCESS_FALSE);    // ARM9Ç…èàóùÇÃé∏îsÇí íB
+                }
+            }
+            cameraWork.camera = CAMERA_SELECT_NONE;
             result = CAMERA_I2CInit((CameraSelect)cameraWork.data[0]);
             CameraReturnResult(cameraWork.command, result ? CAMERA_PXI_RESULT_SUCCESS_TRUE : CAMERA_PXI_RESULT_SUCCESS_FALSE);  // ARM9Ç…èàóùÇÃê¨å˜Çí íB
             break;
@@ -240,6 +249,7 @@ static void CameraThread(void *arg)
             CAMERA_PXI_SIZE_CHECK(CAMERA_PXI_SIZE_ACTIVATE);
             if (cameraWork.camera != cameraWork.data[0])
             {
+                // NONEÇ≈Ç»ÇØÇÍÇŒNONEèÛë‘Ç…Ç∑ÇÈ
                 if (cameraWork.camera != CAMERA_SELECT_NONE)
                 {
                     if (FALSE == CAMERA_I2CStandby(cameraWork.camera, TRUE))

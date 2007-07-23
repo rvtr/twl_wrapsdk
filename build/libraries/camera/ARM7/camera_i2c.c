@@ -26,7 +26,7 @@ typedef enum
 }
 CAMERAType;
 
-static CAMERAType cameraType = CAMERA_TYPE_SHARP;
+static CAMERAType cameraType = CAMERA_TYPE_MICRON;
 
 #if 0
     CAMERA_I2CInit()だけがカメラの種類を入れ替える機能を有する

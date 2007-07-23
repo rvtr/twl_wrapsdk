@@ -84,7 +84,7 @@ BOOL CAMERA_IsBusy( void );
 
   Returns:      None
  *---------------------------------------------------------------------------*/
-void CAMERA_Start( void );
+void CAMERA_StartCapture( void );
 
 /*---------------------------------------------------------------------------*
   Name:         CAMERA_Stop
@@ -95,7 +95,7 @@ void CAMERA_Start( void );
 
   Returns:      None
  *---------------------------------------------------------------------------*/
-void CAMERA_Stop( void );
+void CAMERA_StopCapture( void );
 
 /*---------------------------------------------------------------------------*
   Name:         CAMERA_SetTrimmingParamsCenter

@@ -4,30 +4,56 @@
 #I2CS
 # 7F
 #ImageSize
-# 640
-# 480
+# 320
+# 240
 # 0
 
 
 03 01
 #04 A0
-09 D2  #PLL
-0A 03  #PLL1
-0B 00  #PLL2
-04 10
-04 90
+#09 D2  #PLL
+#0A 03  #PLL1
+#0B 00  #PLL2
+#04 10
+#04 90
 
-C9 B0  #frame height 15fps 
-C8 04  #1200
+C8 02  #1200
+C9 38  #20  #frame height 15fps 
 E0 07  #frame width
 E1 D0  #1600 
 
+#QVGA Setting 23Jul07 .KIM ---->
+03 01
+35 07 #WindowX1 (L)
+37 04 #WindowY1 (L)
+38 01 #WindowX2 (H)
+39 46 #WindowX2 (L)
+3A 00 #WindowY2 (H)
+3B F3 #WindowY2 (L)
+3D 40 #ScaleX
+3E 40 #ScaleY
+40 08 #Scale_th_L
+19 01 #SyncControl0
+03 02
+5C 01 #AEWinWidth (H)
+5D 40 #AEWinWidth (L)
+5E 00 #AEWinHeight (H)
+5F F0 #AEWinHeight (L)
+60 00 #AECenterWinX (H)
+61 54 #AECenterWinX (L)
+62 00 #AECenterWinY (H)
+63 28 #AECenterWinY (L)
+64 00 #AECenterWidth (H)
+65 A0 #AECenterWidth (L)
+66 00 #AECenterHeight (H)
+67 3C #AECenterHeight (L)
+#<------ QVGA Setting 23Jul07 .KIM
 
 03 02
 11 04  #mid fh
 12 B0
-13 0E  #max fh
-14 10
+13 06 #0E #max fh
+14 A8 #10
 16 70  #mid ex
 17 80
 19 70  #max ex
@@ -223,12 +249,13 @@ B6 24   # MatrixNo2 of Color
 95 40
 03 01
 
+### “Á•ÊÝ’è 1676MHz ##############
 #Bank B
 03 01
 D4 08 # 01D4 referense gain1
 09 D2  #PLL
 0A 02 #03  #pre PLL1
-0B 03 #00  #post PLL2
-
-
+0B 01 #03 00  #post PLL2
+04 10
+04 90
 

@@ -248,8 +248,12 @@ sub regmap_init {
 # API–¼‚Ì®Œ`
 sub name_conv {
 	$_ = $_[0];
+	s/\<o\>/Option/g;
+	s/\%/Percent/g;
+	s/\-/Minus/g;
+	s/\+/Plus/g;
 	s/\>/To/g;
-	s/[\s\.\:\+\-\=\*\/]+/_/g;
+	s/[\s\.\:\=\*\/\(\)]+/_/g;
 	return $_;
 }
 
