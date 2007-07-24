@@ -63,12 +63,12 @@ my $multi_foot_format =<<'EOF';
 EOF
 
 my $row_nums = 8;
-sub print_command {
+sub sprint_command {
 	my($addr, @value) = @_;
-	if (@value == 1) {
+	if (@value == 1) {					# シングルライトは別枠
 		return sprintf($single_format, $addr, $value[0]);
 	}
-	my $result = $multi_head_format;
+	my $result = $multi_head_format;	# これ以降はバーストライト
 	for (my $i = 0; $i < @value; $i++)
 	{
 		if (($i % $row_nums) == 0) {
@@ -77,7 +77,7 @@ sub print_command {
 			$result .= " " ;
 		}
 		$result .= sprintf("0x%02X,", $value[$i]);
-		if (($i % $row_nums) == ($row_nums-1) ) {
+		if (($i % $row_nums) == ($row_nums - 1) ) {
 			$result .= "\r\n";
 		}
 	}
@@ -91,10 +91,10 @@ sub print_command {
 #
 # データはいったんキャッシュして、連続アドレスをバーストライトに書き換える
 #
+my $comment;					# コメントキャッシュ
 my @cache;						# キャッシュデータ
 my $start = -1;					# キャッシュの先頭アドレス
 my @output;						# 出力データ
-my $comment = "";				# コメント
 
 #ここからメイン
 
@@ -115,28 +115,28 @@ while (<IN>) {
 	s/[\r\n]+$//;	# delete \r and/or \n
 	s|\#|// |g;		# change comment sign
 	if (s|(//.*)||) {						# コメント抽出
-		$comment .= "    $1\r\n";
+		$comment .= "    $1\r\n";			# 独立行として出力予定
 	}
 
 	if (/\s*([\w\d]{2})\s+([\w\d]{2})/) {	# データ抽出
 		my ($addr, $value) = (hex($1), hex($2));
-		if ($addr != $start + @cache)
-		{
-			push @output, print_command($start, @cache) if (@cache);
-			@cache = ($value);
+		if ($addr != $start + @cache)		# アドレスが連続していないなら
+		{									# 直前までを出力
+			push @output, sprint_command($start, @cache) if (@cache);
+			@cache = ($value);				# 最新の値だけのエントリにする
 			$start = $addr;
-		} else {
-			push @cache, $value;
+		} else {							# アドレスが連続しているなら
+			push @cache, $value;			# 値を追記
 		}
-		push @output, $comment;				# コメント出力
+		push @output, $comment;				# このタイミングでコメント出力
 		$comment = "";
 	}
-	elsif (/\S+/) {							# 未知入力行検出 (コメント扱い (エラーにすべきかも))
+	elsif (/\S/) {							# 未知入力行検出 (エラーにすべきかも)
 		warn "UNKNOWN STATEMENT: <<", $_, ">>\n";
 	}
 }
 # 最終行処理
-push @output, print_command($start, @cache);
+push @output, sprint_command($start, @cache) if (@cache);
 # 入力処理終了
 close IN;
 

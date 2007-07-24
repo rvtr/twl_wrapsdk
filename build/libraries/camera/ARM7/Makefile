@@ -45,6 +45,7 @@ MICRON_INIC_FILE	:= $(MICRON_INI_FILE:%.ini=%.autogen.c)
 SHARP_DAT_FILE		:= \
 			  VGA_15fps_5fps_x8_CC_FilterKIM_MatrixOn3_PLL_QVGA_23Jul07_1676MHz.dat \
 			  VGA_15fps_5fps_x8_CC_FilterKIM_MatrixOn3_PLL_QVGA_23Jul07_1676MHz_Improve.dat \
+			  VGA_15fps_5fps_x8_CC_FilterKIM_MatrixOn3_PLL_VGA_23Jul07_1676MHz_Improve.dat \
 
 SHARP_CONVERT_EXE	:= convert_sharp.pl
 

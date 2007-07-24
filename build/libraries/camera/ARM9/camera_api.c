@@ -321,7 +321,7 @@ CAMERAResult CAMERA_I2CResizeAsync(CameraSelect camera, u16 width, u16 height, C
     const CAMERAPxiCommand  command = CAMERA_PXI_COMMAND_RESIZE;
     const u8                size    = CAMERA_PXI_SIZE_RESIZE;
     OSIntrMode enabled;
-    u8  data[size];
+    u8  data[size+2];
     int i;
 
     SDK_NULL_ASSERT(callback);
@@ -400,7 +400,7 @@ CAMERAResult CAMERA_I2CFrameRateAsync(CameraSelect camera, int rate, CAMERACallb
     const CAMERAPxiCommand  command = CAMERA_PXI_COMMAND_FRAME_RATE;
     const u8                size    = CAMERA_PXI_SIZE_FRAME_RATE;
     OSIntrMode enabled;
-    u8  data[size];
+    u8  data[size+2];
     int i;
 
     SDK_NULL_ASSERT(callback);
@@ -481,7 +481,7 @@ CAMERAResult CAMERA_I2CEffectAsync(CameraSelect camera, CameraEffect effect, CAM
     const CAMERAPxiCommand  command = CAMERA_PXI_COMMAND_EFFECT;
     const u8                size    = CAMERA_PXI_SIZE_EFFECT;
     OSIntrMode enabled;
-    u8  data[size];
+    u8  data[size+2];
     int i;
 
     SDK_NULL_ASSERT(callback);
@@ -558,7 +558,7 @@ CAMERAResult CAMERA_I2CFlipAsync(CameraSelect camera, CameraFlip flip, CAMERACal
     const CAMERAPxiCommand  command = CAMERA_PXI_COMMAND_FLIP;
     const u8                size    = CAMERA_PXI_SIZE_FLIP;
     OSIntrMode enabled;
-    u8  data[size];
+    u8  data[size+2];
     int i;
 
     SDK_NULL_ASSERT(callback);

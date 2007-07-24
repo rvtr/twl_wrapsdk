@@ -1,0 +1,261 @@
+#VGA
+#I2C
+# E0
+#I2CS
+# 7F
+#ImageSize
+# 320
+# 240
+# 0
+
+
+03 01
+#04 A0
+#09 D2  #PLL
+#0A 03  #PLL1
+#0B 00  #PLL2
+#04 10
+#04 90
+
+C8 02  #1200
+C9 38  #20  #frame height 15fps 
+E0 07  #frame width
+E1 D0  #1600 
+
+#VGA Setting 23Jul07 .KIM ---->
+03 01
+35 07 #WindowX1 (L)
+37 07 #WindowY1 (L)
+38 02 #WindowX2 (H)
+39 86 #WindowX2 (L)
+3A 01 #WindowY2 (H)
+3B E6 #WindowY2 (L)
+3D 20 #ScaleX
+3E 20 #ScaleY
+40 04 #Scale_th_L
+19 00 #SyncControl0
+03 02
+5C 02 #AEWinWidth (H)
+5D 80 #AEWinWidth (L)
+5E 01 #AEWinHeight (H)
+5F E0 #AEWinHeight (L)
+60 00 #AECenterWinX (H)
+61 A7 #AECenterWinX (L)
+62 00 #AECenterWinY (H)
+63 57 #AECenterWinY (L)
+64 01 #AECenterWidth (H)
+65 40 #AECenterWidth (L)
+66 00 #AECenterHeight (H)
+67 78 #AECenterHeight (L)
+#<------ VGA Setting 23Jul07 .KIM
+
+03 02
+11 04  #mid fh
+12 B0
+13 06 #0E #max fh
+14 A8 #10
+16 70  #mid ex
+17 80
+19 70  #max ex
+1A 80
+1E 04  #exp fh
+1F B0 
+
+#flicker setting
+03 01
+
+B9 3E
+BA 7F
+BB 0E
+BC 56
+C1 3E
+C2 7F
+C3 25
+C4 80
+
+
+#black
+FF 0B
+
+
+4A 42
+4B 00 #11Jul07 .Kim
+51 24
+52 24
+53 00
+54 20
+
+
+55 00
+56 06
+57 0C
+58 16
+59 20
+5A 36
+5B 48
+5C 68
+5D 84
+5E A6
+5F C2
+60 D6
+61 E8
+62 F4
+63 FF
+#6E 0D #Lengs_Gain_G1(R)
+#6F 02 #Lengs_Gain_G2(B)
+#7E 51 #Lengs_G1_E(R)
+
+#6D 0D #3200 DNP  R:43 B:5A
+#6E 06 #Lengs_Gain_G1(R)
+#6F 06 #Lengs_Gain_G2(B)
+#70 03
+
+
+6D 0D #5200 DNP R:55, B:49
+6E 08 #Lengs_Gain_G1(R)
+6F 08 #Lengs_Gain_G2(B)
+70 03
+
+
+7A 4A #Red_E
+7B 38 #Red_W
+7C 40 #Red_N
+7D 50 #Red_S
+7E 10 #G1_E
+7F 28 #G1_W
+80 20 #G1_N
+81 40 #G1_S
+82 10 #G2_E
+83 28 #G2_W
+84 20 #G2_N
+85 40 #G2_S
+86 10 #B_E
+87 60 #B_W
+88 20 #B_N
+89 50 #B_S
+
+#7A 48
+#7B 30
+#7E 41 #Lengs_G1_E(R)
+#87 50
+#88 50
+
+#03 02
+
+#C1 0D
+#C2 06
+#C3 06
+#C4 03
+
+#C5 0D  #R:55
+#C6 08
+#C7 08
+#C8 03
+
+#C9 43
+#CA 55
+#05 4D   #enable R/B
+
+#03 01
+
+B2 44 #Rgain min 11Jul07 .KIM
+B3 80 #Rgain max
+B4 44 #Bgain min 11Jul07 .KIM
+B5 80 #Bgain max
+0F 98
+
+
+03 02
+94 82   # 11Jul07 .KIM
+95 80   # 11Jul07 .KIM
+AA 4E   # Matrix1 of Color 
+AB A9   # Matrix2 of Color 
+AC 84   # Matrix3 of Color 
+AD 87   # Matrix4 of Color 
+AE 3A   # Matrix5 of Color 
+AF 92   # Matrix6 of Color 
+B0 8B   # Matrix7 of Color 
+B1 A0   # Matrix8 of Color 
+B2 4C   # Matrix9 of Color
+B3 24   # MatrixNo2 of Color 
+B4 00   # MatrixNo2 of Color 
+B5 00   # MatrixNo2 of Color 
+B6 24   # MatrixNo2 of Color 
+
+#AA 40   # Matrix1 of Color 
+#AB 00   # Matrix2 of Color 
+#AC 00   # Matrix3 of Color 
+#AD 00   # Matrix4 of Color 
+#AE 40   # Matrix5 of Color 
+#AF 00   # Matrix6 of Color 
+#B0 00   # Matrix7 of Color 
+#B1 00   # Matrix8 of Color 
+#B2 40   # Matrix9 of Color
+#B3 40   # MatrixNo2 of Color  11Jul07 .KIM
+#B4 08   # MatrixNo2 of Color 
+#B5 00   # MatrixNo2 of Color 
+#B6 40   # MatrixNo2 of Color  11Jul07 .KIM
+
+
+
+69 04   #LPF 
+6A 04
+6B 04
+6C 10
+6D 10
+6E 0A
+6F 00   #Gamma
+70 00
+71 00
+72 10
+73 10
+74 1F
+75 00   #DPC
+76 00
+77 10
+78 1F
+79 1F
+7A 1F
+7B 00   #color
+7C 00
+7D 00
+7E 08
+7F 08
+80 08
+81 00   #Lens
+82 04
+83 08
+84 10
+85 1F
+86 1F
+87 00  #Edge
+88 00
+89 00
+8A 28
+8B 28
+8C 3F
+
+#Bank C
+03 02
+
+2E 88   #max_yt1
+30 78   #min_yt1
+34 80   #Ytarget
+36 80   #UsrYtarget
+37 80   #FstYtarget
+
+#Bank A
+03 00
+95 40
+03 01
+
+### “Á•ÊÝ’è 1676MHz ##############
+#Bank B
+03 01
+D4 08 # 01D4 referense gain1
+09 D2  #PLL
+0A 02 #03  #pre PLL1
+0B 01 #03 00  #post PLL2
+04 10
+04 90
+

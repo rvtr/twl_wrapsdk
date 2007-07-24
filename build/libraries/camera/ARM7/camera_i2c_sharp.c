@@ -19,6 +19,7 @@
 // insert auto-generated code
 //#include "VGA_15fps_5fps_x8_CC_FilterKIM_MatrixOn3_PLL_QVGA_23Jul07_1676MHz.autogen.c"
 #include "VGA_15fps_5fps_x8_CC_FilterKIM_MatrixOn3_PLL_QVGA_23Jul07_1676MHz_Improve.autogen.c"
+//#include "VGA_15fps_5fps_x8_CC_FilterKIM_MatrixOn3_PLL_VGA_23Jul07_1676MHz_Improve.autogen.c"
 
 #define BANK_ADDR   0x03
 typedef enum
@@ -42,7 +43,6 @@ BOOL CAMERAi_S_I2CInit(CameraSelect camera)
 {
     BOOL rIn = TRUE;
     BOOL rOut = TRUE;
-//    const u8 data[] = { 0xD2, 0x02, 0x03 };   // PLL parameters from 16 MHz to 16 MHz
     // should not send init command same time
     if (camera & CAMERA_SELECT_IN)
     {
@@ -50,7 +50,6 @@ BOOL CAMERAi_S_I2CInit(CameraSelect camera)
            && CAMERAi_S_WriteRegister(CAMERA_SELECT_IN, BANK_ADDR, BANK_GROUP_B)
            && CAMERAi_S_SetFlags(CAMERA_SELECT_IN, 0x1A, 0x08)          // reverse RCLK polarity
            && CAMERAi_S_WriteRegister(CAMERA_SELECT_IN, 0x18, 0x02)     // force to order YUYV
-//           && CAMERAi_S_WriteRegisters(CAMERA_SELECT_IN, 0x09, data, 3) // force to set PLL
            && CAMERAi_S_I2CStandby(CAMERA_SELECT_IN, TRUE);
     }
     if (camera & CAMERA_SELECT_OUT)
@@ -59,7 +58,6 @@ BOOL CAMERAi_S_I2CInit(CameraSelect camera)
             && CAMERAi_S_WriteRegister(CAMERA_SELECT_OUT, BANK_ADDR, BANK_GROUP_B)
             && CAMERAi_S_SetFlags(CAMERA_SELECT_OUT, 0x1A, 0x08)        // reverse RCLK polarity
             && CAMERAi_S_WriteRegister(CAMERA_SELECT_OUT, 0x18, 0x02)   // force to order YUYV
-//            && CAMERAi_S_WriteRegisters(CAMERA_SELECT_OUT, 0x09, data, 3) // force to set PLL
             && CAMERAi_S_I2CStandby(CAMERA_SELECT_OUT, TRUE);
     }
     return (rIn && rOut);
