@@ -31,6 +31,7 @@ SUBDIRS += \
              fatfs  \
              dsp    \
              spi    \
+             el     \
 
 endif # TWL_PLATFORM != DSTEG
 

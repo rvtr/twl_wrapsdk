@@ -21,31 +21,45 @@ static u8 *jis_increment(u8 *p);
 
 
 
-void CS_Sjis2Unicode( void* uni_str, void* jis_str)
+/*---------------------------------------------------------------------------*
+  Name:         CS_Sjis2Unicode
+
+  Description:  
+
+  Arguments:    
+
+  Returns:      < 0 : success( return string length)
+                > 0 : error code
+ *---------------------------------------------------------------------------*/
+int CS_Sjis2Unicode( void* uni_str, void* jis_str)
 {
     int i;
     int len;
 
     len = jis_strlen( jis_str);
+    if( len > 255) {
+        return -1;
+    }
     for( i=0; i<len; i++) {
         jis_to_unicode( uni_str, jis_str);
         jis_str = jis_increment( jis_str);
         (u8*)uni_str+=2;
     }
+    return len;
 }
 
 
 /* return number of jis chars in a string */
 static int jis_strlen(u8 * string)   /*__fn__*/
 {
-int len=0;
-   while (*string)
-   {
-    string = jis_increment(string);
-    len++;
-   }
-  PRINTDEBUG( "len:%d\n", len);
-   return len;
+    int len=0;
+    while (*string)
+    {
+        string = jis_increment(string);
+        len++;
+    }
+    PRINTDEBUG( "len:%d\n", len);
+    return len;
 }
 /* Return the length of a JIS character, 1 or 2 */
 static int jis_char_length(u8 *p)

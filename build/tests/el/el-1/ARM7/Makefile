@@ -38,6 +38,7 @@ LLIBRARY_DIRS = $(TWLSDK_ROOT)/lib/ARM-BB/Release
 LLIBRARIES = libfatfs_sp.twl.a \
              libsd_sp.twl.a \
              libel_sp.twl.a \
+             libcs_sp.twl.a \
 
 #SRCDIR		=	# using default
 #LCFILE		=	# using default

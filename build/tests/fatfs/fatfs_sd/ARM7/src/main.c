@@ -15,6 +15,7 @@
  *---------------------------------------------------------------------------*/
 
 #include    <twl_sp.h>
+#include    <twl/cs/cs.h>
 #include    <twl/fatfs/ARM7/rtfs.h>
 #include    <twl/devices/sdmc/ARM7/sdmc.h>
 
@@ -41,6 +42,7 @@ void MY_SdTransferRewind( void);
 /*---------------------------------------------------------------------------*
     
  *---------------------------------------------------------------------------*/
+static u16 path_str[512/sizeof(u16)]; //ロングファイル名
 u32 BlockBuf[(512*3)/4];
 u32 BlockBuf2[(512*3)/4];
 u32 LargeBuf[1*1024*1024/4];
@@ -252,7 +254,8 @@ void TwlSpMain(void)
   for( i=0; i<2; i++) {
       if( (i % 2) == 0) {
           /*SDからブロックライト／リード*/
-          if( !rtfs_pc_set_default_drive( (unsigned char*)"E:")) {
+          CS_Sjis2Unicode( path_str, "E:");
+          if( !rtfs_pc_set_default_drive( (unsigned char*)path_str)) {
               PRINTDEBUG( "pc_set_default_drive (E) failed\n");
               while( 1){};
           }
@@ -260,25 +263,27 @@ void TwlSpMain(void)
           /**/
           PRINTDEBUG( "pc_check_disk start. please wait.\n");
           DEBUG_BEGIN();
-          pc_check_disk( (byte*)"E:", &dstat, 0, 1, 1);
+          pc_check_disk( (byte*)path_str, &dstat, 0, 1, 1);
           DEBUG_END(pc_check_disk);
           PRINTDEBUG( "pc_check_disk end.\n");
       }else{
           /*NANDからブロックライト／リード*/
-          if( !rtfs_pc_set_default_drive( (unsigned char*)"F:")) {
+          CS_Sjis2Unicode( path_str, "F:");
+          if( !rtfs_pc_set_default_drive( (unsigned char*)path_str)) {
               PRINTDEBUG( "pc_set_default_drive (F) failed\n");
               while( 1){};
           }
           PRINTDEBUG( "pc_set_default_drive (F) success\n");
           /**/
           PRINTDEBUG( "pc_check_disk start. please wait.\n");
-          pc_check_disk( (byte*)"F:", &dstat, 0, 1, 1);
+          pc_check_disk( (byte*)path_str, &dstat, 0, 1, 1);
           PRINTDEBUG( "pc_check_disk end.\n");
       }
 
 
       /*----------*/
-      fd = po_open( (byte*)"\\sdmc_twl_test.bin", (PO_CREAT|PO_BINARY|PO_WRONLY), PS_IWRITE);
+      CS_Sjis2Unicode( path_str, "\\sdmc_twl_test.bin");
+      fd = po_open( (byte*)path_str, (PO_CREAT|PO_BINARY|PO_WRONLY), PS_IWRITE);
       if( fd < 0) {
           PRINTDEBUG( "po_open failed.\n");
           while( 1) {};
@@ -304,7 +309,8 @@ void TwlSpMain(void)
       /*----------*/
 
       DEBUG_BEGIN();
-      if( pc_regression_test( (u8*)"E:", FALSE) == FALSE) {
+      CS_Sjis2Unicode( path_str, "E:");
+      if( pc_regression_test( (u8*)path_str, FALSE) == FALSE) {
           PRINTDEBUG( "pc_regression_test failed.\n");
       }else{
           DEBUG_END(pc_regression_test);

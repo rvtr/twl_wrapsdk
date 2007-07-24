@@ -15,6 +15,7 @@
  *---------------------------------------------------------------------------*/
 
 #include    <twl_sp.h>
+#include    <twl/cs/cs.h>
 #include    <twl/vlink.h>
 #include    <twl/fatfs/ARM7/rtfs.h>
 #include    <twl/devices/sdmc/ARM7/sdmc.h>
@@ -50,9 +51,11 @@ extern void nandSetFormatRequest( u16 partition_num, u32* partition_sectors);
 static OSHeapHandle InitializeAllocateSystem(void);
 static void VBlankIntr(void);
 
+
 /*---------------------------------------------------------------------------*
     
  *---------------------------------------------------------------------------*/
+static u16 path_str[512/sizeof(u16)]; //ロングファイル名
 
 
 static BOOL getchar_yes_no_prompt(void)
@@ -324,7 +327,8 @@ NAND_FLASH_FORMAT_START:
         }
     }
 
-    if( !rtfs_pc_set_default_drive( (unsigned char*)"F:")) {
+    CS_Sjis2Unicode( path_str, "F:");
+    if( !rtfs_pc_set_default_drive( (unsigned char*)path_str)) {
         PRINTDEBUG( "pc_set_default_drive failed\n");
         goto NAND_FLASH_FORMAT_END;
     }
@@ -337,20 +341,20 @@ NAND_FLASH_FORMAT_START:
 
 
     /*--- MBR書き込み、パーティション0フォーマット ---*/
-    if( !rtfs_pc_get_media_parms( (byte*)"F:", &geometry)) {
+    if( !rtfs_pc_get_media_parms( (byte*)path_str, &geometry)) {
         PRINTDEBUG( "Invalid parameter. (size over)\n");
         goto NAND_FLASH_FORMAT_END;
     }
   
     /**/
-    if( !pc_format_media( (byte*)"F:", &geometry)) {
+    if( !pc_format_media( (byte*)path_str, &geometry)) {
         PRINTDEBUG( "pc_format_media failed\n");
         goto NAND_FLASH_FORMAT_END;
     }
     PRINTDEBUG( "build MBR success.\n");
   
     /*ボリュームフォーマット*/
-    if( !pc_format_volume( (byte*)"F:", &geometry)) {
+    if( !pc_format_volume( (byte*)path_str, &geometry)) {
         PRINTDEBUG( "pc_format_volume (p0) failed\n");
         goto NAND_FLASH_FORMAT_END;
     }
@@ -379,11 +383,12 @@ NAND_FLASH_FORMAT_START:
     /*ボリュームフォーマット*/
     for( i=1; i<nand_fat_partition_num; i++) {
         VOLUME_LABEL[0] = (byte)(((int)'F') + i);
-        if( !rtfs_pc_get_media_parms( VOLUME_LABEL, &geometry)) {
+        CS_Sjis2Unicode( path_str, VOLUME_LABEL);
+        if( !rtfs_pc_get_media_parms( (byte*)path_str, &geometry)) {
             PRINTDEBUG( "pc_get_media_parms failed\n");
             goto NAND_FLASH_FORMAT_END;
         }
-        if( !pc_format_volume( VOLUME_LABEL, &geometry)) {
+        if( !pc_format_volume( (byte*)path_str, &geometry)) {
             PRINTDEBUG( "pc_format_volume failed\n");
             goto NAND_FLASH_FORMAT_END;
         }
@@ -395,14 +400,16 @@ NAND_FLASH_FORMAT_START:
 #if 0
     for( i=0; i<nand_fat_partition_num; i++) {
         VOLUME_LABEL[0] = (byte)(((int)'F') + i);
+        CS_Sjis2Unicode( path_str, VOLUME_LABEL);
         /*---------- テストファイル作成 ----------*/
-        if( !rtfs_pc_set_default_drive( VOLUME_LABEL)) {
+        if( !rtfs_pc_set_default_drive( (byte*)path_str)) {
             PRINTDEBUG( "pc_set_default_drive failed\n");
             while( 1){};
         }
         /*----------*/
         TEST_FILENAME[7] = (byte)(((int)'0')+i);
-        fd = po_open( (byte*)"\\nand_p0_test.bin", (PO_CREAT|PO_BINARY|PO_WRONLY), PS_IWRITE);
+        CS_Sjis2Unicode( path_str, TEST_FILENAME);
+        fd = po_open( (byte*)path_str, (PO_CREAT|PO_BINARY|PO_WRONLY), PS_IWRITE);
         if( fd < 0) {
             PRINTDEBUG( "po_open (p0) failed.\n");
             while( 1) {};

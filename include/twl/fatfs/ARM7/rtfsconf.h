@@ -23,8 +23,8 @@
 
 /* Character set support */
 #define INCLUDE_CS_JIS       0  /* Set to 1 to support JIS (kanji)  */
-#define INCLUDE_CS_ASCII     1  /* Set to 1 to support ASCII only  */
-#define INCLUDE_CS_UNICODE   0  /* Set to 1 to support unicode characters requires VFAT */
+#define INCLUDE_CS_ASCII     0  /* Set to 1 to support ASCII only  */
+#define INCLUDE_CS_UNICODE   1  /* Set to 1 to support unicode characters requires VFAT */
 
 /* Note: After we implemented VFAT we learned that Microsoft patented
    the Win95 VFS implementation. US PATENT # 5,758,352.

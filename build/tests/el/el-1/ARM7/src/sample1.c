@@ -1,5 +1,6 @@
 #include <twl_sp.h>
 
+#include <twl/cs/cs.h>
 #include <el/elf_loader.h>
 #include <devices/sdmc/ARM7/sdmc.h>
 #include <fatfs/ARM7/rtfs.h>
@@ -24,6 +25,7 @@
 /*---------------------------------------------------------------------------*
     static変数
  *---------------------------------------------------------------------------*/
+static u16 path_str[512/sizeof(u16)]; //ロングファイル名
 static u32 lib_buf[8192];
 static u32 obj_buf[8192];
 int        fd;
@@ -120,14 +122,18 @@ void TwlSpMain( void)
         PRINTDEBUG( "sdmcRtfsAttach success.\n");
     }
 
-    if( !rtfs_pc_set_default_drive( (unsigned char*)"E:")) {
+    CS_Sjis2Unicode( path_str, "E:");
+    if( !rtfs_pc_set_default_drive( (unsigned char*)path_str)) {
         PRINTDEBUG( "pc_set_default_drive (E) failed\n");
         while( 1){};
     }
   
 
     /*-----DLLファイルオープン  -----*/
-    fd = po_open( (byte*)"\\libsampledll_sp.twl.nodbg.a", (PO_BINARY|PO_WRONLY), PS_IREAD);
+//    CS_Sjis2Unicode( path_str, "\\libsampledll_sp.twl.nodbg.a");
+//    fd = po_open( (byte*)path_str, (PO_BINARY|PO_WRONLY), PS_IREAD);
+    CS_Sjis2Unicode( path_str, "\\LIBSAM~1.a");
+    fd = po_open( (byte*)path_str, (PO_BINARY|PO_WRONLY), PS_IREAD);
     if( fd < 0) {
         PRINTDEBUG( "po_open failed.\n");
         while( 1) {};

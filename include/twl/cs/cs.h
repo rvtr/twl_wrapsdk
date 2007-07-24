@@ -10,7 +10,17 @@ extern "C" {
 #endif
 
 
-void CS_Sjis2Unicode( void* uni_str, void* sjis_str);
+/*---------------------------------------------------------------------------*
+  Name:         CS_Sjis2Unicode
+
+  Description:  
+
+  Arguments:    
+
+  Returns:      < 0 : success( return string length)
+                > 0 : error code
+ *---------------------------------------------------------------------------*/
+int CS_Sjis2Unicode( void* uni_str, void* sjis_str);
 
 
 #ifdef __cplusplus
