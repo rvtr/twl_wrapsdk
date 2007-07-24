@@ -92,14 +92,14 @@ static inline void I2Ci_StopPhase2( void )
 
 static inline void I2Ci_SetData( u8 data )
 {
-    DBG_PRINTF(">%02X", data);
+    DBG_PRINTF("%02X", data);
     reg_EXI_I2CD = data;
 }
 
 
 static inline u8 I2Ci_GetData( void )
 {
-    DBG_PRINTF("<%02X", reg_EXI_I2CD);
+    DBG_PRINTF("(%02X)", reg_EXI_I2CD);
     return reg_EXI_I2CD;
 }
 
