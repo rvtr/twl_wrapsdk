@@ -1,6 +1,6 @@
 #! make -f
 #----------------------------------------------------------------------------
-# Project:  TwlSDK - tests - camera
+# Project:  TwlSDK - CAMERA - demos - camera-4
 # File:     Makefile
 #
 # Copyright 2007 Nintendo.  All rights reserved.
@@ -11,23 +11,31 @@
 # not be disclosed to third parties or copied or duplicated in any form,
 # in whole or in part, without the prior written consent of Nintendo.
 #
-# $Log: $
+# $Log: Makefile,v $
 # $NoKeywords: $
 #----------------------------------------------------------------------------
+
+SUBDIRS		=
+
+
+#----------------------------------------------------------------------------
+
+#TWL_CODEGEN   =       THUMB
+
+TARGET_BIN	=	main.axf
+
+SRCS		=	main.c
+
+#SRCDIR		=	# using default
+#LCFILE		=	# using default
 
 include	$(TWLSDK_ROOT)/build/buildtools/commondefs
 
 
 #----------------------------------------------------------------------------
 
-SUBDIRS =	camera-1 \
-                camera-2 \
-                camera-3 \
-                camera-4 \
-
-#----------------------------------------------------------------------------
+do-build:		$(TARGETS)
 
 include	$(TWLSDK_ROOT)/build/buildtools/modulerules
-
 
 #===== End of Makefile =====
