@@ -208,8 +208,8 @@ BOOL I2C_Init( void )
 {
     if (isInitialized == FALSE)
     {
+        isInitialized = TRUE;
         OS_InitMutex(&mutex);
-        I2Ci_Init();
     }
     return TRUE;
 }
@@ -252,24 +252,6 @@ BOOL I2C_Unlock( void )            // äOïîÉXÉåÉbÉhÇ©ÇÁåƒÇŒÇÍÅAI2CÉfÉoÉCÉXÇÃëÄçÏå
     }
     OS_UnlockMutex( &mutex );
     return TRUE;
-}
-
-/*---------------------------------------------------------------------------*
-  Name:         I2Ci_Init
-
-  Description:  initialize I2C
-
-  Arguments:    None
-
-  Returns:      None
- *---------------------------------------------------------------------------*/
-void I2Ci_Init( void )
-{
-#if 0 // TODO
-    I2C_DeviceAddrTable[I2C_SLAVE_CODEC_TP] = ?; // from NorFlash
-    I2C_DeviceAddrTable[I2C_SLAVE_LCDDAC] = ?;   // from NorFlash
-    I2C_DeviceAddrTable[I2C_SLAVE_CAMERA] = ?;   // from NorFlash
-#endif
 }
 
 //================================================================================
