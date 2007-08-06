@@ -62,6 +62,13 @@ my $multi_foot_format =<<'EOF';
     }
 EOF
 
+# ‰üs’²®
+$file_head_format =~ s/\r?\n/\r\n/g;
+$file_foot_format =~ s/\r?\n/\r\n/g;
+$single_format =~ s/\r?\n/\r\n/g;
+$multi_head_format =~ s/\r?\n/\r\n/g;
+$multi_foot_format =~ s/\r?\n/\r\n/g;
+
 my $row_nums = 8;
 sub sprint_command {
 	my($addr, @value) = @_;
@@ -139,6 +146,10 @@ while (<IN>) {
 push @output, sprint_command($start, @cache) if (@cache);
 # “ü—Íˆ—I—¹
 close IN;
+
+for (my $i = 0; $i < @output; $i++) {
+	$output[$i] =~  s/\r?\n/\r\n/g;
+}
 
 # o—Íˆ—
 $outfile =~ s/^.*[\\\/]//;	# get basename to print

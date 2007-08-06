@@ -199,6 +199,25 @@ my $comp_target =<<'EOF';
     \}
 EOF
 
+# 改行調整
+$file_head_format =~ s/\r?\n/\r\n/g;
+$file_foot_format =~ s/\r?\n/\r\n/g;
+$declare_format =~ s/\r?\n/\r\n/g;
+$func_head_format =~ s/\r?\n/\r\n/g;
+$func_foot_format =~ s/\r?\n/\r\n/g;
+$call_format =~ s/\r?\n/\r\n/g;
+$reg_format =~ s/\r?\n/\r\n/g;
+$set_format =~ s/\r?\n/\r\n/g;
+$clear_format =~ s/\r?\n/\r\n/g;
+$delay_format =~ s/\r?\n/\r\n/g;
+$pollreg_format =~ s/\r?\n/\r\n/g;
+$mcu_format =~ s/\r?\n/\r\n/g;
+$fieldset_format =~ s/\r?\n/\r\n/g;
+$fieldclear_format =~ s/\r?\n/\r\n/g;
+$pollfield_format =~ s/\r?\n/\r\n/g;
+$comp_target =~ s/\r?\n/\r\n/g;
+
+
 # API別データベース
 #    name: API名 (最初のAPIより手前は無名)
 #    data: API本体 (文字列の結合形式)
