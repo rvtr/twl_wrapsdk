@@ -104,7 +104,7 @@ die "USAGE: $0 INFILE [OUTFILE]\n" if ($#ARGV != 1 and $#ARGV != 0);
 # 各種初期化
 my $infile = $ARGV[0];
 my $outfile = $ARGV[1];
-($outfile = $infile) =~ s/\.ini$/.autogen.c/ unless ($outfile);
+($outfile = $infile) =~ s/\.dat$/.autogen.c/ unless ($outfile);
 
 # 入出力ファイルのオープン (両方オープンしておく)
 open IN, $infile or die "Cannot open the input file!\n";
