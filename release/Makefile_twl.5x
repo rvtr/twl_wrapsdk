@@ -1,0 +1,465 @@
+#! make -f
+#----------------------------------------------------------------------------
+# Project:  TwlSDK - release
+# File:     Makefile_twl.5x
+#
+# Copyright 2007 Nintendo.  All rights reserved.
+#
+# These coded instructions, statements, and computer programs contain
+# proprietary information of Nintendo of America Inc. and/or Nintendo
+# Company Ltd., and are protected by Federal copyright law.  They may
+# not be disclosed to third parties or copied or duplicated in any form,
+# in whole or in part, without the prior written consent of Nintendo.
+#
+# $Date:: 2007-07-31#$
+# $Rev: 387 $
+# $Author: terui $
+#
+#----------------------------------------------------------------------------
+
+#############################################################################
+.PHONY:	warning snapshot snapshot_tag
+
+warning:;
+	@echo Type \"make nightlybuild\" to do make release snapshot of TwlSDK-SDK
+	@echo please check CVSROOT for cvs access also
+	@echo ex. CVSROOT=:pserver:user@ayame:/home/cvsproject/nitro-sdk
+
+EMPTY	 		:=
+SPACE 			:= $(EMPTY) $(EMPTY)
+
+export PACKING_DATE_AND_TIME	?= $(shell date +"%y%m%d %H%M")
+
+PACKING_DATE		?= $(word 1,$(PACKING_DATE_AND_TIME))
+PACKING_TIME		?= $(word 2,$(PACKING_DATE_AND_TIME))
+PACKING_TIME_NOZERO	 = $(shell echo $(PACKING_TIME) | sed -e 's/^0*\(.\)/\1/')
+
+#############################################################################
+##  バージョン情報 ここから
+#############################################################################
+
+#
+# バージョン数
+#
+SDK_VERSION_MAJOR	?= 1
+SDK_VERSION_MINOR	?= 0
+
+#
+# [PR/RC/RELEASE] の設定 RELEASE の場合 RELSTEPB は無視される
+#
+SDK_VERSION_RELSTEPA_U	?= PR
+SDK_VERSION_RELSTEPB	?= 1
+
+#
+# PLUS パッチの番号 (パッチ番号なしなら 0, その後 1 から順に加算)
+# PLUS が 1 以上ならブランチビルドになる
+#
+SDK_VERSION_PLUS	?= 0
+
+#############################################################################
+## バージョン情報 ここまで
+#############################################################################
+
+#
+# バージョン番号生成
+#             (例) _LVERSION = 2_01
+#                  _FVERSION = 2.1
+#
+_LVERSION		?= $(SDK_VERSION_MAJOR)_$(shell printf '%02d' $(SDK_VERSION_MINOR))
+_FVERSION		?= $(SDK_VERSION_MAJOR).$(SDK_VERSION_MINOR)
+
+#
+# RELSTEP 番号計算
+#             (例) SDK_VERSION_RELSTEP = PR1=10100 PR2=10200 ...
+#                                        RC1=20100 RC2=20200 ...
+#                                        RELEASE=30000
+#                  _FVERSION_RELSTEP   = PR1=pr1   PR2=pr2
+#                                        RC1=rc1   RC2=rc2
+#                                        RELEASE=
+#
+ifeq  ($(SDK_VERSION_RELSTEPA_U),test)
+SDK_VERSION_RELSTEPA	?= 0
+_FVERSION_RELSTEP	?= test$(SDK_VERSION_RELSTEPB)
+else
+ifeq  ($(SDK_VERSION_RELSTEPA_U),PR)
+SDK_VERSION_RELSTEPA	?= 10000
+_FVERSION_RELSTEP	?= pr$(SDK_VERSION_RELSTEPB)
+else
+ifeq  ($(SDK_VERSION_RELSTEPA_U),RC)
+SDK_VERSION_RELSTEPA	?= 20000
+_FVERSION_RELSTEP	?= rc$(SDK_VERSION_RELSTEPB)
+else
+ifeq  ($(SDK_VERSION_RELSTEPA_U),RELEASE)
+SDK_VERSION_RELSTEPA	?= 30000
+_FVERSION_RELSTEP	?=
+else
+endif
+endif
+endif
+endif
+SDK_VERSION_RELSTEP	?= $(shell awk 'BEGIN{ print $(SDK_VERSION_RELSTEPA)+100*$(SDK_VERSION_RELSTEPB)+$(SDK_VERSION_PLUS);}')
+
+#
+# PLUS 文字列生成
+#            (例) _FVERSION_PLUS = なし/plus/plus2/plus3...
+#
+ifeq  ($(SDK_VERSION_PLUS),0)
+_FVERSION_PLUS		?=
+else
+ifeq  ($(SDK_VERSION_PLUS),1)
+_FVERSION_PLUS		?= plus
+else
+_FVERSION_PLUS		?= plus$(SDK_VERSION_PLUS)
+endif
+endif
+
+COUNTRY_CODE		?= jp
+
+#############################################################################
+## ブランチ名とタグ名の設定
+#############################################################################
+ifndef AUTOBUILD_HOST
+export AUTOBUILD_HOST	:= $(shell hostname)
+endif
+
+ifeq  ($(SDK_VERSION_PLUS),0)
+CURRENT_BRANCH		?= HEAD
+SNAPSHOT_TAG		?= NightlyBuild
+else
+CURRENT_BRANCH		?= TwlSDK_$(_LVERSION)$(_FVERSION_RELSTEP)_branch
+SNAPSHOT_TAG		?= NightlyBuild_$(_LVERSION)$(_FVERSION_RELSTEP)_branch
+endif
+
+TEMP_TAG		?= $(SNAPSHOT_TAG)_$(subst .,_,$(AUTOBUILD_HOST))
+
+TWLSDK_RELEASE_NAME	?= TwlSDK-$(_LVERSION)$(_FVERSION_RELSTEP)$(_FVERSION_PLUS)-$(PACKING_DATE)-$(PACKING_TIME)
+
+#---------------------------------------------------------------------------
+#---------------------------------------------------------------------------
+# for Snapshot Release
+#---------------------------------------------------------------------------
+#---------------------------------------------------------------------------
+
+TARGET_PLATFORM	 ?= TWL
+
+ifeq	($(TARGET_PLATFORM), TWL)
+TWLSDK_ROOT		?= c:/dev/autobuild/TwlSDK
+
+VER_SYS			?= svn
+endif
+
+TWLSDK_RELEASE	?= $(TWLSDK_ROOT)/release
+TSDK_RELEASE		?= $(subst $(SPACE),\ ,$(subst \,/,$(TWLSDK_RELEASE)))
+TWLSDK_PACKAGE_ROOT	?= $(TSDK_RELEASE)/package
+TWLSDK_WORKING_ROOT	?= $(TSDK_RELEASE)/working
+TWLSDK_SRLPKG_ROOT	?= $(TSDK_RELEASE)/srlpkg
+TWLSDK_PACKDIR		?= TwlSDK-srlpkg
+TWLSDK_MODULES		?= TwlSDK
+VERSIONFILE		?= $(TSDK_RELEASE)/version.h
+
+ARCHIVE_PUBLIC		?= $(TSDK_RELEASE)/$(TWLSDK_RELEASE_NAME)_$(COUNTRY_CODE).zip
+ARCHIVE_PRIVATE		?= $(TSDK_RELEASE)/$(TWLSDK_RELEASE_NAME)-private_$(COUNTRY_CODE).zip
+ARCHIVE_SRLPKG		?= $(TSDK_RELEASE)/$(TWLSDK_RELEASE_NAME)-srlpkg_$(COUNTRY_CODE).zip
+
+NITRO_WITHOUT_TEG	?= True
+DO_SUPER		?= $(if $(NITRO_WITHOUT_TEG),,super-)
+FILELIST		?= $(TWLSDK_WORKING_ROOT)/filelist
+
+MAKEFILE		?= $(firstword $(MAKEFILE_LIST))
+REMAKE			?= make -sk -f $(MAKEFILE)
+
+# 一時的にfullビルドをreleaseビルドのみに
+NIGHTLY_TARGET		:= nightly
+
+#---------------------------------------------------------------------------
+#---------------------------------------------------------------------------
+#  ビルド設定
+#---------------------------------------------------------------------------
+#---------------------------------------------------------------------------
+.PHONY: quickbuild nightlybuild testbuild tagbuild
+
+quickbuild:
+	@echo --- $@ ---
+#	+@$(REMAKE) settag
+	+@$(REMAKE) revision
+	+@$(REMAKE) checkout
+	+@$(REMAKE) build_libraries
+	+@$(REMAKE) install_libraries
+	+@$(REMAKE) filelist
+	+@$(REMAKE) archives
+#	+@$(REMAKE) settag_new
+	+@$(REMAKE) build_arm_rel_srl
+	+@$(REMAKE) srl_package
+
+nightlybuild:
+	@echo --- $@ ---
+#	+@$(REMAKE) settag
+	+@$(REMAKE) revision
+	+@$(REMAKE) checkout
+	+@$(REMAKE) checkcode
+	+@$(REMAKE) build_all
+	+@$(REMAKE) install_libraries
+	+@$(REMAKE) filelist
+	+@$(REMAKE) archives
+#	+@$(REMAKE) settag_new
+	+@$(REMAKE) test_archives
+	+@$(REMAKE) srl_package
+
+testbuild:
+	@echo --- $@ ---
+#	+@$(REMAKE) settag
+	+@$(REMAKE) revision
+	+@$(REMAKE) checkout
+	+@$(REMAKE) checkcode
+	+@$(REMAKE) build_all
+
+# TAG を指定してパッケージを作成する make -f [Makefile 名] tagbuild TEMP_TAG=[TAG 名]
+tagbuild:
+	@echo --- $@ ---
+	+@$(REMAKE) revision
+	+@$(REMAKE) checkout
+	+@$(REMAKE) build_libraries
+	+@$(REMAKE) install_libraries
+	+@$(REMAKE) filelist
+	+@$(REMAKE) archives
+	+@$(REMAKE) build_arm_rel_srl
+	+@$(REMAKE) srl_package
+
+#---------------------------------------------------------------------------
+#  ソースツリーのチェックアウト
+#    NITROSDK_PACKAGE_ROOT: 最終パッケージ用のディレクトリ
+#    NITROSDK_WORKING_ROOT: ライブラリビルド用のディレクトリ
+#
+.PHONY: settag checkout settag_new
+
+settag:
+	@echo --- $@ ---
+	cvs -Q rtag -F -r $(CURRENT_BRANCH) $(TEMP_TAG) $(TWLSDK_MODULES)
+
+checkout:
+	@echo --- $@ ---
+	rm   -rf $(TWLSDK_PACKAGE_ROOT) $(TWLSDK_WORKING_ROOT)
+	mkdir -p $(TWLSDK_PACKAGE_ROOT)
+	cd $(TWLSDK_PACKAGE_ROOT); \
+	svn --quiet export -r HEAD $(SVNROOT)
+	cp -pr $(TWLSDK_PACKAGE_ROOT) $(TWLSDK_WORKING_ROOT)
+
+settag_new:
+	@echo --- $@ ---
+	cvs -Q rtag -F -r $(TEMP_TAG) $(SNAPSHOT_TAG)_$(PACKING_DATE)_$(PACKING_TIME) $(TWLSDK_MODULES)
+
+#---------------------------------------------------------------------------
+#  リビジョンの表示
+#
+
+revision:
+	@echo --- $@ ---
+	svn --limit 1 log $(SVNROOT) | sed -e '2s/\(r[0-9]*\).*$$/\1/' -e '1d' -e '3,5d'
+
+#---------------------------------------------------------------------------
+#  コードのチェック
+#
+.PHONY: checkcode
+
+checkcode:
+	+@echo --- $@ ---;						\
+	for module in $(TWLSDK_MODULES); do				\
+		export ROOT=$(TWLSDK_WORKING_ROOT)/$$module;		\
+		make -C $$ROOT TWLSDK_ROOT=$$ROOT;			\
+	done
+
+#---------------------------------------------------------------------------
+#  ソースツリーの全ビルド/ライブラリビルド
+#
+.PHONY: build_all build_libraries build_core
+
+build_all:
+	@echo --- $@ ---
+	+unset NITRO_WITHOUT_DEMOS; $(REMAKE) build_core
+
+build_libraries:
+	@echo --- $@ ---
+	+export NITRO_WITHOUT_DEMOS=TRUE; $(REMAKE) build_core
+
+build_core:
+	+export TWLSDK_ROOT=$(TWLSDK_ROOT);				\
+	export TWLSDK_VERSION_MAJOR=$(SDK_VERSION_MAJOR);		\
+	for module in $(TWLSDK_MODULES); do				\
+		export ROOT=$(TWLSDK_WORKING_ROOT)/$$module;		\
+		export INST=$(TWLSDK_PACKAGE_ROOT)/$$module;		\
+		make -C $$ROOT TWLSDK_ROOT=$$ROOT $(DO_SUPER)$(NIGHTLY_TARGET);	\
+		$(REMAKE) mispatch_check;	\
+	done
+
+#---------------------------------------------------------------------------
+#  誤パッチ検出ツールを用いてチェックを行う
+#
+.PHONY: mispatch_check
+
+mispatch_check:
+	@echo --- mispatch_check ---
+#	make -C $$ROOT/build/tests/mispatch_check TWLSDK_ROOT=$$ROOT $(NIGHTLY_TARGET)
+	
+#---------------------------------------------------------------------------
+#  ライブラリのインストール
+#
+.PHONY: install_libraries
+
+install_libraries:
+	@echo --- $@ ---
+	+export TWLSDK_ROOT=$(TWLSDK_ROOT);				\
+	export TWLSDK_VERSION_MAJOR=$(SDK_VERSION_MAJOR);		\
+	export NITRO_WITHOUT_DEMOS=TRUE;				\
+	for module in $(TWLSDK_MODULES); do				\
+		export ROOT=$(TWLSDK_WORKING_ROOT)/$$module;		\
+		export INST=$(TWLSDK_PACKAGE_ROOT)/$$module;		\
+		make -C $$ROOT TWLSDK_ROOT=$$ROOT			\
+			TWLSDK_INSTALL_ROOT=$$INST			\
+			NITROSDK_INSTALL_ROOT=$$INST			\
+			$(DO_SUPER)$(NIGHTLY_TARGET)-install;		\
+	done
+
+#---------------------------------------------------------------------------
+#  パッケージファイルの分類リストを生成
+#
+.PHONY: filelist
+
+filelist:
+	@echo --- $@ ---;						\
+	cd $(TWLSDK_PACKAGE_ROOT);					\
+	/bin/find . -name '_*' -print              >  $(FILELIST)_;	\
+	/bin/find . -name '_'  -exec dirname {} \; >> $(FILELIST)_;	\
+	/bin/find . -name CVS  -print              >> $(FILELIST)_;	\
+	/bin/find . -name '@*' -print              >  $(FILELIST)@;	\
+	/bin/find . -name '@'  -exec dirname {} \; >> $(FILELIST)@
+
+#---------------------------------------------------------------------------
+#  パッケージの作成
+#
+.PHONY: archives
+
+archives:
+	@echo --- $@ ---;						\
+	cd $(TWLSDK_PACKAGE_ROOT);					\
+	rm -rf `cat $(FILELIST)_` $(ARCHIVE_PRIVATE);			\
+	if [ -s $(FILELIST)@ ]; then					\
+		cat $(FILELIST)@ | sort | uniq | zip -r@ $(ARCHIVE_PRIVATE); \
+	fi;								\
+	rm -rf `cat $(FILELIST)@` $(ARCHIVE_PUBLIC);			\
+	zip -r $(ARCHIVE_PUBLIC) .
+
+#---------------------------------------------------------------------------
+#  パッケージをテストビルドする
+#	1) すべてのデモがパッケージ内のライブラリバイナリとリンクできるか？
+#	2) 添付したライブラリのソースファイルがビルド可能か？
+#
+.PHONY: test_archives
+
+test_archives:
+	@echo --- $@ ---
+	+export TWLSDK_VERSION_MAJOR=$(SDK_VERSION_MAJOR);		\
+	for module in $(TWLSDK_MODULES); do				\
+		export INST=$(TWLSDK_PACKAGE_ROOT)/$$module;		\
+		make -C $$INST/build/demos				\
+			TWLSDK_ROOT=$$INST				\
+			$(DO_SUPER)$(NIGHTLY_TARGET);			\
+		make -C $$INST						\
+			TWLSDK_ROOT=$$INST				\
+			NITRO_WITHOUT_DEMOS=TRUE			\
+			$(DO_SUPER)$(NIGHTLY_TARGET);			\
+	done
+
+#---------------------------------------------------------------------------
+# Build srl binary package
+#	build/demos 以下の ARM9-TS/Release 版 srl ファイルをパッケージ化する
+#
+.PHONY: srl_package build_arm_rel_srl
+
+TWLSDK_SRLPKG_DIR	?= $(TWLSDK_SRLPKG_ROOT)/$(TWLSDK_PACKDIR)
+
+srl_package:
+	@echo --- $@ ---
+	rm -rf $(TWLSDK_SRLPKG_ROOT)
+	cd $(TWLSDK_PACKAGE_ROOT);					\
+	/bin/find . -name '*.srl' -print |				\
+	perl -ne '							\
+	chop $$_;							\
+	if (m#/build/demos/(([^/]+)/([^/]+/)*([^/]+)/bin/ARM9-BB/Release/([^/]+\.srl))#) \
+	{								\
+		system "install -D ".$$_." $(TWLSDK_SRLPKG_DIR)/".$$2."/".$$4.".srl\n"; \
+	}'
+	if [ -e $(TWLSDK_SRLPKG_DIR) ]; then				\
+		cd $(TWLSDK_SRLPKG_ROOT);				\
+		zip -r $(ARCHIVE_SRLPKG) $(TWLSDK_PACKDIR);		\
+	fi
+
+build_arm_rel_srl:
+	@echo --- $@ ---
+	+export TWLSDK_VERSION_MAJOR=$(SDK_VERSION_MAJOR);		\
+	for module in $(TWLSDK_MODULES); do				\
+		export INST=$(TWLSDK_PACKAGE_ROOT)/$$module;		\
+		make -C $$INST/build/demos				\
+			TWLSDK_ROOT=$$INST				\
+			TWL_RELEASE=TRUE				\
+			TWL_CODEGEN=ARM				\
+			TWL_PLATFORM=BB				\
+			build;						\
+	done
+
+#---------------------------------------------------------------------------
+#  バージョンファイルの生成(build/buildsetup/versions 以下から呼び出し)
+#
+.PHONY: version
+
+version:
+	@echo --- $@ ---
+	@mkdir -p $(dir $(VERSIONFILE))
+	@echo "#ifndef	TWLSDK_VERSION_H_"		> $(VERSIONFILE)
+	@echo "#define	TWLSDK_VERSION_H_"		>> $(VERSIONFILE)
+	@echo "#define	SDK_VERSION_DATE		20$(PACKING_DATE)"        >> $(VERSIONFILE)
+	@echo "#define	SDK_VERSION_TIME		$(PACKING_TIME_NOZERO)"   >> $(VERSIONFILE)
+	@echo "#define	SDK_VERSION_MAJOR		$(SDK_VERSION_MAJOR)"     >> $(VERSIONFILE)
+	@echo "#define	SDK_VERSION_MINOR		$(SDK_VERSION_MINOR)"     >> $(VERSIONFILE)
+	@echo "#define	SDK_VERSION_RELSTEP		$(SDK_VERSION_RELSTEP)"   >> $(VERSIONFILE)
+	@echo "#define	SDK_BUILDVER_CW_CC		$(SDK_BUILDVER_CW_CC)"    >> $(VERSIONFILE)
+	@echo "#define	SDK_BUILDVER_CW_LD		$(SDK_BUILDVER_CW_LD)"    >> $(VERSIONFILE)
+	@echo "#define	SDK_BUILDNUM_CW_CC		$(SDK_BUILDNUM_CW_CC)"    >> $(VERSIONFILE)
+	@echo "#define	SDK_BUILDNUM_CW_LD		$(SDK_BUILDNUM_CW_LD)"    >> $(VERSIONFILE)
+	@echo "#if 0	// for Makefile"		>> $(VERSIONFILE)
+	@echo "TWL_VERSION_DATE_AND_TIME	=	$(PACKING_DATE_AND_TIME)" >> $(VERSIONFILE)
+	@echo "TWL_VERSION_DATE			=	20$(PACKING_DATE)"        >> $(VERSIONFILE)
+	@echo "TWL_VERSION_TIME			=	$(PACKING_TIME_NOZERO)"   >> $(VERSIONFILE)
+	@echo "TWL_VERSION_MAJOR		=	$(SDK_VERSION_MAJOR)"     >> $(VERSIONFILE)
+	@echo "TWL_VERSION_MINOR		=	$(SDK_VERSION_MINOR)"     >> $(VERSIONFILE)
+	@echo "TWL_VERSION_RELSTEP		=	$(SDK_VERSION_RELSTEP)"   >> $(VERSIONFILE)
+	@echo "TWL_VERSION_BUILDVER_CW_CC	=	$(SDK_BUILDVER_CW_CC)"    >> $(VERSIONFILE)
+	@echo "TWL_VERSION_BUILDVER_CW_LD	=	$(SDK_BUILDVER_CW_LD)"    >> $(VERSIONFILE)
+	@echo "TWL_VERSION_BUILDNUM_CW_CC	=	$(SDK_BUILDNUM_CW_CC)"    >> $(VERSIONFILE)
+	@echo "TWL_VERSION_BUILDNUM_CW_LD	=	$(SDK_BUILDNUM_CW_LD)"    >> $(VERSIONFILE)
+	@echo "#"					>> $(VERSIONFILE)
+	@echo "#  RELSTEP PR1=10100 PR2=10200 ..."	>> $(VERSIONFILE)
+	@echo "#          RC1=20100 RC2=20200 ..."	>> $(VERSIONFILE)
+	@echo "#          RELEASE=30000"		>> $(VERSIONFILE)
+	@echo "#"					>> $(VERSIONFILE)
+	@echo "#endif"					>> $(VERSIONFILE)
+	@echo ""	>> $(VERSIONFILE)
+	@echo "#ifndef SDK_VERSION_NUMBER"	>> $(VERSIONFILE)
+	@echo "#define SDK_VERSION_NUMBER(major, minor, relstep) \\"		>> $(VERSIONFILE)
+	@echo "(((major) << 24) | ((minor) << 16) | ((relstep) << 0))"	>> $(VERSIONFILE)
+	@echo "#define SDK_CURRENT_VERSION_NUMBER \\"		>> $(VERSIONFILE)
+	@echo "SDK_VERSION_NUMBER(SDK_VERSION_MAJOR, SDK_VERSION_MINOR, SDK_VERSION_RELSTEP)"	>> $(VERSIONFILE)
+	@echo "#endif"					>> $(VERSIONFILE)
+	@echo ""	>> $(VERSIONFILE)
+	@echo "#endif"					>> $(VERSIONFILE)
+
+
+#---------------------------------------------------------------------------
+.PHONY: clean clobber
+
+clean clobber:
+	@echo --- $@ ---
+	rm -rf	$(TWLSDK_PACKAGE_ROOT) \
+		$(TWLSDK_WORKING_ROOT) \
+		$(TWLSDK_SRLPKG_ROOT)
+
+#===== End of Makefile_twl.5x =====
