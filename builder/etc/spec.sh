@@ -13,7 +13,7 @@ export CW_2_0_twl='C:\Program Files\Freescale\CW for NINTENDO DS V2.0'
 #----------------------------------------------------------------------------
 #  CVS ÉTÅ[ÉoÇÃê›íË
 #----------------------------------------------------------------------------
-export SVNROOT=http://Aqua/svn/twl_wrapsdk
+export SVNROOT=file://\Aqua/svn/twl_wrapsdk
 export SVNROOT_TWLSDK=$SVNROOT/trunk
 
 #----------------------------------------------------------------------------
