@@ -6,7 +6,7 @@ source `dirname $0`/../etc/spec.sh
 
 TARGET=$1
 BRANCH=$2
-PKNAME=TwlSDK
+PKNAME=twl_wrapsdk
 MAJORVER=5
 
 case ${BRANCH} in
@@ -23,7 +23,7 @@ esac
 LOG_FILE=${WORKSPACE_ROOT}/${PKNAME}/${TARGET}-${BRANCH}.log
 ADR_FILE=${BUILDER_ROOT}/etc/address/${TARGET}.adr
 
-#--- TwlSDK/release ディレクトリをチェックアウト
+#--- twl_wrapsdk/release ディレクトリをチェックアウト
 mkdir -p ${WORKSPACE_ROOT}/${PKNAME}
 cd       ${WORKSPACE_ROOT}/${PKNAME}
 rm   -rf ${BRANCH_DIR}
