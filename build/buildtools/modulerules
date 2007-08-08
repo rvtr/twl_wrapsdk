@@ -558,6 +558,27 @@ full-install:
 	$(call makefull,install)
 
 #----------------------------------------------------------------------------
+#  make nightly
+#----------------------------------------------------------------------------
+
+define makenightly
+	@echo [[[ make nightly $(1) $(CURDIR) ]]]
+	@+unset TWL_DEBUG TWL_RELEASE TWL_FINALROM TWL_CODEGEN_ALL; \
+	$(foreach b,RELEASE,					\
+	    $(foreach a,ARM THUMB,				\
+		date "+::: %Y/%m/%d %H:%M:%S $a-$b" $(AND)	\
+		$(REMAKE) TWL_$b=TRUE TWL_CODEGEN=$a TWL_CODEGEN_ALL=FALSE $(1) $(AND) \
+	    ) \
+	) true
+endef
+
+nightly:
+	$(call makenightly,build)
+
+nightly-install:
+	$(call makenightly,install)
+
+#----------------------------------------------------------------------------
 #  make super-full
 #----------------------------------------------------------------------------
 
