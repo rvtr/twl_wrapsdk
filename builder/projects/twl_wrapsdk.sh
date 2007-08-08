@@ -8,7 +8,7 @@
 ROOT=`dirname $0`
 source ${ROOT}/../etc/spec.sh
 TARGET=$1
-PKNAME=TwlSDK
+PKNAME=twl_wrapsdk
 shift 1
 
 tmp=`pwd`
@@ -21,7 +21,7 @@ for rev in $*; do
 		export CWFOLDER_TWL=${CW_2_0_twl}
 		export CWFOLDER_TWL_LONGJUMP=${CW_2_0_twl}
 		export TWL_STD_PCHDR=True
-		${ROOT}/${PKNAME}-Sequence.sh ${TARGET} $rev
+		${ROOT}/${PKNAME}-sequence.sh ${TARGET} $rev
 		;;
 	272)
 		# Build for r272
@@ -29,7 +29,7 @@ for rev in $*; do
 		export CWFOLDER_TWL=${CW_2_0_twl}
 		export CWFOLDER_TWL_LONGJUMP=${CW_2_0_twl}
 		export TWL_STD_PCHDR=True
-		${ROOT}/${PKNAME}-Sequence.sh ${TARGET} $rev
+		${ROOT}/${PKNAME}-sequence.sh ${TARGET} $rev
 		;;
 	*)
 		# Unknown
