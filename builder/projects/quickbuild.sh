@@ -9,11 +9,11 @@ source $ROOT/../etc/spec.sh
 #----------------------------------------------------------------------------
 # HEAD
 #
-$ROOT/TwlSDK.sh    quickbuild HEAD
+$ROOT/twl_wrapsdk.sh    quickbuild HEAD
 
 #----------------------------------------------------------------------------
 # revision 272
 #
-#$ROOT/TwlSDK.sh    quickbuild 272
+#$ROOT/twl_wrapsdk.sh    quickbuild 272
 
 #----------------------------------------------------------------------------

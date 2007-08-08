@@ -10,6 +10,6 @@ source $ROOT/../etc/spec.sh
 #----------------------------------------------------------------------------
 # HEAD
 #
-$ROOT/TwlSDK.sh    nightlybuild HEAD
+$ROOT/twl_wrapsdk.sh    nightlybuild HEAD
 
 #----------------------------------------------------------------------------
