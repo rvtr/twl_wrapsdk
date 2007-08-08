@@ -65,8 +65,9 @@ SDK_VERSION_PLUS	?= 0
 #             (ó·) _LVERSION = 2_01
 #                  _FVERSION = 2.1
 #
-_LVERSION		?= $(SDK_VERSION_MAJOR)_$(shell printf '%02d' $(SDK_VERSION_MINOR))
-_FVERSION		?= $(SDK_VERSION_MAJOR).$(SDK_VERSION_MINOR)
+
+#_LVERSION		?= $(SDK_VERSION_MAJOR)_$(shell printf '%02d' $(SDK_VERSION_MINOR))
+#_FVERSION		?= $(SDK_VERSION_MAJOR).$(SDK_VERSION_MINOR)
 
 #
 # RELSTEP î‘çÜåvéZ
@@ -126,13 +127,13 @@ ifeq  ($(SDK_VERSION_PLUS),0)
 CURRENT_BRANCH		?= HEAD
 SNAPSHOT_TAG		?= NightlyBuild
 else
-CURRENT_BRANCH		?= TwlSDK_$(_LVERSION)$(_FVERSION_RELSTEP)_branch
+CURRENT_BRANCH		?= twl_wrapsdk_$(_LVERSION)$(_FVERSION_RELSTEP)_branch
 SNAPSHOT_TAG		?= NightlyBuild_$(_LVERSION)$(_FVERSION_RELSTEP)_branch
 endif
 
 TEMP_TAG		?= $(SNAPSHOT_TAG)_$(subst .,_,$(AUTOBUILD_HOST))
 
-TWLSDK_RELEASE_NAME	?= TwlSDK-$(_LVERSION)$(_FVERSION_RELSTEP)$(_FVERSION_PLUS)-$(PACKING_DATE)-$(PACKING_TIME)
+TWLSDK_RELEASE_NAME	?= twl_wrapsdk-$(_LVERSION)$(_FVERSION_RELSTEP)$(_FVERSION_PLUS)-$(PACKING_DATE)-$(PACKING_TIME)
 
 #---------------------------------------------------------------------------
 #---------------------------------------------------------------------------
