@@ -25,7 +25,6 @@ SUBDIRS		= \
 		  os		\
 		  pxi		\
 		  mi		\
-		  vlink		\
 		  spi		\
 		  ctrdg		\
 		  aes		\
@@ -33,12 +32,18 @@ SUBDIRS		= \
 		  cdc		\
 		  snd		\
 		  camera	\
-		  cs		\
-		  fatfs		\
 		  devices	\
 		  dsp		\
 		  el		\
 		  sample_dll	\
+
+ifdef	TWL_PRIVATE
+SUBDIRS		+= \
+		  vlink		\
+		  cs		\
+		  fatfs		\
+
+endif
 
 #----------------------------------------------------------------------------
 export	NITRO_BLXCHECKED = yes

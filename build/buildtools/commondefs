@@ -229,16 +229,6 @@ include	$(NITROSDK_ROOT)/build/buildtools/commondefs
 
 #----------------------------------------------------------------------------
 
-ifeq	($(NITRO_PRIVATE),TRUE)
-TWL_PRIVATE		:= TRUE
-endif
-
-ifeq	($(NITRO_WITH_ARM7),TRUE)
-TWL_WITH_ARM7	:= TRUE
-endif
-
-#----------------------------------------------------------------------------
-
 ### Global Library resettings
 
 GINCLUDES		:= $(TWL_INCDIR) $(GINCLUDES)
@@ -263,6 +253,13 @@ TWL_INSTALL_TOOLSDIR	:= $(TWL_INSTALL_ROOT)/tools
 TWL_INSTALL_LIBDIR	:= $(TWL_INSTALL_ROOT)/lib/$(TWL_LIBTYPE)
 TWL_INSTALL_COMPONENTSDIR	:= $(TWL_INSTALL_ROOT)/components
 TWL_INSTALL_ADDINS	:= $(TWL_INSTALL_ROOT)/add-ins
+
+
+#----------------------------------------------------------------------------
+#  PRIVATE FLAGS
+#
+-include $(TWL_BUILDTOOLSDIR)/_privatedefs
+-include $(TWL_BUILDTOOLSDIR)/@privatedefs
 
 
 #----------------------------------------------------------------------------

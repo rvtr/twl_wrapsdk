@@ -21,7 +21,12 @@ include	$(TWLSDK_ROOT)/build/buildtools/commondefs
 #----------------------------------------------------------------------------
 
 SUBDIRS		= \
+
+ifdef	TWL_PRIVATE
+SUBDIRS		+= \
 		  sdmc		\
+
+endif
 
 #----------------------------------------------------------------------------
 export	NITRO_BLXCHECKED = yes
