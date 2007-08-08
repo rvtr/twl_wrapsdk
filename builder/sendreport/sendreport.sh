@@ -36,7 +36,7 @@ SUBJECT=`gawk 'NR==1{gsub(/^[A-Za-z]*: */, ""); printf $0;}' ${LOG_FILE}`
 gawk -f ${LOG_FILTER} ${LOG_FILE} | sed -e '/^[^:]\+$/,1000!d' >${TMP_REPORT}
 
 TMP_REPORT_WIN=`cygpath -m ${TMP_REPORT}`
-${SENDREPORT_ROOT}/smail.exe -hayame.nintendo.co.jp -f"AUTOBUILDER <okubata_ryoma@nintendo.co.jp>" -s"${SUBJECT}" -F"${TMP_REPORT_WIN}" "${SEND_TO}"
+${SENDREPORT_ROOT}/smail.exe -i -hmail.nintendo.co.jp -f"AUTOBUILDER <nakasima@nintendo.co.jp>" -s"${SUBJECT}" -F"${TMP_REPORT_WIN}" "${SEND_TO}"
 
 
 # 4.[Žg—p•û–@]

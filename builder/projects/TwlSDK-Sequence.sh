@@ -42,8 +42,11 @@ ${SVN} --quiet export -r ${BRANCH_TAG} ${SVNROOT}/release ${BRANCH_TAG}/${PKNAME
 mv ${WORKSPACE_ROOT}/${PKNAME}/${BRANCH_DIR}/*.zip ${WORKSPACE_ROOT}
 
 #--- ÉçÉOì]ëó
+#--- ÉçÉOì]ëó
+if [  ${TARGET} = nightlybuild ]; then
 if [ -e ${ADR_FILE} ]; then
 	${SENDMAIL} ${ADR_FILE} ${LOG_FILE}
+fi
 fi
 
 #----------------------------------------------------------------------------
