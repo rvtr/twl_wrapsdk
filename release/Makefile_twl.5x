@@ -189,8 +189,8 @@ quickbuild:
 	+@$(REMAKE) filelist
 	+@$(REMAKE) archives
 #	+@$(REMAKE) settag_new
-	+@$(REMAKE) build_arm_rel_srl
-	+@$(REMAKE) srl_package
+#	+@$(REMAKE) build_arm_rel_srl
+#	+@$(REMAKE) srl_package
 
 nightlybuild:
 	@echo --- $@ ---
