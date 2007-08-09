@@ -33,9 +33,11 @@ echo ${SVN} export -r ${BRANCH_TAG} ${SVNROOT}/release ${BRANCH_TAG}/${PKNAME}/r
 ${SVN} --quiet export -r ${BRANCH_TAG} ${SVNROOT}/release ${BRANCH_TAG}/${PKNAME}/release
 
 #--- ビルドを行ないログを記録する
+export TWLSDK_REVISION=`svn --limit 1 log ${SVNROOT} | sed -e 's/\-//g;s/\ |\ [^r].*//g'`
+export TWLSDK_REVISION=`echo ${TWLSDK_REVISION} | sed -e 's/[^0-9]*$//g'`
 ( ${MAKEHEADER} ${TARGET} ${PKNAME} ${BRANCH} && \
   ${MAKENOW} && \
-  make -sk -f ./${PKNAME}/release/Makefile_twl.${MAJORVER}x -C ${BRANCH_DIR} TWLSDK_RELEASE=${WORKSPACE_ROOT}/${PKNAME}/${BRANCH_DIR} ${TARGET} && \
+  make -sk -f ./${PKNAME}/release/Makefile_twl.${MAJORVER}x -C ${BRANCH_DIR} TWLSDK_RELEASE=${WORKSPACE_ROOT}/${PKNAME}/${BRANCH_DIR} TWLSDK_REVISION=${TWLSDK_REVISION} ${TARGET} && \
   ${MAKENOW} ) >${LOG_FILE} 2>&1
 
 #--- zip ファイルをコピーする
