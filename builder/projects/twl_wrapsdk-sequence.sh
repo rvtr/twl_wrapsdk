@@ -6,7 +6,7 @@ source `dirname $0`/../etc/spec.sh
 
 TARGET=$1
 BRANCH=$2
-PKNAME=twl_wrapsdk
+PKNAME=${PACKAGE_NAME}
 MAJORVER=5
 
 case ${BRANCH} in

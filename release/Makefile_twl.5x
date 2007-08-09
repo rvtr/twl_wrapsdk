@@ -127,13 +127,13 @@ ifeq  ($(SDK_VERSION_PLUS),0)
 CURRENT_BRANCH		?= HEAD
 SNAPSHOT_TAG		?= NightlyBuild
 else
-CURRENT_BRANCH		?= twl_wrapsdk_$(_LVERSION)$(_FVERSION_RELSTEP)_branch
+CURRENT_BRANCH		?= $(PACKAGE_NAME)_$(_LVERSION)$(_FVERSION_RELSTEP)_branch
 SNAPSHOT_TAG		?= NightlyBuild_$(_LVERSION)$(_FVERSION_RELSTEP)_branch
 endif
 
 TEMP_TAG		?= $(SNAPSHOT_TAG)_$(subst .,_,$(AUTOBUILD_HOST))
 
-TWLSDK_RELEASE_NAME	?= twl_wrapsdk-$(_LVERSION)$(_FVERSION_RELSTEP)$(_FVERSION_PLUS)-$(PACKING_DATE)-$(PACKING_TIME)
+TWLSDK_RELEASE_NAME	?= $(PACKAGE_NAME)-$(_LVERSION)$(_FVERSION_RELSTEP)$(_FVERSION_PLUS)-$(PACKING_DATE)-$(PACKING_TIME)
 
 #---------------------------------------------------------------------------
 #---------------------------------------------------------------------------
@@ -144,7 +144,7 @@ TWLSDK_RELEASE_NAME	?= twl_wrapsdk-$(_LVERSION)$(_FVERSION_RELSTEP)$(_FVERSION_P
 TARGET_PLATFORM	 ?= TWL
 
 ifeq	($(TARGET_PLATFORM), TWL)
-TWLSDK_ROOT		?= c:/dev/autobuild/twl_wrapsdk
+TWLSDK_ROOT		?= c:/dev/autobuild/$(PACKAGE_NAME)
 
 VER_SYS			?= svn
 endif
@@ -154,8 +154,8 @@ TSDK_RELEASE		?= $(subst $(SPACE),\ ,$(subst \,/,$(TWLSDK_RELEASE)))
 TWLSDK_PACKAGE_ROOT	?= $(TSDK_RELEASE)/package
 TWLSDK_WORKING_ROOT	?= $(TSDK_RELEASE)/working
 TWLSDK_SRLPKG_ROOT	?= $(TSDK_RELEASE)/srlpkg
-TWLSDK_PACKDIR		?= twl_wrapsdk-srlpkg
-TWLSDK_MODULES		?= trunk
+TWLSDK_PACKDIR		?= $(PACKAGE_NAME)-srlpkg
+TWLSDK_MODULES		?= $(PACKAGE_NAME)
 VERSIONFILE		?= $(TSDK_RELEASE)/version.h
 
 ARCHIVE_PUBLIC		?= $(TSDK_RELEASE)/$(TWLSDK_RELEASE_NAME)_$(COUNTRY_CODE).zip
@@ -242,7 +242,8 @@ checkout:
 	rm   -rf $(TWLSDK_PACKAGE_ROOT) $(TWLSDK_WORKING_ROOT)
 	mkdir -p $(TWLSDK_PACKAGE_ROOT)
 	cd $(TWLSDK_PACKAGE_ROOT); \
-	svn --quiet export -r HEAD $(SVNROOT)
+	svn --quiet export -r HEAD $(SVNROOT); \
+	mv trunk $(PACKAGE_NAME)
 	cp -pr $(TWLSDK_PACKAGE_ROOT) $(TWLSDK_WORKING_ROOT)
 
 settag_new:

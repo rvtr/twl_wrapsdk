@@ -8,7 +8,7 @@
 ROOT=`dirname $0`
 source ${ROOT}/../etc/spec.sh
 TARGET=$1
-PKNAME=twl_wrapsdk
+PKNAME=${PACKAGE_NAME}
 shift 1
 
 tmp=`pwd`
