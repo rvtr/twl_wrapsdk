@@ -751,6 +751,8 @@ void* elFreeAdrTbl( void)
  -----------------------------------------------------*/
 static void i_elReadFile( void* buf, void* file_struct, u32 file_base, u32 file_offset, u32 size)
 {
+#pragma unused( file_base)
+
 #if (TARGET_OS_NITRO == 1)
     FS_SeekFile( file_struct, (s32)(file_offset), FS_SEEK_SET);
     FS_ReadFile( file_struct, buf, (s32)(size));
@@ -762,6 +764,8 @@ static void i_elReadFile( void* buf, void* file_struct, u32 file_base, u32 file_
 
 static void i_elReadMem( void* buf, void* file_struct, u32 file_base, u32 file_offset, u32 size)
 {
+#pragma unused( file_struct)
+  
     OSAPI_CPUCOPY8( (void*)(file_base + file_offset),
                     buf,
                     size);
@@ -771,6 +775,8 @@ static void i_elReadMem( void* buf, void* file_struct, u32 file_base, u32 file_o
 //#else
 static void i_elReadUsr( void* buf, void* file_struct, u32 file_base, u32 file_offset, u32 size)
 {
+#pragma unused( file_struct, file_base)
+  
     i_elReadImage( file_offset, buf, size);
 }
 //#endif

@@ -112,7 +112,6 @@ void nandSetFormatRequest( u16 partition_num, u32* partition_sectors)
  *---------------------------------------------------------------------------*/
 BOOL nandCheckMedia( void) //TODO:nand partition仕様に対応させること
 {
-    u16             i;
     SdmcResultInfo  SdResult;
     u8*             bufp;
     u32             buffer[512/4];
@@ -160,6 +159,7 @@ BOOL nandRtfsIo( int driveno, dword block, void* buffer, word count, BOOLEAN rea
 {
     u16               result;
     SdmcResultInfo    SdResult;
+#pragma unused( driveno)
     
     /**/
     sdmcSelect( (u16)SDMC_PORT_NAND);
@@ -201,7 +201,6 @@ int nandRtfsCtrl( int driveno, int opcode, void* pargs)
 {
     DDRIVE       *pdr;
     DEV_GEOMETRY gc;
-    int          heads, secptrack;
 
     /**/
     sdmcSelect( (u16)SDMC_PORT_NAND);
@@ -634,7 +633,7 @@ static BOOL sdi_get_nom( u32 MIN_NOM)
 /*FATのビット数を返す*/
 static void sdi_get_fatparams( void)
 {
-    int i, mbytes;
+    u32 i, mbytes;
 
     for( i=0; i<NAND_FAT_PARTITION_COUNT; i++) {
 //        mbytes = (sdmc_current_spec.card_capacity / (1024 * 1024)) * 512;
@@ -700,7 +699,7 @@ static void sdi_build_partition_table( void)
     u32  starting_head[4], starting_sect[4], starting_cyl[4];
     u32  ending_head[4],   ending_sect[4],   ending_cyl[4];
     u32  total_sect[4];
-    u32  starting_data[4], ending_data[4];
+//    u32  starting_data[4], ending_data[4];
     u32  systemid[4];
     u16  i;
 

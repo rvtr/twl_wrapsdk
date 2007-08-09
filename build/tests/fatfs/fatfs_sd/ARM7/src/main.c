@@ -204,7 +204,6 @@ void TwlSpMain(void)
 #endif
     /*----------------------------*/
 
-#else
 
     sdmcSelect( (u16)SDMC_PORT_CARD);
     DEBUG_BEGIN();
@@ -228,6 +227,7 @@ void TwlSpMain(void)
         PRINTDEBUG( "sdmcWriteFifo success.\n");
     }
 
+#else
 
   
     /*デバイスドライバの登録*/

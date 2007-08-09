@@ -227,14 +227,14 @@ void (*func_SDCARD_Out)(void);           /* カード排出イベント用コールバック保存
 
   Returns:      None
  *---------------------------------------------------------------------------*/
-static void MyCpuRecv32( const u32* src, u32* dest, u16 size)
+static void MyCpuRecv32( const u32* src, u32* dest, u32 size)
 {
     u32 i;
     for( i=0; i<(size/sizeof(u32)); i++) {
         *(u32*)dest++ = *(u32*)src;
     }
 }
-static void MyCpuRecv16( const u16* src, u16* dest, u16 size)
+static void MyCpuRecv16( const u16* src, u16* dest, u32 size)
 {
     u32 i;
     for( i=0; i<(size/sizeof(u16)); i++) {
@@ -811,8 +811,8 @@ void i_sdmcCalcSize( void)
         sdmc_current_spec.memory_capacity = ulCSize;
         ulSDCARD_Size = ulCSize;
         /* プロテクト領域サイズ算出 */
-        sdmc_current_spec.protected_capacity = (((SD_SwapByte( &SD_SDSTATUS[2])) << 16) +
-                                            (SD_SwapByte( &SD_SDSTATUS[3]))) / 0x200;
+        sdmc_current_spec.protected_capacity = (u32)((((SD_SwapByte( &SD_SDSTATUS[2])) << 16) +
+                                            (SD_SwapByte( &SD_SDSTATUS[3]))) / 0x200);
         /*トータルサイズ算出 */
         sdmc_current_spec.card_capacity = sdmc_current_spec.memory_capacity +
                                             sdmc_current_spec.protected_capacity;
@@ -821,13 +821,13 @@ void i_sdmcCalcSize( void)
         sdmc_current_spec.csd_ver2_flag = 0;
         ulCSize = (u32)(((SD_CSD[3] & CSD_C_SIZE_BIT_71_62) >> 6) + 
                     ((SD_CSD[4] & CSD_C_SIZE_BIT_73_72) << 10) + 1);
-        mult_val = ((SD_CSD[2] & CSD_C_SIZE_MULT) >> 7) + 2;    //2の乗数
+        mult_val = (u16)(((SD_CSD[2] & CSD_C_SIZE_MULT) >> 7) + 2);    //2の乗数
         ulCSize = ulCSize << mult_val;
         if(SDCARD_MMCFlag){                        /* MMCカードフラグON かチェック */
-            read_block_len_val = ((SD_CSD[4] & CSD_READ_BL_LEN) >> 8);
+            read_block_len_val = (u16)((SD_CSD[4] & CSD_READ_BL_LEN) >> 8);
             ulCSize = (ulCSize << read_block_len_val);
         }else{                                    /* SDカードフラグ(SDCARD_SDFlag)ON のはず */
-            read_block_len_val = (((SD_CSD[1] & CSD_WRITE_BL_LEN_BIT_25_24) << 2) |
+            read_block_len_val = (u16)(((SD_CSD[1] & CSD_WRITE_BL_LEN_BIT_25_24) << 2) |
                         ((SD_CSD[0] & CSD_WRITE_BL_LEN_BIT_23_22) >> 14));
             ulCSize = (ulCSize << read_block_len_val);
         }
@@ -836,8 +836,8 @@ void i_sdmcCalcSize( void)
         sdmc_current_spec.memory_capacity = ulCSize;
         ulSDCARD_Size += ulCSize;                /* 全セクタ数のセット */
         /* プロテクト領域サイズ算出 */
-        sdmc_current_spec.protected_capacity = ((SD_SwapByte( &SD_SDSTATUS[2])) << 16) +
-                                            (SD_SwapByte( &SD_SDSTATUS[3]));
+        sdmc_current_spec.protected_capacity = (u32)((SD_SwapByte( &SD_SDSTATUS[2])) << 16) +
+                                                     (SD_SwapByte( &SD_SDSTATUS[3]));
         sdmc_current_spec.protected_capacity <<= mult_val;
         sdmc_current_spec.protected_capacity <<= read_block_len_val;
         sdmc_current_spec.protected_capacity /= SDCARD_SectorSize;    //TODO:構造体にまとめること
@@ -1126,6 +1126,7 @@ static SDMC_ERR_CODE SDCARDi_Read(void* buf,u32 bufsize,u32 offset,void(*func)(v
     s16           nRetryCount;                  /* リトライ回数カウント */
     SDMC_ERR_CODE SaveErrStatus;                /* エラーステータス保存用 */
     u32           SaveStatus;                   /* カードステータス保存用 */
+#pragma unused( func)
 
     for( nRetryCount=0; nRetryCount<SDCARD_RETRY_COUNT; nRetryCount++) {
 
@@ -1449,6 +1450,8 @@ static    void    SDCARD_TimerStop(void)
  *---------------------------------------------------------------------------*/
 static void    SDCARD_Timer_irq(void* arg)
 {
+#pragma unused( arg)
+
 #if (SD_DEBUG_PRINT_ON == 1)
     u16 tmp;
     
@@ -1756,9 +1759,11 @@ static u16 SDCARD_SD_Status(void)
 /*******************************************************************************/
 int MMCP_SetBusWidth( BOOL b4bit)
 {
+#if 0
     u32 ulSave_SectorSize;                          /* セクタサイズ保存用 */
 //    u16 TestData;
     u16 Resid;
+#endif
 
     SD_EnableClock();                        /* SD-CLK Enable */
     
@@ -2395,6 +2400,7 @@ static void SDCARD_Thread( void* arg)
     SDCARDMsg*    SdMsg;
     OSMessage     current_dat;
     SDMC_ERR_CODE api_result;
+#pragma unused( arg)
 
     while( TRUE) {
         /* メッセージ待ち */
@@ -2459,7 +2465,8 @@ static void SDCARD_Intr_Thread( void* arg)
 {
    static i = 0;
     u16        sd_info1;//, sd_info2;
-    OSIntrMode enabled;
+//    OSIntrMode enabled;
+#pragma unused( arg)
 
     OS_EnableInterrupts();
     OS_EnableIrq();

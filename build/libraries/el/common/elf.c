@@ -31,6 +31,7 @@ static BOOL load_strndx_done = FALSE;
 static u8 *load_elf32_byte(u8 *dest, u8 *org, int lsb)
 {
   u8 *temp_ptr;
+#pragma unused( lsb)
     
   temp_ptr = (u8 *)org;
   *dest = *temp_ptr;

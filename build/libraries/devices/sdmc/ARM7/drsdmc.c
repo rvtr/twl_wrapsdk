@@ -141,6 +141,7 @@ BOOL sdmcRtfsIo( int driveno, dword block, void* buffer, word count, BOOLEAN rea
 {
     u16               result;
     SdmcResultInfo    SdResult;
+#pragma unused( driveno)
     
     /**/
     sdmcSelect( (u16)SDMC_PORT_CARD);
@@ -182,7 +183,6 @@ int sdmcRtfsCtrl( int driveno, int opcode, void* pargs)
 {
     DDRIVE       *pdr;
     DEV_GEOMETRY gc;
-    int          heads, secptrack;
 
     /**/
     sdmcSelect( (u16)SDMC_PORT_CARD);
@@ -235,8 +235,8 @@ int sdmcRtfsCtrl( int driveno, int opcode, void* pargs)
         gc.fmt.oemname[1]     = 'W';
         gc.fmt.oemname[2]     = 'L';
         gc.fmt.oemname[3]     = '\0';
-        gc.fmt.secpalloc     = sdmc_current_spec.SC;    /*sectors per cluster(FIX by capacity)*/
-        gc.fmt.secreserved     = sdmc_current_spec.RSC;//sdmc_current_spec.RSC;/*reserved sectors(FIX 1 at FAT12,16)*/
+        gc.fmt.secpalloc     = (u8)(sdmc_current_spec.SC);    /*sectors per cluster(FIX by capacity)*/
+        gc.fmt.secreserved     = (u16)(sdmc_current_spec.RSC);//sdmc_current_spec.RSC;/*reserved sectors(FIX 1 at FAT12,16)*/
         gc.fmt.numfats         = 2;
         gc.fmt.secpfat        = sdmc_current_spec.SF;
         gc.fmt.numhide         = sdmc_current_spec.NOM;    /**/
@@ -245,7 +245,7 @@ int sdmcRtfsCtrl( int driveno, int opcode, void* pargs)
         gc.fmt.secptrk         = sdmc_current_spec.secptrack;    //CHS Recommendation
         gc.fmt.numhead         = sdmc_current_spec.heads;
         gc.fmt.numcyl         = sdmc_current_spec.cylinders;
-        gc.fmt.physical_drive_no = driveno;
+        gc.fmt.physical_drive_no = (u8)driveno;
         gc.fmt.binary_volume_label = BIN_VOL_LABEL;
         gc.fmt.text_volume_label[0] = '\0';
         //TODO:dev_geometry_lbasもセットする必要あるか調べること
@@ -392,7 +392,7 @@ BOOL sdmcRtfsAttach( int driveno)
 /*SD File System Specification(仕様書)に基づいた値を出す*/
 static void sdi_get_CHS_params( void)
 {
-    int mbytes;
+    u32 mbytes;
 
 //    mbytes = (sdmc_current_spec.card_capacity / (1024 * 1024)) * 512;
     mbytes = (sdmc_current_spec.card_capacity >> 11);

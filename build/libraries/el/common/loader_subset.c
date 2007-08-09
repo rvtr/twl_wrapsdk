@@ -791,13 +791,13 @@ BOOL    i_elDoRelocate( ElDesc* elElfDesc, ElUnresolvedEntry* UnresolvedInfo)
         signed_val = (( (s32)(_S_) + _A_) | (s32)(_T_)) - (s32)(_P_);
         signed_val >>= 1;
         if( _T_) {    /*BL命令でThumbからThumbに飛ぶ*/
-            relocation_val = (*(vu16*)relocation_adr & 0xF800) | ((signed_val>>11) & 0x07FF) +
+            relocation_val = (u32)(*(vu16*)relocation_adr & 0xF800) | ((signed_val>>11) & 0x07FF) +
                                    ((((*((vu16*)(relocation_adr)+1)) & 0xF800) | (signed_val & 0x07FF)) << 16);
         }else{        /*BLX命令でThumbからARMに飛ぶ(v5未満だとBL→ベニアでBXという仕組みが必要)*/
             if( (signed_val & 0x1)) {    //_P_が4バイトアラインされていないとここに来る
                 signed_val += 1;
             }
-            relocation_val = (*(vu16*)relocation_adr & 0xF800) | ((signed_val>>11) & 0x07FF) +
+            relocation_val = (u32)(*(vu16*)relocation_adr & 0xF800) | ((signed_val>>11) & 0x07FF) +
                                    ((((*((vu16*)(relocation_adr)+1)) & 0xE800) | (signed_val & 0x07FF)) << 16);
         }
         *(vu16*)relocation_adr = (vu16)relocation_val;
