@@ -5,5 +5,4 @@
 # Please use 'source ./setup'.
 #----------------------------------------------------------------
 
-tmp=`pwd`
-export TWLSDK_ROOT=`cygpath -m $tmp`
+export TWLSDK_ROOT=`cygpath -m $PWD`
