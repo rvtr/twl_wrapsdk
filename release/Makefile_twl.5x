@@ -133,7 +133,7 @@ endif
 
 TEMP_TAG		?= $(SNAPSHOT_TAG)_$(subst .,_,$(AUTOBUILD_HOST))
 
-TWLSDK_RELEASE_NAME	?= $(PACKAGE_NAME)-$(_LVERSION)$(_FVERSION_RELSTEP)$(_FVERSION_PLUS)-$(PACKING_DATE)-$(PACKING_TIME)
+TWLSDK_RELEASE_NAME	?= $(PACKAGE_NAME)-$(TWLSDK_REVISION)-$(PACKING_DATE)-$(PACKING_TIME)
 
 #---------------------------------------------------------------------------
 #---------------------------------------------------------------------------
@@ -256,7 +256,7 @@ settag_new:
 
 revision:
 	@echo --- $@ ---
-	svn --limit 1 log $(SVNROOT) | sed -e '2s/\(r[0-9]*\).*$$/\1/' -e '1d' -e '3,5d'
+	@echo $(TWLSDK_REVISION)
 
 #---------------------------------------------------------------------------
 #  コードのチェック
