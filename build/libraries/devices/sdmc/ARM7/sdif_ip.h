@@ -321,7 +321,7 @@ void    SD_DisableClock( void);                 /* SDƒJ[ƒh‚ÌƒNƒƒbƒN–³ŒøiÈ“d—
 
 u16     SD_SelectBitWidth(s16 b4bit);           /* ƒrƒbƒg•‚Ì‘I‘ğ */
 
-u16     MMCP_WriteBusWidth(s16 b4bit);
+u16     MMCP_WriteBusWidth( BOOL b4bit);
 u16     MMCP_BusTest( BOOL readflag);
 
 

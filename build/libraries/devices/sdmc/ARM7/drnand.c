@@ -77,6 +77,7 @@ u32 NAND_FAT1_SECTORS;
 u32 NAND_FAT2_SECTORS;
 u32 NAND_FAT3_SECTORS;
 
+void nandSetFormatRequest( u16 partition_num, u32* partition_sectors);
 void nandSetFormatRequest( u16 partition_num, u32* partition_sectors)
 {
     NAND_RAW_SECTORS  = partition_sectors[0];
@@ -258,8 +259,8 @@ int nandRtfsCtrl( int driveno, int opcode, void* pargs)
         gc.fmt.oemname[1]    = 'W';
         gc.fmt.oemname[2]    = 'L';
         gc.fmt.oemname[3]    = '\0';
-        gc.fmt.secpalloc     = NandFatSpec[pdr->partition_number].SC;    /*sectors per cluster(FIX by capacity)*/
-        gc.fmt.secreserved   = NandFatSpec[pdr->partition_number].RSC;//sdmc_current_spec.RSC;/*reserved sectors(FIX 1 at FAT12,16)*/
+        gc.fmt.secpalloc     = (u8)(NandFatSpec[pdr->partition_number].SC);    /*sectors per cluster(FIX by capacity)*/
+        gc.fmt.secreserved   = (u16)(NandFatSpec[pdr->partition_number].RSC);//sdmc_current_spec.RSC;/*reserved sectors(FIX 1 at FAT12,16)*/
         gc.fmt.numfats       = 2;
         gc.fmt.secpfat       = NandFatSpec[pdr->partition_number].SF;
         gc.fmt.numhide       = NandFatSpec[pdr->partition_number].NOM;    /**/
@@ -267,8 +268,8 @@ int nandRtfsCtrl( int driveno, int opcode, void* pargs)
         gc.fmt.mediadesc     = 0xF8;
         gc.fmt.secptrk       = NandFatSpec[pdr->partition_number].secptrack;    //CHS Recommendation
         gc.fmt.numhead       = NandFatSpec[pdr->partition_number].heads;
-        gc.fmt.numcyl        = gc.dev_geometry_cylinders;//NandFatSpec[pdr->partition_number].cylinders;
-        gc.fmt.physical_drive_no = driveno;
+        gc.fmt.numcyl        = (u16)(gc.dev_geometry_cylinders);//NandFatSpec[pdr->partition_number].cylinders;
+        gc.fmt.physical_drive_no = (u8)driveno;
         gc.fmt.binary_volume_label = BIN_VOL_LABEL;
         gc.fmt.text_volume_label[0] = '\0';
 
@@ -382,8 +383,8 @@ BOOL nandRtfsAttach( int driveno, int partition_no)
 /*SD File System Specification(仕様書)に基づいた値を出す*/
 static BOOL sdi_get_CHS_params( void)
 {
-    u16 i;
-    int mbytes;
+    u32 i;
+    u32 mbytes;
     u32 cumulative_capacity; //累計
 
     /**/
@@ -478,23 +479,23 @@ static BOOL sdi_get_CHS_params( void)
         NandFatSpec[i].device_capacity = sdmc_current_spec.memory_capacity;
 
         /*---------- デバイス全体 ----------*/
-        NandFatSpec[i].cylinders =    /*シリンダ数を計算*/
+        NandFatSpec[i].cylinders = (u16)   /*シリンダ数を計算*/
           (NandFatSpec[i].device_capacity /
            (NandFatSpec[i].heads * NandFatSpec[i].secptrack));
 
         /*memory_capacityを再計算してadjusted_memory_capacityに格納*/
-        NandFatSpec[i].adjusted_device_capacity =
-          NandFatSpec[i].cylinders *
-            (NandFatSpec[i].heads * NandFatSpec[i].secptrack);
+        NandFatSpec[i].adjusted_device_capacity = (u32)
+          (NandFatSpec[i].cylinders *
+            (NandFatSpec[i].heads * NandFatSpec[i].secptrack));
         /*----------------------------------*/
 
         /*---------- ボリューム ----------*/
-        NandFatSpec[i].volume_cylinders =    /*シリンダ数を計算*/
+        NandFatSpec[i].volume_cylinders = (u16)   /*シリンダ数を計算*/
           (NandFatSpec[i].memory_capacity /
            (NandFatSpec[i].heads * NandFatSpec[i].secptrack));
 
         /*memory_capacityを再計算してadjusted_memory_capacityに格納*/
-        NandFatSpec[i].adjusted_memory_capacity =
+        NandFatSpec[i].adjusted_memory_capacity = (u32)
           (NandFatSpec[i].volume_cylinders *
            (NandFatSpec[i].heads * NandFatSpec[i].secptrack));
         /*--------------------------------*/
@@ -550,7 +551,7 @@ static BOOL sdi_get_nom( u32 MIN_NOM)
       
         SC = NandFatSpec[i].SC;
     
-        NandFatSpec[i].SF = sdi_get_ceil( TS[i]/SC * NandFatSpec[i].FATBITS, SS*8);
+        NandFatSpec[i].SF = (u16)sdi_get_ceil( TS[i]/SC * NandFatSpec[i].FATBITS, SS*8);
 
         /*-----------------------SDHCのとき----------------------------*/
         if( sdmc_current_spec.csd_ver2_flag) {
@@ -563,7 +564,7 @@ static BOOL sdi_get_nom( u32 MIN_NOM)
                 sdmc_current_spec.NOM = sdmc_current_spec.BU;
             }
             do {
-                n = sdi_get_ceil( 2*NandFatSpec[i].SF, NandFatSpec[i].BU);
+                n = sdi_get_ceil( (u32)(2*NandFatSpec[i].SF), (u32)(NandFatSpec[i].BU));
                 NandFatSpec[i].RSC = (NandFatSpec[i].BU * n) - ( 2 * NandFatSpec[i].SF);
                 if( NandFatSpec[i].RSC < 9) {
                     NandFatSpec[i].RSC += NandFatSpec[i].BU;
@@ -612,7 +613,7 @@ static BOOL sdi_get_nom( u32 MIN_NOM)
                     }
                 }while( 1);
                 if( SFdash != NandFatSpec[i].SF) {
-                    NandFatSpec[i].SF = SFdash;
+                    NandFatSpec[i].SF = (u16)SFdash;
                 }else{
                     break;    //complete
                 }
@@ -766,18 +767,18 @@ static void sdi_build_partition_table( void)
     MI_CpuFill8( MbrSectDat, 0, 512);
 
     for( i=0; i<4; i++) {
-        MbrSectDat[(446+(i*16))/2] = (starting_head[i]<<8);
+        MbrSectDat[(446+(i*16))/2] = (u16)(starting_head[i]<<8);
         //上位8bit:starting_cylの下位8bit, 下位8bit:starting_cylの上位2bit + starting_sect 6bit.
-        MbrSectDat[(448+(i*16))/2] = (starting_cyl[i]<<8) +
-                                    ((starting_cyl[i]>>2) & 0xC0) + starting_sect[i];
-        MbrSectDat[(450+(i*16))/2] = (ending_head[i]<<8) + systemid[i];
+        MbrSectDat[(448+(i*16))/2] = (u16)((starting_cyl[i]<<8) +
+                                    ((starting_cyl[i]>>2) & 0xC0) + starting_sect[i]);
+        MbrSectDat[(450+(i*16))/2] = (u16)((ending_head[i]<<8) + systemid[i]);
         //上位8bit:ending_cylの下位8bit, 下位8bit:ending_cylの上位2bit + ending_sect 6bit.
-        MbrSectDat[(452+(i*16))/2] = (ending_cyl[i]<<8) +
-                                    ((ending_cyl[i]>>2) & 0xC0) + ending_sect[i];
-        MbrSectDat[(454+(i*16))/2] = NandFatSpec[i].NOM;
-        MbrSectDat[(456+(i*16))/2] = (NandFatSpec[i].NOM>>16);
-        MbrSectDat[(458+(i*16))/2] = total_sect[i];
-        MbrSectDat[(460+(i*16))/2] = (total_sect[i]>>16);
+        MbrSectDat[(452+(i*16))/2] = (u16)((ending_cyl[i]<<8) +
+                                    ((ending_cyl[i]>>2) & 0xC0) + ending_sect[i]);
+        MbrSectDat[(454+(i*16))/2] = (u16)(NandFatSpec[i].NOM);
+        MbrSectDat[(456+(i*16))/2] = (u16)(NandFatSpec[i].NOM>>16);
+        MbrSectDat[(458+(i*16))/2] = (u16)(total_sect[i]);
+        MbrSectDat[(460+(i*16))/2] = (u16)(total_sect[i]>>16);
     }
     MbrSectDat[510/2] = 0xAA55;
     /*セクタ0に書き込み*/

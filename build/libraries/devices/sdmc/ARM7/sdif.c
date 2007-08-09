@@ -782,7 +782,7 @@ u16 SD_SelectBitWidth(s16 b4bit)
   Returns:      0 : success
                 > 0 : error
  *---------------------------------------------------------------------------*/
-u16 MMCP_WriteBusWidth(s16 b4bit)
+u16 MMCP_WriteBusWidth( BOOL b4bit)
 {
     if( !SDCARD_MMCFlag) {
         return 1;

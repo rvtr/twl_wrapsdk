@@ -456,12 +456,12 @@ static void sdi_get_CHS_params( void)
     }
 
     /*シリンダ数を計算*/
-    sdmc_current_spec.cylinders = (sdmc_current_spec.memory_capacity /
+    sdmc_current_spec.cylinders = (u16)(sdmc_current_spec.memory_capacity /
                     (sdmc_current_spec.heads * sdmc_current_spec.secptrack));
     
     /*memory_capacityを再計算してadjusted_memory_capacityに格納*/
-    sdmc_current_spec.adjusted_memory_capacity = sdmc_current_spec.cylinders *
-                    (sdmc_current_spec.heads * sdmc_current_spec.secptrack);
+    sdmc_current_spec.adjusted_memory_capacity = (u32)(sdmc_current_spec.cylinders *
+                    (sdmc_current_spec.heads * sdmc_current_spec.secptrack));
 }
 
 
@@ -484,13 +484,13 @@ static void sdi_get_nom( void)
     TS = sdmc_current_spec.adjusted_memory_capacity;
     SC = sdmc_current_spec.SC;
     
-    sdmc_current_spec.SF = sdi_get_ceil( TS/SC * sdmc_current_spec.FATBITS, SS*8);
+    sdmc_current_spec.SF = (u16)sdi_get_ceil( TS/SC * sdmc_current_spec.FATBITS, SS*8);
 
     /*-----------------------SDHCのとき----------------------------*/
     if( sdmc_current_spec.csd_ver2_flag) {
         sdmc_current_spec.NOM = sdmc_current_spec.BU;
         do {
-            n = sdi_get_ceil( 2*sdmc_current_spec.SF, sdmc_current_spec.BU);
+            n = sdi_get_ceil( (u32)(2*sdmc_current_spec.SF), (u32)(sdmc_current_spec.BU));
             sdmc_current_spec.RSC = (sdmc_current_spec.BU * n) - ( 2 * sdmc_current_spec.SF);
             if( sdmc_current_spec.RSC < 9) {
                 sdmc_current_spec.RSC += sdmc_current_spec.BU;
@@ -530,7 +530,7 @@ static void sdi_get_nom( void)
                 }
             }while( 1);
             if( SFdash != sdmc_current_spec.SF) {
-                sdmc_current_spec.SF = SFdash;
+                sdmc_current_spec.SF = (u16)SFdash;
             }else{
                 break;    //complete
             }
@@ -543,7 +543,7 @@ static void sdi_get_nom( void)
 /*FATのビット数を返す*/
 static void sdi_get_fatparams( void)
 {
-    int mbytes;
+    u32 mbytes;
 
 //    mbytes = (sdmc_current_spec.card_capacity / (1024 * 1024)) * 512;
     mbytes = (sdmc_current_spec.card_capacity >> 11);
@@ -658,16 +658,16 @@ static void sdi_build_partition_table( void)
 #else
     MI_CpuFill8( MbrSectDat, 0, 512);
 #endif
-    MbrSectDat[446/2] = (starting_head<<8);
+    MbrSectDat[446/2] = (u16)(starting_head<<8);
     //上位8bit:starting_cylの下位8bit, 下位8bit:starting_cylの上位2bit + starting_sect 6bit.
-    MbrSectDat[448/2] = (starting_cyl<<8) + ((starting_cyl>>2) & 0xC0) + starting_sect;
-    MbrSectDat[450/2] = (ending_head<<8) + systemid;
+    MbrSectDat[448/2] = (u16)((starting_cyl<<8) + ((starting_cyl>>2) & 0xC0) + starting_sect);
+    MbrSectDat[450/2] = (u16)((ending_head<<8) + systemid);
     //上位8bit:ending_cylの下位8bit, 下位8bit:ending_cylの上位2bit + ending_sect 6bit.
-    MbrSectDat[452/2] = (ending_cyl<<8) + ((ending_cyl>>2) & 0xC0) + ending_sect;
-    MbrSectDat[454/2] = sdmc_current_spec.NOM;
-    MbrSectDat[456/2] = (sdmc_current_spec.NOM>>16);
-    MbrSectDat[458/2] = total_sect;
-    MbrSectDat[460/2] = (total_sect>>16);
+    MbrSectDat[452/2] = (u16)((ending_cyl<<8) + ((ending_cyl>>2) & 0xC0) + ending_sect);
+    MbrSectDat[454/2] = (u16)(sdmc_current_spec.NOM);
+    MbrSectDat[456/2] = (u16)(sdmc_current_spec.NOM>>16);
+    MbrSectDat[458/2] = (u16)total_sect;
+    MbrSectDat[460/2] = (u16)(total_sect>>16);
     MbrSectDat[510/2] = 0xAA55;
     /*セクタ0に書き込み*/
     sdmcWriteFifo( MbrSectDat, 1, 0, NULL, &SdResult);
