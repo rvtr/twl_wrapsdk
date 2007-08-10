@@ -196,6 +196,7 @@ TWL_LIBS_BASE	?= \
 			   libvlink_sp \
 			   libnvram_sp \
 			   libpm_sp \
+			   libtp_sp \
 			   libaes_sp \
 			   libi2c_sp \
 			   libcdc_sp \
