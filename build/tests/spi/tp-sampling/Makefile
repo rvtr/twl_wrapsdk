@@ -1,6 +1,6 @@
 #! make -f
 #----------------------------------------------------------------------------
-# Project:  TwlSDK - tests
+# Project:  TwlSDK - build
 # File:     Makefile
 #
 # Copyright 2007 Nintendo.  All rights reserved.
@@ -20,10 +20,9 @@ include	$(TWLSDK_ROOT)/build/buildtools/commondefs
 
 #----------------------------------------------------------------------------
 
-SUBDIRS =	tp-sampling \
-			tp-sampling-twl-mode \
-			tp-auto-sampling \
-			tp-auto-sampling-twl-mode
+SUBDIRS =	\
+            ARM7 \
+            ARM9 \
 
 #----------------------------------------------------------------------------
 

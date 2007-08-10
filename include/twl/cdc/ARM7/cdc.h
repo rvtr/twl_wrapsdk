@@ -47,7 +47,8 @@ extern u16         cdcSpiMode;
 //    BAUDRATE parameter
 //================================================================
 
-#define CDC_SPI_BAUDRATE_DEFAULT  SPI_BAUDRATE_1MHZ  // SPI_BAUDRATE_4MHZ
+// CODECÇÃêßå¿Ç…ÇÊÇË4MHZÇç≈ëÂÇ∆Ç∑ÇÈ
+#define CDC_SPI_BAUDRATE_DEFAULT  SPI_BAUDRATE_4MHZ
 
 /*---------------------------------------------------------------------------*
   Name:         CDCi_SetSPIBaudRate
@@ -289,11 +290,13 @@ static inline void CDC_WriteSpiRegister( u8 reg, u8 data )
   Returns:      value which is read from specified decive register
  *---------------------------------------------------------------------------*/
 u8 CDCi_ReadSpiRegister( u8 reg );
-static inline void CDC_ReadSpiRegister( u8 reg )
+static inline u8 CDC_ReadSpiRegister( u8 reg )
 {
+	u8 value;
     (void)SPI_Lock(123);
-    CDCi_ReadSpiRegister( reg );
+    value = CDCi_ReadSpiRegister( reg );
     (void)SPI_Unlock(123);
+    return value;
 }
 
 /*---------------------------------------------------------------------------*

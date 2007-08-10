@@ -14,9 +14,27 @@
   $NoKeywords: $
  *---------------------------------------------------------------------------*/
 
+/*
+	TP_RequestRawSampling のテストプログラムです。
+
+	tp-sampling と
+	tp-sampling-twlmode の違いは、
+　　ARM7側のコードで CDC_GoDsMode() を呼ぶかどうかの違いだけです。
+	
+	CDC_GoDsMode()内部でOS_Sleep()が呼ばれます。
+	全スレッドが同時にスリープに入るのを避けるため暫定的にアイドルスレッド
+　　を生成しています。
+*/
+
 #include    <twl_sp.h>
 #include    <twl/cdc.h>     // for DS mode
 #include    <twl/snd/ARM7/i2s.h>
+
+#define OSi_IDLE_CHECKNUM_SIZE  ( sizeof(u32)*2 )
+#define OSi_IDLE_SVC_SIZE  ( sizeof(u32)*16 )   // arm7 svc stacks 14 words
+#define OSi_IDLE_THREAD_STACK_SIZE    ( OSi_IDLE_CHECKNUM_SIZE + OSi_IDLE_SVC_SIZE )
+extern u32     OSi_IdleThreadStack[OSi_IDLE_THREAD_STACK_SIZE / sizeof(u32)];
+extern OSThread OSi_IdleThread;
 
 /*---------------------------------------------------------------------------*
     定数定義
@@ -31,6 +49,25 @@
  *---------------------------------------------------------------------------*/
 static OSHeapHandle InitializeAllocateSystem(void);
 static void VBlankIntr(void);
+
+/*---------------------------------------------------------------------------*
+  Name:         OSi_IdleThreadProc
+
+  Description:  procedure of idle thread which system creates
+
+  Arguments:    None
+
+  Returns:      None (never return)
+ *---------------------------------------------------------------------------*/
+static void OSi_IdleThreadProc(void *)
+{
+    (void)OS_EnableInterrupts();
+    while (1)
+    {
+        OS_Halt();
+    }
+    // never return
+}
 
 /*---------------------------------------------------------------------------*
   Name:         TwlSpMain
@@ -61,6 +98,16 @@ void TwlSpMain(void)
     (void)GX_VBlankIntr(TRUE);
     (void)OS_EnableIrq();
     (void)OS_EnableInterrupts();
+
+    // create idle thread to sleep in main thread
+    OS_CreateThread(&OSi_IdleThread,
+                    OSi_IdleThreadProc,
+                    (void *)NULL,
+                    OSi_IdleThreadStack + OSi_IDLE_THREAD_STACK_SIZE / sizeof(u32),
+                    OSi_IDLE_THREAD_STACK_SIZE,
+                    OS_THREAD_PRIORITY_MAX /*pseudo. change at next line. */ );
+    OSi_IdleThread.priority = OS_THREAD_PRIORITY_MAX + 1;       // lower priority than the lowest (=OS_THREAD_PRIORITY_MAX)
+    OSi_IdleThread.state = OS_THREAD_STATE_READY;
 
     // サウンド初期化
     SND_Init(THREAD_PRIO_SND);

@@ -603,11 +603,12 @@ void TP_SetCalibrateParam(const TPCalibrateParam *param)
 
     if (param->xDotSize != 0)
     {
-        CP_SetDiv32_32(0x10000000, (u32)param->xDotSize);
+//      CP_SetDiv32_32(0x10000000, (u32)param->xDotSize);
 
         tpState.calibrate.x0 = param->x0;
         tpState.calibrate.xDotSize = param->xDotSize;
-        tpState.calibrate.xDotSizeInv = (s32)CP_GetDivResult32();
+//      tpState.calibrate.xDotSizeInv = (s32)CP_GetDivResult32();
+        tpState.calibrate.xDotSizeInv = (s32)0x10000000/param->xDotSize;
     }
     else
     {
@@ -618,11 +619,12 @@ void TP_SetCalibrateParam(const TPCalibrateParam *param)
 
     if (param->yDotSize != 0)
     {
-        CP_SetDiv32_32(0x10000000, (u32)param->yDotSize);
+//      CP_SetDiv32_32(0x10000000, (u32)param->yDotSize);
 
         tpState.calibrate.y0 = param->y0;
         tpState.calibrate.yDotSize = param->yDotSize;
-        tpState.calibrate.yDotSizeInv = (s32)CP_GetDivResult32();
+//      tpState.calibrate.yDotSizeInv = (s32)CP_GetDivResult32();
+        tpState.calibrate.yDotSizeInv = (s32)0x10000000/param->yDotSize;
     }
     else
     {
@@ -1086,13 +1088,15 @@ u32 TP_CalcCalibrateParam(TPCalibrateParam *calibrate,
     enabled = OS_DisableInterrupts();
 
     // xDotSize‚ðŒvŽZ
-    CP_SetDiv32_32(((u32)rx_width) << TP_CALIBRATE_DOT_SCALE_SHIFT, (u32)dx_width);
+//  CP_SetDiv32_32(((u32)rx_width) << TP_CALIBRATE_DOT_SCALE_SHIFT, (u32)dx_width);
 
     ry_width = raw_y1 - raw_y2;
     dy_width = dy1 - dy2;
 
-    tmp32 = CP_GetDivResult32();
-    CP_SetDiv32_32(((u32)ry_width) << TP_CALIBRATE_DOT_SCALE_SHIFT, (u32)dy_width);
+//  tmp32 = CP_GetDivResult32();
+	tmp32 = ((rx_width) << TP_CALIBRATE_DOT_SCALE_SHIFT)/dx_width;
+
+//  CP_SetDiv32_32(((u32)ry_width) << TP_CALIBRATE_DOT_SCALE_SHIFT, (u32)dy_width);
 
     if (!IN_S16_RANGE(tmp32))
     {
@@ -1111,7 +1115,9 @@ u32 TP_CalcCalibrateParam(TPCalibrateParam *calibrate,
     }
     calibrate->x0 = (s16)tmp32;
 
-    tmp32 = CP_GetDivResult32();
+//  tmp32 = CP_GetDivResult32();
+	tmp32 = ((ry_width) << TP_CALIBRATE_DOT_SCALE_SHIFT)/dy_width;
+
     (void)OS_RestoreInterrupts(enabled);
 
     if (!IN_S16_RANGE(tmp32))

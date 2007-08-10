@@ -17,31 +17,32 @@
 #include <twl/i2c/ARM7/i2c.h>
 #include <twl/cdc/ARM7/cdc_reg.h>
 #include <twl/cdc/ARM7/cdc.h>
-
 #include "spi_sp.h"
 
-void CDCi_PreInitAudio( void );
-void CDCi_PostInitAudio( void );
-void CDCi_PreInitMic( void );
-void CDCi_PostInitMic( void );
-void CDCi_InitTouchPanel( void );
-void CDCi_InitCoefTable( void );
+/*
+	このソースで定義されているSPIアクセス関数はTWLモード時に使用します。
+　　DSモード時は cdc_dsmode_access.c の関数を使用してください。
+*/
+
 
 
 SPIBaudRate cdcSPIBaudRate = CDC_SPI_BAUDRATE_DEFAULT;
 BOOL        cdcIsTwlMode   = TRUE;
 int         cdcCurrentPage = 0;
-
 int         cdcRevisionID  = 0;
 
+/*
 #define     CDC_SPI_MODE_SETTING_REVISION_A     ((u16)((1 << REG_SPI_SPICNT_E_SHIFT) |  \
                            (0 << REG_SPI_SPICNT_I_SHIFT) |                              \
                            (SPI_SLAVE_RESERVED << REG_SPI_SPICNT_SEL_SHIFT) |           \
                            (CDC_SPI_BAUDRATE_DEFAULT << REG_SPI_SPICNT_BAUDRATE_SHIFT)))
+*/
+
 #define     CDC_SPI_MODE_SETTING_REVISION_B     ((u16)((1 << REG_SPI_SPICNT_E_SHIFT) |  \
                            (0 << REG_SPI_SPICNT_I_SHIFT) |                              \
                            (SPI_COMMPARTNER_TP << REG_SPI_SPICNT_SEL_SHIFT) |           \
                            (CDC_SPI_BAUDRATE_DEFAULT << REG_SPI_SPICNT_BAUDRATE_SHIFT)))
+
 #define     CDC_SPI_MODE_SETTING_REVISION_C     CDC_SPI_MODE_SETTING_REVISION_B
 
 u16         cdcSpiMode     = CDC_SPI_MODE_SETTING_REVISION_B;
@@ -147,9 +148,9 @@ void CDCi_WriteSpiRegister( u8 reg, u8 data )
 /*---------------------------------------------------------------------------*
   Name:         CDCi_ReadSpiRegister
 
-  Description:  get value from PMIC register
+  Description:  get value from register
 
-  Arguments:    reg      : PMIC register
+  Arguments:    reg      : register
 
   Returns:      value which is read from specified PMIC register
  *---------------------------------------------------------------------------*/
@@ -160,7 +161,7 @@ u8 CDCi_ReadSpiRegister( u8 reg )
     SPI_Wait();
 
     CDCi_ChangeSpiMode( SPI_TRANSMODE_CONTINUOUS );
-    SPI_SendWait( (u8)(reg << 1) );
+    SPI_SendWait( (u8)((reg << 1) | 1));
 
     CDCi_ChangeSpiMode( SPI_TRANSMODE_1BYTE );
     data = (u8)SPI_DummyWaitReceive();
@@ -212,7 +213,7 @@ void CDCi_ReadSpiRegisters( u8 reg, u8 *bufp, size_t size )
     SPI_Wait();
 
     CDCi_ChangeSpiMode( SPI_TRANSMODE_CONTINUOUS );
-    SPI_SendWait( (u8)(reg << 1) );
+    SPI_SendWait( (u8)((reg << 1) | 1));
 
     for ( i=0; i<(size-1); i++ )
     {

@@ -23,7 +23,6 @@
 extern "C" {
 #endif
 
-
 //================================================================================
 //        INIT APIs
 //================================================================================
@@ -84,7 +83,7 @@ void CDC_InitMic( void );
 
   Returns:      TRUE : TWL-mode, FALSE : DS-mode
  *---------------------------------------------------------------------------*/
-inline BOOL CDC_IsTwlMode( void );
+BOOL CDC_IsTwlMode( void );
 
 /*---------------------------------------------------------------------------*
   Name:         CDC_GetVendorId
@@ -340,6 +339,32 @@ void CDC_DisableAGC( void );
   Returns:      None
  *---------------------------------------------------------------------------*/
 void CDC_Init1stOrderFilter( u8 *coef, int filter_target );
+
+/*---------------------------------------------------------------------------*
+  Name:         CDC_SetScanModeTimerClockDivider
+
+  Description:  スキャンモードのクロックディバイダーを設定します。
+				ARM7から供給されるMCLK（12.19MHz）はディバイダーの値に
+                よって分周されます。
+
+				結果として、ディバイダーの値に比例して
+				・インターバルタイマー
+				・デバウンスタイマー
+				の時間がスケールされます。
+
+				基本的には 24 固定とします。
+
+				MCLK           = 12.19MHz
+				divider        = 24
+				interval time  = 16ms  2ms  4ms  6ms   8ms  10ms  12ms   14ms
+				de-bounce time =  0us 16us 32us 64us 128us 256us 512us 1024us
+
+  Arguments:    value : 
+
+  Returns:      None
+ *---------------------------------------------------------------------------*/
+void CDC_SetScanModeTimerClockDivider( u8 value );
+
 
 #ifdef __cplusplus
 } /* extern "C" */

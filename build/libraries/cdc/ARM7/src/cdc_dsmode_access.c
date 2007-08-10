@@ -17,8 +17,12 @@
 
 #include "spi_sp.h"
 
-SPIBaudRate cdcDsmodeSPIBaudRate = DSMODE_SPI_BAUDRATE_DEFAULT;
+/*
+	このソースで定義されているSPIアクセス関数はDSモード時に使用します。
+　　TWLモード時は cdc.c の関数を使用してください。
+*/
 
+SPIBaudRate cdcDsmodeSPIBaudRate = DSMODE_SPI_BAUDRATE_DEFAULT;
 
 //================================================================================
 //        SPI BIT CONTROL
