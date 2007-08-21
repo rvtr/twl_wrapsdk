@@ -75,7 +75,7 @@ void MICi_Start( MICSampleRate smp, u32 dmaNo, void *dest, s32 size )
 
             MICi_ExDmaRecvAsync( dmaNo, dest, size );
 
-            OS_SetIrqFunction( OS_IE_DMA4 + ch, MICi_ExDmaInterruptHandler );
+            OS_SetIrqFunction( OS_IE_DMA4 << ch, MICi_ExDmaInterruptHandler );
 
             reg_OS_IF  = (OS_IE_DMA4 << ch);
             reg_OS_IE |= (OS_IE_DMA4 << ch);        // enable mic dma interrupt
