@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------*
-  Project:  CtrSDK - MIC
-  File:     mic.c
+  Project:  TwlSDK - MIC
+  File:     snd_mic.c
 
   Copyright 2006 Nintendo.  All rights reserved.
 
@@ -69,7 +69,7 @@ void MICi_Start( MICSampleRate smp, u32 dmaNo, void *dest, s32 size )
     {
         if ( MI_EXDMA_CH_MIN <= dmaNo && dmaNo <= MI_EXDMA_CH_MAX )
         {
-            u32 ch = dmaNo + MI_EXDMA_CH_MIN;
+            u32 ch = dmaNo - MI_EXDMA_CH_MIN;
 
             MIi_StopExDma( dmaNo );
 
@@ -115,7 +115,7 @@ void MICi_Stop( void )
 
         if ( MI_EXDMA_CH_MIN <= dmaNo && dmaNo <= MI_EXDMA_CH_MAX )
         {
-            u32 ch = dmaNo + MI_EXDMA_CH_MIN;
+            u32 ch = dmaNo - MI_EXDMA_CH_MIN;
 
             MIi_StopExDma( dmaNo );
 
