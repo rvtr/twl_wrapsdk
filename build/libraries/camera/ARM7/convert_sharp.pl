@@ -71,47 +71,44 @@ $multi_foot_format =~ s/\r?\n/\r\n/g;
 
 my $row_nums = 8;
 sub sprint_command {
-	my($addr, @value) = @_;
-	if (@value == 1) {					# シングルライトは別枠
-		return sprintf($single_format, $addr, $value[0]);
-	}
-	my $result = $multi_head_format;	# これ以降はバーストライト
-	for (my $i = 0; $i < @value; $i++)
-	{
-		if (($i % $row_nums) == 0) {
-			$result .= "            " ;
-		} else {
-			$result .= " " ;
-		}
-		$result .= sprintf("0x%02X,", $value[$i]);
-		if (($i % $row_nums) == ($row_nums - 1) ) {
-			$result .= "\r\n";
-		}
-	}
-	if ((@value % $row_nums) != 0) {
-		$result .= "\r\n";
-	}
-	$result .= sprintf($multi_foot_format, $addr, scalar(@value));
-	return $result;
+    my($addr, @value) = @_;
+    return sprintf($single_format, $addr, $value[0]) if @value == 1;    # シングルライトは別枠
+    my $result = $multi_head_format;    # これ以降はバーストライト
+    for (my $i = 0; $i < @value; $i++) {
+        if ($i % $row_nums == 0) {
+            $result .= "            " ;
+        } else {
+            $result .= " " ;
+        }
+        $result .= sprintf("0x%02X,", $value[$i]);
+        if ($i % $row_nums == $row_nums - 1) {
+            $result .= "\r\n";
+        }
+    }
+    if (@value % $row_nums != 0) {
+        $result .= "\r\n";
+    }
+    $result .= sprintf($multi_foot_format, $addr, scalar(@value));
+    return $result;
 }
+
+#ここからメイン
 
 #
 # データはいったんキャッシュして、連続アドレスをバーストライトに書き換える
 #
-my $comment;					# コメントキャッシュ
-my @cache;						# キャッシュデータ
-my $start = -1;					# キャッシュの先頭アドレス
-my @output;						# 出力データ
-
-#ここからメイン
+my $comment;                    # コメントキャッシュ
+my @cache;                      # キャッシュデータ
+my $start = -1;                 # キャッシュの先頭アドレス
+my @output;                     # 出力データ
 
 # 引数チェック
-die "USAGE: $0 INFILE [OUTFILE]\n" if ($#ARGV != 1 and $#ARGV != 0);
+die "USAGE: $0 INFILE [OUTFILE]\n" if $#ARGV != 1 and $#ARGV != 0;
 
 # 各種初期化
 my $infile = $ARGV[0];
 my $outfile = $ARGV[1];
-($outfile = $infile) =~ s/\.dat$/.autogen.c/ unless ($outfile);
+($outfile = $infile) =~ s/\.dat$/.autogen.c/ unless $outfile;
 
 # 入出力ファイルのオープン (両方オープンしておく)
 open IN, $infile or die "Cannot open the input file!\n";
@@ -119,42 +116,35 @@ open OUT, ">", $outfile or die "Cannot open the output file!\n";
 
 # 入力処理
 while (<IN>) {
-	s/[\r\n]+$//;	# delete \r and/or \n
-	s|\#|// |g;		# change comment sign
-	if (s|(//.*)||) {						# コメント抽出
-		$comment .= "    $1\r\n";			# 独立行として出力予定
-	}
+    s/[\r\n]+$//;   # delete \r and/or \n
+    s|\#|// |g;     # change comment sign
+    $comment .= "    $1\r\n" if s|(//.*)||; # コメント抽出(独立行として出力予定)
 
-	if (/\s*([\w\d]{2})\s+([\w\d]{2})/) {	# データ抽出
-		my ($addr, $value) = (hex($1), hex($2));
-		if ($addr != $start + @cache)		# アドレスが連続していないなら
-		{									# 直前までを出力
-			push @output, sprint_command($start, @cache) if (@cache);
-			@cache = ($value);				# 最新の値だけのエントリにする
-			$start = $addr;
-		} else {							# アドレスが連続しているなら
-			push @cache, $value;			# 値を追記
-		}
-		push @output, $comment;				# このタイミングでコメント出力
-		$comment = "";
-	}
-	elsif (/\S/) {							# 未知入力行検出 (エラーにすべきかも)
-		warn "UNKNOWN STATEMENT: <<", $_, ">>\n";
-	}
+    if (/\s*([\w\d]{2})\s+([\w\d]{2})/) {   # データ抽出
+        my ($addr, $value) = (hex($1), hex($2));
+        if ($addr != $start + @cache) {     # アドレスが連続していないなら
+            push @output, sprint_command($start, @cache) if (@cache);   # 直前までを出力
+            @cache = ($value);              # 最新の値だけのエントリにする
+            $start = $addr;
+        } else {                            # アドレスが連続しているなら
+            push @cache, $value;            # 値を追記
+        }
+        push @output, $comment;             # このタイミングでコメント出力
+        $comment = "";
+    }
+    elsif (/\S/) {                          # 未知入力行検出 (エラーにすべきかも)
+        warn "UNKNOWN STATEMENT: <<", $_, ">>\n";
+    }
 }
 # 最終行処理
-push @output, sprint_command($start, @cache) if (@cache);
+push @output, sprint_command($start, @cache) if @cache;
 # 入力処理終了
 close IN;
 
-for (my $i = 0; $i < @output; $i++) {
-	$output[$i] =~  s/\r?\n/\r\n/g;
-}
-
 # 出力処理
-$outfile =~ s/^.*[\\\/]//;	# get basename to print
-printf OUT $file_head_format, $outfile;		# ファイルヘッダ出力
+$outfile =~ s/^.*[\\\/]//;  # get basename to print
+printf OUT $file_head_format, $outfile;     # ファイルヘッダ出力
 print OUT @output;
-printf OUT $file_foot_format;				# ファイルフッタ出力
+printf OUT $file_foot_format;               # ファイルフッタ出力
 # 出力処理終了
 close OUT;

@@ -227,124 +227,125 @@ $comp_target =~ s/\r?\n/\r\n/g;
 my @functions = ({name => "", data => "", comment => "", declare => ""});
 
 # 定義ファイルデータベース
-my %regmap;	# map register/regmap name to the address/mask
+my %regmap; # map register/regmap name to the address/mask
 
 # 定義ファイルデータベースの生成
 sub regmap_init {
-	my %mcu;
-	open IN, $_[0] or die;
-	# search space
-	while(<IN>) {
-		if (/^\[ADDR_SPACE\]/) {
-			while (<IN>) {
-				last if (/^\[END\]/);
-				if (/^([\w\d]+)\s*=\s*\{MCU, (\d+),/) {	# only MCU is supported
-					$mcu{$1} = $2;
-				}
-			}
-		}
-		if  (/^\[REGISTERS\]/) {
-			my $lastreg = "";
-			while (<IN>) {
-				last if (/\[END\]/);
-				if (/(^[\w\d]+)\s*=\s*\{(\w+?),\s*([\w\d]+?),/) {	# address entry
-					if ($mcu{$3}) {	# MCU
-						$regmap{$1}{0} = sprintf("0xA%1X%02X", $mcu{$3}, hex($2));
-					}
-					$lastreg = $1;
-				}
-				elsif (/^\s*\{([\w\d]+?),\s*(\w+?),/) {	# bitfield entry
-					$regmap{$lastreg}{$1} = $2;
-				}
-			}
-		}
-	}
-	close IN;
-#	use Data::Dumper;
-#	print Dumper(\%mcu, \%regmap);
+    my %mcu;
+    open IN, $_[0] or die;
+    # search space
+    while(<IN>) {
+        if (/^\[ADDR_SPACE\]/) {
+            while (<IN>) {
+                last if /^\[END\]/;
+                if (/^([\w\d]+)\s*=\s*\{MCU, (\d+),/) { # only MCU is supported
+                    $mcu{$1} = $2;
+                }
+            }
+        }
+        if  (/^\[REGISTERS\]/) {
+            my $lastreg = "";
+            while (<IN>) {
+                last if /\[END\]/;
+                if (/(^[\w\d]+)\s*=\s*\{(\w+?),\s*([\w\d]+?),/) {   # address entry
+                    if ($mcu{$3}) { # MCU
+                        $regmap{$1}{0} = sprintf("0xA%1X%02X", $mcu{$3}, hex($2));
+                    }
+                    $lastreg = $1;
+                }
+                elsif (/^\s*\{([\w\d]+?),\s*(\w+?),/) { # bitfield entry
+                    $regmap{$lastreg}{$1} = $2;
+                }
+            }
+        }
+    }
+    close IN;
+#   use Data::Dumper;
+#   print Dumper(\%mcu, \%regmap);
 }
 
 # API名の整形
 sub name_conv {
-	$_ = $_[0];
-	s/\<o\>/Option/g;
-	s/\%/Percent/g;
-	s/\-/Minus/g;
-	s/\+/Plus/g;
-	s/\>/To/g;
-	s/[\s\.\:\=\*\/\(\)]+/_/g;
-	return $_;
+    $_ = $_[0];
+    s/\s*\<o\>\s*//g;
+#   s/\<o\>/Option/g;
+    s/\%/Percent/g;
+    s/\-/Minus/g;
+    s/\+/Plus/g;
+    s/\>/To/g;
+    s/[\s\.\:\=\*\/\(\)]+/_/g;
+    return $_;
 }
 
 # 各種コマンドのC言語への変換
 sub func_conv {
-	my($key, $value, $comment) = @_;
-	my @v = split /\s*\,\s*/, $value;			# split value
-	$comment = "    " . $comment if ($comment);	# insert spaces
-	if ($key eq "LOAD") {
-		return sprintf($call_format, name_conv($value), $comment);
-	}
-	elsif ($key eq "REG") {			# address, value
-		return sprintf($reg_format, $v[0], $v[1], $comment);
-	}
-	elsif ($key eq "BITFIELD") {	# address, mask, set/clear
-		if ($v[2]) {
-			return sprintf($set_format, $v[0], $v[1], $comment);
-		} else {
-			return sprintf($clear_format, $v[0], $v[1], $comment);
-		}
-	}
-	elsif ($key eq "DELAY") {		# msec
-		return sprintf($delay_format, $v[0], $comment);
-	}
-	elsif ($key eq "POLL_REG") {	# address, mask, condition, delay, timeout
-		$v[3] =~ s/DELAY\s*=\s*//;
-		$v[4] =~ s/TIMEOUT\s*=\s*//;
-		${$functions[$#functions]}{declare} = "    int timeout;\r\n";
-		return sprintf($pollreg_format, $v[0], @v[1..4], $comment);
-	}
-	elsif ($key eq "VAR8") {		# page, address, value
-		return sprintf($mcu_format, sprintf("0xA%1X%02X", $v[0], hex($v[1])), $v[2], $comment);
-	}
-	elsif ($key eq "VAR") {			# page, address, value
-		return sprintf($mcu_format, sprintf("0x2%1X%02X", $v[0], hex($v[1])), $v[2], $comment);
-	}
-	elsif ($key eq "FIELD_WR") {	# name, value OR name, mask, set/clear
-		if ($v[2] eq "") {
-			return sprintf($mcu_format, $regmap{$v[0]}{0}, $v[1], $comment);
-		}
-		if ($v[2]) {
-			return sprintf($fieldset_format, $regmap{$v[0]}{0}, $regmap{$v[0]}{$v[1]}, $comment);
-		} else {
-			return sprintf($fieldclear_format, $regmap{$v[0]}{0}, $regmap{$v[0]}{$v[1]}, $comment);
-		}
-	}
-	elsif ($key eq "POLL_FIELD") {	# name, condition, delay, timeout
-		$v[2] =~ s/DELAY\s*=\s*//;
-		$v[3] =~ s/TIMEOUT\s*=\s*//;
-		${$functions[$#functions]}{declare} = "    int timeout;\r\n";
-		return sprintf($pollfield_format, $regmap{$v[0]}{0}, @v[1..3], $comment);
-	}
-	return "// IGNORED: " . $key . "=" . $value . $comment . "\r\n";	# 未対応コマンド
+    my($key, $value, $comment) = @_;
+    my @v = split /\s*\,\s*/, $value;           # split value
+    $comment = "    " . $comment if $comment;   # insert spaces
+    if ($key eq "LOAD") {
+        return sprintf($call_format, name_conv($value), $comment);
+    }
+    elsif ($key eq "REG") {         # address, value
+        return sprintf($reg_format, $v[0], $v[1], $comment);
+    }
+    elsif ($key eq "BITFIELD") {    # address, mask, set/clear
+        if ($v[2]) {
+            return sprintf($set_format, $v[0], $v[1], $comment);
+        } else {
+            return sprintf($clear_format, $v[0], $v[1], $comment);
+        }
+    }
+    elsif ($key eq "DELAY") {       # msec
+        return sprintf($delay_format, $v[0], $comment);
+    }
+    elsif ($key eq "POLL_REG") {    # address, mask, condition, delay, timeout
+        $v[3] =~ s/DELAY\s*=\s*//;
+        $v[4] =~ s/TIMEOUT\s*=\s*//;
+        ${$functions[$#functions]}{declare} = "    int timeout;\r\n";
+        return sprintf($pollreg_format, $v[0], @v[1..4], $comment);
+    }
+    elsif ($key eq "VAR8") {        # page, address, value
+        return sprintf($mcu_format, sprintf("0xA%1X%02X", $v[0], hex($v[1])), $v[2], $comment);
+    }
+    elsif ($key eq "VAR") {         # page, address, value
+        return sprintf($mcu_format, sprintf("0x2%1X%02X", $v[0], hex($v[1])), $v[2], $comment);
+    }
+    elsif ($key eq "FIELD_WR") {    # name, value OR name, mask, set/clear
+        if ($v[2] eq "") {
+            return sprintf($mcu_format, $regmap{$v[0]}{0}, $v[1], $comment);
+        }
+        if ($v[2]) {
+            return sprintf($fieldset_format, $regmap{$v[0]}{0}, $regmap{$v[0]}{$v[1]}, $comment);
+        } else {
+            return sprintf($fieldclear_format, $regmap{$v[0]}{0}, $regmap{$v[0]}{$v[1]}, $comment);
+        }
+    }
+    elsif ($key eq "POLL_FIELD") {  # name, condition, delay, timeout
+        $v[2] =~ s/DELAY\s*=\s*//;
+        $v[3] =~ s/TIMEOUT\s*=\s*//;
+        ${$functions[$#functions]}{declare} = "    int timeout;\r\n";
+        return sprintf($pollfield_format, $regmap{$v[0]}{0}, @v[1..3], $comment);
+    }
+    return "// IGNORED: " . $key . "=" . $value . $comment . "\r\n";    # 未対応コマンド
 }
 
 # 後処理 (上位API化処理)
 sub comp_func {
-	$_[0] =~ s/$comp_target/sprintf($mcu_format, $1, $3, $2 . $4)/eg;
-	return $_[0];
+    $_[0] =~ s/$comp_target/sprintf($mcu_format, $1, $3, $2 . $4)/eg;
+    return $_[0];
 }
 
 #ここからメイン
 
 # 引数チェック
-die "USAGE: $0 INFILE [OUTFILE]\n" if ($#ARGV != 1 and $#ARGV != 0);
+die "USAGE: $0 INFILE [OUTFILE]\n" if $#ARGV != 1 and $#ARGV != 0;
 
 # 各種初期化
 regmap_init($register_sdat);
 
 my $infile = $ARGV[0];
 my $outfile = $ARGV[1];
-($outfile = $infile) =~ s/\.ini$/.autogen.c/ unless ($outfile);
+($outfile = $infile) =~ s/\.ini$/.autogen.c/ unless $outfile;
 
 # 入出力ファイルのオープン (両方オープンしておく)
 open IN, $infile or die "Cannot open the input file!\n";
@@ -352,28 +353,28 @@ open OUT, ">", $outfile or die "Cannot open the output file!\n";
 
 # 入力処理
 while (<IN>) {
-	my $comment = "";
-	s/[\r\n]+$//;	# delete \r and/or \n
-	if (s/(\;|\/\/)(.*)//) {				# コメント抽出
-		$comment = $1 . $2;
-	}
-	if (/\s*\[(.+)\]/) {					# API検出
-		push @functions, {name => name_conv($1), data => "", comment => "", declare => ""};
-	}
-	elsif (/\s*(.+?)\s*\=\s*(.+?)\s*$/) {	# コマンド検出
-		# コマンドの手前にコメントがあった場合は、dataに移動させる
-		${$functions[$#functions]}{data} .= ${$functions[$#functions]}{comment};
-		${$functions[$#functions]}{comment} = "";
-		# コマンドをC言語に変換してdataに追加
-		${$functions[$#functions]}{data} .= func_conv($1, $2, $comment);
-	}
-	elsif (/\S+/) {							# 未知入力行検出 (コメント扱い (エラーにすべきかも))
-		warn "UNKNOWN STATEMENT: <<", $_, ">>\n";
-		${$functions[$#functions]}{comment} .= "// " . $_ . $comment . "\r\n";
-	}
-	elsif ($comment) {						# コメントのみ
-		${$functions[$#functions]}{comment} .= "// " . $comment . "\r\n";
-	}
+    my $comment = "";
+    s/[\r\n]+$//;   # delete \r and/or \n
+    if (s/(\;|\/\/)(.*)//) {                # コメント抽出
+        $comment = $1 . $2;
+    }
+    if (/\s*\[(.+)\]/) {                    # API検出
+        push @functions, {name => name_conv($1), data => "", comment => "", declare => ""};
+    }
+    elsif (/\s*(.+?)\s*\=\s*(.+?)\s*$/) {   # コマンド検出
+        # コマンドの手前にコメントがあった場合は、dataに移動させる
+        ${$functions[$#functions]}{data} .= ${$functions[$#functions]}{comment};
+        ${$functions[$#functions]}{comment} = "";
+        # コマンドをC言語に変換してdataに追加
+        ${$functions[$#functions]}{data} .= func_conv($1, $2, $comment);
+    }
+    elsif (/\S+/) {                         # 未知入力行検出 (コメント扱い (エラーにすべきかも))
+        warn "UNKNOWN STATEMENT: <<", $_, ">>\n";
+        ${$functions[$#functions]}{comment} .= "// " . $_ . $comment . "\r\n";
+    }
+    elsif ($comment) {                      # コメントのみ
+        ${$functions[$#functions]}{comment} .= "// " . $comment . "\r\n";
+    }
 }
 # 入力処理終了
 close IN;
@@ -382,25 +383,25 @@ close IN;
 #print Dumper(\@functions);
 
 # 出力処理
-$outfile =~ s/^.*[\\\/]//;	# get basename to print
-printf OUT $file_head_format, $outfile;		# ファイルヘッダ出力
-foreach my $func ( @functions ) {			# 検出済みAPIの宣言
-	printf OUT $declare_format, $$func{name} if ($$func{name});
+$outfile =~ s/^.*[\\\/]//;  # get basename to print
+printf OUT $file_head_format, $outfile;     # ファイルヘッダ出力
+foreach my $func ( @functions ) {           # 検出済みAPIの宣言
+    printf OUT $declare_format, $$func{name} if $$func{name};
 }
 printf OUT "\r\n";
-foreach my $func ( @functions ) {			# API本体の出力
-	if ($$func{name}) {						# 最初のAPIより前の場合を除く
-		printf OUT $func_head_format, $$func{name};	# API名＆開き括弧の出力
-		print OUT "#pragma unused(camera)\r\n" unless ($$func{data} =~ /camera/);	# warning防止
-		print OUT $$func{declare}, "\r\n" if ($$func{declare});	# 変数宣言 (if any)
-	}
-	print OUT comp_func($$func{data});		# 本体の後処理＋出力
-	if ($$func{name}) {						# 最初のAPIより前の場合を除く
-		printf OUT $func_foot_format ;		# 閉じ括弧出力
-	}
-	print OUT $$func{comment};				# 最後のコメントの出力 (たいてい次のAPIのためのもの)
+foreach my $func ( @functions ) {           # API本体の出力
+    if ($$func{name}) {                     # 最初のAPIより前の場合を除く
+        printf OUT $func_head_format, $$func{name}; # API名＆開き括弧の出力
+        print OUT "#pragma unused(camera)\r\n" unless $$func{data} =~ /\bcamera\b/; # warning防止
+        print OUT $$func{declare}, "\r\n" if $$func{declare};   # 変数宣言 (if any)
+    }
+    print OUT comp_func($$func{data});      # 本体の後処理＋出力
+    if ($$func{name}) {                     # 最初のAPIより前の場合を除く
+        printf OUT $func_foot_format ;      # 閉じ括弧出力
+    }
+    print OUT $$func{comment};              # 最後のコメントの出力 (たいてい次のAPIのためのもの)
 }
-printf OUT $file_foot_format;				# ファイルフッタ出力
+printf OUT $file_foot_format;               # ファイルフッタ出力
 # 出力処理終了
 close OUT;
 
