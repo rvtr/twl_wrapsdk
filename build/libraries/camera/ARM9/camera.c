@@ -55,12 +55,16 @@ void CAMERA_PowerOn( void )
         // (re)set polarities first
         reg_CAM_CAM_MCNT = (u16)((reg_CAM_CAM_MCNT & ~(REG_CAM_CAM_MCNT_SYNC_MASK | REG_CAM_CAM_MCNT_IRCLK_MASK))
                                  | SYNC_TYPE | RCLK_TYPE);
-
+#if defined(TWL_PLATFORM_BB) || PLATFORM == BB
+        reg_CAM_CAM_MCNT &= ~REG_CAM_CAM_MCNT_V18_MASK;  // VDD1.8 POWER ON
+        CAMERAi_Wait( 10 );                             // wait for over 10 MCLKs (M:10-20)(S:10ns?)
         reg_CAM_CAM_MCNT |= REG_CAM_CAM_MCNT_V28_MASK;  // VDD2.8 POWER ON
         CAMERAi_Wait( 10 );                             // wait for over 10 MCLKs (M:10-20)(S:10ns?)
+#endif
         reg_CFG_CLK |= REG_CFG_CLK_CAM_CKI_MASK;        // MCLK on
         CAMERAi_Wait( 32 );                             // wait for over 32 MCLKs (M:20-10)(S:32)
-        reg_CAM_CAM_MCNT |= REG_CAM_CAM_MCNT_RSTN_MASK; // RSTN => Hi
+        //reg_CAM_CAM_MCNT |= REG_CAM_CAM_MCNT_RSTN_MASK; // RSTN => Hi
+        reg_CAM_CAM_MCNT |= (REG_CAM_CAM_MCNT_STBYN_MASK|REG_CAM_CAM_MCNT_RSTN_MASK); // RSTN => Hi (for special board)
         CAMERAi_Wait( 6000 );                           // wait for over 6000 MCLKs
 
         CAMERA_StopCapture();                           // stop cmaera output
@@ -89,13 +93,17 @@ void CAMERA_PowerOff( void )
         {
         }
 
-        reg_CAM_CAM_MCNT &= ~REG_CAM_CAM_MCNT_RSTN_MASK;// RSTN => Lo
+        //reg_CAM_CAM_MCNT &= ~REG_CAM_CAM_MCNT_RSTN_MASK;// RSTN => Lo
+        reg_CAM_CAM_MCNT &= ~(REG_CAM_CAM_MCNT_STBYN_MASK|REG_CAM_CAM_MCNT_RSTN_MASK); // RSTN => Lo (for special board)
         CAMERAi_Wait( 10 );                             // wait for over 10 MCLKs (M:10)(S:10ns?)
 
         reg_CFG_CLK  &= ~REG_CFG_CLK_CAM_CKI_MASK;      // MCLK off
         CAMERAi_Wait( 20 );                             // wait for over 20 MCLKs (M:20)(S:0?)
-
+#if defined(TWL_PLATFORM_BB) || PLATFORM == BB
         reg_CAM_CAM_MCNT &= ~REG_CAM_CAM_MCNT_V28_MASK; // VDD2.8 POWER OFF
+        CAMERAi_Wait( 10 );                             // wait for over 10 MCLKs (M:10-20)(S:10ns?)
+        reg_CAM_CAM_MCNT |= REG_CAM_CAM_MCNT_V18_MASK;  // VDD1.8 POWER OFF
+#endif
     }
     reg_CFG_CLK &= ~REG_CFG_CLK_CAM_MASK;
 }
