@@ -257,5 +257,5 @@ D4 08 # 01D4 referense gain1
 0A 02 #03  #pre PLL1
 0B 01 #03 00  #post PLL2
 04 10
-04 90
+#04 98	# Yutaka: no output
 

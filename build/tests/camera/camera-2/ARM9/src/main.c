@@ -76,13 +76,13 @@ void TwlMain()
     CAMERA_Init();      // wakeup camera module
 
     result = CAMERA_I2CActivate(CAMERA_SELECT_IN);
-    if (result != CAMERA_RESULT_SUCCESS_TRUE)
+    if (result != CAMERA_RESULT_SUCCESS)
     {
         OS_TPrintf("CAMERA_I2CActivate was failed. (%d)\n", result);
     }
 #if 0
     result = CAMERA_I2CResize(CAMERA_SELECT_IN, 320, 240);
-    if (result != CAMERA_RESULT_SUCCESS_TRUE)
+    if (result != CAMERA_RESULT_SUCCESS)
     {
         OS_TPrintf("CAMERA_I2CResize was failed. (%d)\n", result);
     }

@@ -50,6 +50,7 @@ typedef enum CAMERAPxiCommand
     CAMERA_PXI_COMMAND_INIT                         = 0x00, // 初期化
 
     CAMERA_PXI_COMMAND_ACTIVATE                     = 0x10, // アクティブ選択
+    CAMERA_PXI_COMMAND_OUTPUT_WITH_DUAL_ACTIVATION  = 0x11, // 出力選択(両方アクティブ)
 
     CAMERA_PXI_COMMAND_RESIZE                       = 0x30, // サイズ設定
     CAMERA_PXI_COMMAND_FRAME_RATE                   = 0x31, // フレームレート設定
@@ -66,6 +67,7 @@ typedef enum CAMERAPxiSize
     CAMERA_PXI_SIZE_INIT                            = 1,    // camera
 
     CAMERA_PXI_SIZE_ACTIVATE                        = 1,    // camera
+    CAMERA_PXI_SIZE_OUTPUT_WITH_DUAL_ACTIVATION     = 1,    // camera
 
     CAMERA_PXI_SIZE_RESIZE                          = 5,    // camera, (u16)width, (u16)height
     CAMERA_PXI_SIZE_FRAME_RATE                      = 2,    // camera, rate
@@ -80,11 +82,11 @@ CAMERAPxiSize;
 typedef enum CAMERAPxiResult
 {
     CAMERA_PXI_RESULT_SUCCESS = 0,        // 処理成功 (void/void*型) // 場合により後続パケットあり
-    CAMERA_PXI_RESULT_SUCCESS_TRUE,       // 処理成功 (BOOL型)
+    CAMERA_PXI_RESULT_SUCCESS_TRUE = 0,   // 処理成功 (BOOL型)
     CAMERA_PXI_RESULT_SUCCESS_FALSE,      // 処理成功 (BOOL型)
     CAMERA_PXI_RESULT_INVALID_COMMAND,    // 不正なPXIコマンド
     CAMERA_PXI_RESULT_INVALID_PARAMETER,  // 不正なパラメータ
-    CAMERA_PXI_RESULT_ILLEGAL_STATUS,     // RTCの状態により処理を実行不能
+    CAMERA_PXI_RESULT_ILLEGAL_STATUS,     // CAMERAの状態により処理を実行不可
     CAMERA_PXI_RESULT_BUSY,               // 他のリクエストを実行中
     CAMERA_PXI_RESULT_FATAL_ERROR,        // その他何らかの原因で処理に失敗
     CAMERA_PXI_RESULT_MAX

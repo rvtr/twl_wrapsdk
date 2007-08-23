@@ -120,9 +120,10 @@ CAMERAResult CAMERA_I2CInit(CameraSelect camera);
   Name:         CAMERA_I2CActivateAsync
 
   Description:  activate specified CAMERA (goto standby if NONE is specified)
+                if you want to activate both cameras, use CAMERA_I2COutputWithDualActivation[Async]
                 async version
 
-  Arguments:    camera      - one of CameraSelect
+  Arguments:    camera      - one of CameraSelect (BOTH is not valid)
                 callback    - 非同期処理が完了した再に呼び出す関数を指定
                 arg         - コールバック関数の呼び出し時の引数を指定。
 
@@ -134,13 +135,40 @@ CAMERAResult CAMERA_I2CActivateAsync(CameraSelect camera, CAMERACallback callbac
   Name:         CAMERA_I2CActivate
 
   Description:  activate specified CAMERA (goto standby if NONE is specified)
+                if you want to activate both cameras, use CAMERA_I2COutputWithDualActivation[Async]
                 sync version.
 
-  Arguments:    camera      - one of CameraSelect
+  Arguments:    camera      - one of CameraSelect (BOTH is not valid)
 
   Returns:      CAMERAResult
  *---------------------------------------------------------------------------*/
 CAMERAResult CAMERA_I2CActivate(CameraSelect camera);
+
+/*---------------------------------------------------------------------------*
+  Name:         CAMERA_I2COutputWithDualActivationAsync
+
+  Description:  activate both camera and output specified CAMERA
+                async version
+
+  Arguments:    camera      - one of CameraSelect (IN or OUT)
+                callback    - 非同期処理が完了した再に呼び出す関数を指定
+                arg         - コールバック関数の呼び出し時の引数を指定。
+
+  Returns:      CAMERAResult
+ *---------------------------------------------------------------------------*/
+CAMERAResult CAMERA_I2COutputWithDualActivationAsync(CameraSelect camera, CAMERACallback callback, void *arg);
+
+/*---------------------------------------------------------------------------*
+  Name:         CAMERA_I2COutputWithDualActivation
+
+  Description:  activate both camera and output specified CAMERA
+                sync version.
+
+  Arguments:    camera      - one of CameraSelect (IN or OUT)
+
+  Returns:      CAMERAResult
+ *---------------------------------------------------------------------------*/
+CAMERAResult CAMERA_I2COutputWithDualActivation(CameraSelect camera);
 
 /*---------------------------------------------------------------------------*
   Name:         CAMERAi_I2CResizeAsync

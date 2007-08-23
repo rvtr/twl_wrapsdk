@@ -58,7 +58,7 @@ BOOL CAMERA_I2CInit(CameraSelect camera)
         result = CAMERAi_S_I2CInit(camera);
         if (result == FALSE)
         {
-            cameraType = CAMERA_TYPE_MICRON; // rotate for next try
+            //cameraType = CAMERA_TYPE_MICRON; // rotate for next try
             //cameraType = CAMERA_TYPE_UNKNOWN; // annihilate camera I2C
         }
     }
@@ -69,24 +69,75 @@ BOOL CAMERA_I2CInit(CameraSelect camera)
 /*---------------------------------------------------------------------------*
   Name:         CAMERA_I2CStandby
 
-  Description:  standby or resume CAMERA
+  Description:  goto standby
 
-  Arguments:    camera  : one of CameraSelect
-                standby : TRUE if goto standby mode
+  Arguments:    camera  : one of CameraSelect (IN/OUT/BOTH) to goto standby
 
   Returns:      TRUE if success
  *---------------------------------------------------------------------------*/
-BOOL CAMERA_I2CStandby(CameraSelect camera, BOOL standby)
+BOOL CAMERA_I2CStandby(CameraSelect camera)
 {
     BOOL result = FALSE;
     (void)I2C_Lock();
     switch (cameraType)
     {
     case CAMERA_TYPE_MICRON:
-        result = CAMERAi_M_I2CStandby(camera, standby);
+        result = CAMERAi_M_I2CStandby(camera);
         break;
     case CAMERA_TYPE_SHARP:
-        result = CAMERAi_S_I2CStandby(camera, standby);
+        result = CAMERAi_S_I2CStandby(camera);
+        break;
+    }
+    (void)I2C_Unlock();
+    return result;
+}
+
+/*---------------------------------------------------------------------------*
+  Name:         CAMERA_I2CResume
+
+  Description:  resume from standby
+
+  Arguments:    camera  : one of CameraSelect (IN/OUT) to resume
+
+  Returns:      TRUE if success
+ *---------------------------------------------------------------------------*/
+BOOL CAMERA_I2CResume(CameraSelect camera)
+{
+    BOOL result = FALSE;
+    (void)I2C_Lock();
+    switch (cameraType)
+    {
+    case CAMERA_TYPE_MICRON:
+        result = CAMERAi_M_I2CResume(camera);
+        break;
+    case CAMERA_TYPE_SHARP:
+        result = CAMERAi_S_I2CResume(camera);
+        break;
+    }
+    (void)I2C_Unlock();
+    return result;
+}
+
+/*---------------------------------------------------------------------------*
+  Name:         CAMERA_I2CResumeBoth
+
+  Description:  resume both CAMERAs, but only one will output
+
+  Arguments:    camera  : one of CameraSelect (IN/OUT) to output
+
+  Returns:      TRUE if success
+ *---------------------------------------------------------------------------*/
+BOOL CAMERA_I2CResumeBoth(CameraSelect camera)
+{
+    BOOL result = FALSE;
+    (void)I2C_Lock();
+    switch (cameraType)
+    {
+    case CAMERA_TYPE_MICRON:
+        result = CAMERAi_S_I2CResumeBoth(camera);
+        break;
+    case CAMERA_TYPE_SHARP:
+        result = CAMERAi_S_I2CResumeBoth(camera);
         break;
     }
     (void)I2C_Unlock();
@@ -120,7 +171,6 @@ BOOL CAMERA_I2CResize(CameraSelect camera, u16 width, u16 height)
     (void)I2C_Unlock();
     return result;
 }
-
 
 /*---------------------------------------------------------------------------*
   Name:         CAMERA_I2CFrameRate
@@ -203,3 +253,8 @@ BOOL CAMERA_I2CFlip(CameraSelect camera, CameraFlip flip)
     return result;
 }
 
+#if 0
+    その他のAPI候補
+    ホワイトバランス、露光
+    フォーマット(YUYVの順番、RGB444もあり?)
+#endif

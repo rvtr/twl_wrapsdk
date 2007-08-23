@@ -41,16 +41,17 @@ BankGroup;
  *---------------------------------------------------------------------------*/
 BOOL CAMERAi_S_I2CInit(CameraSelect camera)
 {
+#if 0
     BOOL rIn = TRUE;
     BOOL rOut = TRUE;
-    // should not send init command same time
+    // should not send init command same time (TODO:èoóÕÇ»ÇµÇ≈èâä˙âªÇ≈Ç´ÇÈÇ»ÇÁìØéûÇ…èàóùÇ∑ÇÈÇÊÇ§Ç…ïœÇ¶ÇÈ)
     if (camera & CAMERA_SELECT_IN)
     {
         rIn = CAMERAi_S_Initialize(CAMERA_SELECT_IN)
            && CAMERAi_S_WriteRegister(CAMERA_SELECT_IN, BANK_ADDR, BANK_GROUP_B)
            && CAMERAi_S_SetFlags(CAMERA_SELECT_IN, 0x1A, 0x08)          // reverse RCLK polarity
            && CAMERAi_S_WriteRegister(CAMERA_SELECT_IN, 0x18, 0x02)     // force to order YUYV
-           && CAMERAi_S_I2CStandby(CAMERA_SELECT_IN, TRUE);
+           && CAMERAi_S_I2CStandby(CAMERA_SELECT_IN);
     }
     if (camera & CAMERA_SELECT_OUT)
     {
@@ -58,33 +59,71 @@ BOOL CAMERAi_S_I2CInit(CameraSelect camera)
             && CAMERAi_S_WriteRegister(CAMERA_SELECT_OUT, BANK_ADDR, BANK_GROUP_B)
             && CAMERAi_S_SetFlags(CAMERA_SELECT_OUT, 0x1A, 0x08)        // reverse RCLK polarity
             && CAMERAi_S_WriteRegister(CAMERA_SELECT_OUT, 0x18, 0x02)   // force to order YUYV
-            && CAMERAi_S_I2CStandby(CAMERA_SELECT_OUT, TRUE);
+           && CAMERAi_S_I2CStandby(CAMERA_SELECT_OUT);
     }
     return (rIn && rOut);
+#else
+    return CAMERAi_S_Initialize(camera)
+        && CAMERAi_S_WriteRegister(camera, BANK_ADDR, BANK_GROUP_B)
+        && CAMERAi_S_SetFlags(camera, 0x1A, 0x08)       // reverse RCLK polarity
+        && CAMERAi_S_WriteRegister(camera, 0x18, 0x02)  // force to order YUYV
+        && CAMERAi_S_ClearFlags(camera, 0x04, 0x88);    // goto standby (maybe already into)
+#endif
 }
 
 /*---------------------------------------------------------------------------*
   Name:         CAMERAi_S_I2CStandby
 
-  Description:  standby or resume CAMERA
+  Description:  goto standby
 
-  Arguments:    camera  : one of CameraSelect
-                standby : TRUE if goto standby mode
+  Arguments:    camera  : one of CameraSelect (IN/OUT/BOTH) to goto standby
 
   Returns:      TRUE if success
  *---------------------------------------------------------------------------*/
-BOOL CAMERAi_S_I2CStandby(CameraSelect camera, BOOL standby)
+BOOL CAMERAi_S_I2CStandby(CameraSelect camera)
 {
-    if (standby)
+    return CAMERAi_S_WriteRegister(camera, BANK_ADDR, BANK_GROUP_B)
+        && CAMERAi_S_ClearFlags(camera, 0x04, 0x88);    // goto standby and disable to output
+}
+
+/*---------------------------------------------------------------------------*
+  Name:         CAMERAi_S_I2CResume
+
+  Description:  resume from standby
+
+  Arguments:    camera  : one of CameraSelect (IN/OUT) to resume
+
+  Returns:      TRUE if success
+ *---------------------------------------------------------------------------*/
+BOOL CAMERAi_S_I2CResume(CameraSelect camera)
+{
+    if (camera == CAMERA_SELECT_BOTH)
     {
-        return CAMERAi_S_WriteRegister(camera, BANK_ADDR, BANK_GROUP_B)
-            && CAMERAi_S_ClearFlags(camera, 0x04, 0x80);
+        return FALSE;
     }
-    else
+    return CAMERAi_S_WriteRegister(camera, BANK_ADDR, BANK_GROUP_B)
+        && CAMERAi_S_SetFlags(camera, 0x04, 0x88);  // resume from standby and enable to output
+}
+
+/*---------------------------------------------------------------------------*
+  Name:         CAMERAi_S_I2CResumeBoth
+
+  Description:  resume both CAMERAs, but only one will output
+
+  Arguments:    camera  : one of CameraSelect (IN/OUT) to output
+
+  Returns:      TRUE if success
+ *---------------------------------------------------------------------------*/
+BOOL CAMERAi_S_I2CResumeBoth(CameraSelect camera)
+{
+    CameraSelect alternative = (camera == CAMERA_SELECT_IN ? CAMERA_SELECT_OUT : CAMERA_SELECT_IN);
+    if (camera == CAMERA_SELECT_BOTH)
     {
-        return CAMERAi_S_WriteRegister(camera, BANK_ADDR, BANK_GROUP_B)
-            && CAMERAi_S_SetFlags(camera, 0x04, 0x80);
+        return FALSE;
     }
+    return CAMERAi_S_WriteRegister(CAMERA_SELECT_BOTH, BANK_ADDR, BANK_GROUP_B)
+        && CAMERAi_S_SetParams(alternative, 0x04, 0x80, 0x88)   // resume but no output
+        && CAMERAi_S_SetFlags(camera, 0x04, 0x88);              // resume and output
 }
 
 /*---------------------------------------------------------------------------*
@@ -174,7 +213,7 @@ BOOL CAMERAi_S_I2CFlip(CameraSelect camera, CameraFlip flip)
     u8 data = 0;
     switch (flip)
     {
-    case CAMERA_FLIP_NONE:      data = 0x00;    break;
+    //case CAMERA_FLIP_NONE:      data = 0x00;    break;
     case CAMERA_FLIP_VERTICAL:  data = 0x02;    break;
     case CAMERA_FLIP_HORIZONTAL:data = 0x01;    break;
     case CAMERA_FLIP_REVERSE:   data = 0x03;    break;

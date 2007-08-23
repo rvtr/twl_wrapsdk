@@ -100,8 +100,7 @@ void CAMERA_Init(void)
     CAMERA_PowerOn();
 
     // カメラ初期化
-    //CAMERA_I2CInit(CAMERA_SELECT_BOTH);
-    CAMERA_I2CInit(CAMERA_SELECT_IN);
+    CAMERA_I2CInit(CAMERA_SELECT_BOTH);
 }
 
 /*---------------------------------------------------------------------------*
@@ -246,9 +245,10 @@ CAMERAResult CAMERA_I2CInit(CameraSelect camera)
   Name:         CAMERA_I2CActivateAsync
 
   Description:  activate specified CAMERA (goto standby if NONE is specified)
+                if you want to activate both cameras, use CAMERA_I2COutputWithDualActivation[Async]
                 async version
 
-  Arguments:    camera      - one of CameraSelect
+  Arguments:    camera      - one of CameraSelect (BOTH is not valid)
                 callback    - 非同期処理が完了した再に呼び出す関数を指定
                 arg         - コールバック関数の呼び出し時の引数を指定。
 
@@ -286,15 +286,76 @@ CAMERAResult CAMERA_I2CActivateAsync(CameraSelect camera, CAMERACallback callbac
   Name:         CAMERA_I2CActivate
 
   Description:  activate specified CAMERA (goto standby if NONE is specified)
+                if you want to activate both cameras, use CAMERA_I2COutputWithDualActivation[Async]
                 sync version.
 
-  Arguments:    camera      - one of CameraSelect
+  Arguments:    camera      - one of CameraSelect (BOTH is not valid)
 
   Returns:      CAMERAResult
  *---------------------------------------------------------------------------*/
 CAMERAResult CAMERA_I2CActivate(CameraSelect camera)
 {
     cameraWork.result = CAMERA_I2CActivateAsync(camera, CameraSyncCallback, 0);
+    if (cameraWork.result == CAMERA_RESULT_SUCCESS)
+    {
+        CameraWaitBusy();
+    }
+    return cameraWork.result;
+}
+
+/*---------------------------------------------------------------------------*
+  Name:         CAMERA_I2COutputWithDualActivationAsync
+
+  Description:  activate both camera and output specified CAMERA
+                async version
+
+  Arguments:    camera      - one of CameraSelect (IN or OUT)
+                callback    - 非同期処理が完了した再に呼び出す関数を指定
+                arg         - コールバック関数の呼び出し時の引数を指定。
+
+  Returns:      CAMERAResult
+ *---------------------------------------------------------------------------*/
+CAMERAResult CAMERA_I2COutputWithDualActivationAsync(CameraSelect camera, CAMERACallback callback, void *arg)
+{
+    const CAMERAPxiCommand  command = CAMERA_PXI_COMMAND_OUTPUT_WITH_DUAL_ACTIVATION;
+    const u8                size    = CAMERA_PXI_SIZE_OUTPUT_WITH_DUAL_ACTIVATION;
+    OSIntrMode enabled;
+
+    SDK_NULL_ASSERT(callback);
+
+    if (CAMERA_SELECT_BOTH == camera || CAMERA_SELECT_NONE == camera)
+    {
+        return CAMERA_RESULT_ILLEGAL_PARAMETER;
+    }
+
+    enabled = OS_DisableInterrupts();
+    if (cameraWork.lock)
+    {
+        (void)OS_RestoreInterrupts(enabled);
+        return CAMERA_RESULT_BUSY;
+    }
+    cameraWork.lock = TRUE;
+    (void)OS_RestoreInterrupts(enabled);
+    // コールバック設定
+    cameraWork.callback = callback;
+    cameraWork.callbackArg = arg;
+
+    return CameraSendPxiCommand(command, size, (u8)camera) ? CAMERA_RESULT_SUCCESS : CAMERA_RESULT_SEND_ERROR;
+}
+
+/*---------------------------------------------------------------------------*
+  Name:         CAMERA_I2COutputWithDualActivation
+
+  Description:  activate both camera and output specified CAMERA
+                sync version.
+
+  Arguments:    camera      - one of CameraSelect (IN or OUT)
+
+  Returns:      CAMERAResult
+ *---------------------------------------------------------------------------*/
+CAMERAResult CAMERA_I2COutputWithDualActivation(CameraSelect camera)
+{
+    cameraWork.result = CAMERA_I2COutputWithDualActivationAsync(camera, CameraSyncCallback, 0);
     if (cameraWork.result == CAMERA_RESULT_SUCCESS)
     {
         CameraWaitBusy();
@@ -721,11 +782,8 @@ static void CameraPxiCallback(PXIFifoTag tag, u32 data, BOOL err)
         // 処理結果を確認
         switch (cameraWork.pxiResult)
         {
-        case CAMERA_PXI_RESULT_SUCCESS:
-            result = CAMERA_RESULT_SUCCESS;
-            break;
-        case CAMERA_PXI_RESULT_SUCCESS_TRUE:
-            result = CAMERA_RESULT_SUCCESS_TRUE;
+        case CAMERA_PXI_RESULT_SUCCESS:     // alias CAMERA_PXI_RESULT_SUCCESS_TRUE
+            result = CAMERA_RESULT_SUCCESS; // alias CAMERA_RESULT_SUCCESS_TRUE
             break;
         case CAMERA_PXI_RESULT_SUCCESS_FALSE:
             result = CAMERA_RESULT_SUCCESS_FALSE;

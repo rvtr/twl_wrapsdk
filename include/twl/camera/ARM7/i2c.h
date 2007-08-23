@@ -41,14 +41,35 @@ BOOL CAMERA_I2CInit(CameraSelect camera);
 /*---------------------------------------------------------------------------*
   Name:         CAMERA_I2CStandby
 
-  Description:  standby or resume CAMERA
+  Description:  goto standby
 
-  Arguments:    camera  : one of CameraSelect
-                standby : TRUE if goto standby mode
+  Arguments:    camera  : one of CameraSelect (IN/OUT/BOTH) to goto standby
 
   Returns:      TRUE if success
  *---------------------------------------------------------------------------*/
-BOOL CAMERA_I2CStandby(CameraSelect camera, BOOL standby);
+BOOL CAMERA_I2CStandby(CameraSelect camera);
+
+/*---------------------------------------------------------------------------*
+  Name:         CAMERA_I2CResume
+
+  Description:  resume from standby
+
+  Arguments:    camera  : one of CameraSelect (IN/OUT) to resume
+
+  Returns:      TRUE if success
+ *---------------------------------------------------------------------------*/
+BOOL CAMERA_I2CResume(CameraSelect camera);
+
+/*---------------------------------------------------------------------------*
+  Name:         CAMERA_I2CResumeBoth
+
+  Description:  resume both CAMERAs, but only one will output
+
+  Arguments:    camera  : one of CameraSelect (IN/OUT) to output
+
+  Returns:      TRUE if success
+ *---------------------------------------------------------------------------*/
+BOOL CAMERA_I2CResumeBoth(CameraSelect camera);
 
 /*---------------------------------------------------------------------------*
   Name:         CAMERA_I2CResize
@@ -62,7 +83,6 @@ BOOL CAMERA_I2CStandby(CameraSelect camera, BOOL standby);
   Returns:      TRUE if success
  *---------------------------------------------------------------------------*/
 BOOL CAMERA_I2CResize(CameraSelect camera, u16 width, u16 height);
-
 
 /*---------------------------------------------------------------------------*
   Name:         CAMERA_I2CFrameRate

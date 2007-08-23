@@ -31,50 +31,83 @@
  *---------------------------------------------------------------------------*/
 BOOL CAMERAi_M_I2CInit(CameraSelect camera)
 {
+#if 0
     BOOL rIn = TRUE;
     BOOL rOut = TRUE;
-    // should not send init command same time
+    // should not send init command same time (TODO:èoóÕÇ»ÇµÇ≈èâä˙âªÇ≈Ç´ÇÈÇ»ÇÁìØéûÇ…èàóùÇ∑ÇÈÇÊÇ§Ç…ïœÇ¶ÇÈ)
     if (camera & CAMERA_SELECT_IN)
     {
         rIn = CAMERAi_M_Default_Registers(CAMERA_SELECT_IN)
            && CAMERAi_M_WriteMCU(CAMERA_SELECT_IN, 0x2755, 0x0002)  // YUYV format (required to refresh)
-           && CAMERAi_M_I2CResize(CAMERA_SELECT_IN, 320, 240)
-           && CAMERAi_M_I2CStandby(CAMERA_SELECT_IN, TRUE);
+           && CAMERAi_M_I2CStandby(CAMERA_SELECT_IN);
     }
     if (camera & CAMERA_SELECT_OUT)
     {
         rOut = CAMERAi_M_Default_Registers(CAMERA_SELECT_OUT)
             && CAMERAi_M_WriteMCU(CAMERA_SELECT_OUT, 0x2755, 0x0002)    // YUYV format (required to refresh)
-            && CAMERAi_M_I2CResize(CAMERA_SELECT_OUT, 320, 240)
-            && CAMERAi_M_I2CStandby(CAMERA_SELECT_OUT, TRUE);
+            && CAMERAi_M_I2CStandby(CAMERA_SELECT_OUT);
     }
     return (rIn && rOut);
+#else
+    return CAMERAi_M_Default_Registers(camera)
+        && CAMERAi_M_WriteMCU(camera, 0x2755, 0x0002)   // YUYV format (required to refresh)
+        && CAMERAi_M_SetFlags(camera, 0x0018, 0x0001);  // goto standby
+#endif
 }
 
 /*---------------------------------------------------------------------------*
   Name:         CAMERAi_M_I2CStandby
 
-  Description:  standby or resume CAMERA
+  Description:  goto standby
 
-  Arguments:    camera  : one of CameraSelect
-                standby : TRUE if goto standby mode
+  Arguments:    camera  : one of CameraSelect (IN/OUT/BOTH) to goto standby
 
   Returns:      TRUE if success
  *---------------------------------------------------------------------------*/
-BOOL CAMERAi_M_I2CStandby(CameraSelect camera, BOOL standby)
+BOOL CAMERAi_M_I2CStandby(CameraSelect camera)
 {
-    if (standby)
+    return CAMERAi_M_ClearFlags(camera, 0x001A, 0x0200) // disable to output
+        && CAMERAi_M_SetFlags(camera, 0x0018, 0x0001);  // goto standby
+}
+
+/*---------------------------------------------------------------------------*
+  Name:         CAMERAi_M_I2CResume
+
+  Description:  resume from standby
+
+  Arguments:    camera  : one of CameraSelect (IN/OUT) to resume
+
+  Returns:      TRUE if success
+ *---------------------------------------------------------------------------*/
+BOOL CAMERAi_M_I2CResume(CameraSelect camera)
+{
+    if (camera == CAMERA_SELECT_BOTH)
     {
-        return CAMERAi_M_ClearFlags(camera, 0x001A, 0x0200) // stop to output
-//      return CAMERAi_M_Stop(camera)
-            && CAMERAi_M_SetFlags(camera, 0x0018, 0x0001);  // go to standby
+        return FALSE;
     }
-    else
+    return CAMERAi_M_SetFlags(camera, 0x001A, 0x0200)   // enable to output
+        && CAMERAi_M_ClearFlags(camera, 0x0018, 0x0001);// resume from standby
+}
+
+/*---------------------------------------------------------------------------*
+  Name:         CAMERAi_M_I2CResumeBoth
+
+  Description:  resume both CAMERAs, but only one will output
+
+  Arguments:    camera  : one of CameraSelect (IN/OUT) to output
+
+  Returns:      TRUE if success
+ *---------------------------------------------------------------------------*/
+BOOL CAMERAi_M_I2CResumeBoth(CameraSelect camera)
+{
+    CameraSelect alternative = (camera == CAMERA_SELECT_IN ? CAMERA_SELECT_OUT : CAMERA_SELECT_IN);
+    if (camera == CAMERA_SELECT_BOTH)
     {
-        return CAMERAi_M_ClearFlags(camera, 0x0018, 0x0001) // leave standby
-            && CAMERAi_M_SetFlags(camera, 0x001A, 0x0200);  // start to output
-//          && CAMERAi_M_Start(camera);
+        return FALSE;
     }
+    return CAMERAi_M_ClearFlags(alternative, 0x001A, 0x0200)        // disable to output
+        && CAMERAi_M_SetFlags(camera, 0x001A, 0x0200)               // enable to output
+        && CAMERAi_M_ClearFlags(CAMERA_SELECT_BOTH, 0x0018, 0x0001);// resume from standby
 }
 
 /*---------------------------------------------------------------------------*
@@ -135,16 +168,13 @@ BOOL CAMERAi_M_I2CEffect(CameraSelect camera, CameraEffect effect)
     {
     case CAMERA_EFFECT_NONE:
         return CAMERAi_M_Effect_Off(camera);
-//        return CAMERAi_M_Option_Effect_Off(camera);
     case CAMERA_EFFECT_MONO:
         return CAMERAi_M_Effect_Mono(camera);
-//        return CAMERAi_M_Option_Effect_Mono(camera);
     case CAMERA_EFFECT_SEPIA:
         return CAMERAi_M_Effect_Sepia(camera);
-//        return CAMERAi_M_Option_Effect_Sepia(camera);
     case CAMERA_EFFECT_NEGATIVE:
-        return CAMERAi_M_WriteMCU(camera, 0x2759, 0x6443)  //NEVATIVE_SPEC_EFFECTS_A
-            && CAMERAi_M_WriteMCU(camera, 0x275B, 0x6443)  //NEVATIVE_SPEC_EFFECTS_B
+        return CAMERAi_M_WriteMCU(camera, 0x2759, 0x6443)  //NEGATIVE_SPEC_EFFECTS_A
+            && CAMERAi_M_WriteMCU(camera, 0x275B, 0x6443)  //NEGATIVE_SPEC_EFFECTS_B
             && CAMERAi_M_Refresh(camera);
     }
     return FALSE;
@@ -173,67 +203,3 @@ BOOL CAMERAi_M_I2CFlip(CameraSelect camera, CameraFlip flip)
     }
     return FALSE;
 }
-#if 0
-/*---------------------------------------------------------------------------*
-  Name:         CAMERAi_M_I2CWhiteBalance
-
-  Description:  set CAMERA white balance
-
-  Arguments:    camera  : one of CameraSelect
-                type    : preset number (0: auto)
-
-  Returns:      TRUE if success
- *---------------------------------------------------------------------------*/
-BOOL CAMERAi_M_I2CWhiteBalance(CameraSelect camera, int type)
-{
-    switch (type)
-    {
-    case 0:
-        return CAMERAi_M_Manual_WB_To_Auto_WB(camera);
-    case 1:
-        return CAMERAi_M_Manual_White_Balance_P1(camera);
-    case 2:
-        return CAMERAi_M_Manual_White_Balance_P2(camera);
-    case 3:
-        return CAMERAi_M_Manual_White_Balance_P3(camera);
-    case 4:
-        return CAMERAi_M_Manual_White_Balance_P4(camera);
-    case 5:
-        return CAMERAi_M_Manual_White_Balance_P5(camera);
-    case 6:
-        return CAMERAi_M_Manual_White_Balance_P6(camera);
-    case 7:
-        return CAMERAi_M_Manual_White_Balance_P7(camera);
-    case 8:
-        return CAMERAi_M_Manual_White_Balance_P8(camera);
-    }
-    return FALSE;
-}
-/*---------------------------------------------------------------------------*
-  Name:         CAMERAi_M_I2CExposure
-
-  Description:  set CAMERA exposure
-
-  Arguments:    camera  : one of CameraSelect
-                type    : preset number (0: auto)
-
-  Returns:      TRUE if success
- *---------------------------------------------------------------------------*/
-BOOL CAMERAi_M_I2CExposure(CameraSelect camera, int type)
-{
-    switch (type)
-    {
-    case 0:
-    case 1:
-    case 2:
-    case 3:
-    case 4:
-    case 5:
-    case 6:
-    case 7:
-    case 8:
-        return TRUE;
-    }
-    return FALSE;
-}
-#endif

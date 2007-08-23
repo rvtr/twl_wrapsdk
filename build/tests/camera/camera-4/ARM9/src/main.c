@@ -86,13 +86,13 @@ void TwlMain()
     CAMERA_Init();      // wakeup camera module
 
     result = CAMERA_I2CActivate(CAMERA_SELECT_IN);
-    if (result != CAMERA_RESULT_SUCCESS_TRUE)
+    if (result != CAMERA_RESULT_SUCCESS)
     {
         OS_TPrintf("CAMERA_I2CActivate was failed. (%d)\n", result);
     }
 #if 0
     result = CAMERA_I2CResize(CAMERA_SELECT_IN, 320, 240);
-    if (result != CAMERA_RESULT_SUCCESS_TRUE)
+    if (result != CAMERA_RESULT_SUCCESS)
     {
         OS_TPrintf("CAMERA_I2CResize was failed. (%d)\n", result);
     }
@@ -110,8 +110,9 @@ void TwlMain()
     OS_SetIrqFunction(OS_IE_CAM, CameraIntr);
     (void)OS_EnableIrqMask(OS_IE_CAM);
 
-    // カメラスタート (リクエストのみ)
+    // カメラスタート (割り込みハンドラで代用)
     startRequest = TRUE;
+    CameraIntr();
     OS_TPrintf("Camera is shooting a movie...\n");
 
     while (1)
@@ -187,7 +188,8 @@ void CameraIntr(void)
         if (MIi_IsExDmaBusy(DMA_NO))    // NOT done to capture last frame?
         {
             OS_TPrintf("DMA was not done until VBlank.\n");
-            return; // waiting next frame (skip current frame)
+            MIi_StopExDma(DMA_NO);  // DMA停止
+//            return; // waiting next frame (skip current frame)
         }
         // start to capture for next frame
         if (wp_pending)

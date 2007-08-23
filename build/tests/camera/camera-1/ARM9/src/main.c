@@ -20,7 +20,29 @@
 #define DMA_NO      5           // 使用するDMA番号(4-7)
 #define WIDTH       256         // イメージの幅
 #define HEIGHT      192         // イメージの高さ
-#define NUMS        1           // バッファ数
+
+#define DEFAULT_CAMERA  CAMERA_SELECT_IN
+//#define DEFAULT_CAMERA  CAMERA_SELECT_OUT
+
+//#define DUAL_MODE // 両方アクティブ状態での使用
+#if 0
+    DUAL_MODEはテストのために用意しているだけで、切り替えの瞬間に画面が
+    崩れるのは仕様です。CAMERA_I2COutputWithDualActivation()の目的は、
+    両者のFPSを固定しておき、ほぼ同時にStandbyから解除させることで、
+    フレーム同期している状態にしておき、上下のLCDにIN/OUTの両方の画像を
+    カメラに設定した半分のFPSで表示させるということが可能となるように
+    するためのものです。VRAM表示は1画面しか使えないので、FPGAでは検証
+    できません。(TSのタイミングで別サンプル作成予定)
+
+    切り替え時の自動露光の時間がもったいないときにも利用可能ではあります
+    が、消費電力の  観点から見て、CAMERA_I2COutputWithDualActivation()の
+    利用は最低限に限定すべきです。
+    (IN/OUT共通でフレームレート固定なので、片側の画面がかなり暗くなる
+     恐れがあることも踏まえておく必要があります)
+
+    最終的に、この仕様を残すかどうかは難しいところですね。
+    (削るならARM7側の仕様をもう少し整理できるのですが)
+#endif
 
 #define LINES_AT_ONCE   CAMERA_GET_MAX_LINES(WIDTH)     // 一回の転送ライン数
 #define BYTES_PER_LINE  CAMERA_GET_LINE_BYTES(WIDTH)    // 一ラインの転送バイト数
@@ -29,6 +51,7 @@ static void VBlankIntr(void);
 static void CameraIntr(void);
 
 static BOOL startRequest = FALSE;
+static CameraSelect current;
 /*---------------------------------------------------------------------------*
   Name:         TwlMain
 
@@ -64,16 +87,25 @@ void TwlMain()
     GX_DispOn();
 
     // カメラ初期化
-    CAMERA_Init();      // wakeup camera module
+    {
+        OSTick begin = OS_GetTick();
+        CAMERA_Init();      // wakeup camera module
+        OS_TPrintf("CAMERA_Init took %d msec\n", (int)OS_TicksToMilliSeconds(OS_GetTick()-begin));
+    }
+    current = DEFAULT_CAMERA;
 
-    result = CAMERA_I2CActivate(CAMERA_SELECT_IN);
-    if (result != CAMERA_RESULT_SUCCESS_TRUE)
+#ifdef DUAL_MODE
+    result = CAMERA_I2COutputWithDualActivation(current);
+#else
+    result = CAMERA_I2CActivate(current);
+#endif
+    if (result != CAMERA_RESULT_SUCCESS)
     {
         OS_TPrintf("CAMERA_I2CActivate was failed. (%d)\n", result);
     }
 #if 0
-    result = CAMERA_I2CResize(CAMERA_SELECT_IN, 320, 240);
-    if (result != CAMERA_RESULT_SUCCESS_TRUE)
+    result = CAMERA_I2CResize(current, 320, 240);
+    if (result != CAMERA_RESULT_SUCCESS)
     {
         OS_TPrintf("CAMERA_I2CResize was failed. (%d)\n", result);
     }
@@ -91,8 +123,15 @@ void TwlMain()
     OS_SetIrqFunction(OS_IE_CAM, CameraIntr);
     (void)OS_EnableIrqMask(OS_IE_CAM);
 
-    // カメラスタート (リクエストのみ)
+    // カメラスタート (割り込みハンドラで代用)
     startRequest = TRUE;
+    CameraIntr();
+    /*
+      (シャープカメラのみ確認済み事項)
+      Acitavate後、約30msec間VBlank期間が続く仕様なので、Activate直後は
+      実際の開始処理をしてしまって問題ない
+      (結局1枚目を捨てるつもりならフラグを立てるだけでいいけど・・・)
+    */
     OS_TPrintf("Camera is shooting a movie...\n");
 
     while (1)
@@ -107,23 +146,26 @@ void TwlMain()
         trg = (u16)(pad & ~old);
         old = pad;
 
+
         if (trg & PAD_BUTTON_A)
         {
-            OS_TPrintf("call CAMERA_I2CActivate(CAMERA_SELECT_IN)... ");
-            result = CAMERA_I2CActivate(CAMERA_SELECT_IN);
-            OS_TPrintf("%s\n", result == CAMERA_RESULT_SUCCESS_TRUE ? "SUCCESS" : "FAILED");
         }
         if (trg & PAD_BUTTON_B)
         {
-            OS_TPrintf("call CAMERA_I2CActivate(CAMERA_SELECT_OUT)... ");
-            result = CAMERA_I2CActivate(CAMERA_SELECT_OUT);
-            OS_TPrintf("%s\n", result == CAMERA_RESULT_SUCCESS_TRUE ? "SUCCESS" : "FAILED");
+            current = (current == CAMERA_SELECT_IN ? CAMERA_SELECT_OUT : CAMERA_SELECT_IN);
+            OS_TPrintf("call CAMERA_I2CActivate(%s)... ", (current == CAMERA_SELECT_IN ? "CAMERA_SELECT_IN" : "CAMERA_SELECT_OUT"));
+#ifdef DUAL_MODE
+            result = CAMERA_I2COutputWithDualActivation(current);
+#else
+            result = CAMERA_I2CActivate(current);
+#endif
+            OS_TPrintf("%s\n", result == CAMERA_RESULT_SUCCESS ? "SUCCESS" : "FAILED");
         }
         if (trg & PAD_BUTTON_R)
         {
             OS_TPrintf("call CAMERA_I2CActivate(CAMERA_SELECT_NONE)... ");
             result = CAMERA_I2CActivate(CAMERA_SELECT_NONE);
-            OS_TPrintf("%s\n", result == CAMERA_RESULT_SUCCESS_TRUE ? "SUCCESS" : "FAILED");
+            OS_TPrintf("%s\n", result == CAMERA_RESULT_SUCCESS ? "SUCCESS" : "FAILED");
         }
         if (trg & PAD_BUTTON_START) // start/stop to capture w/o Activate API
         {
@@ -162,14 +204,14 @@ void TwlMain()
                 OS_TPrintf("Done.\n");
 #if 0
                 // resize
-                OS_TPrintf("call CAMERA_I2CResize(CAMERA_SELECT_IN)... ");
-                result = CAMERA_I2CResize(CAMERA_SELECT_IN, 320, 240);
-                OS_TPrintf("%s\n", result == CAMERA_RESULT_SUCCESS_TRUE ? "SUCCESS" : "FAILED");
+                OS_TPrintf("call CAMERA_I2CResize(current)... ");
+                result = CAMERA_I2CResize(current, 320, 240);
+                OS_TPrintf("%s\n", result == CAMERA_RESULT_SUCCESS ? "SUCCESS" : "FAILED");
 #endif
                 // activate inside camera first
-                OS_TPrintf("call CAMERA_I2CActivate(CAMERA_SELECT_IN)... ");
-                result = CAMERA_I2CActivate(CAMERA_SELECT_IN);
-                OS_TPrintf("%s\n", result == CAMERA_RESULT_SUCCESS_TRUE ? "SUCCESS" : "FAILED");
+                OS_TPrintf("call CAMERA_I2CActivate(current)... ");
+                result = CAMERA_I2CActivate(current);
+                OS_TPrintf("%s\n", result == CAMERA_RESULT_SUCCESS ? "SUCCESS" : "FAILED");
             }
         }
     }
@@ -236,7 +278,8 @@ void CameraIntr(void)
         if (MIi_IsExDmaBusy(DMA_NO))    // NOT done to capture last frame?
         {
             OS_TPrintf("DMA was not done until VBlank.\n");
-            return; // waiting next frame (skip current frame)
+            MIi_StopExDma(DMA_NO);  // DMA停止
+//            return; // waiting next frame (skip current frame)
         }
         // start to capture for next frame
         CAMERA_DmaRecvAsync(DMA_NO, (void *)HW_LCDC_VRAM_A, BYTES_PER_LINE * LINES_AT_ONCE, BYTES_PER_LINE * HEIGHT);
