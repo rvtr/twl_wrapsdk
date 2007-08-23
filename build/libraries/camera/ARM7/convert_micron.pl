@@ -39,8 +39,43 @@ static inline BOOL CAMERAi_M_WriteMCU( CameraSelect camera, u16 addr, u16 value 
 }
 static inline BOOL CAMERAi_M_ReadMCU( CameraSelect camera, u16 addr, u16 *pValue )
 {
+    if (camera == CAMERA_SELECT_BOTH)
+    {
+        u16 vIn;
+        u16 vOut;
+        if (CAMERAi_M_WriteRegister(camera, 0x98C, addr)
+         && CAMERAi_M_ReadRegisters(CAMERA_SELECT_IN, 0x990, &vIn, 1)
+         && CAMERAi_M_ReadRegisters(CAMERA_SELECT_OUT, 0x990, &vOut, 1))
+        {
+            if (vIn == vOut)
+            {
+                *pValue = vIn;
+                return TRUE;
+            }
+        }
+        return FALSE;
+    }
     return CAMERAi_M_WriteRegister(camera, 0x98C, addr)
         && CAMERAi_M_ReadRegisters(camera, 0x990, pValue, 1);
+}
+static inline BOOL CAMERAi_M_ReadRegEx( CameraSelect camera, u16 addr, u16 *pValue )
+{
+    if (camera == CAMERA_SELECT_BOTH)
+    {
+        u16 vIn;
+        u16 vOut;
+        if (CAMERAi_M_ReadRegisters(CAMERA_SELECT_IN, addr, &vIn, 1)
+         && CAMERAi_M_ReadRegisters(CAMERA_SELECT_OUT, addr, &vOut, 1))
+        {
+            if (vIn == vOut)
+            {
+                *pValue = vIn;
+                return TRUE;
+            }
+        }
+        return FALSE;
+    }
+    return CAMERAi_M_ReadRegisters(camera, addr, pValue, 1);
 }
 
 EOF
@@ -103,12 +138,7 @@ my $pollreg_format =<<'EOF';
     while (1)
     {
         u16 data;
-        if (CAMERAi_M_ReadRegisters(camera, %1$s, &data, 1) == FALSE)
-        {
-            DBG_PRINTF("Failed to read a register! (%%d)\n", __LINE__);
-            return FALSE;
-        }
-        if ((data & %2$s) %3$s)
+        if (CAMERAi_M_ReadRegEx(camera, %1$s, &data) == FALSE || (data & %2$s) %3$s)
         {
             if (--timeout)
             {
@@ -167,12 +197,7 @@ my $pollfield_format =<<'EOF';
     while (1)
     {
         u16 data;
-        if (CAMERAi_M_ReadMCU(camera, %1$s, &data) == FALSE)
-        {
-            DBG_PRINTF("Failed to read a MCU! (%%d)\n", __LINE__);
-            return FALSE;
-        }
-        if (data %2$s)
+        if (CAMERAi_M_ReadMCU(camera, %1$s, &data) == FALSE || data %2$s)
         {
             if (--timeout)
             {

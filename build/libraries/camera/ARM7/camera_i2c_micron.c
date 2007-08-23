@@ -85,8 +85,8 @@ BOOL CAMERAi_M_I2CResume(CameraSelect camera)
     {
         return FALSE;
     }
-    return CAMERAi_M_SetFlags(camera, 0x001A, 0x0200)   // enable to output
-        && CAMERAi_M_ClearFlags(camera, 0x0018, 0x0001);// resume from standby
+    return CAMERAi_M_ClearFlags(camera, 0x0018, 0x0001)  // resume from standby
+        && CAMERAi_M_SetFlags(camera, 0x001A, 0x0200);   // enable to output;
 }
 
 /*---------------------------------------------------------------------------*
