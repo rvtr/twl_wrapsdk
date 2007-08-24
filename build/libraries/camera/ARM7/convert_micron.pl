@@ -134,7 +134,7 @@ my $delay_format =<<'EOF';
 EOF
 
 my $pollreg_format =<<'EOF';
-    timeout = %5$s;%6$s
+    timeout = %5$s * %4$s;%6$s
     while (1)
     {
         u16 data;
@@ -142,7 +142,7 @@ my $pollreg_format =<<'EOF';
         {
             if (--timeout)
             {
-                OS_Sleep(%4$s);
+                OS_Sleep(1);
                 continue;
             }
             DBG_PRINTF("Failed to poll a register! (%%d)\n", __LINE__);
@@ -193,7 +193,7 @@ my $fieldclear_format =<<'EOF';
 EOF
 
 my $pollfield_format =<<'EOF';
-    timeout = %4$s;%5$s
+    timeout = %4$s * %3$s;%5$s
     while (1)
     {
         u16 data;
@@ -201,7 +201,7 @@ my $pollfield_format =<<'EOF';
         {
             if (--timeout)
             {
-                OS_Sleep(%3$s);
+                OS_Sleep(1);
                 continue;
             }
             DBG_PRINTF("Failed to poll a register! (%%d)\n", __LINE__);
