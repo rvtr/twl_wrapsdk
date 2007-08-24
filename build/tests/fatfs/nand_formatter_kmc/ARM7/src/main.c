@@ -53,7 +53,7 @@ static void VBlankIntr(void);
 
 
 /*---------------------------------------------------------------------------*
-    
+
  *---------------------------------------------------------------------------*/
 static u16 path_str[512/sizeof(u16)]; //ロングファイル名
 
@@ -83,7 +83,7 @@ static BOOL getchar_yes_no_prompt(void)
 static int pow10( int count)
 {
   int i, result;
-  
+
   result = 1;
   for( i=0; i<count; i++) {
     result *= 10;
@@ -98,7 +98,7 @@ static int get_number_prompt( void)
   char c;
   int j, keta, pow_num, result_num;
   int size_num[3]; //3桁MBytes
-  
+
   while( (c = kmc_getchar()) != '\r') {
       if( (c >= '0')&&(c <= '9')) {
           kmc_putchar( c);
@@ -111,7 +111,7 @@ static int get_number_prompt( void)
       }
   }
   keta = i;
-  
+
   result_num = 0;
   for( j=0; j<keta; j++) {
       pow_num = pow10( keta-i);
@@ -150,14 +150,14 @@ void TwlSpMain(void)
     PCFD           fd;
     CHKDISK_STATS dstat;
     DEV_GEOMETRY  geometry;
-  
+
 
     // OS初期化
     OS_Init();
 
     OS_InitTick();
     OS_InitAlarm();
-    
+
     // PXI初期化、ARM9と同期
     PXI_Init();
 
@@ -178,7 +178,7 @@ void TwlSpMain(void)
     OS_InitThread();
 
     PRINTDEBUG("\nnand_formatter_kmc starts.\n");
-  
+
     /*----- RTFSが使うヒープ作成 -----*/
     {
       OSHeapHandle hh;
@@ -206,7 +206,7 @@ void TwlSpMain(void)
     }
     DBG_PRINTF( "es\n");
     DBG_CHAR( '\n');
-  
+
 
 #if 1
     nand_fat_partition_num = 1;
@@ -238,7 +238,7 @@ void TwlSpMain(void)
             break;
         }
         nand_fat_partition_num++;
-  
+
 //        DBG_PRINTF( "FAT PARTITION 3 SIZE?(MBytes) -> ");
 //        partition_MB_size[INDEX_FAT3_PARTITION] = get_number_prompt();
 //        DBG_PRINTF( "  (%d MBytes)\n\n", partition_MB_size[INDEX_FAT3_PARTITION]);
@@ -246,8 +246,8 @@ void TwlSpMain(void)
     }
 #endif
     DBG_PRINTF( "%d FAT Partitions.\n", nand_fat_partition_num);
-  
-  
+
+
     /*----- nandfirmチェック -----*/
 //    pc_raw_read( 5, (byte*)block_buf, 1, 1, TRUE);
     nandRtfsIo( 5, 1, (byte*)block_buf, 1, TRUE);
@@ -255,19 +255,25 @@ void TwlSpMain(void)
     arm9_size = *(u32*)(((u8*)block_buf)+0x2C);
     arm7_ofs  = *(u32*)(((u8*)block_buf)+0x30);
     arm7_size = *(u32*)(((u8*)block_buf)+0x3C);
+    if (arm9_ofs == 0x800 || arm7_ofs == 0x800) // there is a duplicate header for mirroring
+    {
+        nandRtfsIo( 5, 3, (byte*)block_buf, 1, TRUE);   // get header for mirroring image
+        arm9_ofs = *(u32*)(((u8*)block_buf)+0x20);
+        arm7_ofs = *(u32*)(((u8*)block_buf)+0x30);
+    }
 //    DBG_PRINTF( "arm9: 0x%x, 0x%x\n", arm9_ofs, arm9_size);
 //    DBG_PRINTF( "arm7: 0x%x, 0x%x\n", arm7_ofs, arm7_size);
 
     if( ((arm9_ofs + arm9_size) == arm7_ofs) && (arm9_ofs < arm7_ofs) &&
          (arm9_size != 0) && (arm7_size != 0)) {
-        nand_firm_size = arm7_ofs + arm7_size;
+        nand_firm_size = (arm9_ofs < arm7_ofs ? arm7_ofs + arm7_size : arm9_ofs + arm9_size);
         DBG_PRINTF( "nandfirm found. (size:0x%x bytes)\n", nand_firm_size);
         nand_firm_size = (nand_firm_size / 1024 / 1024) +
                          (((nand_firm_size % (1024*1024)) != 0)? 1:0);
 //        DBG_PRINTF( "firm %dMB, raw %dMB\n", nand_firm_size, partition_MB_size[INDEX_RAW_PARTITION]);
-      
+
         if( nand_firm_size > partition_MB_size[INDEX_RAW_PARTITION]) {
-           
+
             DBG_PRINTF( "YOUR SETTING WILL ERASE NAND FIRM, OK?(y/n) -> ");
             if( FALSE == getchar_yes_no_prompt()) {
                 PRINTDEBUG( "o\n");
@@ -283,7 +289,7 @@ void TwlSpMain(void)
     }else{
         DBG_PRINTF( "nandfirm is not found.\n");
     }
-  
+
 NAND_FLASH_FORMAT_START:
     /*------------------------------*/
 
@@ -332,8 +338,8 @@ NAND_FLASH_FORMAT_START:
         PRINTDEBUG( "pc_set_default_drive failed\n");
         goto NAND_FLASH_FORMAT_END;
     }
-  
-  
+
+
     /**/
 //    PRINTDEBUG( "pc_check_disk start. please wait.\n");
 //    pc_check_disk( (byte*)"F:", &dstat, 0, 1, 1);
@@ -345,14 +351,14 @@ NAND_FLASH_FORMAT_START:
         PRINTDEBUG( "Invalid parameter. (size over)\n");
         goto NAND_FLASH_FORMAT_END;
     }
-  
+
     /**/
     if( !pc_format_media( (byte*)path_str, &geometry)) {
         PRINTDEBUG( "pc_format_media failed\n");
         goto NAND_FLASH_FORMAT_END;
     }
     PRINTDEBUG( "build MBR success.\n");
-  
+
     /*ボリュームフォーマット*/
     if( !pc_format_volume( (byte*)path_str, &geometry)) {
         PRINTDEBUG( "pc_format_volume (p0) failed\n");
@@ -362,7 +368,7 @@ NAND_FLASH_FORMAT_START:
     /*-------------------------------------------------*/
 
 
-  
+
     /*マウント(F:p0, G:p1, H:p2, I:p3)*/
     for( i=1; i<nand_fat_partition_num; i++) {
         if( nandRtfsAttach( (5+i), i) == FALSE) {
@@ -396,7 +402,7 @@ NAND_FLASH_FORMAT_START:
     }
     /*----------------------*/
     DBG_CHAR( '\n');
-  
+
 #if 0
     for( i=0; i<nand_fat_partition_num; i++) {
         VOLUME_LABEL[0] = (byte)(((int)'F') + i);
@@ -428,7 +434,7 @@ NAND_FLASH_FORMAT_START:
 
 
 NAND_FLASH_FORMAT_END:
-  
+
     PRINTDEBUG( "nand_formatter_kmc ends.\n");
 }
 
