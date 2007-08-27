@@ -23,6 +23,10 @@
 #include <twl/os/common/emulator.h>
 #include <twl/os/common/systemCall.h>
 
+#ifdef SDK_ARM9
+#include <twl/os/ARM9/cache_tag.h>
+#endif // SDK_ARM9
+
 #ifdef SDK_DEBUGGER_KMC
 #include <twl/vlink.h>
 #endif // SDK_DEBUGGER_KMC

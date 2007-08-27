@@ -52,6 +52,7 @@ SRCS			= \
 			  os_message.c		\
 			  os_mutex.c		\
 			  os_cache.c		\
+			  os_cache_tag.c	\
 			  os_arena.c		\
 			  os_alloc.c		\
 			  os_tcm.c		\
