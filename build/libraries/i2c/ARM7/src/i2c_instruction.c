@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*
-  Project:  TwlSDK - libraties - i2c
+  Project:  TwlSDK - libralies - i2c
   File:     i2c_instruction.c
 
   Copyright 2007 Nintendo.  All rights reserved.
@@ -10,7 +10,7 @@
   not be disclosed to third parties or copied or duplicated in any form,
   in whole or in part, without the prior written consent of Nintendo.
 
-  $Log: I2C_.c,v $
+  $Log: $
   $NoKeywords: $
  *---------------------------------------------------------------------------*/
 #include <twl.h>
@@ -28,7 +28,7 @@
 #endif
 #ifdef PRINT_DEBUG_MINI
 #include <nitro/os/common/printf.h>
-#define DBG_PRINT_FUNC()    OS_TPrintf("%s(0x%02X, 0x%02X, ...);\n", __func__, I2C_DeviceAddrTable[id], reg)
+#define DBG_PRINT_FUNC()    OS_TPrintf("%s(0x%02X, 0x%02X, ...);\n", __func__, deviceAddrTable[id], reg)
 #define DBG_PRINT_ERR()     OS_TPrintf("  Failed(%d) @ %d\n", error, r)
 #else
 #define DBG_PRINT_FUNC()    ((void)0)
@@ -37,16 +37,30 @@
 
 #define RETRY_COUNT     8
 
-static u8 I2C_DeviceAddrTable[I2C_SLAVE_NUM] = {
+static const u8 deviceAddrTable[I2C_SLAVE_NUM] = {
                                                 I2C_ADDR_CODEC,
                                                 I2C_ADDR_CAMERA_MICRON_IN,
                                                 I2C_ADDR_CAMERA_MICRON_OUT,
                                                 I2C_ADDR_CAMERA_SHARP_IN,
                                                 I2C_ADDR_CAMERA_SHARP_OUT,
-                                              };
+                                                I2C_ADDR_MICRO_CONTROLLER,
+                                                I2C_ADDR_DEBUG_LED,
+                                            };
+
+/*static const*/ s32 I2CSlowRateTable[I2C_SLAVE_NUM] = {
+                                                0,      // CODEC
+                                                0,      // CAMERA_MICRON_IN
+                                                0,      // CAMERA_MICRON_OUT
+                                                0,      // CAMERA_SHARP_IN
+                                                0,      // CAMERA_SHARP_OUT
+                                                0x90,   // MICRO_CONTROLLER
+                                                0,      // DEBUG_LED
+                                            };
 
 static OSMutex mutex;
 static BOOL isInitialized = FALSE;
+
+static BOOL slowRate = 0;
 
 static inline void I2Ci_Start( void )
 {
@@ -89,6 +103,26 @@ static inline void I2Ci_StopPhase2( void )
                           (1 << REG_EXI_I2CCNT_NT_SHIFT));
 }
 
+static inline void I2Ci_WaitEx( void )  // support slowRate
+{
+    I2Ci_Wait();
+    SVC_WaitByLoop(slowRate);
+}
+
+static inline void I2Ci_StopEx( I2CReadWrite rw )   // support slowRate
+{
+    if (slowRate)
+    {
+        I2Ci_StopPhase1(rw);
+        I2Ci_Wait();
+        SVC_WaitByLoop(slowRate);
+        I2Ci_StopPhase2();
+    }
+    else
+    {
+        I2Ci_Stop(rw);
+    }
+}
 
 static inline void I2Ci_SetData( u8 data )
 {
@@ -105,23 +139,23 @@ static inline u8 I2Ci_GetData( void )
 
 static inline BOOL I2Ci_GetResult( void )
 {
-    I2Ci_Wait();
+    I2Ci_WaitEx();
     DBG_PRINTF("%c", (reg_EXI_I2CCNT & REG_EXI_I2CCNT_ACK_MASK) ? '.' : '*');
     return (BOOL)((reg_EXI_I2CCNT & REG_EXI_I2CCNT_ACK_MASK) >> REG_EXI_I2CCNT_ACK_SHIFT);
 }
-
 static inline BOOL I2Ci_SendStart( I2CSlave id )
 {
     DBG_PRINTF("\n");
+    slowRate = I2CSlowRateTable[id];
     I2Ci_Wait();
-    I2Ci_SetData( (u8)(I2C_DeviceAddrTable[id] | (u8)I2C_WRITE) );
+    I2Ci_SetData( (u8)(deviceAddrTable[id] | I2C_WRITE) );
     I2Ci_Start();
     return I2Ci_GetResult();
 }
 
 static inline BOOL I2Ci_SendMiddle( u8 data )
 {
-    I2Ci_Wait();
+    I2Ci_WaitEx();
     I2Ci_SetData( data );
     I2Ci_Continue( I2C_WRITE );
     return I2Ci_GetResult();
@@ -129,43 +163,43 @@ static inline BOOL I2Ci_SendMiddle( u8 data )
 
 static inline BOOL I2Ci_SendLast( u8 data )
 {
-    I2Ci_Wait();
+    I2Ci_WaitEx();
     I2Ci_SetData( data );
-    I2Ci_Stop( I2C_WRITE );
+    I2Ci_StopEx( I2C_WRITE );
     return I2Ci_GetResult();
 }
 
 static inline BOOL I2Ci_ReceiveStart( I2CSlave id )
 {
-    I2Ci_Wait();
-    I2Ci_SetData( (u8)(I2C_DeviceAddrTable[id] | I2C_READ) );
+    I2Ci_WaitEx();
+    I2Ci_SetData( (u8)(deviceAddrTable[id] | I2C_READ) );
     I2Ci_Start();
     return I2Ci_GetResult();
 }
 
 static inline void I2Ci_ReceiveMiddle( void )
 {
-    I2Ci_Wait();
+    I2Ci_WaitEx();
     I2Ci_Continue( I2C_READ );
 }
 
 static inline void I2Ci_ReceiveLast( void )
 {
-    I2Ci_Wait();
-    I2Ci_Stop( I2C_READ );
+    I2Ci_WaitEx();
+    I2Ci_StopEx( I2C_READ );
 }
 
 static inline u8 I2Ci_WaitReceiveMiddle( void )
 {
     I2Ci_ReceiveMiddle();
-    I2Ci_Wait();
+    I2Ci_WaitEx();
     return I2Ci_GetData();
 }
 
 static inline u8 I2Ci_WaitReceiveLast( void )
 {
     I2Ci_ReceiveLast();
-    I2Ci_Wait();
+    I2Ci_WaitEx();
     return I2Ci_GetData();
 }
 

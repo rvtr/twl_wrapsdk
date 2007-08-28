@@ -25,6 +25,8 @@
 
 #ifdef SDK_ARM9
 #include <twl/os/ARM9/cache_tag.h>
+#else
+#include <twl/os/ARM7/debugLED.h>
 #endif // SDK_ARM9
 
 #ifdef SDK_DEBUGGER_KMC

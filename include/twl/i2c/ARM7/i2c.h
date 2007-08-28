@@ -36,6 +36,8 @@ typedef enum
     I2C_SLAVE_CAMERA_MICRON_OUT,
     I2C_SLAVE_CAMERA_SHARP_IN,
     I2C_SLAVE_CAMERA_SHARP_OUT,
+    I2C_SLAVE_MICRO_CONTROLLER,
+    I2C_SLAVE_DEBUG_LED,
     I2C_SLAVE_NUM
 }
 I2CSlave;
@@ -55,6 +57,8 @@ I2CReadWrite;
 #define I2C_ADDR_CAMERA_MICRON_OUT  0x78    // MICRON
 #define I2C_ADDR_CAMERA_SHARP_IN    0xE0    // SHARP
 #define I2C_ADDR_CAMERA_SHARP_OUT   0xA0    // SHARP
+#define I2C_ADDR_MICRO_CONTROLLER   0x4A
+#define I2C_ADDR_DEBUG_LED  (0x20 << 1)
 
 //----------------------------------------------------------------
 //        subroutine definition

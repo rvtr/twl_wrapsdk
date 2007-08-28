@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------*
-  Project:  TwlSDK
-  File:     twl.h
+  Project:  TwlSDK - OS - include
+  File:     debugLED.h
 
   Copyright 2007 Nintendo.  All rights reserved.
 
@@ -10,25 +10,22 @@
   not be disclosed to third parties or copied or duplicated in any form,
   in whole or in part, without the prior written consent of Nintendo.
 
-  $Log: $
-  $NoKeywords: $
+  $Date::            $
+  $Rev$
+  $Author$
  *---------------------------------------------------------------------------*/
-#ifndef TWL_H_
-#define TWL_H_
+#ifndef TWL_OS_DEBUG_LED_H_
+#define TWL_OS_DEBUG_LED_H_
 
-#include <nitro.h>
+//#if PLATFORM == TS
 
-#include <twl/os.h>
-#include <twl/mi.h>
-#include <twl/pm.h>
-#include <twl/aes.h>
-#include <twl/mic.h>
-#include <twl/camera.h>
-#include <twl/dsp.h>
-#include <twl/mcu.h>
-#ifdef SDK_DEBUGGER_KMC
-#include <twl/vlink.h>
-#endif // SDK_DEBUGGER_KMC
+#include <twl/i2c/ARM7/i2c.h>
 
-/* TWL_H_ */
+#define OS_InitDebugLED()       I2C_WriteRegister(I2C_SLAVE_DEBUG_LED, 0x03, 0x00)
+#define OS_SetDebugLED(pattern) I2C_WriteRegister(I2C_SLAVE_DEBUG_LED, 0x01, (pattern))
+#define OS_GetDebugLED()        I2C_ReadRegister(I2C_SLAVE_DEBUG_LED, 0x01)
+
+//#endif // PLATFORM == TS
+
+/* TWL_OS_DEBUG_LED_H_ */
 #endif
