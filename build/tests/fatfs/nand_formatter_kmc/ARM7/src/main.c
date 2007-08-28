@@ -255,18 +255,51 @@ void TwlSpMain(void)
     arm9_size = *(u32*)(((u8*)block_buf)+0x2C);
     arm7_ofs  = *(u32*)(((u8*)block_buf)+0x30);
     arm7_size = *(u32*)(((u8*)block_buf)+0x3C);
-    if (arm9_ofs == 0x800 || arm7_ofs == 0x800) // there is a duplicate header for mirroring
+
+    if (arm9_ofs == 0x400 || arm7_ofs == 0x400) // simple image
     {
-        nandRtfsIo( 5, 3, (byte*)block_buf, 1, TRUE);   // get header for mirroring image
+        /*
+            0x000 +-------------------+
+                  | MBR               |
+            0x200 +-------------------+
+                  | Header (genuine)  |
+            0x400 +-------------------+ <- arm9_ofs or arm7_ofs by Header (genuine)
+                  | ARM7/ARM9 IMAGE   |
+          I+0x400 +-------------------+ <- nand_firm_size
+        */
+        nand_firm_size =  (arm9_ofs < arm7_ofs ? arm7_ofs + arm7_size : arm9_ofs + arm9_size);
+    }
+    if (arm9_ofs == 0x800 || arm7_ofs == 0x800) // double header image
+    {
+        /*
+            0x000 +-------------------+
+                  | MBR               |
+            0x200 +-------------------+
+                  | Header (genuine)  |
+            0x400 +-------------------+
+                  | Header (original) |
+            0x600 +-------------------+
+                  | Header (mirrored) |
+            0x800 +-------------------+ <- arm9_ofs or arm7_ofs by Header (genuine)
+                  | ARM7/ARM9 IMAGE   |
+                  |     + reserved    |
+          I+0x800 +-------------------+
+                  | Header (original) |
+          I+0xA00 +-------------------+
+                  | Header (mirrored) |
+          I+0xC00 +-------------------+ <- arm9_ofs or arm7_ofs by Header (mirroed)
+                  | reserved for      |
+                  |   ARM7/ARM9 IMAGE |
+        2*I+0xC00 +-------------------+ <- nand_firm_size
+        */
+        u32 arm9_orig = arm9_ofs;
+        nandRtfsIo( 5, 3, (byte*)block_buf, 1, TRUE);   // get header for mirrored image
         arm9_ofs = *(u32*)(((u8*)block_buf)+0x20);
         arm7_ofs = *(u32*)(((u8*)block_buf)+0x30);
+        nand_firm_size = (arm9_ofs - arm9_orig) * 2 + 0x400;
     }
-//    DBG_PRINTF( "arm9: 0x%x, 0x%x\n", arm9_ofs, arm9_size);
-//    DBG_PRINTF( "arm7: 0x%x, 0x%x\n", arm7_ofs, arm7_size);
-
-    if( ((arm9_ofs + arm9_size) == arm7_ofs) && (arm9_ofs < arm7_ofs) &&
-         (arm9_size != 0) && (arm7_size != 0)) {
-        nand_firm_size = (arm9_ofs < arm7_ofs ? arm7_ofs + arm7_size : arm9_ofs + arm9_size);
+    if (nand_firm_size)
+    {
         DBG_PRINTF( "nandfirm found. (size:0x%x bytes)\n", nand_firm_size);
         nand_firm_size = (nand_firm_size / 1024 / 1024) +
                          (((nand_firm_size % (1024*1024)) != 0)? 1:0);
