@@ -136,7 +136,7 @@ static inline BOOL CAMERA_M_WriteRegisters( CameraSelect camera, u16 reg, const 
     BOOL rOut = TRUE;
     if (camera & CAMERA_SELECT_IN)
     {
-        rOut = I2C_WriteRegisters16( I2C_SLAVE_CAMERA_MICRON_IN, reg, bufp, size );
+        rIn = I2C_WriteRegisters16( I2C_SLAVE_CAMERA_MICRON_IN, reg, bufp, size );
     }
     if (camera & CAMERA_SELECT_OUT)
     {
