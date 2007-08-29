@@ -53,7 +53,7 @@ static const u8 deviceAddrTable[I2C_SLAVE_NUM] = {
                                                 0,      // CAMERA_MICRON_OUT
                                                 0,      // CAMERA_SHARP_IN
                                                 0,      // CAMERA_SHARP_OUT
-                                                0x90,   // MICRO_CONTROLLER
+                                                0x98,   // MICRO_CONTROLLER
                                                 0,      // DEBUG_LED
                                             };
 

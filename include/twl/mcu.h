@@ -18,7 +18,7 @@
 #define TWL_MCU_H_
 
 #ifdef SDK_ARM7
-#include <twl/mcu/ARM7/i2c.h>
+#include <twl/mcu/ARM7/mcu.h>
 #endif
 
 /* TWL_MCU_H_ */

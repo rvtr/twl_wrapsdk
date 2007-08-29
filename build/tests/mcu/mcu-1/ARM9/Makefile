@@ -1,6 +1,6 @@
 #! make -f
 #----------------------------------------------------------------------------
-# Project:  TwlDK - tests
+# Project:  TwlSDK - MCU - demos - mcu-1
 # File:     Makefile
 #
 # Copyright 2007 Nintendo.  All rights reserved.
@@ -15,28 +15,27 @@
 # $NoKeywords: $
 #----------------------------------------------------------------------------
 
+SUBDIRS		=
+
+
+#----------------------------------------------------------------------------
+
+#TWL_CODEGEN   =       THUMB
+
+TARGET_BIN	=	main.axf
+
+SRCS		=	main.c
+
+#SRCDIR		=	# using default
+#LCFILE		=	# using default
+
 include	$(TWLSDK_ROOT)/build/buildtools/commondefs
 
 
 #----------------------------------------------------------------------------
 
-SUBDIRS =    os     \
-             mi     \
-             snd    \
+do-build:		$(TARGETS)
 
-ifneq	($(TWL_PLATFORM),DSTEG)
-SUBDIRS += \
-             aes    \
-             camera \
-             fatfs  \
-             dsp    \
-             spi    \
-             el     \
-             mcu    \
-
-endif # TWL_PLATFORM != DSTEG
-
-#----------------------------------------------------------------------------
 
 include	$(TWLSDK_ROOT)/build/buildtools/modulerules
 
