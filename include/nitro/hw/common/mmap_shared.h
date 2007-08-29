@@ -208,6 +208,7 @@ extern "C" {
 //
 #define HW_TWL_ROM_HEADER_BUF           (HW_MAIN_MEM_EX_END - 0x2000)    // TWL-ROM内登録エリアデータ・バッファ
 #define HW_TWL_ROM_HEADER_BUF_END       (HW_MAIN_MEM_EX_END - 0x1000)
+#define HW_TWL_ROM_HEADER_BUF_SIZE      0x1000
 
 #define HW_RED_RESERVED                 (HW_MAIN_MEM_EX_END - 0x800)      // maybe change later
 #define HW_RED_RESERVED_END             (HW_RED_RESERVED + HW_RED_RESERVED_SIZE)
