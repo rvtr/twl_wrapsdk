@@ -352,15 +352,15 @@ static asm void do_autoload( void )
         ldr     tmp,       [infop], #4          // size
         add     dest_end, dest_begin, tmp       // dest_end
         mov     dest,     dest_begin            // dest working pointer
-#if 1
+#ifdef TWL_PLATFORM_BB
         mov     dest, dest_end
-#else
+#else // TWL_PLATFORM_TS
 @1:
         cmp     dest, dest_end
         ldrmi   tmp, [src],  #4                 // [dest++] <- [src++]
         strmi   tmp, [dest], #4
         bmi     @1
-#endif
+#endif // TWL_PLATFORM_TS
 
         //---- fill bss with 0
         ldr     tmp, [infop], #4                // size

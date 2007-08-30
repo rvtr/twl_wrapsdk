@@ -184,6 +184,7 @@
  *---------------------------------------------------------------------------*/
 #include        <twl.h>
 #include        <twl/vlink.h>
+#include <isdbglibpriv.h>
 
 #ifdef          SDK_LINK_ISD
 # pragma warn_extracomma off
@@ -282,7 +283,10 @@ static void OS_PutStringInit(const char *str)
         OS_PutString = OS_PutStringKMC;
 #endif
         OS_PutString = OS_PutStringKMC;
-#ifdef SDK_DEBUGGER_ARM
+#if defined( SDK_DEBUGGER_ISD )
+        _ISDbgLib_Initialize();
+        OS_PutString = OS_PutStringISD;
+#else defined( SDK_DEBUGGER_ARM )
         OS_PutString = OS_PutStringARM;
 #endif
     }

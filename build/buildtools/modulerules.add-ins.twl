@@ -46,6 +46,9 @@ else
 ifdef FIRM_STRIP_AXF
 	$(OBJCOPY) $@ $(BINDIR)/$(TARGET_BIN_BASENAME).sbin
 endif
+ifeq	($(TWL_PLATFORM),TS)
+	cp $(BINDIR)/$(TARGET_BIN_BASENAME).axf $(BINDIR)/$(TARGET_BIN_BASENAME).nef
+endif
 endif
 
 #----------------------------------------------------------------------------

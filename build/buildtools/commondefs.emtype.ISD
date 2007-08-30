@@ -1,0 +1,49 @@
+#! make -f
+#----------------------------------------------------------------------------
+#  Project:  TwlSDK - buildtools - debugger dependant settings for ISDbgr
+#  File:     commondefs.emtype.ISD
+#
+#  Copyright 2007 Nintendo.  All rights reserved.
+#
+# These coded instructions, statements, and computer programs contain
+# proprietary information of Nintendo of America Inc. and/or Nintendo
+# Company Ltd., and are protected by Federal copyright law.  They may
+# not be disclosed to third parties or copied or duplicated in any form,
+# in whole or in part, without the prior written consent of Nintendo.
+#
+# $Log: $
+# $NoKeywords: $
+#----------------------------------------------------------------------------
+
+ifdef		IS_TWL_DEBUGGER_DIR
+
+#----------------------------------------------------------------------------
+#  Setting for IS-TWL-EMULATOR
+#----------------------------------------------------------------------------
+
+EMPTY	 		?=
+SPACE 			?= $(EMPTY) $(EMPTY)
+TWL_ISD_ROOT	:= $(patsubst %/,%,$(subst $(SPACE),\ ,$(subst \,/,$(IS_TWL_DEBUGGER_DIR))))
+TWL_ISD_ROOT_NOSPACE	:= $(subst \,/,$(shell cygpath -d $(TWL_ISD_ROOT)))
+
+#----------------------------------------------------------------------------
+
+ifeq	($(CODEGEN_PROC),ARM9)
+
+TWL_ISD_INCDIRS	:= $(TWL_ISD_ROOT)/Target/include/ARM9
+TWL_ISD_LIBDIRS	:= $(TWL_ISD_ROOT_NOSPACE)/Target\lib\ARM9-TS
+
+else #	($(CODEGEN_PROC),ARM7)
+
+TWL_ISD_INCDIRS	:= $(TWL_ISD_ROOT)/Target/include/ARM7
+TWL_ISD_LIBDIRS	:= $(TWL_ISD_ROOT_NOSPACE)/Target\lib\ARM7-TS
+
+endif
+
+#----------------------------------------------------------------------------
+
+else
+
+endif
+
+#----- End of commondefs.emtype.ISD -----

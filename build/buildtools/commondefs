@@ -104,7 +104,13 @@ TWL_PMIC_REV	?= 0
 #	one of [ISD/KMC/ARM]
 #
 
+ifeq	($(TWL_PLATFORM),TS)
+TWL_DEBUGGER	?= ISD
+else
+ifeq	($(TWL_PLATFORM),BB)
 TWL_DEBUGGER	?= KMC
+endif
+endif
 
 
 #----------------------------------------------------------------------------
@@ -229,11 +235,18 @@ TOUCH	:= touch
 include	$(NITROSDK_ROOT)/build/buildtools/commondefs
 
 #----------------------------------------------------------------------------
+### Debugger settings
 
+include $(TWL_BUILDTOOLSDIR)/commondefs.emtype.ISD
+
+
+#----------------------------------------------------------------------------
 ### Global Library resettings
 
-GINCLUDES		:= $(TWL_INCDIR) $(GINCLUDES)
-GLIBRARY_DIRS	:= $(TWL_LIBDIR)  $(dir $(TWL_LIBSYSCALL)) $(GLIBRARY_DIRS)
+GINCLUDES		:= $(TWL_INCDIR) $(TWL_ISD_INCDIRS) \
+					$(filter-out $(ISD_INCDIRS),$(GINCLUDES))
+GLIBRARY_DIRS	:= $(TWL_LIBDIR) $(dir $(TWL_LIBSYSCALL)) $(TWL_ISD_LIBDIRS) \
+					$(filter-out $(ISD_LIBDIRS),$(GLIBRARY_DIRS))
 GLIBRARIES		:= $(TWL_LIBS) \
 					$(filter-out $(addsuffix $(NITRO_LIBSUFFIX).a,$(TWL_LIBS_BASE)),$(GLIBRARIES))
 
