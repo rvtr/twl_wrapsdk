@@ -243,13 +243,14 @@ include $(TWL_BUILDTOOLSDIR)/commondefs.emtype.ISD
 #----------------------------------------------------------------------------
 ### Global Library resettings
 
-GINCLUDES		:= $(TWL_INCDIR) $(TWL_ISD_INCDIRS) \
-					$(filter-out $(ISD_INCDIRS),$(GINCLUDES))
-GLIBRARY_DIRS	:= $(TWL_LIBDIR) $(dir $(TWL_LIBSYSCALL)) $(TWL_ISD_LIBDIRS) \
-					$(filter-out $(ISD_LIBDIRS),$(GLIBRARY_DIRS))
+GINCLUDES		:= $(TWL_INCDIR) $(TWL_ISD_INCDIRS) $(GINCLUDES)
+GLIBRARY_DIRS	:= $(TWL_LIBDIR) $(dir $(TWL_LIBSYSCALL)) $(TWL_ISD_LIBDIRS) $(GLIBRARY_DIRS)
 GLIBRARIES		:= $(TWL_LIBS) \
 					$(filter-out $(addsuffix $(NITRO_LIBSUFFIX).a,$(TWL_LIBS_BASE)),$(GLIBRARIES))
 
+ifdef	IS_TWL_DEBUGGER_DIR
+GLIBRARY_DIRS	:= $(filter-out $(ISD_LIBDIRS),$(GLIBRARY_DIRS))
+endif
 
 #----------------------------------------------------------------------------
 #  TWLSDK_INSTALL_ROOT
