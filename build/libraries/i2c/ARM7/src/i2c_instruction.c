@@ -28,11 +28,13 @@
 #endif
 #ifdef PRINT_DEBUG_MINI
 #include <nitro/os/common/printf.h>
-#define DBG_PRINT_FUNC()    OS_TPrintf("%s(0x%02X, 0x%02X, ...);\n", __func__, deviceAddrTable[id], reg)
-#define DBG_PRINT_ERR()     OS_TPrintf("  Failed(%d) @ %d\n", error, r)
+#define DBG_PRINT_FUNC()        OS_TPrintf("%s(0x%02X, 0x%02X);\n", __func__, deviceAddrTable[id], reg)
+#define DBG_PRINT_FUNC1(data)   OS_TPrintf("%s(0x%02X, 0x%02X, 0x%02X, ...);\n", __func__, deviceAddrTable[id], reg, (data))
+#define DBG_PRINT_ERR()         OS_TPrintf("  Failed(%d) @ %d\n", error, r)
 #else
-#define DBG_PRINT_FUNC()    ((void)0)
-#define DBG_PRINT_ERR()     ((void)0)
+#define DBG_PRINT_FUNC()        ((void)0)
+#define DBG_PRINT_FUNC1(data)   ((void)0)
+#define DBG_PRINT_ERR()         ((void)0)
 #endif
 
 #define RETRY_COUNT     8
@@ -133,13 +135,14 @@ static inline void I2Ci_SetData( u8 data )
 
 static inline u8 I2Ci_GetData( void )
 {
+    I2Ci_Wait();
     DBG_PRINTF("(%02X)", reg_EXI_I2CD);
     return reg_EXI_I2CD;
 }
 
 static inline BOOL I2Ci_GetResult( void )
 {
-    I2Ci_WaitEx();
+    I2Ci_Wait();
     DBG_PRINTF("%c", (reg_EXI_I2CCNT & REG_EXI_I2CCNT_ACK_MASK) ? '.' : '*');
     return (BOOL)((reg_EXI_I2CCNT & REG_EXI_I2CCNT_ACK_MASK) >> REG_EXI_I2CCNT_ACK_SHIFT);
 }
@@ -192,14 +195,12 @@ static inline void I2Ci_ReceiveLast( void )
 static inline u8 I2Ci_WaitReceiveMiddle( void )
 {
     I2Ci_ReceiveMiddle();
-    I2Ci_WaitEx();
     return I2Ci_GetData();
 }
 
 static inline u8 I2Ci_WaitReceiveLast( void )
 {
     I2Ci_ReceiveLast();
-    I2Ci_WaitEx();
     return I2Ci_GetData();
 }
 
@@ -207,16 +208,12 @@ static inline u8 I2Ci_WaitReceiveLast( void )
 
 static inline BOOL I2Ci_SendMiddle16( u16 data )
 {
-    BOOL rHi = I2Ci_SendMiddle( (u8)(data >> 8) );
-    BOOL rLo = I2Ci_SendMiddle( (u8)(data & 0xFF) );
-    return (rHi && rLo);
+    return I2Ci_SendMiddle( (u8)(data >> 8) ) & I2Ci_SendMiddle( (u8)(data & 0xFF) );
 }
 
 static inline BOOL I2Ci_SendLast16( u16 data )
 {
-    BOOL rHi = I2Ci_SendMiddle( (u8)(data >> 8) );
-    BOOL rLo = I2Ci_SendLast( (u8)(data & 0xFF) );
-    return (rHi && rLo);
+    return I2Ci_SendMiddle( (u8)(data >> 8) ) & I2Ci_SendLast( (u8)(data & 0xFF) );
 }
 
 static inline u16 I2Ci_WaitReceiveMiddle16( void )
@@ -440,7 +437,7 @@ BOOL I2Ci_WriteRegister( I2CSlave id, u8 reg, u8 data )
 {
     int r;
     int error;
-    DBG_PRINT_FUNC();
+    DBG_PRINT_FUNC1(data);
     for (r = 0; r < RETRY_COUNT; r++)
     {
         error = 0;
@@ -466,7 +463,7 @@ BOOL I2Ci_WriteRegister16( I2CSlave id, u16 reg, u16 data )
 {
     int r;
     int error;
-    DBG_PRINT_FUNC();
+    DBG_PRINT_FUNC1(data);
     for (r = 0; r < RETRY_COUNT; r++)
     {
         error = 0;
@@ -575,7 +572,7 @@ BOOL I2Ci_VerifyRegister( I2CSlave id, u8 reg, u8 data )
     int r;
     int error;
     BOOL result;
-    DBG_PRINT_FUNC();
+    DBG_PRINT_FUNC1(data);
     for (r = 0; r < RETRY_COUNT; r++)
     {
         error = 0;
@@ -606,7 +603,7 @@ BOOL I2Ci_VerifyRegisterSC( I2CSlave id, u8 reg, u8 data )
     int r;
     int error;
     BOOL result;
-    DBG_PRINT_FUNC();
+    DBG_PRINT_FUNC1(data);
     for (r = 0; r < RETRY_COUNT; r++)
     {
         error = 0;
@@ -637,7 +634,7 @@ BOOL I2Ci_VerifyRegister16( I2CSlave id, u16 reg, u16 data )
     int r;
     int error;
     BOOL result;
-    DBG_PRINT_FUNC();
+    DBG_PRINT_FUNC1(data);
     for (r = 0; r < RETRY_COUNT; r++)
     {
         error = 0;
@@ -671,7 +668,7 @@ BOOL I2Ci_WriteRegisters( I2CSlave id, u8 reg, const u8 *bufp, size_t size )
     int r;
     int error;
     const u8 *ptr;
-    DBG_PRINT_FUNC();
+    DBG_PRINT_FUNC1(bufp[0]);
     for (r = 0; r < RETRY_COUNT; r++)
     {
         error = 0;
@@ -704,7 +701,7 @@ BOOL I2Ci_WriteRegisters16( I2CSlave id, u16 reg, const u16 *bufp, size_t size )
     int r;
     int error;
     const u16 *ptr;
-    DBG_PRINT_FUNC();
+    DBG_PRINT_FUNC1(bufp[0]);
     for (r = 0; r < RETRY_COUNT; r++)
     {
         error = 0;
@@ -859,7 +856,7 @@ BOOL I2Ci_VerifyRegisters( I2CSlave id, u8 reg, const u8 *bufp, size_t size )
     int error;
     const u8 *ptr;
     BOOL result;
-    DBG_PRINT_FUNC();
+    DBG_PRINT_FUNC1(bufp[0]);
     for (r = 0; r < RETRY_COUNT; r++)
     {
         error = 0;
@@ -899,7 +896,7 @@ BOOL I2Ci_VerifyRegistersSC( I2CSlave id, u8 reg, const u8 *bufp, size_t size )
     int error;
     const u8 *ptr;
     BOOL result;
-    DBG_PRINT_FUNC();
+    DBG_PRINT_FUNC1(bufp[0]);
     for (r = 0; r < RETRY_COUNT; r++)
     {
         error = 0;
@@ -939,7 +936,7 @@ BOOL I2Ci_VerifyRegisters16( I2CSlave id, u16 reg, const u16 *bufp, size_t size 
     int error;
     const u16 *ptr;
     BOOL result;
-    DBG_PRINT_FUNC();
+    DBG_PRINT_FUNC1(bufp[0]);
     for (r = 0; r < RETRY_COUNT; r++)
     {
         error = 0;
