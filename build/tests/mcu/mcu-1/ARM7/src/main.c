@@ -182,6 +182,38 @@ static void test_tuning(void)
         SVC_WaitByLoop(max);
         OS_TPrintf("== %d usec\n", (int)OS_TicksToMicroSeconds(OS_GetTick()-begin));
     }
+    // aging
+    OS_TPrintf("\naging...");
+    for (k = 0; k < times; k++)
+    {
+        for (j = 0; j < nums; j++)
+        {
+            wdata[j]++;
+        }
+
+        if (!MCU_GetFreeRegisters(offset, wdata, nums) || !MCU_SetFreeRegisters(offset, rdata, nums))
+        {
+            (*pInterval)++;
+            continue;
+        }
+        for (j = 0; j < nums; j++)
+        {
+            if (wdata[j] != rdata[j])
+            {
+                (*pInterval)++;
+                continue;
+            }
+        }
+    }
+    max = *pInterval;
+    {
+        OSTick begin;
+        OS_InitTick();
+        OS_TPrintf("\n\nResult: interval = 0x%08X (%d) ", max, max);
+        begin = OS_GetTick();
+        SVC_WaitByLoop(max);
+        OS_TPrintf("== %d usec\n", (int)OS_TicksToMicroSeconds(OS_GetTick()-begin));
+    }
 }
 
 /*---------------------------------------------------------------------------*
@@ -202,7 +234,7 @@ void TwlMain()
     test_normal();
 
     // tune I2C interval
-    //test_tuning();
+    test_tuning();
 
     // done
     OS_TPrintf("\nARM7 ends.\n");
