@@ -15,16 +15,26 @@
 # $NoKeywords: $
 #----------------------------------------------------------------------------
 
-include	$(TWLSDK_ROOT)/build/buildtools/commondefs
-
-
-#----------------------------------------------------------------------------
-
 SUBDIRS =	\
             ARM7 \
             ARM9 \
 
 #----------------------------------------------------------------------------
+
+TARGET_BIN		=	dsp-jtag.srl
+
+MAKEROM_ARM9	=	ARM9/bin/$(TWL_BUILDTYPE_ARM9)/dsp_jtag9.axf
+MAKEROM_ARM7	=	ARM7/bin/$(TWL_BUILDTYPE_ARM7)/dsp_jtag7.axf
+
+#----------------------------------------------------------------------------
+
+include	$(TWLSDK_ROOT)/build/buildtools/commondefs
+
+#----------------------------------------------------------------------------
+
+ifeq	($(TWL_PLATFORM),TS)
+do-build:		$(TARGETS)
+endif
 
 include	$(TWLSDK_ROOT)/build/buildtools/modulerules
 

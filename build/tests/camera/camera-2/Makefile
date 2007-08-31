@@ -15,16 +15,26 @@
 # $NoKeywords: $
 #----------------------------------------------------------------------------
 
-include	$(TWLSDK_ROOT)/build/buildtools/commondefs
-
-
-#----------------------------------------------------------------------------
-
 SUBDIRS =	\
             ARM7 \
             ARM9 \
 
 #----------------------------------------------------------------------------
+
+TARGET_BIN		=	camera-2.srl
+
+MAKEROM_ARM9	=	ARM9/bin/$(TWL_BUILDTYPE_ARM9)/main.axf
+MAKEROM_ARM7	=	ARM7/bin/$(TWL_BUILDTYPE_ARM7)/main.axf
+
+#----------------------------------------------------------------------------
+
+include	$(TWLSDK_ROOT)/build/buildtools/commondefs
+
+#----------------------------------------------------------------------------
+
+ifeq	($(TWL_PLATFORM),TS)
+do-build:		$(TARGETS)
+endif
 
 include	$(TWLSDK_ROOT)/build/buildtools/modulerules
 
