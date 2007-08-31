@@ -1,6 +1,6 @@
 #! make -f
 #----------------------------------------------------------------------------
-# Project:  TwlSDK - libraries - aes
+# Project:  TwlSDK - libraries - camera
 # File:     Makefile
 #
 # Copyright 2007 Nintendo.  All rights reserved.

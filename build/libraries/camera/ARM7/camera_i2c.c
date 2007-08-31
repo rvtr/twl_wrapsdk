@@ -17,20 +17,10 @@
 #include <twl/camera/ARM7/i2c_micron.h>
 #include <twl/camera/ARM7/i2c_sharp.h>
 
-typedef enum
-{
-    CAMERA_TYPE_MICRON,
-    CAMERA_TYPE_SHARP,
+static CameraSelect cameraSharp = CAMERA_SELECT_NONE;
 
-    CAMERA_TYPE_UNKNOWN
-}
-CAMERAType;
-
-static CAMERAType cameraType = CAMERA_TYPE_MICRON;
-
-#if 0
-    CAMERA_I2CInit()だけがカメラの種類を入れ替える機能を有する
-#endif
+#define GET_MICRON(camera)  (CameraSelect)(camera & ~cameraSharp)
+#define GET_SHARP(camera)   (CameraSelect)(camera & cameraSharp)
 
 /*---------------------------------------------------------------------------*
   Name:         CAMERA_I2CInit
@@ -43,27 +33,33 @@ static CAMERAType cameraType = CAMERA_TYPE_MICRON;
  *---------------------------------------------------------------------------*/
 BOOL CAMERA_I2CInit(CameraSelect camera)
 {
-    BOOL result = FALSE;
+    BOOL ri = TRUE;
+    BOOL ro = TRUE;
     (void)I2C_Lock();
-    if (cameraType == CAMERA_TYPE_MICRON)
+    if (camera & CAMERA_SELECT_IN)
     {
-        result = CAMERAi_M_I2CInit(camera);
-        if (result == FALSE)
+        if (FALSE == (ri = CAMERAi_M_I2CInit(CAMERA_SELECT_IN)))
         {
-            cameraType = CAMERA_TYPE_SHARP;
+            cameraSharp |= CAMERA_SELECT_IN;
+            if (FALSE == (ri = CAMERAi_S_I2CInit(CAMERA_SELECT_IN)))
+            {
+                cameraSharp &= ~CAMERA_SELECT_IN;
+            }
         }
     }
-    if (cameraType == CAMERA_TYPE_SHARP)
+    if (camera & CAMERA_SELECT_OUT)
     {
-        result = CAMERAi_S_I2CInit(camera);
-        if (result == FALSE)
+        if (FALSE == (ro = CAMERAi_M_I2CInit(CAMERA_SELECT_OUT)))
         {
-            //cameraType = CAMERA_TYPE_MICRON; // rotate for next try
-            //cameraType = CAMERA_TYPE_UNKNOWN; // annihilate camera I2C
+            cameraSharp |= CAMERA_SELECT_OUT;
+            if (FALSE == (ro = CAMERAi_S_I2CInit(CAMERA_SELECT_OUT)))
+            {
+                cameraSharp &= ~CAMERA_SELECT_OUT;
+            }
         }
     }
     (void)I2C_Unlock();
-    return result;
+    return ri & ro;
 }
 
 /*---------------------------------------------------------------------------*
@@ -77,19 +73,14 @@ BOOL CAMERA_I2CInit(CameraSelect camera)
  *---------------------------------------------------------------------------*/
 BOOL CAMERA_I2CStandby(CameraSelect camera)
 {
-    BOOL result = FALSE;
+    BOOL rm, rs;
     (void)I2C_Lock();
-    switch (cameraType)
-    {
-    case CAMERA_TYPE_MICRON:
-        result = CAMERAi_M_I2CStandby(camera);
-        break;
-    case CAMERA_TYPE_SHARP:
-        result = CAMERAi_S_I2CStandby(camera);
-        break;
-    }
+    rm = GET_MICRON(camera) != CAMERA_SELECT_NONE ?
+            CAMERAi_M_I2CStandby(GET_MICRON(camera)) : TRUE;
+    rs = GET_SHARP(camera) != CAMERA_SELECT_NONE ?
+            CAMERAi_S_I2CStandby(GET_SHARP(camera)) : TRUE;
     (void)I2C_Unlock();
-    return result;
+    return rm & rs;
 }
 
 /*---------------------------------------------------------------------------*
@@ -103,19 +94,14 @@ BOOL CAMERA_I2CStandby(CameraSelect camera)
  *---------------------------------------------------------------------------*/
 BOOL CAMERA_I2CResume(CameraSelect camera)
 {
-    BOOL result = FALSE;
+    BOOL rm, rs;
     (void)I2C_Lock();
-    switch (cameraType)
-    {
-    case CAMERA_TYPE_MICRON:
-        result = CAMERAi_M_I2CResume(camera);
-        break;
-    case CAMERA_TYPE_SHARP:
-        result = CAMERAi_S_I2CResume(camera);
-        break;
-    }
+    rm = GET_MICRON(camera) != CAMERA_SELECT_NONE ?
+            CAMERAi_M_I2CResume(GET_MICRON(camera)) : TRUE;
+    rs = GET_SHARP(camera) != CAMERA_SELECT_NONE ?
+            CAMERAi_S_I2CResume(GET_SHARP(camera)) : TRUE;
     (void)I2C_Unlock();
-    return result;
+    return rm & rs;
 }
 
 /*---------------------------------------------------------------------------*
@@ -129,19 +115,14 @@ BOOL CAMERA_I2CResume(CameraSelect camera)
  *---------------------------------------------------------------------------*/
 BOOL CAMERA_I2CResumeBoth(CameraSelect camera)
 {
-    BOOL result = FALSE;
+    BOOL rm, rs;
     (void)I2C_Lock();
-    switch (cameraType)
-    {
-    case CAMERA_TYPE_MICRON:
-        result = CAMERAi_S_I2CResumeBoth(camera);
-        break;
-    case CAMERA_TYPE_SHARP:
-        result = CAMERAi_S_I2CResumeBoth(camera);
-        break;
-    }
+    rm = GET_MICRON(camera) != CAMERA_SELECT_NONE ?
+            CAMERAi_M_I2CResumeBoth(GET_MICRON(camera)) : TRUE;
+    rs = GET_SHARP(camera) != CAMERA_SELECT_NONE ?
+            CAMERAi_S_I2CResumeBoth(GET_SHARP(camera)) : TRUE;
     (void)I2C_Unlock();
-    return result;
+    return rm & rs;
 }
 
 /*---------------------------------------------------------------------------*
@@ -157,19 +138,14 @@ BOOL CAMERA_I2CResumeBoth(CameraSelect camera)
  *---------------------------------------------------------------------------*/
 BOOL CAMERA_I2CResize(CameraSelect camera, u16 width, u16 height)
 {
-    BOOL result = FALSE;
+    BOOL rm, rs;
     (void)I2C_Lock();
-    switch (cameraType)
-    {
-    case CAMERA_TYPE_MICRON:
-        result = CAMERAi_M_I2CResize(camera, width, height);
-        break;
-    case CAMERA_TYPE_SHARP:
-        result = CAMERAi_S_I2CResize(camera, width, height);
-        break;
-    }
+    rm = GET_MICRON(camera) != CAMERA_SELECT_NONE ?
+            CAMERAi_M_I2CResize(GET_MICRON(camera), width, height) : TRUE;
+    rs = GET_SHARP(camera) != CAMERA_SELECT_NONE ?
+            CAMERAi_S_I2CResize(GET_SHARP(camera), width, height) : TRUE;
     (void)I2C_Unlock();
-    return result;
+    return rm & rs;
 }
 
 /*---------------------------------------------------------------------------*
@@ -184,19 +160,14 @@ BOOL CAMERA_I2CResize(CameraSelect camera, u16 width, u16 height)
  *---------------------------------------------------------------------------*/
 BOOL CAMERA_I2CFrameRate(CameraSelect camera, int rate)
 {
-    BOOL result = FALSE;
+    BOOL rm, rs;
     (void)I2C_Lock();
-    switch (cameraType)
-    {
-    case CAMERA_TYPE_MICRON:
-        result = CAMERAi_M_I2CFrameRate(camera, rate);
-        break;
-    case CAMERA_TYPE_SHARP:
-        result = CAMERAi_S_I2CFrameRate(camera, rate);
-        break;
-    }
+    rm = GET_MICRON(camera) != CAMERA_SELECT_NONE ?
+            CAMERAi_M_I2CFrameRate(GET_MICRON(camera), rate) : TRUE;
+    rs = GET_SHARP(camera) != CAMERA_SELECT_NONE ?
+            CAMERAi_S_I2CFrameRate(GET_SHARP(camera), rate) : TRUE;
     (void)I2C_Unlock();
-    return result;
+    return rm & rs;
 }
 
 /*---------------------------------------------------------------------------*
@@ -211,19 +182,14 @@ BOOL CAMERA_I2CFrameRate(CameraSelect camera, int rate)
  *---------------------------------------------------------------------------*/
 BOOL CAMERA_I2CEffect(CameraSelect camera, CameraEffect effect)
 {
-    BOOL result = FALSE;
+    BOOL rm, rs;
     (void)I2C_Lock();
-    switch (cameraType)
-    {
-    case CAMERA_TYPE_MICRON:
-        result = CAMERAi_M_I2CEffect(camera, effect);
-        break;
-    case CAMERA_TYPE_SHARP:
-        result = CAMERAi_S_I2CEffect(camera, effect);
-        break;
-    }
+    rm = GET_MICRON(camera) != CAMERA_SELECT_NONE ?
+            CAMERAi_M_I2CEffect(GET_MICRON(camera), effect) : TRUE;
+    rs = GET_SHARP(camera) != CAMERA_SELECT_NONE ?
+            CAMERAi_S_I2CEffect(GET_SHARP(camera), effect) : TRUE;
     (void)I2C_Unlock();
-    return result;
+    return rm & rs;
 }
 
 /*---------------------------------------------------------------------------*
@@ -238,19 +204,14 @@ BOOL CAMERA_I2CEffect(CameraSelect camera, CameraEffect effect)
  *---------------------------------------------------------------------------*/
 BOOL CAMERA_I2CFlip(CameraSelect camera, CameraFlip flip)
 {
-    BOOL result = FALSE;
+    BOOL rm, rs;
     (void)I2C_Lock();
-    switch (cameraType)
-    {
-    case CAMERA_TYPE_MICRON:
-        result = CAMERAi_M_I2CFlip(camera, flip);
-        break;
-    case CAMERA_TYPE_SHARP:
-        result = CAMERAi_S_I2CFlip(camera, flip);
-        break;
-    }
+    rm = GET_MICRON(camera) != CAMERA_SELECT_NONE ?
+            CAMERAi_M_I2CFlip(GET_MICRON(camera), flip) : TRUE;
+    rs = GET_SHARP(camera) != CAMERA_SELECT_NONE ?
+            CAMERAi_S_I2CFlip(GET_SHARP(camera), flip) : TRUE;
     (void)I2C_Unlock();
-    return result;
+    return rm & rs;
 }
 
 #if 0

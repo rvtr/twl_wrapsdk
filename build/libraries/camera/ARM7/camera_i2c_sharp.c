@@ -41,34 +41,11 @@ BankGroup;
  *---------------------------------------------------------------------------*/
 BOOL CAMERAi_S_I2CInit(CameraSelect camera)
 {
-#if 0
-    BOOL rIn = TRUE;
-    BOOL rOut = TRUE;
-    // should not send init command same time (TODO:èoóÕÇ»ÇµÇ≈èâä˙âªÇ≈Ç´ÇÈÇ»ÇÁìØéûÇ…èàóùÇ∑ÇÈÇÊÇ§Ç…ïœÇ¶ÇÈ)
-    if (camera & CAMERA_SELECT_IN)
-    {
-        rIn = CAMERAi_S_Initialize(CAMERA_SELECT_IN)
-           && CAMERAi_S_WriteRegister(CAMERA_SELECT_IN, BANK_ADDR, BANK_GROUP_B)
-           && CAMERAi_S_SetFlags(CAMERA_SELECT_IN, 0x1A, 0x08)          // reverse RCLK polarity
-           && CAMERAi_S_WriteRegister(CAMERA_SELECT_IN, 0x18, 0x02)     // force to order YUYV
-           && CAMERAi_S_I2CStandby(CAMERA_SELECT_IN);
-    }
-    if (camera & CAMERA_SELECT_OUT)
-    {
-        rOut = CAMERAi_S_Initialize(CAMERA_SELECT_OUT)
-            && CAMERAi_S_WriteRegister(CAMERA_SELECT_OUT, BANK_ADDR, BANK_GROUP_B)
-            && CAMERAi_S_SetFlags(CAMERA_SELECT_OUT, 0x1A, 0x08)        // reverse RCLK polarity
-            && CAMERAi_S_WriteRegister(CAMERA_SELECT_OUT, 0x18, 0x02)   // force to order YUYV
-           && CAMERAi_S_I2CStandby(CAMERA_SELECT_OUT);
-    }
-    return (rIn && rOut);
-#else
     return CAMERAi_S_Initialize(camera)
         && CAMERAi_S_WriteRegister(camera, BANK_ADDR, BANK_GROUP_B)
         && CAMERAi_S_SetFlags(camera, 0x1A, 0x08)       // reverse RCLK polarity
         && CAMERAi_S_WriteRegister(camera, 0x18, 0x02)  // force to order YUYV
         && CAMERAi_S_ClearFlags(camera, 0x04, 0x88);    // goto standby (maybe already into)
-#endif
 }
 
 /*---------------------------------------------------------------------------*

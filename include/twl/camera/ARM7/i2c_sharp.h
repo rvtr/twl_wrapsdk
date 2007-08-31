@@ -44,31 +44,19 @@ extern "C" {
  *---------------------------------------------------------------------------*/
 static inline BOOL CAMERAi_S_WriteRegister( CameraSelect camera, u8 reg, u8 data )
 {
-    BOOL rIn = TRUE;
-    BOOL rOut = TRUE;
-    if (camera & CAMERA_SELECT_IN)
-    {
-        rIn = I2Ci_WriteRegister( I2C_SLAVE_CAMERA_SHARP_IN, reg, data );
-    }
-    if (camera & CAMERA_SELECT_OUT)
-    {
-        rOut = I2Ci_WriteRegister( I2C_SLAVE_CAMERA_SHARP_OUT, reg, data );
-    }
-    return (rIn && rOut);
+    BOOL ri = camera & CAMERA_SELECT_IN ?
+                I2Ci_WriteRegister( I2C_SLAVE_CAMERA_SHARP_IN, reg, data ) : TRUE;
+    BOOL ro = camera & CAMERA_SELECT_OUT ?
+                I2Ci_WriteRegister( I2C_SLAVE_CAMERA_SHARP_OUT, reg, data ) : TRUE;
+    return ri & ro;
 }
 static inline BOOL CAMERA_S_WriteRegister( CameraSelect camera, u8 reg, u8 data )
 {
-    BOOL rIn = TRUE;
-    BOOL rOut = TRUE;
-    if (camera & CAMERA_SELECT_IN)
-    {
-        rIn = I2C_WriteRegister( I2C_SLAVE_CAMERA_SHARP_IN, reg, data );
-    }
-    if (camera & CAMERA_SELECT_OUT)
-    {
-        rOut = I2C_WriteRegister( I2C_SLAVE_CAMERA_SHARP_OUT, reg, data );
-    }
-    return (rIn && rOut);
+    BOOL ri = camera & CAMERA_SELECT_IN ?
+                I2C_WriteRegister( I2C_SLAVE_CAMERA_SHARP_IN, reg, data ) : TRUE;
+    BOOL ro = camera & CAMERA_SELECT_OUT ?
+                I2C_WriteRegister( I2C_SLAVE_CAMERA_SHARP_OUT, reg, data ) : TRUE;
+    return ri & ro;
 }
 
 /*---------------------------------------------------------------------------*
@@ -118,31 +106,19 @@ static inline u8 CAMERA_S_ReadRegister( CameraSelect camera, u8 reg )
  *---------------------------------------------------------------------------*/
 static inline BOOL CAMERAi_S_WriteRegisters( CameraSelect camera, u8 reg, const u8 *bufp, size_t size )
 {
-    BOOL rIn = TRUE;
-    BOOL rOut = TRUE;
-    if (camera & CAMERA_SELECT_IN)
-    {
-        rIn = I2Ci_WriteRegisters( I2C_SLAVE_CAMERA_SHARP_IN, reg, bufp, size );
-    }
-    if (camera & CAMERA_SELECT_OUT)
-    {
-        rOut = I2Ci_WriteRegisters( I2C_SLAVE_CAMERA_SHARP_OUT, reg, bufp, size );
-    }
-    return (rIn && rOut);
+    BOOL ri = camera & CAMERA_SELECT_IN ?
+                I2Ci_WriteRegisters( I2C_SLAVE_CAMERA_SHARP_IN, reg, bufp, size ) : TRUE;
+    BOOL ro = camera & CAMERA_SELECT_OUT ?
+                I2Ci_WriteRegisters( I2C_SLAVE_CAMERA_SHARP_OUT, reg, bufp, size ) : TRUE;
+    return ri & ro;
 }
 static inline BOOL CAMERA_S_WriteRegisters( CameraSelect camera, u8 reg, const u8 *bufp, size_t size )
 {
-    BOOL rIn = TRUE;
-    BOOL rOut = TRUE;
-    if (camera & CAMERA_SELECT_IN)
-    {
-        rIn = I2C_WriteRegisters( I2C_SLAVE_CAMERA_SHARP_IN, reg, bufp, size );
-    }
-    if (camera & CAMERA_SELECT_OUT)
-    {
-        rOut = I2C_WriteRegisters( I2C_SLAVE_CAMERA_SHARP_OUT, reg, bufp, size );
-    }
-    return (rIn && rOut);
+    BOOL ri = camera & CAMERA_SELECT_IN ?
+                I2C_WriteRegisters( I2C_SLAVE_CAMERA_SHARP_IN, reg, bufp, size ) : TRUE;
+    BOOL ro = camera & CAMERA_SELECT_OUT ?
+                I2C_WriteRegisters( I2C_SLAVE_CAMERA_SHARP_OUT, reg, bufp, size ) : TRUE;
+    return ri & ro;
 }
 
 /*---------------------------------------------------------------------------*
@@ -197,31 +173,19 @@ static inline BOOL CAMERA_S_ReadRegisters( CameraSelect camera, u8 reg, u8 *bufp
  *---------------------------------------------------------------------------*/
 static inline BOOL CAMERAi_S_SetParams( CameraSelect camera, u8 reg, u8 setBits, u8 maskBits )
 {
-    BOOL rIn = TRUE;
-    BOOL rOut = TRUE;
-    if (camera & CAMERA_SELECT_IN)
-    {
-        rIn = I2Ci_SetParams( I2C_SLAVE_CAMERA_SHARP_IN, reg, setBits, maskBits );
-    }
-    if (camera & CAMERA_SELECT_OUT)
-    {
-        rOut = I2Ci_SetParams( I2C_SLAVE_CAMERA_SHARP_OUT, reg, setBits, maskBits );
-    }
-    return (rIn && rOut);
+    BOOL ri = camera & CAMERA_SELECT_IN ?
+                I2Ci_SetParams( I2C_SLAVE_CAMERA_SHARP_IN, reg, setBits, maskBits ) : TRUE;
+    BOOL ro = camera & CAMERA_SELECT_OUT ?
+                I2Ci_SetParams( I2C_SLAVE_CAMERA_SHARP_OUT, reg, setBits, maskBits ) : TRUE;
+    return ri & ro;
 }
 static inline BOOL CAMERA_S_SetParams( CameraSelect camera, u8 reg, u8 setBits, u8 maskBits )
 {
-    BOOL rIn = TRUE;
-    BOOL rOut = TRUE;
-    if (camera & CAMERA_SELECT_IN)
-    {
-        rIn = I2C_SetParams( I2C_SLAVE_CAMERA_SHARP_IN, reg, setBits, maskBits );
-    }
-    if (camera & CAMERA_SELECT_OUT)
-    {
-        rOut = I2C_SetParams( I2C_SLAVE_CAMERA_SHARP_OUT, reg, setBits, maskBits );
-    }
-    return (rIn && rOut);
+    BOOL ri = camera & CAMERA_SELECT_IN ?
+                I2C_SetParams( I2C_SLAVE_CAMERA_SHARP_IN, reg, setBits, maskBits ) : TRUE;
+    BOOL ro = camera & CAMERA_SELECT_OUT ?
+                I2C_SetParams( I2C_SLAVE_CAMERA_SHARP_OUT, reg, setBits, maskBits ) : TRUE;
+    return ri & ro;
 }
 
 /*---------------------------------------------------------------------------*

@@ -31,28 +31,9 @@
  *---------------------------------------------------------------------------*/
 BOOL CAMERAi_M_I2CInit(CameraSelect camera)
 {
-#if 0
-    BOOL rIn = TRUE;
-    BOOL rOut = TRUE;
-    // should not send init command same time (TODO:èoóÕÇ»ÇµÇ≈èâä˙âªÇ≈Ç´ÇÈÇ»ÇÁìØéûÇ…èàóùÇ∑ÇÈÇÊÇ§Ç…ïœÇ¶ÇÈ)
-    if (camera & CAMERA_SELECT_IN)
-    {
-        rIn = CAMERAi_M_Default_Registers(CAMERA_SELECT_IN)
-           && CAMERAi_M_WriteMCU(CAMERA_SELECT_IN, 0x2755, 0x0002)  // YUYV format (required to refresh)
-           && CAMERAi_M_I2CStandby(CAMERA_SELECT_IN);
-    }
-    if (camera & CAMERA_SELECT_OUT)
-    {
-        rOut = CAMERAi_M_Default_Registers(CAMERA_SELECT_OUT)
-            && CAMERAi_M_WriteMCU(CAMERA_SELECT_OUT, 0x2755, 0x0002)    // YUYV format (required to refresh)
-            && CAMERAi_M_I2CStandby(CAMERA_SELECT_OUT);
-    }
-    return (rIn && rOut);
-#else
     return CAMERAi_M_Default_Registers(camera)
         && CAMERAi_M_WriteMCU(camera, 0x2755, 0x0002)   // YUYV format (required to refresh)
         && CAMERAi_M_SetFlags(camera, 0x0018, 0x0001);  // goto standby
-#endif
 }
 
 /*---------------------------------------------------------------------------*
