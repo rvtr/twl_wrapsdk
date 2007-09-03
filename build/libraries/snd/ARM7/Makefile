@@ -25,7 +25,7 @@ TWL_CODEGEN_ALL ?= True
 # Codegen for sub processer
 TWL_PROC    =   ARM7
 
-SRCDIR		=	../common .
+SRCDIR		=	../common ./src
 SRCDIR		+= $(TWL_NITROSDK_ROOT)/build/libraries/snd/common/src \
                    $(TWL_NITROSDK_ROOT)/build/libraries/snd/ARM7/src \
 
