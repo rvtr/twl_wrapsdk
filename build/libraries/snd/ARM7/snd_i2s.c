@@ -44,18 +44,20 @@ static void I2Si_Init(void)
 
         reg_SND_POWCNT |= REG_SND_POWCNT_SPE_MASK;
 
+/* CODECì∆óßâ^ìÆ
+
         if ((reg_CFG_CLK & REG_CFG_CLK_SND_MASK) == 0)
         {
             // initialize codec with enabling I2S
             CDC_Init();
         }
-
+*/
         reg_CFG_TWL_EX |= REG_CFG_TWL_EX_I2S_MASK;
         if (reg_CFG_TWL_EX & REG_CFG_TWL_EX_I2S_MASK)
         {
             isTwl = TRUE;
             // Set default values
-            I2S_SetSamplingRatio(TRUE);
+//          I2S_SetSamplingRatio(TRUE);		èüéËÇ…48kÇ…Ç≥ÇÍÇΩÇÁç¢ÇÈ
             I2S_SetMixingRatio(8);
             I2S_Mute(FALSE);
         }

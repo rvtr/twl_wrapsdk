@@ -76,9 +76,13 @@ void MICi_Start( MICSampleRate smp, u32 dmaNo, void *dest, s32 size )
             MICi_ExDmaRecvAsync( dmaNo, dest, size );
 
             OS_SetIrqFunction( OS_IE_DMA4 << ch, MICi_ExDmaInterruptHandler );
-
             reg_OS_IF  = (OS_IE_DMA4 << ch);
             reg_OS_IE |= (OS_IE_DMA4 << ch);        // enable mic dma interrupt
+/*
+            OS_SetIrqFunction( OS_IE_MIC, MICi_FifoInterruptHandler );
+            reg_OS_IF2  = (OS_IE_MIC >> 32);
+            reg_OS_IE2 |= (OS_IE_MIC >> 32);       // disable mic fifo interrupt
+*/
         }
     }
 
@@ -191,7 +195,17 @@ void MICi_ExDmaInterruptHandler( void )
  *---------------------------------------------------------------------------*/
 void MICi_FifoInterruptHandler( void )
 {
-//    OS_TPrintf( "X" );
+
+/*
+	// 本当はDMAを停止してからFIFOをクリアした方がいいらしい
+
+	// マイクディゼーブル
+    reg_SND_MICCNT &= (u16)(~REG_SND_MICCNT_E_MASK);
+	// FIFO & エラーフラグクリア
+    reg_SND_MICCNT |= REG_SND_MICCNT_FIFO_CLR_MASK;
+	// マイクイネーブル
+    reg_SND_MICCNT |= (u16)(REG_SND_MICCNT_E_MASK);
+*/
 
 #if 0
     MICWork *wp = &micWork;
