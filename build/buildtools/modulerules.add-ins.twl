@@ -45,10 +45,9 @@ else
 	$(LD) $(LDFLAGS) $(LIBRARY_DIRS) @$(LDRES_FILE) $(LCFILE) -o $@
 ifeq	($(TWL_PLATFORM),TS)
 	cp $(BINDIR)/$(TARGET_BIN_BASENAME).axf $(BINDIR)/$(TARGET_BIN_BASENAME).nef
-else  # ($(TWL_PLATFORM),BB)
+endif
 ifdef FIRM_STRIP_AXF
 	$(OBJCOPY) $@ $(BINDIR)/$(TARGET_BIN_BASENAME).sbin
-endif
 endif
 endif
 
