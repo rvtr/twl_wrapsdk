@@ -222,13 +222,13 @@ void OS_Init(void)
     OS_InitPrintServer();
 #endif
 
-    //---- Init Arena (arenas except SUBPRIV-WRAM)
-    OS_InitArena();
-
     //---- Init interProcessor I/F
     //  Sync with ARM7 to enable OS_GetConsoleType()
     //  PXI_Init() must be called before OS_InitArenaEx()
     PXI_Init();
+
+    //---- Init Arena (arenas except SUBPRIV-WRAM)
+    OS_InitArena();
 
     //---- Init Spinlock
     OS_InitLock();
@@ -285,11 +285,11 @@ void OS_Init(void)
     //----------------------------------------------------------------
     // for ARM7
 
-    //---- Init Arena (SUBPRIV-WRAM arena)
-    OS_InitArena();
-
     //---- Init interProcessor I/F
     PXI_Init();
+
+    //---- Init Arena (SUBPRIV-WRAM arena)
+    OS_InitArena();
 
     //---- Init Spinlock
     OS_InitLock();
