@@ -95,7 +95,7 @@ NITRO_BUILD_DIR		?= $(TWL_BUILD_DIR)
 # PMIC Revision
 #
 
-TWL_PMIC_REV	?= 0
+TWL_PMIC_REV	?= 100
 
 
 #
