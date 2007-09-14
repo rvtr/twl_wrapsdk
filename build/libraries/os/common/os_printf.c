@@ -184,14 +184,14 @@
  *---------------------------------------------------------------------------*/
 #include        <twl.h>
 #include        <twl/vlink.h>
-#include <isdbglibpriv.h>
+#include <istdbglibpriv.h>
 
 #ifdef          SDK_LINK_ISD
 # pragma warn_extracomma off
-# include       <isdbglib.h>           // has extracomma in enum
+# include       <istdbglib.h>          // has extracomma in enum
 # pragma warn_extracomma reset
 #else
-void    ISDPrint(const char *);
+void    ISTDPrint(const char *);
 #endif
 
 #ifndef SDK_FINALROM
@@ -284,7 +284,7 @@ static void OS_PutStringInit(const char *str)
 #endif
         OS_PutString = OS_PutStringKMC;
 #if defined( SDK_DEBUGGER_ISD )
-        _ISDbgLib_Initialize();
+        _ISTDbgLib_Initialize();
         OS_PutString = OS_PutStringISD;
 #elif defined( SDK_DEBUGGER_ARM )
         OS_PutString = OS_PutStringARM;
@@ -336,7 +336,7 @@ static void OS_PutStringISD(const char *str)
     // ISDPrint ÇÃèâä˙âªèàóù
     OS_InitLock();
 
-    OS_PutString = ISDPrint;
+    OS_PutString = ISTDPrint;
     OS_PutString(str);
 }
 #endif

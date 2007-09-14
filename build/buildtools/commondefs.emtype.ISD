@@ -31,12 +31,24 @@ TWL_ISD_ROOT_NOSPACE	:= $(subst \,/,$(shell cygpath -d $(TWL_ISD_ROOT)))
 ifeq	($(CODEGEN_PROC),ARM9)
 
 TWL_ISD_INCDIRS	:= $(TWL_ISD_ROOT)/Target/include/ARM9
-TWL_ISD_LIBDIRS	:= $(TWL_ISD_ROOT_NOSPACE)/Target\lib\ARM9-TS
+TWL_ISD_LIBDIRS	:= $(TWL_ISD_ROOT_NOSPACE)/Target/lib/ARM9-TS
+
+ifeq	($(TWL_CODEGEN),ARM)
+TWL_ISD_LIBS    := libistdmainparm.a
+else #	($(TWL_CODEGEN),THUMB)
+TWL_ISD_LIBS    := libistdmainpthumb.a
+endif
 
 else #	($(CODEGEN_PROC),ARM7)
 
 TWL_ISD_INCDIRS	:= $(TWL_ISD_ROOT)/Target/include/ARM7
-TWL_ISD_LIBDIRS	:= $(TWL_ISD_ROOT_NOSPACE)/Target\lib\ARM7-TS
+TWL_ISD_LIBDIRS	:= $(TWL_ISD_ROOT_NOSPACE)/Target/lib/ARM7-TS
+
+ifeq	($(TWL_CODEGEN),ARM)
+TWL_ISD_LIBS    := libistdsubparm.a
+else #	($(TWL_CODEGEN),THUMB)
+TWL_ISD_LIBS    := libistdsubpthumb.a
+endif
 
 endif
 
