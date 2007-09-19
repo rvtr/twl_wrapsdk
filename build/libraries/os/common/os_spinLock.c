@@ -245,11 +245,11 @@ void OS_InitLock(void)
         // Code for MAIN PROCESSOR
         //
 
-        lockp->lockFlag = 0;
+        *(u64*)HW_INIT_LOCK_BUF = 0;
         (void)OS_LockByWord(OS_MAINP_SYSTEM_LOCK_ID - 1, lockp, NULL);
 
         // サブプロセッサによる共有リソース未使用チェック
-        while (lockp->extension != 0)
+        while (lockp->extension != OS_SUBP_SYSTEM_LOCK_ID - 1)
         {
             OSi_WaitByLoop();
         }
@@ -282,13 +282,12 @@ void OS_InitLock(void)
         //
         // Code for SUB PROCESSOR
         //
-
         while (lockp->ownerID != OS_MAINP_SYSTEM_LOCK_ID - 1)
         {
             OSi_WaitByLoop();
         }
 
-        lockp->extension = 0;
+        lockp->extension = OS_SUBP_SYSTEM_LOCK_ID - 1;
         while (lockp->ownerID != OS_MAINP_SYSTEM_LOCK_ID)
         {
             OSi_WaitByLoop();
