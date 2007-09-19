@@ -114,7 +114,7 @@
 
   $NoKeywords: $
  *---------------------------------------------------------------------------*/
-#include <nitro/os.h>
+#include <twl/os.h>
 #include <nitro/code32.h>
 
 //============================================================================
@@ -398,3 +398,47 @@ void OS_WaitVBlankIntr(void)
 #endif
     OS_WaitIrq(TRUE, OS_IE_V_BLANK);
 }
+
+#ifdef SDK_ARM9
+
+/*---------------------------------------------------------------------------*
+  Name:         OS_ChangeSpeedOfARM9
+
+  Description:  change speed of arm9
+
+  Arguments:    None
+
+  Returns:      None
+ *---------------------------------------------------------------------------*/
+typedef void (*OSi_ChangeSpeedOfARM9Entry)( OSSpeedOfARM9 clock );
+
+static asm void OSi_ChangeSpeedOfARM9Core( OSSpeedOfARM9 clock )
+{
+        ldr     r3, =REG_CLK_ADDR
+        ldr     r2, =REG_CFG_CLK_ARM2X_MASK
+        ldrh    r1, [r3]
+        bic     r1, r1, r2
+        orr     r1, r1, r0
+        strh    r1, [r3]
+
+        mov     r0, #8
+@1:
+        subs    r0, r0, #4   // 1 cycle
+        bge     @1           // 3 cycle
+
+        bx      lr
+
+        ltorg
+}
+
+void OS_ChangeSpeedOfARM9( OSSpeedOfARM9 clock, void* itcm )
+{
+    OSi_ChangeSpeedOfARM9Entry entry = itcm;
+
+    MIi_CpuCopyFast( OSi_ChangeSpeedOfARM9Core, itcm, 64 );
+
+    entry( clock );
+}
+
+#endif // SDK_ARM9
+

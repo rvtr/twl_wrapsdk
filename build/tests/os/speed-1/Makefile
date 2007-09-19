@@ -1,6 +1,6 @@
 #! make -f
 #----------------------------------------------------------------------------
-# Project:  TwlSDK - tests
+# Project:  TwlSDK - build
 # File:     Makefile
 #
 # Copyright 2007 Nintendo.  All rights reserved.
@@ -15,19 +15,26 @@
 # $NoKeywords: $
 #----------------------------------------------------------------------------
 
+SUBDIRS =	\
+            ARM7 \
+            ARM9 \
+
+#----------------------------------------------------------------------------
+
+TARGET_BIN		=	speed-1.srl
+
+MAKEROM_ARM9	=	ARM9/bin/$(TWL_BUILDTYPE_ARM9)/main.axf
+MAKEROM_ARM7	=	ARM7/bin/$(TWL_BUILDTYPE_ARM7)/main.axf
+
+#----------------------------------------------------------------------------
+
 include	$(TWLSDK_ROOT)/build/buildtools/commondefs
 
-
 #----------------------------------------------------------------------------
 
-SUBDIRS =       alarm-1 \
-                sleep-1 \
-                speed-1 \
-                svc-rsa \
-                svc-sha1 \
-                debugLED \
-
-#----------------------------------------------------------------------------
+ifeq	($(TWL_PLATFORM),TS)
+do-build:		$(TARGETS)
+endif
 
 include	$(TWLSDK_ROOT)/build/buildtools/modulerules
 

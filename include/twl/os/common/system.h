@@ -35,6 +35,9 @@ typedef enum
 }
 OSChipType;
 
+//---- entry point type
+typedef void (*OSEntryPoint) (void);
+
 typedef u32 OSCpuCycle;
 
 #define OS_CPU_CLOCK                   HW_CPU_CLOCK
@@ -53,6 +56,28 @@ typedef u32 OSCpuCycle;
 #define  OS_CPUCYC_TO_USEC( cyc ) ( ((u32)(cyc) * 1000) / (OS_CPU_CLOCK/1000) )
 #define  OS_CPUCYC_TO_NSEC( cyc ) ( ((u32)(cyc) * 1000 * 1000) / (OS_CPU_CLOCK/1000) )
 
+
+#ifdef SDK_ARM9
+
+typedef enum
+{
+    OS_SPEED_ARM9_X1 = 0,
+    OS_SPEED_ARM9_X2 = REG_CFG_CLK_ARM2X_MASK
+}
+OSSpeedOfARM9;
+
+/*---------------------------------------------------------------------------*
+  Name:         OS_ChangeSpeedOfARM9
+
+  Description:  change speed of arm9
+
+  Arguments:    None
+
+  Returns:      None
+ *---------------------------------------------------------------------------*/
+void OS_ChangeSpeedOfARM9( OSSpeedOfARM9 clock, void* itcm );
+
+#endif // SDK_ARM9
 
 
 #ifdef __cplusplus

@@ -283,6 +283,11 @@ void OS_InitLock(void)
         // Code for SUB PROCESSOR
         //
 
+        while (lockp->ownerID != OS_MAINP_SYSTEM_LOCK_ID - 1)
+        {
+            OSi_WaitByLoop();
+        }
+
         lockp->extension = 0;
         while (lockp->ownerID != OS_MAINP_SYSTEM_LOCK_ID)
         {
