@@ -248,7 +248,6 @@ void CDC_GoDsMode( void )
     // !! from now on, I2C cannot be used. Only DS-type PCSN,TCSN SPI can work.
     //-------------------------------------------------------------------------
 
-    if (cdcRevisionID < CDC_REVISION_C)
     {
         // MicBias powered up
         // In Rev-A, MicBias must be powered up before enabling Master Sound Power
@@ -263,12 +262,6 @@ void CDC_GoDsMode( void )
         //       CODEC PCSN is associated with TouchPanel now (for revision A).
         //
         CDC_DsmodeSetSpiFlags( REG_CDC255_AUD_CTL_ADDR, CDC255_AUD_CTL_PWR );
-    }
-    else
-    {
-        // MicBias powered up
-        u8 flags = PMi_GetRegister( REG_CDC255_DS_MIC_CTL_ADDR );
-        PMi_SetRegister( REG_CDC255_DS_MIC_CTL_ADDR, (u8)(flags | CDC255_DS_MIC_CTL_BIAS_PWR) );
     }
 
     // change CODEC status variable
