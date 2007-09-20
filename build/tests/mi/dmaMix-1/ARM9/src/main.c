@@ -19,7 +19,7 @@
 
 #define MY_DMA_WRAM   ((t_TestBuf *)HW_WRAM_1_END)
 #define MY_TEST_LOOPS (sizeof(copyfillArg)/sizeof(t_CommonArg))
-#define ONE_BUF_SIZE  0x2004
+#define ONE_BUF_SIZE  (0x2000 - 4)
 
 #define MY_DMA_CH_START  1
 #define MY_DMA_CH_END    7
