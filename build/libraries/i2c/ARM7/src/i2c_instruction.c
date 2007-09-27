@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*
-  Project:  TwlSDK - libralies - i2c
+  Project:  TwlSDK - libraties - i2c
   File:     i2c_instruction.c
 
   Copyright 2007 Nintendo.  All rights reserved.
@@ -10,8 +10,9 @@
   not be disclosed to third parties or copied or duplicated in any form,
   in whole or in part, without the prior written consent of Nintendo.
 
-  $Log: $
-  $NoKeywords: $
+  $Date:: 2007-09-19#$
+  $Rev: 1004 $
+  $Author: yutaka $
  *---------------------------------------------------------------------------*/
 #include <twl.h>
 #include <twl/i2c/ARM7/i2c.h>
@@ -29,7 +30,7 @@
 #ifdef PRINT_DEBUG_MINI
 #include <nitro/os/common/printf.h>
 #define DBG_PRINT_FUNC()        OS_TPrintf("%s(0x%02X, 0x%02X);\n", __func__, deviceAddrTable[id], reg)
-#define DBG_PRINT_FUNC1(data)   OS_TPrintf("%s(0x%02X, 0x%02X, 0x%02X, ...);\n", __func__, deviceAddrTable[id], reg, (data))
+#define DBG_PRINT_FUNC1(data)   OS_TPrintf("%s(0x%02X, 0x%02X, 0x%02X);\n", __func__, deviceAddrTable[id], reg, (data))
 #define DBG_PRINT_ERR()         OS_TPrintf("  Failed(%d) @ %d\n", error, r)
 #else
 #define DBG_PRINT_FUNC()        ((void)0)
@@ -49,13 +50,13 @@ static const u8 deviceAddrTable[I2C_SLAVE_NUM] = {
                                                 I2C_ADDR_DEBUG_LED,
                                             };
 
-/*static const*/ s32 I2CSlowRateTable[I2C_SLAVE_NUM] = {
+/*static const*/ s32 slowRateTable[I2C_SLAVE_NUM] = {   /* ƒ`ƒ…[ƒjƒ“ƒO‚Ì‚½‚ßˆêŽžƒOƒ[ƒoƒ‹•Ï”‰» */
                                                 0,      // CODEC
                                                 0,      // CAMERA_MICRON_IN
                                                 0,      // CAMERA_MICRON_OUT
                                                 0,      // CAMERA_SHARP_IN
                                                 0,      // CAMERA_SHARP_OUT
-                                                0x98,   // MICRO_CONTROLLER
+                                                0x100,  // MICRO_CONTROLLER
                                                 0,      // DEBUG_LED
                                             };
 
@@ -132,7 +133,6 @@ static inline void I2Ci_SetData( u8 data )
     reg_EXI_I2CD = data;
 }
 
-
 static inline u8 I2Ci_GetData( void )
 {
     I2Ci_Wait();
@@ -146,10 +146,11 @@ static inline BOOL I2Ci_GetResult( void )
     DBG_PRINTF("%c", (reg_EXI_I2CCNT & REG_EXI_I2CCNT_ACK_MASK) ? '.' : '*');
     return (BOOL)((reg_EXI_I2CCNT & REG_EXI_I2CCNT_ACK_MASK) >> REG_EXI_I2CCNT_ACK_SHIFT);
 }
+
 static inline BOOL I2Ci_SendStart( I2CSlave id )
 {
     DBG_PRINTF("\n");
-    slowRate = I2CSlowRateTable[id];
+    slowRate = slowRateTable[id];   // set new value
     I2Ci_Wait();
     I2Ci_SetData( (u8)(deviceAddrTable[id] | I2C_WRITE) );
     I2Ci_Start();
@@ -218,12 +219,14 @@ static inline BOOL I2Ci_SendLast16( u16 data )
 
 static inline u16 I2Ci_WaitReceiveMiddle16( void )
 {
-    return (u16)((I2Ci_WaitReceiveMiddle() << 8) | I2Ci_WaitReceiveMiddle());
+    u8 data = I2Ci_WaitReceiveMiddle();
+    return (u16)((data << 8) | I2Ci_WaitReceiveMiddle());
 }
 
 static inline u16 I2Ci_WaitReceiveLast16( void )
 {
-    return (u16)((I2Ci_WaitReceiveMiddle() << 8) | I2Ci_WaitReceiveLast());
+    u8 data = I2Ci_WaitReceiveMiddle();
+    return (u16)((data << 8) | I2Ci_WaitReceiveLast());
 }
 
 /*---------------------------------------------------------------------------*
@@ -256,8 +259,10 @@ BOOL I2C_Init( void )
  *---------------------------------------------------------------------------*/
 BOOL I2C_Lock( void )              // ŠO•”ƒXƒŒƒbƒh‚©‚çŒÄ‚Î‚êAI2CƒfƒoƒCƒX‚Ì‘€ìŒ —˜‚ðŽæ“¾‚·‚é
 {
-    if( isInitialized == FALSE ) {
-        if( FALSE == I2C_Init() ) {
+    if( isInitialized == FALSE )
+    {
+        if( FALSE == I2C_Init() )
+        {
             return FALSE;
         }
     }
@@ -276,8 +281,10 @@ BOOL I2C_Lock( void )              // ŠO•”ƒXƒŒƒbƒh‚©‚çŒÄ‚Î‚êAI2CƒfƒoƒCƒX‚Ì‘€ìŒ
  *---------------------------------------------------------------------------*/
 BOOL I2C_Unlock( void )            // ŠO•”ƒXƒŒƒbƒh‚©‚çŒÄ‚Î‚êAI2CƒfƒoƒCƒX‚Ì‘€ìŒ —˜‚ð‰ð•ú‚·‚é
 {
-    if( isInitialized == FALSE ) {
-        if( FALSE == I2C_Init() ) {
+    if( isInitialized == FALSE )
+    {
+        if( FALSE == I2C_Init() )
+        {
             return FALSE;
         }
     }

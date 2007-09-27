@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------*
-  Project:  TwlSDK - libraries - mcu
-  File:     i2c.h
+  Project:  TwlSDK - mcu - include
+  File:     control.h
 
   Copyright 2007 Nintendo.  All rights reserved.
 
@@ -10,15 +10,20 @@
   not be disclosed to third parties or copied or duplicated in any form,
   in whole or in part, without the prior written consent of Nintendo.
 
-  $Log: $
-  $NoKeywords: $
+  $Date::            $
+  $Rev$
+  $Author$
  *---------------------------------------------------------------------------*/
-#ifndef TWL_MCU_ARM7_MCU_H_
-#define TWL_MCU_ARM7_MCU_H_
+#ifndef TWL_MCU_CONTROL_H_
+#define TWL_MCU_CONTROL_H_
 
 #include <twl/types.h>
 #include <twl/mcu/ARM7/i2c.h>
 #include <twl/mcu/ARM7/mcu_reg.h>
+
+#ifdef _cplusplus
+extern "C" {
+#endif
 
 typedef enum
 {
@@ -29,16 +34,57 @@ MCUSystemMode;
 
 typedef enum
 {
-    MCU_CAMERA_PATTERN_NONE     = 0,
-    MCU_CAMERA_PATTERN_BLINK    = 1
+    MCU_CAMLED_PATTERN_NONE     = 0,
+    MCU_CAMLED_PATTERN_BLINK    = 1
 }
-MCUCameraPattern;
+MCUCameraLedPattern;
 
-#define MCU_CAMLED_BLINK    1
+typedef enum
+{
+    MCU_CARDLED_STATUS_AUTO     = 0,
+    MCU_CARDLED_STATUS_OFF      = 1,
+    MCU_CARDLED_STATUS_ON       = 2,
+    MCU_CARDLED_STATUS_ERROR    = 3 /* MCU is treated as ON */
+}
+MCUCardLedStatus;
 
-#ifdef _cplusplus
-extern "C" {
-#endif
+/*---------------------------------------------------------------------------*
+  Name:         MCU_GetVersion
+
+  Description:  get version.
+
+  Arguments:    None
+
+  Returns:      0xFF if error, otherwise version (0-3)
+ *---------------------------------------------------------------------------*/
+static inline u8 MCU_GetVersion( void )
+{
+    u8 data;
+    if ( MCU_ReadRegisters( MCU_REG_INFO_ADDR, &data, 1 ) )
+    {
+        return (u8)( ( data & MCU_REG_INFO_VERSION_MASK ) >> MCU_REG_INFO_VERSION_SHIFT );
+    }
+    return 0xFF;    // error
+}
+
+/*---------------------------------------------------------------------------*
+  Name:         MCU_GetRevision
+
+  Description:  get revision.
+
+  Arguments:    None
+
+  Returns:      0xFF if error, otherwise revision (0-3)
+ *---------------------------------------------------------------------------*/
+static inline u8 MCU_GetRevision( void )
+{
+    u8 data;
+    if ( MCU_ReadRegisters( MCU_REG_INFO_ADDR, &data, 1 ) )
+    {
+        return (u8)( ( data & MCU_REG_INFO_REVISION_MASK ) >> MCU_REG_INFO_REVISION_SHIFT );
+    }
+    return 0xFF;    // error
+}
 
 /*---------------------------------------------------------------------------*
   Name:         MCU_IsResetRequest
@@ -88,7 +134,7 @@ static inline BOOL MCU_GoDsMode( void )
 }
 
 /*---------------------------------------------------------------------------*
-  Name:         MCU_IsWifi
+  Name:         MCU_GetWifiLedStatus
 
   Description:  get wifi LED status
 
@@ -96,18 +142,18 @@ static inline BOOL MCU_GoDsMode( void )
 
   Returns:      TRUE is on
  *---------------------------------------------------------------------------*/
-static inline BOOL MCU_IsWifi( void )
+static inline BOOL MCU_GetWifiLedStatus( void )
 {
     u8 data;
-    if ( MCU_ReadRegisters( MCU_REG_WIFI_ADDR, &data, 1 ) )
+    if ( MCU_ReadRegisters( MCU_REG_WIFILED_ADDR, &data, 1 ) )
     {
-        return ( data & MCU_REG_WIFI_MASK ) >> MCU_REG_WIFI_SHIFT;
+        return ( data & MCU_REG_WIFILED_MASK ) >> MCU_REG_WIFILED_SHIFT;
     }
     return FALSE;   // error
 }
 
 /*---------------------------------------------------------------------------*
-  Name:         MCU_SetWifiLed
+  Name:         MCU_SetWifiLedStatus
 
   Description:  set wifi LED status
 
@@ -115,13 +161,13 @@ static inline BOOL MCU_IsWifi( void )
 
   Returns:      TRUE if success
  *---------------------------------------------------------------------------*/
-static inline BOOL MCU_SetWifi( BOOL enabled )
+static inline BOOL MCU_SetWifiLedStatus( BOOL enabled )
 {
-    return MCU_SetParams( MCU_REG_WIFI_ADDR, (u8)( enabled ? MCU_REG_WIFI_MASK : 0 ), MCU_REG_WIFI_MASK );
+    return MCU_SetParams( MCU_REG_WIFILED_ADDR, (u8)( enabled ? MCU_REG_WIFILED_MASK : 0 ), MCU_REG_WIFILED_MASK );
 }
 
 /*---------------------------------------------------------------------------*
-  Name:         MCU_GetCameraPattern
+  Name:         MCU_GetCameraLedPattern
 
   Description:  get camera LED status.
 
@@ -129,18 +175,18 @@ static inline BOOL MCU_SetWifi( BOOL enabled )
 
   Returns:      camera LED pattern
  *---------------------------------------------------------------------------*/
-static inline MCUCameraPattern MCU_GetCameraPattern( void )
+static inline MCUCameraLedPattern MCU_GetCameraLedPattern( void )
 {
     u8 data;
-    if ( MCU_ReadRegisters( MCU_REG_CAMERA_ADDR, &data, 1 ) )
+    if ( MCU_ReadRegisters( MCU_REG_CAMLED_ADDR, &data, 1 ) )
     {
-        return (MCUCameraPattern)( ( data & MCU_REG_CAMERA_PATTERN_MASK ) >> MCU_REG_CAMERA_PATTERN_SHIFT );
+        return (MCUCameraLedPattern)( ( data & MCU_REG_CAMLED_PATTERN_MASK ) >> MCU_REG_CAMLED_PATTERN_SHIFT );
     }
-    return MCU_CAMERA_PATTERN_NONE; // error
+    return MCU_CAMLED_PATTERN_NONE; // error
 }
 
 /*---------------------------------------------------------------------------*
-  Name:         MCU_SetCameraPattern
+  Name:         MCU_SetCameraLedPattern
 
   Description:  set camera LED status.
 
@@ -148,9 +194,49 @@ static inline MCUCameraPattern MCU_GetCameraPattern( void )
 
   Returns:      TRUE if sucess
  *---------------------------------------------------------------------------*/
-static inline BOOL MCU_SetCameraPattern( MCUCameraPattern pattern )
+static inline BOOL MCU_SetCameraLedPattern( MCUCameraLedPattern pattern )
 {
-    return MCU_SetParams( MCU_REG_CAMERA_ADDR, (u8)( pattern << MCU_REG_CAMERA_PATTERN_SHIFT ), MCU_REG_CAMERA_PATTERN_MASK );
+    return MCU_SetParams( MCU_REG_CAMLED_ADDR, (u8)( pattern << MCU_REG_CAMLED_PATTERN_SHIFT ), MCU_REG_CAMLED_PATTERN_MASK );
+}
+
+/*---------------------------------------------------------------------------*
+  Name:         MCU_GetCardLedStatus
+
+  Description:  get card LED status.
+                NOTE: slot 1/2 does not correspond to MC_IF[A]/[B]
+
+  Arguments:    slot    physical slot number (1 or 2)
+
+  Returns:      card LED status
+ *---------------------------------------------------------------------------*/
+static inline MCUCardLedStatus MCU_GetCardLedStatus( int slot )
+{
+    u8 data;
+    u8 addr = (u8)(slot == 1 ? MCU_REG_CARDLED_1_ADDR : MCU_REG_CARDLED_2_ADDR);
+    SDK_ASSERT(slot == 1 || slot == 2);
+    if ( MCU_ReadRegisters( addr, &data, 1 ) )
+    {
+        return (MCUCardLedStatus)( ( data & MCU_REG_CARDLED_MASK ) >> MCU_REG_CARDLED_SHIFT );
+    }
+    return MCU_CARDLED_STATUS_ERROR; // error
+}
+
+/*---------------------------------------------------------------------------*
+  Name:         MCU_SetCardLedStatus
+
+  Description:  set card LED status.
+                NOTE: slot 1/2 does not correspond to MC_IF[A]/[B]
+
+  Arguments:    slot    physical slot number (1 or 2)
+                status  one of card LED status
+
+  Returns:      TRUE if sucess
+ *---------------------------------------------------------------------------*/
+static inline BOOL MCU_SetCardLedStatus( int slot, MCUCardLedStatus status )
+{
+    u8 addr = (u8)(slot == 1 ? MCU_REG_CARDLED_1_ADDR : MCU_REG_CARDLED_2_ADDR);
+    SDK_ASSERT(slot == 1 || slot == 2);
+    return MCU_SetParams( addr, (u8)( status << MCU_REG_CARDLED_SHIFT ), MCU_REG_CARDLED_MASK );
 }
 
 /*---------------------------------------------------------------------------*
@@ -188,44 +274,6 @@ static inline BOOL MCU_SetVolume( u8 volume )
         return MCU_SetParams( MCU_REG_VOLUME_ADDR, (u8)( volume << MCU_REG_VOLUME_SHIFT ), MCU_REG_VOLUME_MASK );
     }
     return FALSE;   // invalid parameters
-}
-
-/*---------------------------------------------------------------------------*
-  Name:         MCU_GetVersion
-
-  Description:  get version.
-
-  Arguments:    None
-
-  Returns:      0xFF if error, otherwise version (0-3)
- *---------------------------------------------------------------------------*/
-static inline u8 MCU_GetVersion( void )
-{
-    u8 data;
-    if ( MCU_ReadRegisters( MCU_REG_INFO_ADDR, &data, 1 ) )
-    {
-        return (u8)( ( data & MCU_REG_INFO_VERSION_MASK ) >> MCU_REG_INFO_VERSION_SHIFT );
-    }
-    return 0xFF;    // error
-}
-
-/*---------------------------------------------------------------------------*
-  Name:         MCU_GetRevision
-
-  Description:  get revision.
-
-  Arguments:    None
-
-  Returns:      0xFF if error, otherwise revision (0-3)
- *---------------------------------------------------------------------------*/
-static inline u8 MCU_GetRevision( void )
-{
-    u8 data;
-    if ( MCU_ReadRegisters( MCU_REG_INFO_ADDR, &data, 1 ) )
-    {
-        return (u8)( ( data & MCU_REG_INFO_REVISION_MASK ) >> MCU_REG_INFO_REVISION_SHIFT );
-    }
-    return 0xFF;    // error
 }
 
 /*---------------------------------------------------------------------------*
@@ -272,5 +320,4 @@ static inline BOOL MCU_SetFreeRegisters( u8 offset, const u8 *bufp, u32 nums )
 } /* extern "C" */
 #endif
 
-/* TWL_MCU_ARM7_MCU_H_ */
-#endif
+#endif /* TWL_MCU_CONTROL_H_ */
