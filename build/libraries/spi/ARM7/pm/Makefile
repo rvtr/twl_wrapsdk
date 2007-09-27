@@ -31,6 +31,7 @@ SRCS			= pm_sp.c \
 			  pm_send.c \
 			  pm_pmic.c \
 			  pm_pmic_ex.c \
+			  pm_ds.c \
 			  pm_utility.c \
 			  pm_sleep.c \
 			  pm_selfBlink.c \
