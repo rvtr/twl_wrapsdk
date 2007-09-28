@@ -43,10 +43,6 @@ void TwlMain()
     OS_Init();
 
     OS_Printf("ARM9 starts.\n");
-
-    CAMERA_Init();
-
-    // done
     OS_TPrintf("\nARM9 ends.\n");
     OS_Terminate();
 }
