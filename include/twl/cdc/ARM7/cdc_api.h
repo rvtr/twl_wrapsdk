@@ -23,6 +23,12 @@
 extern "C" {
 #endif
 
+typedef enum _CDCPllParameter
+{
+	CDC_PLL_PARAMETER_FOR_SAMPLING_RATE_32730,
+	CDC_PLL_PARAMETER_FOR_SAMPLING_RATE_47610
+} CDCPllParameter;
+
 //================================================================================
 //        INIT APIs
 //================================================================================
@@ -69,7 +75,6 @@ void CDC_InitSound( void );
   Returns:      None
  *---------------------------------------------------------------------------*/
 void CDC_InitMic( void );
-
 
 //================================================================================
 //        Query/Check APIs
@@ -151,15 +156,15 @@ void CDC_SetInputPinControl( BOOL  enable_vcnt5, BOOL  enable_sphp, BOOL  enable
 void CDC_GetInputPinControl( BOOL *enable_vcnt5, BOOL *enable_sphp, BOOL *enable_pmoff );
 
 /*---------------------------------------------------------------------------*
-  Name:         CDC_SetParamPLL
+  Name:         CDC_SetPLL
 
   Description:  setup PLL parameter of the CODEC
 
-  Arguments:    is48kHz : set 48 kHz if TRUE. set 32kHz if FALSE.
+  Arguments:    param: parameter type
 
   Returns:      None
  *---------------------------------------------------------------------------*/
-void CDC_SetParamPLL( BOOL is48kHz );
+void CDC_SetPLL( CDCPllParameter param );
 
 /*---------------------------------------------------------------------------*
   Name:         CDC_PowerUpDAC
@@ -327,6 +332,29 @@ void CDC_EnableAGC( int target_gain );
   Returns:      None
  *---------------------------------------------------------------------------*/
 void CDC_DisableAGC( void );
+
+/*---------------------------------------------------------------------------*
+  Name:         CDC_SetPGAB
+
+  Description:  Setup PGA of the CODEC
+                PGA is enabled when AGC is disabled.
+
+  Arguments:    int target_gain : 0 Å` 119 (0dB Å` 59.5dB)
+
+  Returns:      None
+ *---------------------------------------------------------------------------*/
+void CDC_SetPGAB( u8 target_gain );
+
+/*---------------------------------------------------------------------------*
+  Name:         CDC_GetPGAB
+
+  Description:  Get PGA of the CODEC
+  
+  Arguments:    None
+
+  Returns:      Gain
+ *---------------------------------------------------------------------------*/
+u8 CDC_GetPGAB( void );
 
 /*---------------------------------------------------------------------------*
   Name:         CDC_Init1stOrderFilter

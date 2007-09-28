@@ -36,6 +36,10 @@
 extern u32     OSi_IdleThreadStack[OSi_IDLE_THREAD_STACK_SIZE / sizeof(u32)];
 extern OSThread OSi_IdleThread;
 
+///////////////////
+#define OS_TPrintf( ...)    ((void)0)
+///////////////////
+
 /*---------------------------------------------------------------------------*
     定数定義
  *---------------------------------------------------------------------------*/
@@ -108,6 +112,9 @@ void TwlSpMain(void)
                     OS_THREAD_PRIORITY_MAX /*pseudo. change at next line. */ );
     OSi_IdleThread.priority = OS_THREAD_PRIORITY_MAX + 1;       // lower priority than the lowest (=OS_THREAD_PRIORITY_MAX)
     OSi_IdleThread.state = OS_THREAD_STATE_READY;
+
+	// CODEC初期化
+	CDC_Init();
 
     // サウンド初期化
     SND_Init(THREAD_PRIO_SND);

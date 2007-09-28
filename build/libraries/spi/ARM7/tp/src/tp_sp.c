@@ -66,31 +66,33 @@
   $NoKeywords: $
  *---------------------------------------------------------------------------*/
 
+/*
+	TP関連はCODECがDSモードとTWLモードのいずれであってもARM9から同じ関数が
+　　使えるようにしてあります。というよりも、TWLモードだからといって特に良い
+　　ことは増えてないといった方が正しいです。完全互換の方がよかったですね。
+
+	現時点では CDC_IsTwlMode() の結果によって
+	DS互換モードとTWLモードを分岐させています。
+	ご自由に料理してください。
+*/
+
 #include    "tp_sp.h"
-#include    <tp_reg.h>				    //////////////
-#include    <twl/cdc/ARM7/cdc.h>	    //////////////
-#include    <twl/cdc/ARM7/cdc_api.h>	//////////////
+#include    <twl/cdc/ARM7/cdc_api.h>
 
-
-#define PRINT_DEBUG
+//#define PRINT_DEBUG
 
 #ifdef PRINT_DEBUG
 #include <nitro/os/common/printf.h>
 #define DBG_PRINTF OS_TPrintf
 #else
 #define DBG_PRINTF( ... )  ((void)0)
-#define DBG_CHAR( c )      ((void)0)
+#define DBG_modeAR( c )      ((void)0)
 #endif
-
 
 /*---------------------------------------------------------------------------*
     内部変数定義
  *---------------------------------------------------------------------------*/
 static TPWork tpw;
-
-///////////////////////////  TWL
-tpData_t    tpData;
-///////////////////////////
 
 /*---------------------------------------------------------------------------*
     内部関数定義
@@ -111,17 +113,6 @@ static void SetStability(u16 range);
 
   Returns:      None.
  *---------------------------------------------------------------------------*/
-
-// CODECの電源は現在SndInitでONになっていたはず。
-// CDCInitでONにするようにするか？
-
-// ここでCODECの状態がDSモードかTWLモードかによって
-// 分岐させるという考えもある。
-// スレッドを別にする。
-// TPのスレッドはそういえばSPIスレッドとしてまとめられているんだった。
-// TP_AnalyzeCommandwを別にするだけでいい？
-// いやTP_ExecuteProcessでしょ。
-
 
 void TP_Init(void)
 {
@@ -151,36 +142,17 @@ void TP_Init(void)
 
 	if (CDC_IsTwlMode())
 	{
-/*
-	    tpSetPrechargeTime(     TP_SETUP_TIME_0_1US );
-	    tpSetSenseTime(         TP_SETUP_TIME_0_1US );
-	    tpSetStabilizationTime( TP_SETUP_TIME_0_1US );				// 済み
-	    
-	    tpSetDebounceTime( TP_DEBOUNCE_16US );
-	    
-	    tpSetResolution( TP_RESOLUTION_12 );						// 済み
-	    tpSetInterval( TP_INTERVAL_4MS );							// 済み
-
-	    tpSetTouchPanelDataDepth( TP_DATA_SAMPLE_DEPTH_DEFAULT );	// 済み
-
-	    tpSetConvertChannel( TP_CHANNEL_XY );						// 済み
-	    
-	    tpEnableNewBufferMode();									// 済み
-*/
-
-    	TWL_TP_DisableNewBufferMode();							// for TSC2101 mode
-	    TWL_TP_SetResolution( TP_RESOLUTION_12 );
-		TWL_TP_SetInterval(TP_INTERVAL_NONE);					// for TSC2101 mode	
-	    TWL_TP_SetTouchPanelDataDepth( 5 /*TP_DATA_SAMPLE_DEPTH_DEFAULT*/ );
-		TWL_TP_SetConvertChannel( TP_CHANNEL_XY );
-		TWL_TP_SetStabilizationTime( TP_SETUP_TIME_100US );		// Yの座標が全部同じになることがあったため0.1us->1us
-		TWL_TP_SetSenseTime(         TP_SETUP_TIME_3US );		// Yの座標が全部同じになることがあったため0.1us->1us
-		TWL_TP_SetPrechargeTime(     TP_SETUP_TIME_3US );		// Yの座標が全部同じになることがあったため0.1us->1us
-
-		// シングルショットモードに設定する
-		//    CDC_ChangePage( 3 );
-		//	CDC_SetI2cParams( REG_TP_NEW_BUFFER_MODE, TP_CONVERSION_MODE_SINGLESHOT, TP_CONVERSION_MODE_MASK );
-
+    	TWL_TP_DisableNewBufferMode();							// NewBufferModeは使用せずTSC2101モードを使用する
+	    TWL_TP_SetResolution( TP_RESOLUTION_12 );				// タッチパネルデータの精度は12bit
+		TWL_TP_SetInterval(TP_INTERVAL_NONE);					// TSC2101モードでは無効	
+		TWL_TP_SetConversionMode( 
+				TP_CONVERSION_CONTROL_SELF, 
+				TP_CONVERSION_MODE_XY,
+				TP_CONVERSION_PIN_DATA_AVAILABLE	);			// 変換モードはXY座標
+		TWL_TP_SetStabilizationTime( TP_SETUP_TIME_100US );		// 大きいと座標値の安定性が高まる代わりにサンプリング時間が増加
+		TWL_TP_SetSenseTime(         TP_SETUP_TIME_0_1US );		// sense time 中は Pen Touch が Low にマスクされるので注意
+		TWL_TP_SetPrechargeTime(     TP_SETUP_TIME_0_1US );		// precharge time 中は Pen Touch が Low にマスクされるので注意
+		TWL_TP_SetDebounceTime( TP_DEBOUNCE_0US );				// 
 	}
 	else
 	{
@@ -195,7 +167,6 @@ void TP_Init(void)
 	    TP_SPIChangeMode(SPI_TRANSMODE_1BYTE);
 	    SPI_DummyWait();
 	}
-
 }
 
 /*---------------------------------------------------------------------------*
@@ -311,8 +282,6 @@ void TP_AnalyzeCommand(u32 data)
     }
 }
 
-
-
 #ifdef SDK_TP_AUTO_ADJUST_RANGE        // rangeの自動調整スイッチ
 /*---------------------------------------------------------------------------*
   Name:         TP_AutoAdjustRange
@@ -404,47 +373,47 @@ void TP_ExecuteProcess(SPIEntry * entry)
         // 単体サンプリング
     case SPI_PXI_COMMAND_TP_SAMPLING:
 
-// 排他はCDC_ReadSpiRegister(s)内部でのSPI_Lock()->SPIi_GetExceptionで実現する
-/*
-        // 排他制御開始
-        {
-            OSIntrMode e;
-
-            e = OS_DisableInterrupts();
-            if (!SPIi_CheckException(SPI_DEVICE_TYPE_TP))
-            {
-                (void)OS_RestoreInterrupts(e);
-                // 外部スレッドからのSPI排他中
-                SPIi_ReturnResult((u16)(entry->process), SPI_PXI_RESULT_EXCLUSIVE);
-                return;
-            }
-            SPIi_GetException(SPI_DEVICE_TYPE_TP);
-            (void)OS_RestoreInterrupts(e);
-        }
-*/
         // サンプリングを実行
         {
             SPITpData temp;
-
+#ifdef SDK_TP_AUTO_ADJUST_RANGE        // rangeの自動調整スイッチ
+            u16     density;
+#endif
+			// TWLモード
 			if (CDC_IsTwlMode())
 			{
-//    			OSTick tick = OS_GetTick();	///////////////////////
-				
-				if (TWL_TP_ReadBuffer(&temp))
+#ifdef SDK_TP_AUTO_ADJUST_RANGE        // rangeの自動調整スイッチ
+				if (TWL_TP_ReadBuffer(&temp, tpw.range, &density))
+            	TP_AutoAdjustRange(&temp, density);
+#else
+				if (TWL_TP_ReadBuffer(&temp, tpw.range))
+#endif
 				{
 		            // システム領域に書き出し( 2バイトアクセス )
 		            *((u16 *)(&(OS_GetSystemWork()->touch_panel[0]))) = temp.halfs[0];
 		            *((u16 *)(&(OS_GetSystemWork()->touch_panel[2]))) = temp.halfs[1];
-				}
-	
-//				DBG_PRINTF("TWL_TP_ReadBuffer = %6d us\n", OS_TicksToMicroSeconds(OS_GetTick() - tick));	/////////
+				}	
 			}
+			// DSモード
 			else
 			{
-//    			OSTick tick = OS_GetTick();	/////////////////
+		        // 排他制御開始
+		        {
+		            OSIntrMode e;
+
+		            e = OS_DisableInterrupts();
+		            if (!SPIi_CheckException(SPI_DEVICE_TYPE_TP))
+		            {
+		                (void)OS_RestoreInterrupts(e);
+		                // 外部スレッドからのSPI排他中
+		                SPIi_ReturnResult((u16)(entry->process), SPI_PXI_RESULT_EXCLUSIVE);
+		                return;
+		            }
+		            SPIi_GetException(SPI_DEVICE_TYPE_TP);
+		            (void)OS_RestoreInterrupts(e);
+		        }
 
 #ifdef SDK_TP_AUTO_ADJUST_RANGE        // rangeの自動調整スイッチ
-            	u16     density;
             	TP_ExecSampling(&temp, tpw.range, &density);
             	TP_AutoAdjustRange(&temp, density);
 #else
@@ -453,9 +422,10 @@ void TP_ExecuteProcess(SPIEntry * entry)
 	            // システム領域に書き出し( 2バイトアクセス )
 	            *((u16 *)(&(OS_GetSystemWork()->touch_panel[0]))) = temp.halfs[0];
 	            *((u16 *)(&(OS_GetSystemWork()->touch_panel[2]))) = temp.halfs[1];
-
-//				DBG_PRINTF("TP_ExecSampling = %6d us\n", OS_TicksToMicroSeconds(OS_GetTick() - tick));	/////////
 			}
+
+	        // 排他制御終了
+	        SPIi_ReleaseException(SPI_DEVICE_TYPE_TP);
         }
         // ARM9に処理の成功を通達
         if (entry->process == SPI_PXI_COMMAND_TP_SAMPLING)
@@ -468,8 +438,6 @@ void TP_ExecuteProcess(SPIEntry * entry)
             // 自動サンプリングのインジケート
             SPIi_ReturnResult((u16)(entry->process), (u16)(entry->arg[0] & 0x00ff));
         }
-        // 排他制御終了
-//      SPIi_ReleaseException(SPI_DEVICE_TYPE_TP);
         break;
 
         // 自動サンプリング開始
@@ -572,391 +540,6 @@ static void SetStability(u16 range)
     // ARM9に処理の成功を通達
     SPIi_ReturnResult(SPI_PXI_COMMAND_TP_SETUP_STABILITY, SPI_PXI_RESULT_SUCCESS);
     return;
-}
-
-/*---------------------------------------------------------------------------*
-  Name:         TWL_TP_SetTouchPanelDataDepth
-
-  Description:  set touch-panel data depth (1 <= depth <= 8)
-  
-  Arguments:    int depth : data depth (1<= depth <= 8)
-
-  Returns:      None
- *---------------------------------------------------------------------------*/ //TODO: depthの切り替えはPage3, Reg14, D7 is "0"の状態で行うように修正する
-void TWL_TP_SetTouchPanelDataDepth( u8 depth )
-{
-    u8 tmp;
-    
-    SDK_ASSERT( (1 <= depth) && (depth <= 8) );
-    
-    tmp = (u8)(depth << TP_DATA_DEPTH_SHIFT);
-    if (depth == 8) tmp = 0;
-    
-	CDC_ChangePage( 3 );
-    CDC_SetI2cParams( REG_TP_DATA_DEPTH, tmp, TP_DATA_DEPTH_MASK );
-
-    tpData.tpDepth = depth;
-}
-
-/*---------------------------------------------------------------------------*
-  Name:         TWL_TP_SetConvertChannel
-
-  Description:  set ADC target channel
-  
-  Arguments:    TpChannel_t ch : Convert Channel
-
-  Returns:      None
- *---------------------------------------------------------------------------*/
-void TWL_TP_SetConvertChannel( TpChannel_t ch )
-{
-    SDK_ASSERT( (ch == TP_CHANNEL_NONE)   || (ch == TP_CHANNEL_XY)       ||
-                (ch == TP_CHANNEL_XYZ)    || (ch == TP_CHANNEL_X)        ||
-                (ch == TP_CHANNEL_Y)      || (ch == TP_CHANNEL_Z)        ||
-                (ch == TP_CHANNEL_AUX3)   || (ch == TP_CHANNEL_AUX2)     ||
-                (ch == TP_CHANNEL_AUX1)   || (ch == TP_CHANNEL_AUTO_AUX) ||
-                (ch == TP_CHANNEL_AUX123) || (ch == TP_CHANNEL_XP_XM)    ||
-                (ch == TP_CHANNEL_YP_YM)  || (ch == TP_CHANNEL_YP_XM)      );
-    
-	CDC_ChangePage( 3 );
-
-//  i_tpWriteSpiRegister( REG_TP_CHANNEL, ch );
-//	cdcWriteI2cRegister( REG_TP_CHANNEL, ch );
-//	CDC_WriteI2cRegister( REG_TP_CHANNEL, ch );	// TODO: マスク書き換えに修正する
-
-//	CDC_WriteI2cRegister( REG_TP_CHANNEL, (ch & 0x7f) );	// 強引にホストコントロールモード
-
-	CDC_WriteI2cRegister( REG_TP_CHANNEL, (u8)(ch & 0xfd) );	// 2101 & self
-}
-
-/*---------------------------------------------------------------------------*
-  Name:         TWL_TP_SetInterval
-
-  Description:  set Touch-Panel / AUX Interval Time
-                Either Touch-Panel or AUX can be enabled, the last setting
-                is only valid. Normally, Touch-Panel is enabled.
-  
-  Arguments:    tpInterval_t interval : interval time between sampling
-
-  Returns:      None
- *---------------------------------------------------------------------------*/
-void TWL_TP_SetInterval( tpInterval_t interval )
-{
-    SDK_ASSERT( (interval == TP_INTERVAL_NONE) || 
-                (interval == TP_INTERVAL_8MS)  || (interval == TP_AUX_INTERVAL_1_12M) ||
-                (interval == TP_INTERVAL_1MS)  || (interval == TP_AUX_INTERVAL_3_36M) ||
-                (interval == TP_INTERVAL_2MS)  || (interval == TP_AUX_INTERVAL_5_59M) ||
-                (interval == TP_INTERVAL_3MS)  || (interval == TP_AUX_INTERVAL_7_83M) ||
-                (interval == TP_INTERVAL_4MS)  || (interval == TP_AUX_INTERVAL_10_01M) ||
-                (interval == TP_INTERVAL_5MS)  || (interval == TP_AUX_INTERVAL_12_30M) ||
-                (interval == TP_INTERVAL_6MS)  || (interval == TP_AUX_INTERVAL_14_54M) ||
-                (interval == TP_INTERVAL_7MS)  || (interval == TP_AUX_INTERVAL_16_78M)
-              );
-    
-//  i_tpChangePage( 3 );
-	CDC_ChangePage( 3 );
-
-//  i_tpWriteSpiRegister( REG_TP_INTERVAL, interval );
-//  cdcWriteI2cRegister( REG_TP_INTERVAL, interval );
-	CDC_WriteI2cRegister( REG_TP_INTERVAL, interval );
-}
-
-/*---------------------------------------------------------------------------*
-  Name:         tpEnableNewBufferMode
-
-  Description:  enable new buffer mode
-  
-  Arguments:    None
-
-  Returns:      None
- *---------------------------------------------------------------------------*/
-void TWL_TP_EnableNewBufferMode( void )
-{
-//  i_tpChangePage( 3 );
-	CDC_ChangePage( 3 );
-
-//  i_tpSetSpiParams( REG_TP_NEW_BUFFER_MODE, TP_NEW_BUFFER_MODE_E, TP_NEW_BUFFER_MODE_MASK );
-//  i_tpSetI2cParams( REG_TP_NEW_BUFFER_MODE, TP_NEW_BUFFER_MODE_E, TP_NEW_BUFFER_MODE_MASK );
-    CDC_SetI2cParams( REG_TP_NEW_BUFFER_MODE, TP_NEW_BUFFER_MODE_E, TP_NEW_BUFFER_MODE_MASK );
-}
-
-/*---------------------------------------------------------------------------*
-  Name:         tpDisableNewBufferMode
-
-  Description:  disable new buffer mode
-  
-  Arguments:    None
-
-  Returns:      None
- *---------------------------------------------------------------------------*/
-void TWL_TP_DisableNewBufferMode( void )
-{
-//  i_tpChangePage( 3 );
-	CDC_ChangePage( 3 );
-
-//  i_tpSetSpiParams( REG_TP_NEW_BUFFER_MODE, TP_NEW_BUFFER_MODE_D, TP_NEW_BUFFER_MODE_MASK );
-//  i_tpSetI2cParams( REG_TP_NEW_BUFFER_MODE, TP_NEW_BUFFER_MODE_D, TP_NEW_BUFFER_MODE_MASK );
-    CDC_SetI2cParams( REG_TP_NEW_BUFFER_MODE, TP_NEW_BUFFER_MODE_D, TP_NEW_BUFFER_MODE_MASK );
-}
-
-/*---------------------------------------------------------------------------*
-  Name:         TWL_TP_SetResolution
-
-  Description:  set AD Converting Resolution (8, 10, or 12-bit)
-  
-  Arguments:    TpResolution_t res : Converting Resolution
-
-  Returns:      None
- *---------------------------------------------------------------------------*/
-void TWL_TP_SetResolution( TpResolution_t res )
-{
-    SDK_ASSERT( (res == TP_RESOLUTION_12) || 
-                (res == TP_RESOLUTION_8)  ||
-                (res == TP_RESOLUTION_10) );
-    
-//  i_tpChangePage( 3 );
-	CDC_ChangePage( 3 );
-
-
-//  i_tpSetSpiParams( REG_TP_RESOLUTION, res, TP_RESOLUTION_MASK );
-//  i_tpSetI2cParams( REG_TP_RESOLUTION, res, TP_RESOLUTION_MASK );
-    CDC_SetI2cParams( REG_TP_RESOLUTION, res, TP_RESOLUTION_MASK );
-}
-
-/*---------------------------------------------------------------------------*
-  Name:         TWL_TP_GetResolution
-
-  Description:  get AD Converting Resolution (8, 10, or 12-bit)
-  
-  Arguments:    TpResolution_t *res : Converting Resolution
-
-  Returns:      None
- *---------------------------------------------------------------------------*/
-void TWL_TP_GetResolution( TpResolution_t *res )
-{
-//  i_tpChangePage( 3 );
-	CDC_ChangePage( 3 );
-
-//  *res = (TpResolution_t)(i_tpReadSpiRegister( REG_TP_RESOLUTION ) & TP_RESOLUTION_MASK);
-//  *res = (TpResolution_t)( cdcReadI2cRegister( REG_TP_RESOLUTION ) & TP_RESOLUTION_MASK);
-    *res = (TpResolution_t)( CDC_ReadI2cRegister( REG_TP_RESOLUTION ) & TP_RESOLUTION_MASK);
-}
-
-/*---------------------------------------------------------------------------*
-  Name:         TWL_TP_SetStabilizationTime
-
-  Description:  set ADC stabilization time before touch detection
-  
-  Arguments:    TpSetupTime_t time : stabilization time
-
-  Returns:      None
- *---------------------------------------------------------------------------*/
-void TWL_TP_SetStabilizationTime( TpSetupTime_t time )
-{
-    SDK_ASSERT( (TP_SETUP_TIME_0_1US <= time) || (time <= TP_SETUP_TIME_1MS) );
-    
-	CDC_ChangePage( 3 );
-	CDC_SetI2cParams( REG_TP_STABILIZATION_TIME, time, TP_STABILIZATION_TIME_MASK );
-}
-
-/*---------------------------------------------------------------------------*
-  Name:         TWL_TP_SetPrechargeTime
-
-  Description:  set ADC precharge time before touch detection
-  
-  Arguments:    TpSetupTime_t time : precharge time
-
-  Returns:      None
- *---------------------------------------------------------------------------*/
-void TWL_TP_SetPrechargeTime( TpSetupTime_t time )
-{
-    SDK_ASSERT( (TP_SETUP_TIME_0_1US <= time) || (time <= TP_SETUP_TIME_1MS) );
-    
-    CDC_ChangePage( 3 );
-    CDC_SetI2cParams( REG_TP_PRECHARGE, (u8)(time << TP_PRECHARGE_SHIFT), TP_PRECHARGE_MASK );
-}
-
-/*---------------------------------------------------------------------------*
-  Name:         TWL_TP_SetSenseTime
-
-  Description:  set ADC sense time before touch detection
-  
-  Arguments:    TpSetupTime_t time : sense time
-
-  Returns:      None
- *---------------------------------------------------------------------------*/
-void TWL_TP_SetSenseTime( TpSetupTime_t time )
-{
-    SDK_ASSERT( (TP_SETUP_TIME_0_1US <= time) || (time <= TP_SETUP_TIME_1MS) );
-    
-    CDC_ChangePage( 3 );
-    CDC_SetI2cParams( REG_TP_SENSE_TIME, time, TP_SENSE_TIME_MASK );
-}
-
-/*---------------------------------------------------------------------------*
-  Name:         TWL_TP_IS_TOUCH
-
-  Description:  タッチパネル接触判定
- 
-  Arguments:    none
-
-  Returns:      BOOL : if touched, return TRUE. otherwise FALSE.
- *---------------------------------------------------------------------------*/
-static BOOL TWL_TP_IS_TOUCH( void )
-{
-	vu8 penup = 0;
-
-	penup = CDC_ReadSpiRegister( 9 );
-	if ((penup & 0x80) == 0x00)
-	{
-		penup = CDC_ReadSpiRegister( 9 );
-		if ((penup & 0x80) == 0x00)
-		{
-			penup = CDC_ReadSpiRegister( 9 );
-			if ((penup & 0x80) == 0x00)
-			{
-				return FALSE;
-			}
-		}
-	}
-
-	return TRUE;
-}
-
-
-#define ABS(x) ( ( (x) >= 0 ) ? (x) : ( -(x) ) )
-/*---------------------------------------------------------------------------*
-  Name:         TWL_TP_ReadBuffer
-
-  Description:  read Touch-Panel Buffer
-  
-  Arguments:    data : データ格納ポインタ
-
-  Returns:      BOOL : if read success, return TRUE. otherwise FALSE.
- *---------------------------------------------------------------------------*/
-BOOL TWL_TP_ReadBuffer( SPITpData *data )
-{
-    int i;
-    int target_index = 0;   // 今からデータを格納する領域の先頭インデックス
-    u8  buf[32];
-	u8 not_readready;
-
-//	(void)cdcLock();	// CODECデバイスの操作権利を取得
-
-    CDC_ChangePage( 3 );
-
-
-//  ペンアップ判定
-	if (!TWL_TP_IS_TOUCH())
-	{
-        data->e.touch    = FALSE;
-		data->e.validity = FALSE;
-        return TRUE;	// ここはペンアップとしてシステム領域に書き出す
-	}
-
-/*
-	//----- Availableチェック
-	not_readready = (u8)(CDC_ReadI2cRegister( 9 ));
-	if ((not_readready && 0x0c) == 0x0c)
-	{
-		(void)cdcUnlock();	// CODECデバイスの操作権利を解放 (忘れずに）
-		return FALSE;
-	}
-*/
-    
-    if (tpData.tpIndex == 0)
-        target_index = TP_DATA_SAMPLE_DEPTH_MAX;
-
-
-	for (i=0;i<tpData.tpDepth;i++)
-	{
-//		OS_SpinWait(100);		// サンプリング時間が不足しているようなら追加も検討（ここは本来レディチェックするべき）
-
-		// XYサンプリング
-		CDC_ReadSpiRegisters( 42, &buf[i*4], 4 );
-
-		//  サンプリング後のペンアップ判定 (サンプリング時間も稼げる）
-		if (!TWL_TP_IS_TOUCH())
-		{
-		    return FALSE;	// システム領域には書き出さない
-		}
-	}
-
-
-    for (i=0; i<tpData.tpDepth; i++)
-    {
-        tpData.xBuf[target_index+i]  = (u16)((buf[i*4]     << 8) | buf[i*4 + 1]);
-        tpData.yBuf[target_index+i]  = (u16)((buf[i*4 + 2] << 8) | buf[i*4 + 3]);
-    }
-    
-    tpData.tpIndex = target_index;
-
-//	(void)cdcUnlock();	// CODECデバイスの操作権利を解放
-
-	{
-	    int i, j, index;
-	    int xSum = 0;
-		int ySum = 0;
-		int same_required = (tpData.tpDepth >> 1) + 1;
-		int same_chance   = tpData.tpDepth - same_required + 1;
-		int same_count = 0;
-
-	    index  = tpData.tpIndex;
-
-/*
-		// ペンアップbitチェック
-	    for (i=0; i<tpData.tpDepth; i++, index++)
-	    {
-	        if ((tpData.xBuf[index] & TP_NOT_TOUCH_MASK) || (tpData.yBuf[index] & TP_NOT_TOUCH_MASK))
-	        {
-	            data->e.touch    = FALSE;
-				data->e.validity = FALSE;
-	            return TRUE;	// ここはペンアップとしてシステム領域に書き出す
-	        }
-//	        xSum += tpData.xBuf[index];
-//	        ySum += tpData.yBuf[index];
-	    }
-*/
-
-	    index  = tpData.tpIndex;
-
-	    // サンプリングした内の半数以上がrange以内であればvalidなデータとする。
-		for (i=0; i<same_chance; i++)
-		{
-			same_count = 0;
-			xSum = tpData.xBuf[index + i];
-			ySum = tpData.yBuf[index + i];
-
-			for (j=0; j<tpData.tpDepth; j++)
-			{
-				if (i==j) { continue; }
-				if ((ABS( tpData.xBuf[index + i] - tpData.xBuf[index + j] ) < 5) && 
-					(ABS( tpData.yBuf[index + i] - tpData.yBuf[index + j] ) < 5))
-				{
-					same_count++;
-					xSum += tpData.xBuf[index + j];
-					ySum += tpData.yBuf[index + j];
-				}
-			}
-
-			if (same_count >= same_required) { break; }
-		}
-
-		if (same_count < same_required)
-		{
-	            return FALSE;	// システム領域には書き出さない
-		}
-
-		data->e.x        = xSum / (same_count+1);
-		data->e.y        = ySum / (same_count+1);
-	    data->e.touch    = TRUE;
-	    data->e.validity = TRUE;
-
-//DBG_PRINTF("x : %4d %4d %4d %4d %4d %4d %4d %4d -> %4d\n",   tpData.xBuf[index], tpData.xBuf[index + 1], tpData.xBuf[index + 2], tpData.xBuf[index + 3], tpData.xBuf[index + 4], tpData.xBuf[index + 5], tpData.xBuf[index + 6], tpData.xBuf[index + 7], data->e.x);   
-//DBG_PRINTF("y : %4d %4d %4d %4d %4d %4d %4d %4d -> %4d\n\n", tpData.yBuf[index], tpData.yBuf[index + 1], tpData.yBuf[index + 2], tpData.yBuf[index + 3], tpData.yBuf[index + 4], tpData.yBuf[index + 5], tpData.yBuf[index + 6], tpData.yBuf[index + 7], data->e.y);   
-
-	}
-
-    return TRUE;
 }
 
 /*---------------------------------------------------------------------------*

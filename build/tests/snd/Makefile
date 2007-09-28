@@ -26,7 +26,7 @@ SUBDIRS =	channel \
 
 ifneq	($(TWL_PLATFORM),DSTEG)
 SUBDIRS += \
-		mic-2 \
+#		mic-2 \
 
 endif # TWL_PLATFORM != DSTEG
 

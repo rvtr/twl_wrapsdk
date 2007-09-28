@@ -13,15 +13,92 @@
   $Log: $
   $NoKeywords: $
  *---------------------------------------------------------------------------*/
+
+
+/*
+ 
+　CODECのレジスタアクセスにはページ切り替えが存在します。
+　Page0,1,3,4,8,9,252,255 が存在し、各ページに異なる機能の
+　レジスタが列挙されています。
+
+　"現在のページ"が、割り込みハンドラや別スレッドによって処理の
+　途中で変更されてしまうと困ったことになります。
+
+
+　【問題となる例】
+
+
+　 スレッドＡ
+　（優先度低）
+┏━━━━━━┓　　　 　　スレッドB
+┃ページ０へ　┃　　　　　（優先度高）
+┃　　　　　　┃→→→→┏━━━━━━┓
+┃　　　　　　┃←←　　┃ページ１へ　┃
+┃Access	  ┃ 　↑ 　┃　　　　　　┃
+┃Page 0　  　┃ 　↑ 　┃Access　　　┃
+┃Registers   ┃ 　↑　 ┃Page 1　　　┃
+┗━━━━━━┛ 　↑ 　┃Registers　 ┃
+                 　 ←←┗━━━━━━┛
+                
+
+　そこで、Codecへのアクセスに関してMutexによる排他制御を行います。
+　（短期間であれば割り込み禁止でもいいかも）
+
+　【Mutexによる排他制御】
+
+
+　 スレッドＡ
+　（優先度低）
+┏━━━━━━┓
+┃Mutex Lock  ┃
+┃　　　　　　┃　　　 　　スレッドB
+┃ページ０へ　┃　　　　　（優先度高）
+┃　　　　　　┃→→→→┏━━━━━━┓
+┃Access　　　┃←←←←┃Mutex Lock　┃
+┃Page 0　　　┃　　→→┃　　　　　　┃
+┃Registers	  ┃ 　↑ 　┃ページ１へ　┃
+┃      　  　┃ 　↑　 ┃　　　　　　┃
+┃Mutex Unlock┃→→    ┃Access　　　┃
+┗━━━━━━┛ 　　 　┃Page 1　    ┃
+　                 　 　┃Registers　 ┃
+                 　 　　┗━━━━━━┛
+
+
+　CodecへのアクセスにはSPI通信もしくはI2C通信を使用
+　しますが、これらの関数においてもMutexによる排他制御
+　が行われています。そのため、スレッドＡがCODEC用の
+　Mutexを取得し、スレッドＢがSPI用のMutexを取得した
+　場合に、いわゆるデッドロック状態となる場合があります。
+
+　デッドロックを回避するセオリーは1つのスレッドにおいて
+　複数のMutexを取得しないことですが、CODECに関してはそれが
+　難しいため、Mutexを取得する順番を統一することでデッド
+　ロックを回避します。
+
+　【方針】
+
+　① CODECへのアクセスに関してMutexによる排他制御を行う。
+　　 I2C/SPI通信を行う場合、それらの関数内部でもMutexが使用
+　　 されていることに注意する。デッドロックを回避するため、
+　　 Mutexの取得順はCODECが先、I2C/SPIが後とする。
+
+　② 割り込みハンドラ内では原則CODECアクセスは行わない。
+　　（割り込みハンドラ内ではMutex取得待ちの際にスレッド切り替え
+　　　が発生しないためMutexを永久に取得できない可能性がある）
+　　 割り込みハンドラではスレッドを作成もしくは起床させ、
+     そのスレッドにおいてCODECアクセスを行う。
+
+*/
+
 #include <twl.h>
 #include <twl/cdc.h>
+#include <pm_pmic.h>
 
-#include "pm_pmic.h"
+u8 isADCOn 		  = FALSE;
+u8 isDACOn 		  = FALSE;
+u8 cdcIsTwlMode   = TRUE;
 
-BOOL isADCOn = FALSE;
-BOOL isDACOn = FALSE;
-
-#define CDC_PLL_STABLE_WAIT_TIME                   18
+#define CDC_PLL_STABLE_WAIT_TIME                   20 // 約20msのウェイトが必要
 #define CDC_SCAN_MODE_TIMER_CLOCK_DIVIDER_VALUE    24
 
 static void CDCi_PowerUpPLL( void );
@@ -41,17 +118,19 @@ static void CDCi_PowerDownPLL( void );
  *---------------------------------------------------------------------------*/
 void CDC_Init( void )
 {
-    reg_CFG_CLK |= REG_CFG_CLK_SND_MASK;
+	reg_CFG_CLK |= REG_CFG_CLK_SND_MASK;
+
+	CDC_InitMutex();
 
     CDC_Reset();
 
-    cdcRevisionID = CDC_GetRevisionId();
+	CDC_SetPLL( CDC_PLL_PARAMETER_FOR_SAMPLING_RATE_47610 );
+
+    CDC_SetScanModeTimerClockDivider( CDC_SCAN_MODE_TIMER_CLOCK_DIVIDER_VALUE );
 
     CDCi_PowerUpPLL();
 
     CDC_InitSound();
-
-    CDC_SetScanModeTimerClockDivider( CDC_SCAN_MODE_TIMER_CLOCK_DIVIDER_VALUE );
 }
 
 /*---------------------------------------------------------------------------*
@@ -65,8 +144,7 @@ void CDC_Init( void )
  *---------------------------------------------------------------------------*/
 void CDC_Reset( void )
 {
-    CDC_ChangePage( 0 );
-    CDC_WriteI2cRegister( REG_CDC0_RST_ADDR, CDC0_RST_E );
+    CDC_WriteSpiRegisterEx( 0, REG_CDC0_RST_ADDR, CDC0_RST_E );
     CDC_SetInputPinControl( TRUE, TRUE, TRUE );  // enable VCNT5,SP#HP,PMOFF pin
     OS_Sleep(1);
 }
@@ -82,7 +160,7 @@ void CDC_Reset( void )
  *---------------------------------------------------------------------------*/
 void CDC_InitSound( void )
 {
-#if 1 // このコードは本来、cdcInitSound呼び出しルーチンが記述すべきコード。
+#if 1
     // Enable I2S
     reg_SND_I2SCNT |= REG_SND_I2SCNT_E_MASK;
 #endif
@@ -120,8 +198,7 @@ void CDC_InitSound( void )
 void CDC_InitMic( void )
 {
     // setup Mic Bias
-    CDC_ChangePage( 1 );
-    CDC_WriteI2cRegister( REG_CDC1_MIC_BIAS_ADDR, CDC1_MIC_BIAS_2_5V );
+    CDC_WriteSpiRegisterEx( 1, REG_CDC1_MIC_BIAS_ADDR, CDC1_MIC_BIAS_2_5V );
 
 #if 1 // このコードは本来、cdcInitSound呼び出しルーチンが記述すべきコード。
     // Enable I2S
@@ -135,9 +212,15 @@ void CDC_InitMic( void )
     CDC_PowerUpADC();
     CDC_UnmuteADC();
 
-    CDC_EnableAGC( CDC0_AGC_CTL1_DEFAULT_GAIN );
-}
+    // AGC(Automatic Gain Control)で取得値を調整されると
+	// ライブラリの正常動作を確認しにくいため暫定的にdisableにしています。
+	// 最終的にAGCとPGAのどちらをデフォルトにするかは未定です。
 
+	// ゲイン設定
+//	CDC_EnableAGC( CDC0_AGC_CTL1_DEFAULT_GAIN );
+	CDC_DisableAGC();
+	CDC_SetPGAB( 40 );
+}
 
 //================================================================================
 //        Query APIs
@@ -167,8 +250,7 @@ BOOL CDC_IsTwlMode( void )
  *---------------------------------------------------------------------------*/
 u8 CDC_GetVendorId( void )
 {
-    CDC_ChangePage( 0 );
-    return CDC_ReadI2cRegister( REG_CDC0_VEND_ID_ADDR );
+	return CDC_ReadSpiRegisterEx( 0, REG_CDC0_VEND_ID_ADDR );
 }
 
 /*---------------------------------------------------------------------------*
@@ -182,8 +264,7 @@ u8 CDC_GetVendorId( void )
  *---------------------------------------------------------------------------*/
 u8 CDC_GetRevisionId( void )
 {
-    CDC_ChangePage( 0 );
-    return (u8)(( CDC_ReadI2cRegister( REG_CDC0_REV_ID_ADDR ) & CDC0_REV_ID_MASK ) >> CDC0_REV_ID_SHIFT);
+    return (u8)(( CDC_ReadSpiRegisterEx( 0, REG_CDC0_REV_ID_ADDR ) & CDC0_REV_ID_MASK ) >> CDC0_REV_ID_SHIFT);
 }
 
 //================================================================================
@@ -201,68 +282,51 @@ u8 CDC_GetRevisionId( void )
  *---------------------------------------------------------------------------*/
 void CDC_GoDsMode( void )
 {
-    CDC_ChangePage( 0 );
 
-//#ifdef CDC_REVISION_A
+#ifdef CDC_REVISION_A
 
     // CODEC-IC bug workaround
 	CDC_PowerUpADC();
     CDC_UnmuteADC();
 
-//#endif // CDC_REVISION_A
+#endif // CDC_REVISION_A
 
-///////////////// 箕輪君の要望により+7dB設定を試す（従来の2.5倍音圧相当）
-    CDC_WriteI2cRegister( REG_CDC0_DIG_VOL_L_ADDR, 14 );
-    CDC_WriteI2cRegister( REG_CDC0_DIG_VOL_R_ADDR, 14 );
-/////////////////
+    // デジタルボリューム設定 +7dB（従来の2.5倍音圧相当）
+    CDC_WriteSpiRegisterEx( 0, REG_CDC0_DIG_VOL_L_ADDR, 14 );
+    CDC_WriteSpiRegisterEx( 0, REG_CDC0_DIG_VOL_R_ADDR, 14 );
 
-    // マイクバイアスを設定しておく必要がある。DSモードに入ってからは
-    // この設定を行う手段がない。
-    CDC_ChangePage( 1 );
-    CDC_WriteI2cRegister( REG_CDC1_MIC_BIAS_ADDR, CDC1_MIC_BIAS_2_5V );
+    // マイクバイアスを設定しておく必要がある。
+	// DSモードに入ってからはこの設定を行う手段がない。
+    CDC_WriteSpiRegisterEx( 1, REG_CDC1_MIC_BIAS_ADDR, CDC1_MIC_BIAS_2_5V );
 
-	// PGA 設定も同様（18.8k 設定でDSと同等のゲインが得られる）
-    CDC_WriteI2cRegister( REG_CDC1_MIC_PGA_P_ADDR,  1 << CDC1_MIC_PGA_P_I_SHIFT);
-    CDC_WriteI2cRegister( REG_CDC1_MIC_PGA_M_ADDR,  1 << CDC1_MIC_PGA_M_I_SHIFT);	
-
+	// PGAインピーダンス 設定も同様（18.8k 設定でDSと同等のゲインが得られる）
+    CDC_WriteSpiRegisterEx( 1, REG_CDC1_MIC_PGA_P_ADDR,  1 << CDC1_MIC_PGA_P_I_SHIFT);
+    CDC_WriteSpiRegisterEx( 1, REG_CDC1_MIC_PGA_M_ADDR,  1 << CDC1_MIC_PGA_M_I_SHIFT);	
 
     // PLL 設定を DS 用に変更
-    CDC_WriteI2cRegister( REG_CDC0_PLL_J_ADDR,    21 );
-    CDC_WriteI2cRegister( REG_CDC0_NDAC_DIV_ADDR, CDC0_NDAC_DIV_PWR | 7 );
-    CDC_WriteI2cRegister( REG_CDC0_NADC_DIV_ADDR, CDC0_NADC_DIV_PWR | 7 );
-
-    CDC_ChangePage( 3 );
+    CDC_WriteSpiRegisterEx( 0, REG_CDC0_PLL_J_ADDR,    21 );
+    CDC_WriteSpiRegisterEx( 0, REG_CDC0_NDAC_DIV_ADDR, CDC0_NDAC_DIV_PWR | 7 );
+    CDC_WriteSpiRegisterEx( 0, REG_CDC0_NADC_DIV_ADDR, CDC0_NADC_DIV_PWR | 7 );
 
     // READREADY 端子属性を TSC2046-PENINTERRUPT に変更
-    CDC_WriteI2cRegister( REG_CDC3_TP_CONV_MODE_ADDR, 0 );
-
-    CDC_ChangePage( 255 );
+    CDC_WriteSpiRegisterEx( 3, REG_CDC3_TP_CONV_MODE_ADDR, 0 );
 
     // enable DS-Mode             (via reg5 : current page=255)
     //
     // DS-mode default
     //   Master Sound Power OFF, MicBias OFF, MicPGA x40 times
-    CDC_WriteI2cRegister( REG_CDC255_BKCMPT_MODE_ADDR, CDC255_BKCMPT_MODE_DS );
+    CDC_WriteSpiRegisterEx( 255, REG_CDC255_BKCMPT_MODE_ADDR, CDC255_BKCMPT_MODE_DS );
 
     //-------------------------------------------------------------------------
     // !! from now on, I2C cannot be used. Only DS-type PCSN,TCSN SPI can work.
     //-------------------------------------------------------------------------
 
-    {
-        // MicBias powered up
-        // In Rev-A, MicBias must be powered up before enabling Master Sound Power
-        CDC_DsmodeSetSpiFlags( REG_CDC255_DS_MIC_CTL_ADDR, CDC255_DS_MIC_CTL_BIAS_PWR );
+    // enable Master Sound Power  (via reg0 : current page=255)
+    CDC_DsmodeSetSpiFlags( REG_CDC255_AUD_CTL_ADDR, CDC255_AUD_CTL_PWR );
 
-        // enable Master Sound Power  (via reg0 : current page=255)
-        //
-        // note: In Rev-A, if Master Sound Power is off, touch-panel logic does
-        //       not work.
-        //
-        //       CODEC PCSN is connected to IO-board Analog Key CS.
-        //       CODEC PCSN is associated with TouchPanel now (for revision A).
-        //
-        CDC_DsmodeSetSpiFlags( REG_CDC255_AUD_CTL_ADDR, CDC255_AUD_CTL_PWR );
-    }
+    // MicBias powered up
+    // In Rev-A, MicBias must be powered up before enabling Master Sound Power
+    CDC_DsmodeSetSpiFlags( REG_CDC255_DS_MIC_CTL_ADDR, CDC255_DS_MIC_CTL_BIAS_PWR );
 
     // change CODEC status variable
     cdcIsTwlMode = FALSE;
@@ -284,15 +348,13 @@ void CDC_SetInputPinControl( BOOL  enable_vcnt5, BOOL  enable_sphp, BOOL  enable
 {
     u8 work = 0;
 
-    CDC_ChangePage( 0 );
-
     if (enable_vcnt5)   work  = CDC0_PIN_CTL1_VCNT5_E;
     if (enable_sphp)    work |= CDC0_PIN_CTL1_SPHP_E;
-    CDC_WriteI2cRegister( REG_CDC0_PIN_CTL1_ADDR, work );
+    CDC_WriteSpiRegisterEx( 0, REG_CDC0_PIN_CTL1_ADDR, work );
 
     work = 0;
     if (enable_pmoff)   work  = CDC0_PIN_CTL2_PMOFF_E;
-    CDC_WriteI2cRegister( REG_CDC0_PIN_CTL2_ADDR, work );
+    CDC_WriteSpiRegisterEx( 0, REG_CDC0_PIN_CTL2_ADDR, work );
 }
 
 /*---------------------------------------------------------------------------*
@@ -314,19 +376,16 @@ void CDC_GetInputPinControl( BOOL *enable_vcnt5, BOOL *enable_sphp, BOOL *enable
     *enable_sphp  = FALSE;
     *enable_pmoff = FALSE;
 
-    CDC_ChangePage( 0 );
-
-    work = CDC_ReadI2cRegister( REG_CDC0_PIN_CTL1_ADDR );
+    work = CDC_ReadSpiRegisterEx( 0, REG_CDC0_PIN_CTL1_ADDR );
     if ((work & CDC0_PIN_CTL1_VCNT5_MASK) == CDC0_PIN_CTL1_VCNT5_E)
         *enable_vcnt5 = TRUE;
     if ((work & CDC0_PIN_CTL1_SPHP_MASK)  == CDC0_PIN_CTL1_SPHP_E)
         *enable_sphp = TRUE;
 
-    work = CDC_ReadI2cRegister( REG_CDC0_PIN_CTL2_ADDR );
+    work = CDC_ReadSpiRegisterEx( 0, REG_CDC0_PIN_CTL2_ADDR );
     if ((work & CDC0_PIN_CTL2_PMOFF_MASK) == CDC0_PIN_CTL2_PMOFF_E)
         *enable_pmoff = TRUE;
 }
-
 
 /*---------------------------------------------------------------------------*
   Name:         CDCi_PowerUpPLL
@@ -340,8 +399,8 @@ void CDC_GetInputPinControl( BOOL *enable_vcnt5, BOOL *enable_sphp, BOOL *enable
 static void CDCi_PowerUpPLL( void )
 {
     // page 0, reg 5 で P=2,R=1,PLL on 設定
-    CDC_ChangePage( 0 );
-    CDC_WriteI2cRegister(   REG_CDC0_PLL_P_R_ADDR,
+    CDC_WriteSpiRegisterEx( 0,
+							REG_CDC0_PLL_P_R_ADDR,
                             CDC0_PLL_P_R_PWR |
                             (2 << CDC0_PLL_P_R_DIV_SHIFT) |
                             (1 << CDC0_PLL_P_R_MUL_SHIFT) );
@@ -359,37 +418,48 @@ static void CDCi_PowerUpPLL( void )
 static void CDCi_PowerDownPLL( void )
 {
     // page 0, reg 5 で PLL off 設定
-    CDC_ChangePage( 0 );
-    CDC_WriteI2cRegister( REG_CDC0_PLL_P_R_ADDR, 0 );
+    CDC_WriteSpiRegisterEx( 0, REG_CDC0_PLL_P_R_ADDR, 0 );
 }
 
 /*---------------------------------------------------------------------------*
-  Name:         CDC_SetParamPLL
+  Name:         CDC_SetPLL
 
   Description:  setup PLL parameter of the CODEC
+
+  Note:  		PLLを安全に変更するためにはAD/DAを停止させなければならない。
+                
 
   Arguments:    is48kHz : set 48 kHz if TRUE. set 32kHz if FALSE.
 
   Returns:      None
  *---------------------------------------------------------------------------*/
-// パラメータをいきなり変更しても問題ないか要確認
-// Codec Off状態で変更すべき？
-
-void CDC_SetParamPLL( BOOL is48kHz )
+void 
+CDC_SetPLL( CDCPllParameter param )
 {
-    if (is48kHz)
-    {
-        CDC_WriteI2cRegister( REG_CDC0_PLL_J_ADDR,    15 );
-        CDC_WriteI2cRegister( REG_CDC0_NDAC_DIV_ADDR, CDC0_NDAC_DIV_PWR | 5 );
-        CDC_WriteI2cRegister( REG_CDC0_NADC_DIV_ADDR, CDC0_NADC_DIV_PWR | 5 );
-    }
-    else
-    {
-        CDC_WriteI2cRegister( REG_CDC0_PLL_J_ADDR,    21 );
-        CDC_WriteI2cRegister( REG_CDC0_NDAC_DIV_ADDR, CDC0_NDAC_DIV_PWR | 7 );
-        CDC_WriteI2cRegister( REG_CDC0_NADC_DIV_ADDR, CDC0_NADC_DIV_PWR | 7 );
-    }
+	CDC_Lock();
+	SPI_Lock(123);
+
+    CDCi_ChangePage( 0 );
+
+	switch ( param )
+	{
+		case CDC_PLL_PARAMETER_FOR_SAMPLING_RATE_32730:
+	        CDCi_WriteSpiRegister( REG_CDC0_PLL_J_ADDR,    21 );
+	        CDCi_WriteSpiRegister( REG_CDC0_NDAC_DIV_ADDR, CDC0_NDAC_DIV_PWR | 7 );
+	        CDCi_WriteSpiRegister( REG_CDC0_NADC_DIV_ADDR, CDC0_NADC_DIV_PWR | 7 );
+			break;
+
+		case CDC_PLL_PARAMETER_FOR_SAMPLING_RATE_47610:
+	        CDCi_WriteSpiRegister( REG_CDC0_PLL_J_ADDR,    15 );
+	        CDCi_WriteSpiRegister( REG_CDC0_NDAC_DIV_ADDR, CDC0_NDAC_DIV_PWR | 5 );
+	        CDCi_WriteSpiRegister( REG_CDC0_NADC_DIV_ADDR, CDC0_NADC_DIV_PWR | 5 );
+			break;
+	}
+
+	SPI_Unlock(123);
+	CDC_Unlock();
 }
+
 /*---------------------------------------------------------------------------*
   Name:         CDC_PowerUpDAC
 
@@ -402,8 +472,8 @@ void CDC_SetParamPLL( BOOL is48kHz )
 void CDC_PowerUpDAC( void )
 {
     // page 0, reg 63 で Left/Right DAC On, datapath is straght-forward setting.
-    CDC_ChangePage( 0 );
-    CDC_WriteI2cRegister( REG_CDC0_DIG_PATH_ADDR,
+    CDC_WriteSpiRegisterEx( 0,
+						REG_CDC0_DIG_PATH_ADDR,
                         CDC0_DIG_PATH_CH_PWR_L | (1 << CDC0_DIG_PATH_L_SHIFT) |
                         CDC0_DIG_PATH_CH_PWR_R | (1 << CDC0_DIG_PATH_R_SHIFT) );
 
@@ -426,9 +496,7 @@ void CDC_PowerUpDAC( void )
 void CDC_PowerDownDAC( void )
 {
     // page 0, reg 63 で Left/Right DAC Off
-    CDC_ChangePage( 0 );
-    CDC_WriteI2cRegister( REG_CDC0_DIG_PATH_ADDR, 0 );
-
+    CDC_WriteSpiRegisterEx( 0, REG_CDC0_DIG_PATH_ADDR, 0 );
     isDACOn = FALSE;
 }
 
@@ -445,11 +513,17 @@ void CDC_PowerDownDAC( void )
  *---------------------------------------------------------------------------*/
 void CDC_SetupDAC( int hp_pwon_tm, int hp_rmpup_tm, int sphp_rmpdn_tm )
 {
+	CDC_Lock();
+	SPI_Lock(123);
+
     // page 1, reg 33--35
-    CDC_ChangePage( 1 );
-    CDC_WriteI2cRegister( REG_CDC1_HP_DRV_TM_ADDR,    (u8)(hp_pwon_tm | hp_rmpup_tm) );
-    CDC_WriteI2cRegister( REG_CDC1_HPSP_RAMPDWN_ADDR, (u8)sphp_rmpdn_tm );
-    CDC_WriteI2cRegister( REG_CDC1_DAC_OUTPUT_ADDR,   CDC1_DAC_OUTPUT_E_R | CDC1_DAC_OUTPUT_E_L );
+    CDCi_ChangePage( 1 );
+    CDCi_WriteSpiRegister( REG_CDC1_HP_DRV_TM_ADDR,    (u8)(hp_pwon_tm | hp_rmpup_tm) );
+    CDCi_WriteSpiRegister( REG_CDC1_HPSP_RAMPDWN_ADDR, (u8)sphp_rmpdn_tm );
+    CDCi_WriteSpiRegister( REG_CDC1_DAC_OUTPUT_ADDR,   CDC1_DAC_OUTPUT_E_R | CDC1_DAC_OUTPUT_E_L );
+
+	SPI_Unlock(123);
+	CDC_Unlock();
 }
 
 /*---------------------------------------------------------------------------*
@@ -463,24 +537,30 @@ void CDC_SetupDAC( int hp_pwon_tm, int hp_rmpup_tm, int sphp_rmpdn_tm )
  *---------------------------------------------------------------------------*/
 void CDC_EnableHeadphoneDriver( void )
 {
+	CDC_Lock();
+	SPI_Lock(123);
+
     // page 1, reg 36--41
-    CDC_ChangePage( 1 );
+    CDCi_ChangePage( 1 );
 
     // Mute Analog Volume
-    CDC_WriteI2cRegister( REG_CDC1_HP_ANGVOL_L_ADDR, CDC1_ANGVOL_E | CDC1_ANGVOL_GAIN_MUTE );
-    CDC_WriteI2cRegister( REG_CDC1_HP_ANGVOL_R_ADDR, CDC1_ANGVOL_E | CDC1_ANGVOL_GAIN_MUTE );
+    CDCi_WriteSpiRegister( REG_CDC1_HP_ANGVOL_L_ADDR, CDC1_ANGVOL_E | CDC1_ANGVOL_GAIN_MUTE );
+    CDCi_WriteSpiRegister( REG_CDC1_HP_ANGVOL_R_ADDR, CDC1_ANGVOL_E | CDC1_ANGVOL_GAIN_MUTE );
 
     // Power Up Headphone Driver, with short-circuit protection
-    CDC_WriteI2cRegister( REG_CDC1_HP_DRV_ADDR, CDC1_HP_DRV_PWR_L | CDC1_HP_DRV_PWR_R |
+    CDCi_WriteSpiRegister( REG_CDC1_HP_DRV_ADDR, CDC1_HP_DRV_PWR_L | CDC1_HP_DRV_PWR_R |
                             CDC1_HP_CMN_MODE_VOL_1_65V | CDC1_HP_DRV_SHTC_PROTECT_E );
 
     // Un-mute Headphone
-    CDC_WriteI2cRegister( REG_CDC1_HP_DRV_L_ADDR, CDC1_HP_DRV_PDN_TRISTATE | CDC1_HP_DRV_MUTEN );
-    CDC_WriteI2cRegister( REG_CDC1_HP_DRV_R_ADDR, CDC1_HP_DRV_PDN_TRISTATE | CDC1_HP_DRV_MUTEN );
+    CDCi_WriteSpiRegister( REG_CDC1_HP_DRV_L_ADDR, CDC1_HP_DRV_PDN_TRISTATE | CDC1_HP_DRV_MUTEN );
+    CDCi_WriteSpiRegister( REG_CDC1_HP_DRV_R_ADDR, CDC1_HP_DRV_PDN_TRISTATE | CDC1_HP_DRV_MUTEN );
 
     // Un-mute Analog Volume
-    CDC_WriteI2cRegister( REG_CDC1_HP_ANGVOL_L_ADDR, CDC1_ANGVOL_E | CDC1_ANGVOL_GAIN_MAX );
-    CDC_WriteI2cRegister( REG_CDC1_HP_ANGVOL_R_ADDR, CDC1_ANGVOL_E | CDC1_ANGVOL_GAIN_MAX );
+    CDCi_WriteSpiRegister( REG_CDC1_HP_ANGVOL_L_ADDR, CDC1_ANGVOL_E | CDC1_ANGVOL_GAIN_MAX );
+    CDCi_WriteSpiRegister( REG_CDC1_HP_ANGVOL_R_ADDR, CDC1_ANGVOL_E | CDC1_ANGVOL_GAIN_MAX );
+
+	SPI_Unlock(123);
+	CDC_Unlock();
 }
 
 /*---------------------------------------------------------------------------*
@@ -494,15 +574,21 @@ void CDC_EnableHeadphoneDriver( void )
  *---------------------------------------------------------------------------*/
 void CDC_DisableHeadphoneDriver( void )
 {
+	CDC_Lock();
+	SPI_Lock(123);
+
     // page 1, reg 36--37,31
-    CDC_ChangePage( 1 );
+    CDCi_ChangePage( 1 );
 
     // Mute Analog Volume
-    CDC_WriteI2cRegister( REG_CDC1_HP_ANGVOL_L_ADDR, CDC1_ANGVOL_E | CDC1_ANGVOL_GAIN_MUTE );
-    CDC_WriteI2cRegister( REG_CDC1_HP_ANGVOL_R_ADDR, CDC1_ANGVOL_E | CDC1_ANGVOL_GAIN_MUTE );
+    CDCi_WriteSpiRegister( REG_CDC1_HP_ANGVOL_L_ADDR, CDC1_ANGVOL_E | CDC1_ANGVOL_GAIN_MUTE );
+    CDCi_WriteSpiRegister( REG_CDC1_HP_ANGVOL_R_ADDR, CDC1_ANGVOL_E | CDC1_ANGVOL_GAIN_MUTE );
 
     // Power Down Headphone Driver, with short-circuit protection
-    CDC_WriteI2cRegister( REG_CDC1_HP_DRV_ADDR, CDC1_HP_DRV_SHTC_PROTECT_E );
+    CDCi_WriteSpiRegister( REG_CDC1_HP_DRV_ADDR, CDC1_HP_DRV_SHTC_PROTECT_E );
+
+	SPI_Unlock(123);
+	CDC_Unlock();
 }
 
 /*---------------------------------------------------------------------------*
@@ -516,24 +602,30 @@ void CDC_DisableHeadphoneDriver( void )
  *---------------------------------------------------------------------------*/
 void CDC_EnableSpeakerDriver( void )
 {
+	CDC_Lock();
+	SPI_Lock(123);
+
     // page 1, reg 38-39,32,42-43
-    CDC_ChangePage( 1 );
+    CDCi_ChangePage( 1 );
 
     // Mute Analog Volume
-    CDC_WriteI2cRegister( REG_CDC1_SP_ANGVOL_L_ADDR, CDC1_ANGVOL_E | CDC1_ANGVOL_GAIN_MUTE );
-    CDC_WriteI2cRegister( REG_CDC1_SP_ANGVOL_R_ADDR, CDC1_ANGVOL_E | CDC1_ANGVOL_GAIN_MUTE );
+    CDCi_WriteSpiRegister( REG_CDC1_SP_ANGVOL_L_ADDR, CDC1_ANGVOL_E | CDC1_ANGVOL_GAIN_MUTE );
+    CDCi_WriteSpiRegister( REG_CDC1_SP_ANGVOL_R_ADDR, CDC1_ANGVOL_E | CDC1_ANGVOL_GAIN_MUTE );
 
     // Power Up Speaker Driver, with short-circuit protection
-    CDC_WriteI2cRegister( REG_CDC1_SP_DRV_ADDR, CDC1_SP_DRV_PWR_L | CDC1_SP_DRV_PWR_R |
+    CDCi_WriteSpiRegister( REG_CDC1_SP_DRV_ADDR, CDC1_SP_DRV_PWR_L | CDC1_SP_DRV_PWR_R |
                             CDC1_SP_DRV_SHTC_PROTECT_E );
 
     // Un-mute Speaker
-    CDC_WriteI2cRegister( REG_CDC1_SP_DRV_L_ADDR, CDC1_SP_DRV_MUTEN | CDC1_SP_DRV_GAIN_0DB );
-    CDC_WriteI2cRegister( REG_CDC1_SP_DRV_R_ADDR, CDC1_SP_DRV_MUTEN | CDC1_SP_DRV_GAIN_0DB );
+    CDCi_WriteSpiRegister( REG_CDC1_SP_DRV_L_ADDR, CDC1_SP_DRV_MUTEN | CDC1_SP_DRV_GAIN_0DB );
+    CDCi_WriteSpiRegister( REG_CDC1_SP_DRV_R_ADDR, CDC1_SP_DRV_MUTEN | CDC1_SP_DRV_GAIN_0DB );
 
     // Un-mute Analog Volume
-    CDC_WriteI2cRegister( REG_CDC1_SP_ANGVOL_L_ADDR, CDC1_ANGVOL_E | CDC1_ANGVOL_GAIN_MAX );
-    CDC_WriteI2cRegister( REG_CDC1_SP_ANGVOL_R_ADDR, CDC1_ANGVOL_E | CDC1_ANGVOL_GAIN_MAX );
+    CDCi_WriteSpiRegister( REG_CDC1_SP_ANGVOL_L_ADDR, CDC1_ANGVOL_E | CDC1_ANGVOL_GAIN_MAX );
+    CDCi_WriteSpiRegister( REG_CDC1_SP_ANGVOL_R_ADDR, CDC1_ANGVOL_E | CDC1_ANGVOL_GAIN_MAX );
+
+	SPI_Unlock(123);
+	CDC_Unlock();
 }
 
 /*---------------------------------------------------------------------------*
@@ -547,17 +639,22 @@ void CDC_EnableSpeakerDriver( void )
  *---------------------------------------------------------------------------*/
 void CDC_DisableSpeakerDriver( void )
 {
+	CDC_Lock();
+	SPI_Lock(123);
+
     // page 1, reg 38-39,32
-    CDC_ChangePage( 1 );
+    CDCi_ChangePage( 1 );
 
     // Mute Analog Volume
-    CDC_WriteI2cRegister( REG_CDC1_SP_ANGVOL_L_ADDR, CDC1_ANGVOL_E | CDC1_ANGVOL_GAIN_MUTE );
-    CDC_WriteI2cRegister( REG_CDC1_SP_ANGVOL_R_ADDR, CDC1_ANGVOL_E | CDC1_ANGVOL_GAIN_MUTE );
+    CDCi_WriteSpiRegister( REG_CDC1_SP_ANGVOL_L_ADDR, CDC1_ANGVOL_E | CDC1_ANGVOL_GAIN_MUTE );
+    CDCi_WriteSpiRegister( REG_CDC1_SP_ANGVOL_R_ADDR, CDC1_ANGVOL_E | CDC1_ANGVOL_GAIN_MUTE );
 
     // Power Down Speaker Driver, with short-circuit protection
-    CDC_WriteI2cRegister( REG_CDC1_SP_DRV_ADDR, CDC1_SP_DRV_SHTC_PROTECT_E );
-}
+    CDCi_WriteSpiRegister( REG_CDC1_SP_DRV_ADDR, CDC1_SP_DRV_SHTC_PROTECT_E );
 
+	SPI_Unlock(123);
+	CDC_Unlock();
+}
 
 /*---------------------------------------------------------------------------*
   Name:         CDC_UnmuteDAC
@@ -571,8 +668,7 @@ void CDC_DisableSpeakerDriver( void )
 void CDC_UnmuteDAC( void )
 {
     // page 0, reg 64 で Un-mute
-    CDC_ChangePage( 0 );
-    CDC_WriteI2cRegister( REG_CDC0_DIG_VOL_M_ADDR, 0 );
+    CDC_WriteSpiRegisterEx( 0, REG_CDC0_DIG_VOL_M_ADDR, 0 );
 }
 
 /*---------------------------------------------------------------------------*
@@ -587,8 +683,7 @@ void CDC_UnmuteDAC( void )
 void CDC_MuteDAC( void )
 {
     // page 0, reg 64 で Mute
-    CDC_ChangePage( 0 );
-    CDC_WriteI2cRegister( REG_CDC0_DIG_VOL_M_ADDR, CDC0_DIG_VOL_M_MUTE_L | CDC0_DIG_VOL_M_MUTE_R );
+    CDC_WriteSpiRegisterEx( 0, REG_CDC0_DIG_VOL_M_ADDR, CDC0_DIG_VOL_M_MUTE_L | CDC0_DIG_VOL_M_MUTE_R );
 }
 
 /*---------------------------------------------------------------------------*
@@ -603,8 +698,7 @@ void CDC_MuteDAC( void )
 void CDC_PowerUpADC( void )
 {
     // page 0, reg 81 で Power Up
-    CDC_ChangePage( 0 );
-    CDC_WriteI2cRegister( REG_CDC0_ADC_PWR_STEP_ADDR, CDC0_ADC_PWR_STEP_PWRUP );
+    CDC_WriteSpiRegisterEx( 0, REG_CDC0_ADC_PWR_STEP_ADDR, CDC0_ADC_PWR_STEP_PWRUP );
 
     // PLL は ADC, DAC が起動したときに動き出すらしいので、ここに PLL 安定のためのウェイトが必要
     if ((!isADCOn) && (!isDACOn))
@@ -625,9 +719,7 @@ void CDC_PowerUpADC( void )
 void CDC_PowerDownADC( void )
 {
     // page 0, reg 81 で Power Down
-    CDC_ChangePage( 0 );
-    CDC_WriteI2cRegister( REG_CDC0_ADC_PWR_STEP_ADDR, CDC0_ADC_PWR_STEP_PWRDN );
-
+    CDC_WriteSpiRegisterEx( 0, REG_CDC0_ADC_PWR_STEP_ADDR, CDC0_ADC_PWR_STEP_PWRDN );
     isADCOn = FALSE;
 }
 
@@ -643,8 +735,7 @@ void CDC_PowerDownADC( void )
 void CDC_UnmuteADC( void )
 {
     // page 0, reg 82 で Un-mute
-    CDC_ChangePage( 0 );
-    CDC_WriteI2cRegister( REG_CDC0_ADC_MUTE_ADDR, CDC0_ADC_MUTE_D );
+    CDC_WriteSpiRegisterEx( 0, REG_CDC0_ADC_MUTE_ADDR, CDC0_ADC_MUTE_D );
 }
 
 /*---------------------------------------------------------------------------*
@@ -659,8 +750,7 @@ void CDC_UnmuteADC( void )
 void CDC_MuteADC( void )
 {
     // page 0, reg 82 で Mute
-    CDC_ChangePage( 0 );
-    CDC_WriteI2cRegister( REG_CDC0_ADC_MUTE_ADDR, CDC0_ADC_MUTE_E );
+    CDC_WriteSpiRegisterEx( 0, REG_CDC0_ADC_MUTE_ADDR, CDC0_ADC_MUTE_E );
 }
 
 /*---------------------------------------------------------------------------*
@@ -675,8 +765,7 @@ void CDC_MuteADC( void )
 void CDC_EnableAGC( int target_gain )
 {
     // page 0, reg 86 で Enable
-    CDC_ChangePage( 0 );
-    CDC_WriteI2cRegister( REG_CDC0_AGC_CTL1_ADDR, (u8)(CDC0_AGC_CTL1_E | target_gain) );
+    CDC_WriteSpiRegisterEx( 0, REG_CDC0_AGC_CTL1_ADDR, (u8)(CDC0_AGC_CTL1_E | target_gain) );
 }
 
 /*---------------------------------------------------------------------------*
@@ -691,8 +780,36 @@ void CDC_EnableAGC( int target_gain )
 void CDC_DisableAGC( void )
 {
     // page 0, reg 86 で Disable
-    CDC_ChangePage( 0 );
-    CDC_WriteI2cRegister( REG_CDC0_AGC_CTL1_ADDR, CDC0_AGC_CTL1_D );
+    CDC_WriteSpiRegisterEx( 0, REG_CDC0_AGC_CTL1_ADDR, CDC0_AGC_CTL1_D );
+}
+
+/*---------------------------------------------------------------------------*
+  Name:         CDC_SetPGAB
+
+  Description:  Setup PGAB of the CODEC
+                PGAB is enabled when AGC is disabled.
+
+  Arguments:    int target_gain : 0 ～ 119 (0dB ～ 59.5dB)
+
+  Returns:      None
+ *---------------------------------------------------------------------------*/
+void CDC_SetPGAB( u8 target_gain )
+{
+	CDC_WriteSpiRegisterEx( 1, REG_CDC1_MIC_ADC_PGA_ADDR, target_gain );
+}
+
+/*---------------------------------------------------------------------------*
+  Name:         CDC_GetPGAB
+
+  Description:  Get PGA of the CODEC
+  
+  Arguments:    None
+
+  Returns:      Gain
+ *---------------------------------------------------------------------------*/
+u8 CDC_GetPGAB( void )
+{
+	return CDC_ReadSpiRegisterEx( 1, REG_CDC1_MIC_ADC_PGA_ADDR );
 }
 
 /*---------------------------------------------------------------------------*
@@ -709,18 +826,15 @@ void CDC_Init1stOrderFilter( u8 *coef, int filter_target )
 {
     if (filter_target & CDC_FILTER_1ST_IIR_ADC)
     {
-        CDC_ChangePage( 4 );
-        CDC_WriteI2cRegisters( REG_CDC4_ADC_C4_MSB_ADDR, coef, 6 );
+        CDC_WriteSpiRegistersEx( 4, REG_CDC4_ADC_C4_MSB_ADDR, coef, 6 );
     }
     if (filter_target & CDC_FILTER_1ST_IIR_LDAC)
     {
-        CDC_ChangePage( 9 );
-        CDC_WriteI2cRegisters( REG_CDC9_DAC_C65_MSB_ADDR, coef, 6 );
+        CDC_WriteSpiRegistersEx( 9, REG_CDC9_DAC_C65_MSB_ADDR, coef, 6 );
     }
     if (filter_target & CDC_FILTER_1ST_IIR_RDAC)
     {
-        CDC_ChangePage( 9 );
-        CDC_WriteI2cRegisters( REG_CDC9_DAC_C68_MSB_ADDR, coef, 6 );
+        CDC_WriteSpiRegistersEx( 9, REG_CDC9_DAC_C68_MSB_ADDR, coef, 6 );
     }
 }
 
@@ -750,7 +864,6 @@ void CDC_Init1stOrderFilter( u8 *coef, int filter_target )
 void CDC_SetScanModeTimerClockDivider( u8 value )
 {
     SDK_ASSERT( value < 128);
-    CDC_ChangePage( 3 );
-    CDC_WriteI2cRegister( REG_CDC3_TP_DELAY_CLK_ADDR, value );
+    CDC_WriteSpiRegisterEx( 3, REG_CDC3_TP_DELAY_CLK_ADDR, value );
 }
 

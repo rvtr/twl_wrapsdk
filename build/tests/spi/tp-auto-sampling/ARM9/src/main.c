@@ -62,6 +62,8 @@ TPCalibrateParam calibrate;
  *---------------------------------------------------------------------------*/
 void TwlMain()
 {
+    OS_InitPrintServer();
+
     // èâä˙âª
     OS_Init();
     GX_Init();
@@ -99,6 +101,7 @@ void TwlMain()
                        (GXBGMode)0,    			// dummy
                        (GXBG0As)0);    			// dummy
 
+	GX_SetDispSelect(GX_DISP_SELECT_SUB_MAIN);
     GX_DispOn();
     GXS_DispOn();
 

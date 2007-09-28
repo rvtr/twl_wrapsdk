@@ -36,6 +36,7 @@ SUBDIRS		= \
 		  dsp		\
 		  el		\
 		  sample_dll	\
+		  mic	    \
 
 ifdef	TWL_PRIVATE
 SUBDIRS		+= \

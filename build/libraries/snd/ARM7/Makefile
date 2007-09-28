@@ -44,7 +44,6 @@ SRCS	=	\
 		snd_command.c		\
 		snd_data.c		\
 		snd_i2s.c		\
-		snd_mic.c		\
 
 
 TARGET_LIB	=	libsnd_sp$(TWL_LIBSUFFIX).a

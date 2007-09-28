@@ -48,20 +48,13 @@ TWL_PROC		= ARM7
 SRCDIR			= ./src
 SRCDIR			+= $(TWL_NITROSDK_ROOT)/build/libraries/spi/ARM7/tp/src \
 
-SRCS			= tp_sp.c tp_sampling.c
+SRCS			= tp_sp.c tp_sampling.c twl_tp_sampling.c
 
 TARGET_LIB		= libtp_sp$(TWL_LIBSUFFIX).a
 INCDIR          = ../include
 INCDIR			+= $(TWL_NITROSDK_ROOT)/build/libraries/spi/ARM7/include
 
 #----------------------------------------------------------------------------
-
-# DEBUG版ビルドの場合、RELEASE版でビルドして
-# DEBUG版のライブラリを装います。
-
-ifdef	NITRO_DEBUG
-NITRO_BUILD_TYPE	= RELEASE
-endif
 
 include	$(TWLSDK_ROOT)/build/buildtools/commondefs
 

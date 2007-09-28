@@ -30,6 +30,13 @@ extern "C" {
 #define I2S_MIXING_DSP_MAX      0
 #define I2S_MIXING_DSP_MIN      8
 
+typedef enum _I2SSamplingRate
+{
+	I2S_SAMPLING_RATE_32730 = 0,
+	I2S_SAMPLING_RATE_47610 = 1,
+	I2S_SAMPLING_RATE_NUM   = 2
+} I2SSamplingRate;
+
 /******************************************************************************
     public function declaration
  ******************************************************************************/
@@ -50,8 +57,8 @@ BOOL    I2S_IsMute(void);
 void    I2S_SetMixingRatio(int nitroRatio);
 int     I2S_GetMixingRatio(void);
 
-void    I2S_SetSamplingRatio(BOOL is48kHz);
-BOOL    I2S_IsSamplingRatio48kHz( void );
+void    I2S_SetSamplingRate( I2SSamplingRate rate );
+I2SSamplingRate    I2S_GetSamplingRate( void );
 
 #endif /* SDK_ARM7 */
 

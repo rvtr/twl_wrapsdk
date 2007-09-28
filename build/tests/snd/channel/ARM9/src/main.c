@@ -46,6 +46,8 @@ void    VBlankIntr(void);
  *---------------------------------------------------------------------------*/
 void TwlMain()
 {
+    OS_InitPrintServer();
+
     // èâä˙âª
     OS_Init();
     GX_Init();

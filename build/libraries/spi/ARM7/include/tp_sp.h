@@ -116,6 +116,9 @@ extern "C" {
 
 #define     TP_VALARM_DELAY_MAX         10
 
+#define TP_DATA_SAMPLE_DEPTH_MAX        8
+#define TP_DATA_SAMPLE_DEPTH_DEFAULT    5
+
 /*---------------------------------------------------------------------------*
     構造体定義
  *---------------------------------------------------------------------------*/
@@ -142,7 +145,6 @@ typedef struct TPWork
 }
 TPWork;
 
-
 /*---------------------------------------------------------------------------*
     関数定義
  *---------------------------------------------------------------------------*/
@@ -158,22 +160,24 @@ void    TWL_TP_Init(void);
 void    TWL_TP_SetStabilizationTime( TpSetupTime_t time );
 void    TWL_TP_SetPrechargeTime( TpSetupTime_t time );
 void    TWL_TP_SetSenseTime( TpSetupTime_t time );
+void	TWL_TP_SetDebounceTime( tpDebounce_t time );
 void    TWL_TP_SetResolution( TpResolution_t res );
 void    TWL_TP_GetResolution( TpResolution_t *res );
 void    TWL_TP_SetTouchPanelDataDepth(u8 depth);
-void    TWL_TP_SetConvertChannel( TpChannel_t ch );
+void	TWL_TP_SetConversionMode( TpCnversionControl_t control, TpConversionMode_t mode, TpCnversionPin_t pin );
 void    TWL_TP_SetInterval( tpInterval_t interval );
 void    TWL_TP_EnableNewBufferMode( void );
 void    TWL_TP_DisableNewBufferMode( void );
-BOOL    TWL_TP_ReadBuffer( SPITpData *data );
 ////////////////////////////
 
 #define SDK_TP_AUTO_ADJUST_RANGE       // range自動調整スイッチ
 
 #ifdef SDK_TP_AUTO_ADJUST_RANGE        // range自動調整スイッチ
 void    TP_ExecSampling(SPITpData *data, s32 range, u16 *density);
+BOOL TWL_TP_ReadBuffer( SPITpData *data, u8 range, u16* density );
 #else
 void    TP_ExecSampling(SPITpData *data, s32 range);
+BOOL TWL_TP_ReadBuffer( SPITpData *data, u8 range );
 #endif
 
 /*---------------------------------------------------------------------------*

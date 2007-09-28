@@ -43,15 +43,6 @@ static void I2Si_Init(void)
         isInitialized = TRUE;
 
         reg_SND_POWCNT |= REG_SND_POWCNT_SPE_MASK;
-
-/* CODEC独立運動
-
-        if ((reg_CFG_CLK & REG_CFG_CLK_SND_MASK) == 0)
-        {
-            // initialize codec with enabling I2S
-            CDC_Init();
-        }
-*/
         reg_CFG_TWL_EX |= REG_CFG_TWL_EX_I2S_MASK;
         if (reg_CFG_TWL_EX & REG_CFG_TWL_EX_I2S_MASK)
         {
@@ -229,43 +220,72 @@ int I2S_GetMixingRatio(void)
 }
 
 /*---------------------------------------------------------------------------*
-  Name:         I2S_SetSamplingRatio
+  Name:         I2S_SetSamplingRate
 
   Description:  Set I2S sampling ratio.
                 It can be called while I2S is disabled.
 
-  Arguments:    is48kHz : set 48 kHz if TRUE. set 32kHz if FALSE.
+  Note:         この関数ではCODECのPLLの値を変更しますが、PLLの変更は
+				安全のためCODEC停止中に行うべきとの話をチップメーカー
+　　　　　　　　から聞いています。
+
+				サンプリングレート変更の具体的なシーケンスは以下のとおり。
+
+				1.CPUがI2S出力を停止
+				2.Codec内部動作の停止【CODEC】
+				3.CPUがMCLK(例えば12MHz)停止
+				4.PLLの再設定【CODEC】
+				5.CPUがMCLK(例えば8MHz)出力
+				6.Codec内部動作の再開【CODEC】
+				7.CPUがI2S出力開始
+
+				サンプリングレートを変更する際には、少なくとも
+　　　　　　　　サウンド/タッチパネル/マイクを停止させる必要があります。				
+　　　　　　　　AD/DAをOFFにする必要があるかについてメーカーに確認します。
+
+				現在の実装では何も対策を講じていません。
+
+  Arguments:    rate : sampling rate
 
   Returns:      None
  *---------------------------------------------------------------------------*/
-void I2S_SetSamplingRatio(BOOL is48kHz)
+void I2S_SetSamplingRate(I2SSamplingRate rate)
 {
     if (isTwl)
     {
-        if (is48kHz)
-        {
-            reg_SND_I2SCNT |= REG_SND_I2SCNT_CODEC_SMP_MASK;
-        }
-        else
-        {
-            reg_SND_I2SCNT &= ~REG_SND_I2SCNT_CODEC_SMP_MASK;
-        }
-        CDC_SetParamPLL(is48kHz);
+		switch (rate)
+		{
+			case I2S_SAMPLING_RATE_32730:
+	            reg_SND_I2SCNT &= ~REG_SND_I2SCNT_CODEC_SMP_MASK;
+		        CDC_SetPLL( CDC_PLL_PARAMETER_FOR_SAMPLING_RATE_32730 );
+				break;
+			case I2S_SAMPLING_RATE_47610:
+	            reg_SND_I2SCNT |= REG_SND_I2SCNT_CODEC_SMP_MASK;
+		        CDC_SetPLL( CDC_PLL_PARAMETER_FOR_SAMPLING_RATE_47610 );
+				break;
+		}
     }
 }
 
 /*---------------------------------------------------------------------------*
-  Name:         I2S_IsSamplingRatio48kHz
+  Name:         I2S_GetSamplingRate
 
   Description:  Get I2S sampling ratio.
 
   Arguments:    None
 
-  Returns:      TRUE if 48 kHz. otherwise FALSE
+  Returns:      
  *---------------------------------------------------------------------------*/
-BOOL I2S_IsSamplingRatio48kHz(void)
+I2SSamplingRate I2S_GetSamplingRate( void )
 {
-    return (BOOL)((reg_SND_I2SCNT & REG_SND_I2SCNT_CODEC_SMP_MASK) >> REG_SND_I2SCNT_CODEC_SMP_SHIFT);
+	if (reg_SND_I2SCNT & REG_SND_I2SCNT_CODEC_SMP_MASK)
+	{
+		return I2S_SAMPLING_RATE_47610;
+	}
+	else
+	{
+		return I2S_SAMPLING_RATE_32730;
+	}
 }
 
 /*====== End of snd_i2s.c ======*/

@@ -29,19 +29,38 @@ extern "C" {
 extern void SPI_Lock(u32 id);
 extern void SPI_Unlock(u32 id);
 
-//================================================================
-// CODEC status variables
-//================================================================
-extern SPIBaudRate cdcSPIBaudRate;
-extern BOOL        cdcIsTwlMode;
-extern int         cdcCurrentPage;
+/*---------------------------------------------------------------------------*
+  Name:         CDC_InitMutex
 
-#define CDC_REVISION_A      0
-#define CDC_REVISION_B      1
-#define CDC_REVISION_C      2
-extern int         cdcRevisionID;
+  Description:  Init CODEC Mutex
 
-extern u16         cdcSpiMode;
+  Arguments:    None
+
+  Returns:      None
+ *---------------------------------------------------------------------------*/
+void CDC_InitMutex(void);
+
+/*---------------------------------------------------------------------------*
+  Name:         CDC_Lock
+
+  Description:  Lock CODEC device
+
+  Arguments:    None
+
+  Returns:      TRUE if success
+ *---------------------------------------------------------------------------*/
+void CDC_Lock( void );              // 外部スレッドから呼ばれ、CODECデバイスの操作権利を取得する
+
+/*---------------------------------------------------------------------------*
+  Name:         CDC_Unlock
+
+  Description:  Unlock CODEC device
+
+  Arguments:    None
+
+  Returns:      TRUE if success
+ *---------------------------------------------------------------------------*/
+void CDC_Unlock( void );            // 外部スレッドから呼ばれ、CODECデバイスの操作権利を解放する
 
 //================================================================
 //    BAUDRATE parameter
@@ -49,34 +68,6 @@ extern u16         cdcSpiMode;
 
 // CODECの制限により4MHZを最大とする
 #define CDC_SPI_BAUDRATE_DEFAULT  SPI_BAUDRATE_4MHZ
-
-/*---------------------------------------------------------------------------*
-  Name:         CDCi_SetSPIBaudRate
-
-  Description:  set SPI baud rate.
-
-  Arguments:    baud rate.
-
-  Returns:      None.
- *---------------------------------------------------------------------------*/
-static inline void CDCi_SetSPIBaudRate( SPIBaudRate rate )
-{
-    cdcSPIBaudRate = rate;
-}
-
-/*---------------------------------------------------------------------------*
-  Name:         CDCi_GetSPIBaudRate
-
-  Description:  get SPI baud rate.
-
-  Arguments:    None.
-
-  Returns:      baud rate.
- *---------------------------------------------------------------------------*/
-static inline SPIBaudRate CDCi_GetSPIBaudRate( void )
-{
-    return cdcSPIBaudRate;
-}
 
 //================================================================================
 //        I2C BIT CONTROL
@@ -232,6 +223,8 @@ static inline void CDC_ReadI2cRegisters( u8 reg, u8 *bufp, size_t size )
  *---------------------------------------------------------------------------*/
 void CDCi_SetSpiParams( u8 reg, u8 setBits, u8 maskBits );
 void CDC_SetSpiParams( u8 reg, u8 setBits, u8 maskBits );
+void CDCi_SetSpiParamsEx( u8 page, u8 reg, u8 setBits, u8 maskBits );
+void CDC_SetSpiParamsEx( u8 page, u8 reg, u8 setBits, u8 maskBits );
 
 /*---------------------------------------------------------------------------*
   Name:         CDC_SetSpiFlags
@@ -244,7 +237,10 @@ void CDC_SetSpiParams( u8 reg, u8 setBits, u8 maskBits );
   Returns:      None
  *---------------------------------------------------------------------------*/
 void CDCi_SetSpiFlags( u8 reg, u8 setBits );
-void CDC_SetSpiFlags( u8 reg, u8 setBits );
+static inline void CDC_SetSpiFlags( u8 reg, u8 setBits )
+{
+    CDC_SetSpiParams( reg, setBits, setBits );
+}
 
 /*---------------------------------------------------------------------------*
   Name:         CDC_ClearSpiFlags
@@ -257,7 +253,10 @@ void CDC_SetSpiFlags( u8 reg, u8 setBits );
   Returns:      None
  *---------------------------------------------------------------------------*/
 void CDCi_ClearSpiFlags( u8 reg, u8 clrBits );
-void CDC_ClearSpiFlags( u8 reg, u8 clrBits );
+static inline void CDC_ClearSpiFlags( u8 reg, u8 clrBits )
+{
+    CDC_SetSpiParams( reg, 0, clrBits );
+}
 
 //================================================================================
 //        SPI ACCESS
@@ -273,12 +272,9 @@ void CDC_ClearSpiFlags( u8 reg, u8 clrBits );
   Returns:      None
  *---------------------------------------------------------------------------*/
 void CDCi_WriteSpiRegister( u8 reg, u8 data );
-static inline void CDC_WriteSpiRegister( u8 reg, u8 data )
-{
-    (void)SPI_Lock(123);
-    CDCi_WriteSpiRegister( reg, data );
-    (void)SPI_Unlock(123);
-}
+void CDC_WriteSpiRegister( u8 reg, u8 data );
+void CDCi_WriteSpiRegisterEx( u8 page, u8 reg, u8 data );
+void CDC_WriteSpiRegisterEx( u8 page, u8 reg, u8 data );
 
 /*---------------------------------------------------------------------------*
   Name:         CDC_ReadSpiRegister
@@ -290,14 +286,9 @@ static inline void CDC_WriteSpiRegister( u8 reg, u8 data )
   Returns:      value which is read from specified decive register
  *---------------------------------------------------------------------------*/
 u8 CDCi_ReadSpiRegister( u8 reg );
-static inline u8 CDC_ReadSpiRegister( u8 reg )
-{
-	u8 value;
-    (void)SPI_Lock(123);
-    value = CDCi_ReadSpiRegister( reg );
-    (void)SPI_Unlock(123);
-    return value;
-}
+u8 CDC_ReadSpiRegister( u8 reg );
+u8 CDCi_ReadSpiRegisterEx( u8 page, u8 reg );
+u8 CDC_ReadSpiRegisterEx( u8 page, u8 reg );
 
 /*---------------------------------------------------------------------------*
   Name:         CDC_WriteSpiRegisters
@@ -310,12 +301,9 @@ static inline u8 CDC_ReadSpiRegister( u8 reg )
   Returns:      None
  *---------------------------------------------------------------------------*/
 void CDCi_WriteSpiRegisters( u8 reg, const u8 *bufp, size_t size );
-static inline void CDC_WriteSpiRegisters( u8 reg, const u8 *bufp, size_t size )
-{
-    (void)SPI_Lock(123);
-    CDCi_WriteSpiRegisters( reg, bufp, size );
-    (void)SPI_Unlock(123);
-}
+void CDC_WriteSpiRegisters( u8 reg, const u8 *bufp, size_t size );
+void CDCi_WriteSpiRegistersEx( u8 page, u8 reg, const u8 *bufp, size_t size );
+void CDC_WriteSpiRegistersEx( u8 page, u8 reg, const u8 *bufp, size_t size );
 
 /*---------------------------------------------------------------------------*
   Name:         CDC_ReadSpiRegisters
@@ -327,12 +315,9 @@ static inline void CDC_WriteSpiRegisters( u8 reg, const u8 *bufp, size_t size )
   Returns:      value which is read from specified decive register
  *---------------------------------------------------------------------------*/
 void CDCi_ReadSpiRegisters( u8 reg, u8 *bufp, size_t size );
-static inline void CDC_ReadSpiRegisters( u8 reg, u8 *bufp, size_t size )
-{
-    (void)SPI_Lock(123);
-    CDCi_ReadSpiRegisters( reg, bufp, size );
-    (void)SPI_Unlock(123);
-}
+void CDC_ReadSpiRegisters( u8 reg, u8 *bufp, size_t size );
+void CDCi_ReadSpiRegistersEx( u8 page, u8 reg, u8 *bufp, size_t size );
+void CDC_ReadSpiRegistersEx( u8 page, u8 reg, u8 *bufp, size_t size );
 
 //================================================================================
 //        Utility Functions
@@ -346,8 +331,8 @@ static inline void CDC_ReadSpiRegisters( u8 reg, u8 *bufp, size_t size )
 
   Returns:      None
  *---------------------------------------------------------------------------*/
-void CDCi_ChangePage( int page_no );
-void CDC_ChangePage( int page_no );
+void CDCi_ChangePage( u8 page_no );
+void CDC_ChangePage( u8 page_no );
 
 #ifdef __cplusplus
 } /* extern "C" */

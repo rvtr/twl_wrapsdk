@@ -742,11 +742,11 @@ CDCBackCompatibleMode;
 #define CDC1_MIC_ADC_PGA_MUTE       (1<< 7)  // default
 
 //---- CDC1_MIC_PGA_P
-#define CDC1_MIC_PGA_P_I_SHIFT      0
+#define CDC1_MIC_PGA_P_I_SHIFT      6
 #define CDC1_MIC_PGA_P_I_MASK       (0x3<< CDC1_MIC_PGA_P_I_SHIFT)
 
 //---- CDC1_MIC_PGA_M
-#define CDC1_MIC_PGA_M_I_SHIFT      0
+#define CDC1_MIC_PGA_M_I_SHIFT      6
 #define CDC1_MIC_PGA_M_I_MASK       (0x3<< CDC1_MIC_PGA_M_I_SHIFT)
 
 //---- CDC1_MIC_INPUT

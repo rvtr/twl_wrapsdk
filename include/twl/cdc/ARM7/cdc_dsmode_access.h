@@ -70,9 +70,11 @@ static inline SPIBaudRate CDCi_DsmodeGetSPIBaudRate( void )
 }
 
 /*---------------------------------------------------------------------------*
-  Name:         i_tpChangeSpiMode
+  Name:         CDCi_DsmodeChangeSpiMode
 
   Description:  change SPI mode..
+
+  この関数はDSモードで、かつ、Codecにさわるときのみ使うはず  
 
   Arguments:    continuous : SPI_TRANSMODE_CONTINUOUS or SPI_TRANSMODE_1BYTE
 
@@ -103,7 +105,12 @@ static inline void CDCi_DsmodeChangeSpiMode( SPITransMode continuous )
   Returns:      None
  *---------------------------------------------------------------------------*/
 void CDCi_DsmodeSetSpiParams( u8 reg, u8 setBits, u8 maskBits );
-void CDC_DsmodeSetSpiParams( u8 reg, u8 setBits, u8 maskBits );
+static inline void CDC_DsmodeSetSpiParams( u8 reg, u8 setBits, u8 maskBits )
+{
+    (void)SPI_Lock(123);
+    CDCi_DsmodeSetSpiParams( reg, setBits, maskBits );
+    (void)SPI_Unlock(123);
+}
 
 /*---------------------------------------------------------------------------*
   Name:         CDC_DsmodeSetSpiFlags
@@ -116,7 +123,10 @@ void CDC_DsmodeSetSpiParams( u8 reg, u8 setBits, u8 maskBits );
   Returns:      None
  *---------------------------------------------------------------------------*/
 void CDCi_DsmodeSetSpiFlags( u8 reg, u8 setBits );
-void CDC_DsmodeSetSpiFlags( u8 reg, u8 setBits );
+static inline void CDC_DsmodeSetSpiFlags( u8 reg, u8 setBits )
+{
+    CDC_DsmodeSetSpiParams( reg, setBits, setBits );
+}
 
 /*---------------------------------------------------------------------------*
   Name:         CDC_DsmodeClearSpiFlags
@@ -129,7 +139,10 @@ void CDC_DsmodeSetSpiFlags( u8 reg, u8 setBits );
   Returns:      None
  *---------------------------------------------------------------------------*/
 void CDCi_DsmodeClearSpiFlags( u8 reg, u8 clrBits );
-void CDC_DsmodeClearSpiFlags( u8 reg, u8 clrBits );
+static inline void CDC_DsmodeClearSpiFlags( u8 reg, u8 clrBits )
+{
+    CDC_DsmodeSetSpiParams( reg, 0, clrBits );
+}
 
 //================================================================================
 //        SPI ACCESS
@@ -162,11 +175,13 @@ static inline void CDC_DsmodeWriteSpiRegister( u8 reg, u8 data )
   Returns:      value which is read from specified TP register
  *---------------------------------------------------------------------------*/
 u8 CDCi_DsmodeReadSpiRegister( u8 reg );
-static inline void CDC_DsmodeReadSpiRegister( u8 reg )
+static inline u8 CDC_DsmodeReadSpiRegister( u8 reg )
 {
+	u8 value;
     (void)SPI_Lock(123);
-    CDCi_DsmodeReadSpiRegister( reg );
+    value = CDCi_DsmodeReadSpiRegister( reg );
     (void)SPI_Unlock(123);
+    return value;
 }
 
 /*---------------------------------------------------------------------------*

@@ -24,7 +24,7 @@ TWL_CODEGEN_ALL 	?= True
 
 TWL_PROC		= ARM7
 
-SRCDIR			= ../common .
+SRCDIR			= ../common/src .
 SRCDIR			+= $(TWL_NITROSDK_ROOT)/build/libraries/pxi/common/src \
                    $(TWL_NITROSDK_ROOT)/build/libraries/pxi/ARM7/src \
 

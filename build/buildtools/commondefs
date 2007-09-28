@@ -188,6 +188,7 @@ TWL_LIBS_BASE	?= \
 			   libcamera \
 			   libdsp \
 			   libspi \
+               libtwlmic \
 
 ifdef		TWL_PROFILE_TYPE
 TWL_LIBS_BASE	+= libos.$(TWL_PROFILE_TYPE)
@@ -208,6 +209,8 @@ TWL_LIBS_BASE	?= \
 			   libcdc_sp \
 			   libsnd_sp \
 			   libcamera_sp \
+               libtwlmic_sp \
+               libmic_sp \
 
 ifdef		TWL_PROFILE_TYPE
 TWL_LIBS_BASE	+= libos_sp.$(TWL_PROFILE_TYPE)

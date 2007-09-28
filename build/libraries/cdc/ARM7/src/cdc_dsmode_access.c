@@ -13,16 +13,27 @@
   $Log: $
   $NoKeywords: $
  *---------------------------------------------------------------------------*/
-#include <twl/cdc.h>
-
-#include "spi_sp.h"
 
 /*
-	このソースで定義されているSPIアクセス関数はDSモード時に使用します。
-　　TWLモード時は cdc.c の関数を使用してください。
+
+	このソースで定義されているSPIアクセス関数はCODECがDSモードの時に
+　　CODECにアクセスするために使用します。CODECがTWLモードの時は 
+    cdc.c で定義されている関数を使用してください。
+
+    [DSモード時]
+
+ 	ＳＰＩ最大速度　：　2MHz (CODEC側の制限）
+	チップセレクト　：　PCSN
+	Read/Write指定　：　MSB
+
 */
 
+#include <twl/cdc.h>
+#include <spi_sp.h>
+
 SPIBaudRate cdcDsmodeSPIBaudRate = DSMODE_SPI_BAUDRATE_DEFAULT;
+
+
 
 //================================================================================
 //        SPI BIT CONTROL
@@ -47,12 +58,6 @@ void CDCi_DsmodeSetSpiParams( u8 reg, u8 setBits, u8 maskBits )
     tmp |= setBits;
     CDCi_DsmodeWriteSpiRegister( reg, tmp );
 }
-void CDC_DsmodeSetSpiParams( u8 reg, u8 setBits, u8 maskBits )
-{
-    (void)SPI_Lock(123);
-    CDCi_DsmodeSetSpiParams( reg, setBits, maskBits );
-    (void)SPI_Unlock(123);
-}
 
 /*---------------------------------------------------------------------------*
   Name:         CDC_DsmodeSetSpiFlags
@@ -68,10 +73,6 @@ void CDCi_DsmodeSetSpiFlags( u8 reg, u8 setBits )
 {
     CDCi_DsmodeSetSpiParams( reg, setBits, setBits );
 }
-void CDC_DsmodeSetSpiFlags( u8 reg, u8 setBits )
-{
-    CDC_DsmodeSetSpiParams( reg, setBits, setBits );
-}
 
 /*---------------------------------------------------------------------------*
   Name:         CDC_DsmodeClearSpiFlags
@@ -86,10 +87,6 @@ void CDC_DsmodeSetSpiFlags( u8 reg, u8 setBits )
 void CDCi_DsmodeClearSpiFlags( u8 reg, u8 clrBits )
 {
     CDCi_DsmodeSetSpiParams( reg, 0, clrBits );
-}
-void CDC_DsmodeClearSpiFlags( u8 reg, u8 clrBits )
-{
-    CDC_DsmodeSetSpiParams( reg, 0, clrBits );
 }
 
 //================================================================================

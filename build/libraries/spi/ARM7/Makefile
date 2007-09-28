@@ -15,7 +15,7 @@
 # $NoKeywords: $
 #----------------------------------------------------------------------------
 
-SUBDIRS			= nvram pm tp # mic
+SUBDIRS			= nvram pm tp mic
 
 #----------------------------------------------------------------------------
 
@@ -30,13 +30,6 @@ TWL_PROC		= ARM7
 INCDIR			= $(TWL_NITROSDK_ROOT)/build/libraries/spi/ARM7/include
 
 #----------------------------------------------------------------------------
-
-# DEBUG版ビルドの場合、RELEASE版でビルドして
-# DEBUG版のライブラリを装います。
-
-ifdef	NITRO_DEBUG
-NITRO_BUILD_TYPE	= RELEASE
-endif
 
 include	$(TWLSDK_ROOT)/build/buildtools/commondefs
 

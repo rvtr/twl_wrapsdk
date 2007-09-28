@@ -37,13 +37,6 @@ TARGET_LIB	=	libcdc_sp$(TWL_LIBSUFFIX).a
 
 #----------------------------------------------------------------------------
 
-# DEBUG版ビルドの場合、RELEASE版でビルドして
-# DEBUG版のライブラリを装います。
-
-ifdef	TWL_DEBUG
-TWL_BUILD_TYPE	= RELEASE
-endif
-
 include $(TWLSDK_ROOT)/build/buildtools/commondefs
 
 INSTALL_TARGETS	=	$(TARGETS)

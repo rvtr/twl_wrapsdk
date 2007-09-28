@@ -17,8 +17,17 @@
 #ifndef TWL_MIC_H_
 #define TWL_MIC_H_
 
+#include <twl/mic/common/fifo.h>
+
 #ifdef SDK_ARM7
-#include <twl/snd/ARM7/snd_mic.h>
+
+#include <twl/mic/ARM7/twl_mic_api.h>
+#include <twl/mic/ARM7/twl_mic_server.h>
+
+#else
+
+#include <twl/mic/ARM9/twl_mic_api.h>
+
 #endif // SDK_ARM7
 
 /* TWL_MIC_H_ */

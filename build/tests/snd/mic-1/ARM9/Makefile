@@ -24,7 +24,7 @@ SUBDIRS		=
 
 TARGET_BIN	=	mic9_1.axf
 
-SRCS		=	main.c
+SRCS		=	main.c organ_det.g3.pcm16.c wihaho.pcm16.c
 
 #SRCDIR		=	# using default
 #LCFILE		=	# using default

@@ -39,31 +39,6 @@ extern "C" {
 #define TP0_REV_ID_MASK             0x70
 #define TP0_REV_ID_SHIFT            4
 
-
-//================================================================================
-//        TP Data
-//================================================================================
-#define TP_DATA_SAMPLE_DEPTH_MAX        8
-#define TP_DATA_SAMPLE_DEPTH_DEFAULT    8		// 8だとmix問題は発生しない
-
-typedef struct
-{
-    u16     xBuf[TP_DATA_SAMPLE_DEPTH_MAX * 2];  // ダブルバッファ
-    u16     yBuf[TP_DATA_SAMPLE_DEPTH_MAX * 2];  // ダブルバッファ
-    int     tpIndex;    // 有効データの先頭インデックス（ダブルバッファなので、0 か TP_DATA_SAMPLE_DEPTH_MAX）
-    
-    u16     x;      // page 3 での単発 read 時
-    u16     y;      // page 3 での単発 rea d時
-    u16     in1;
-    u16     in2;
-    u16     in3;
-    
-    int     tpDepth;    // タッチパネル・データ数
-
-} tpData_t;
-
-extern  tpData_t    tpData;
-
 //================================================================================
 //        Resolution / ADC Power
 //================================================================================
@@ -83,28 +58,45 @@ typedef enum
 #define TP_ADC_PWRDN        0x80
 
 //================================================================================
-//        Sampling Channel
+//        Sampling Conversion Mode
 //================================================================================
-#define REG_TP_CHANNEL   3
+#define REG_TP_CONVERSION_MODE   3
+#define TP_CONVERSION_CONTROL_MASK 0x80 
+#define TP_CONVERSION_MODE_MASK    0x3c
+#define TP_CONVERSION_PIN_MASK     0x03
 
 typedef enum
 {
-    TP_CHANNEL_NONE     = 0x00,
-    TP_CHANNEL_XY       = 0x87,     // Self, /READREADY = ReadReady
-    TP_CHANNEL_XYZ      = 0x8b,
-    TP_CHANNEL_X        = 0x8f,
-    TP_CHANNEL_Y        = 0x93,
-    TP_CHANNEL_Z        = 0x97,
-    TP_CHANNEL_AUX3     = 0x19,
-    TP_CHANNEL_AUX2     = 0x1d,
-    TP_CHANNEL_AUX1     = 0x21,
-    TP_CHANNEL_AUTO_AUX = 0xa5,
-    TP_CHANNEL_AUX123   = 0x2d,
-    TP_CHANNEL_XP_XM    = 0x35,
-    TP_CHANNEL_YP_YM    = 0x39,
-    TP_CHANNEL_YP_XM    = 0x3d
+    TP_CONVERSION_CONTROL_HOST     = 0x00,
+    TP_CONVERSION_CONTROL_SELF     = 0x80
+} TpCnversionControl_t;
+
+typedef enum
+{
+    TP_CONVERSION_MODE_NONE     = 0x00,
+    TP_CONVERSION_MODE_XY       = 0x04,     // Self, /READREADY = ReadReady
+    TP_CONVERSION_MODE_XYZ      = 0x08,
+    TP_CONVERSION_MODE_X        = 0x0c,
+    TP_CONVERSION_MODE_Y        = 0x10,
+    TP_CONVERSION_MODE_Z        = 0x14,
+    TP_CONVERSION_MODE_AUX3     = 0x18,
+    TP_CONVERSION_MODE_AUX2     = 0x1c,
+    TP_CONVERSION_MODE_AUX1     = 0x20,
+    TP_CONVERSION_MODE_AUTO_AUX = 0x24,
+    TP_CONVERSION_MODE_AUX123   = 0x2c,
+    TP_CONVERSION_MODE_XP_XM    = 0x34,
+    TP_CONVERSION_MODE_YP_YM    = 0x38,
+    TP_CONVERSION_MODE_YP_XM    = 0x3c
     
-} TpChannel_t;
+} TpConversionMode_t;
+
+typedef enum
+{
+    TP_CONVERSION_PIN_INTERRUPT                = 0x00,
+    TP_CONVERSION_PIN_DATA_AVAILABLE           = 0x01,
+    TP_CONVERSION_PIN_INTERRUPT_DATA_AVAILABLE = 0x02,
+    TP_CONVERSION_PIN_NBM                      = 0x03    
+} TpCnversionPin_t;
 
 //================================================================================
 //        Precharge / Sense / Stability time
@@ -173,9 +165,9 @@ typedef enum
 #define TP_NEW_BUFFER_MODE_D        0x00
 #define TP_NEW_BUFFER_MODE_MASK     0x80
 
-#define TP_CONVERSION_MODE_CONTINUOUS 0x00 
-#define TP_CONVERSION_MODE_SINGLESHOT 0x40
-#define TP_CONVERSION_MODE_MASK       0x40
+#define TP_NEW_BUFFER_CONVERSION_MODE_CONTINUOUS 0x00 
+#define TP_NEW_BUFFER_CONVERSION_MODE_SINGLESHOT 0x40
+#define TP_NEW_BUFFER_CONVERSION_MODE_MASK       0x40
 
 #define TP_HOLDOFF_ENABLE   0x04
 #define TP_HOLDOFF_DISABLE  0x00
@@ -226,7 +218,9 @@ typedef enum
 //================================================================================
 //        Debounce
 //================================================================================
-#define REG_TP_DEBOUNCE     18
+#define REG_TP_DEBOUNCE_TIME     18
+#define TP_DEBOUNCE_TIME_SHIFT  0
+#define TP_DEBOUNCE_TIME_MASK   0x07
 
 typedef enum
 {

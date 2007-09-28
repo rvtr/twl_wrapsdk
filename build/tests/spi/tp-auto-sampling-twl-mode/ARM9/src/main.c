@@ -62,6 +62,8 @@ TPCalibrateParam calibrate;
  *---------------------------------------------------------------------------*/
 void TwlMain()
 {
+    OS_InitPrintServer();
+
     // èâä˙âª
     OS_Init();
     GX_Init();
@@ -74,10 +76,12 @@ void TwlMain()
     (void)GX_VBlankIntr(TRUE);
 
     // Send parameter of revision noise.
+/*
     if (TP_RequestSetStability(3, 15) != 0)
     {
         OS_Panic("SetStability request err!\n");
     }
+*/
 
     GX_DispOff();
     GXS_DispOff();
@@ -99,6 +103,7 @@ void TwlMain()
                        (GXBGMode)0,    			// dummy
                        (GXBG0As)0);    			// dummy
 
+	GX_SetDispSelect(GX_DISP_SELECT_SUB_MAIN);
     GX_DispOn();
     GXS_DispOn();
 
@@ -193,7 +198,7 @@ void* Sequence4(void)
 {
 	s32 last_idx = TP_GetLatestIndexInAuto();
 
-	if (gTpBuf[last_idx].touch)
+	if (gTpBuf[last_idx].touch == TP_TOUCH_ON && gTpBuf[last_idx].validity == TP_VALIDITY_VALID )
 	{
 /*
 		///////////

@@ -39,6 +39,11 @@
 extern u32     OSi_IdleThreadStack[OSi_IDLE_THREAD_STACK_SIZE / sizeof(u32)];
 extern OSThread OSi_IdleThread;
 
+
+///////////////////
+#define OS_TPrintf( ...)    ((void)0)
+///////////////////
+
 /*---------------------------------------------------------------------------*
     定数定義
  *---------------------------------------------------------------------------*/
@@ -112,6 +117,9 @@ void TwlSpMain(void)
     OSi_IdleThread.priority = OS_THREAD_PRIORITY_MAX + 1;       // lower priority than the lowest (=OS_THREAD_PRIORITY_MAX)
     OSi_IdleThread.state = OS_THREAD_STATE_READY;
 
+	// CODEC初期化
+	CDC_Init();
+
     // サウンド初期化
     SND_Init(THREAD_PRIO_SND);
 
@@ -161,7 +169,7 @@ static OSHeapHandle InitializeAllocateSystem(void)
 {
     void   *tempLo;
     OSHeapHandle hh;
-
+/*
     OS_TPrintf("OS_GetWramSubPrivArenaLo() = %p\n", OS_GetWramSubPrivArenaLo());
     OS_TPrintf("OS_GetWramSubPrivArenaHi() = %p\n", OS_GetWramSubPrivArenaHi());
     OS_TPrintf("OS_GetWramSubArenaLo() = %p\n", OS_GetWramSubArenaLo());
@@ -170,6 +178,7 @@ static OSHeapHandle InitializeAllocateSystem(void)
     OS_TPrintf("OS_GetSubPrivArenaHi() = %p\n", OS_GetSubPrivArenaHi());
 
     OS_TPrintf("call OS_SetWramSubPrivArenaHi(0x0380f980); to fix arena.\n");
+*/
     OS_SetWramSubPrivArenaHi((void*)0x0380f980);
 
     // メモリ割当て初期化
