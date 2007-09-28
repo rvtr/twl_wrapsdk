@@ -1387,13 +1387,13 @@ typedef struct rtfs_cfg {
 extern RTFS_CFG *prtfs_cfg;
 
 #if (INCLUDE_FAILSAFE_CODE)
-#include <prfs.h>
+#include "prfs.h"
 #endif      /* INCLUDE_FAILSAFE_CODE */
 /* Include RTFS Pro features */
-#include <rtfspro.h> //twl modified
+#include "rtfspro.h" //twl modified
 
 
-#include <attach.h>			//ctr modified
+#include "attach.h"			//ctr modified
 
 BOOLEAN rtfs_init( void);	//ctr modified
 

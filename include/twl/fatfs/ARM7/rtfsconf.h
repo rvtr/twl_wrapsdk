@@ -19,7 +19,7 @@
 #define __RTFSCONF__ 1
 
 /* Include CPU and peripheral configuration */
-#include <portconf.h>
+#include "portconf.h"
 
 /* Character set support */
 #define INCLUDE_CS_JIS       0  /* Set to 1 to support JIS (kanji)  */
