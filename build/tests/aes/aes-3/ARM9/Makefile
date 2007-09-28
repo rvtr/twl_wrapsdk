@@ -1,6 +1,6 @@
 #! make -f
 #----------------------------------------------------------------------------
-# Project:  TwlSDK - tests - aes
+# Project:  TwlSDK - AES - demos - aes-3
 # File:     Makefile
 #
 # Copyright 2007 Nintendo.  All rights reserved.
@@ -15,17 +15,27 @@
 # $NoKeywords: $
 #----------------------------------------------------------------------------
 
+SUBDIRS		=
+
+
+#----------------------------------------------------------------------------
+
+#TWL_CODEGEN   =       THUMB
+
+TARGET_BIN	=	main.axf
+
+SRCS		=	main.c
+
+#SRCDIR		=	# using default
+#LCFILE		=	# using default
+
 include	$(TWLSDK_ROOT)/build/buildtools/commondefs
 
 
 #----------------------------------------------------------------------------
 
-SUBDIRS =	aes-1 \
-		aes-2 \
-		aes-3
+do-build:		$(TARGETS)
 
-
-#----------------------------------------------------------------------------
 
 include	$(TWLSDK_ROOT)/build/buildtools/modulerules
 
