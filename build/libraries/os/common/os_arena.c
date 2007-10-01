@@ -563,19 +563,23 @@ void   *OS_GetInitArenaLo(OSArenaId id)
     case OS_ARENA_WRAM_SUB:
         {
             u32     wramSubLo = OSi_WRAM_SUB_ARENA_LO_DEFAULT;
+#if 0
             if ((u32)HW_WRAM_END < (u32)wramSubLo)
             {
                 wramSubLo = (u32)HW_WRAM_END;
             }
+#endif
             return (void *)wramSubLo;
         }
     case OS_ARENA_WRAM_SUBPRIV:
         {
             u32     privWramLo = OSi_WRAM_SUBPRIV_ARENA_LO_DEFAULT;
+#if 0
             if ((u32)SDK_WRAM_ARENA_LO > (u32)privWramLo)
             {
                 privWramLo = (u32)SDK_WRAM_ARENA_LO;
             }
+#endif
             return (void *)privWramLo;
         }
 #endif
