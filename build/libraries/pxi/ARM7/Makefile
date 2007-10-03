@@ -24,11 +24,13 @@ TWL_CODEGEN_ALL 	?= True
 
 TWL_PROC		= ARM7
 
-SRCDIR			= ../common/src .
+SRCDIR			= ../common .
 SRCDIR			+= $(TWL_NITROSDK_ROOT)/build/libraries/pxi/common/src \
                    $(TWL_NITROSDK_ROOT)/build/libraries/pxi/ARM7/src \
 
-SRCS			= pxi_init.c pxi_fifo.c
+SRCS			= pxi_init.c \
+				  pxi_fifo.c \
+				  pxi_intf.c \
 
 TARGET_LIB		= libpxi_sp$(TWL_LIBSUFFIX).a
 

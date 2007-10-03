@@ -28,7 +28,9 @@ SRCDIR			= ../common .
 SRCDIR			+= $(TWL_NITROSDK_ROOT)/build/libraries/pxi/common/src \
                    $(TWL_NITROSDK_ROOT)/build/libraries/pxi/ARM9/src \
 
-SRCS			= pxi_init.c pxi_fifo.c
+SRCS			= pxi_init.c \
+				  pxi_fifo.c \
+				  pxi_intf.c \
 
 TARGET_LIB		= libpxi$(TWL_LIBSUFFIX).a
 

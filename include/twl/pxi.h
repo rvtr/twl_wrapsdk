@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------*
-  Project:  TwlSDK
-  File:     twl.h
+  Project:  TwlSDK - include - PXI
+  File:     pxi.h
 
   Copyright 2007 Nintendo.  All rights reserved.
 
@@ -13,23 +13,13 @@
   $Log: $
   $NoKeywords: $
  *---------------------------------------------------------------------------*/
-#ifndef TWL_H_
-#define TWL_H_
 
-#include <nitro.h>
+#ifndef TWL_PXI_H_
+#define TWL_PXI_H_
 
-#include <twl/os.h>
-#include <twl/pxi.h>
-#include <twl/mi.h>
-#include <twl/pm.h>
-#include <twl/aes.h>
-#include <twl/mic.h>
-#include <twl/camera.h>
-#include <twl/dsp.h>
-#include <twl/mcu.h>
-#ifdef SDK_DEBUGGER_KMC
-#include <twl/vlink.h>
-#endif // SDK_DEBUGGER_KMC
+#include <nitro/pxi.h>
 
-/* TWL_H_ */
+#include <twl/pxi/common/intf.h>
+
+/* TWL_PXI_H_ */
 #endif
