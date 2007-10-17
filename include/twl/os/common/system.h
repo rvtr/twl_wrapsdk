@@ -29,8 +29,8 @@ extern "C" {
 
 typedef enum
 {
-    OS_CHIPTYPE_TWL = 0,
-    OS_CHIPTYPE_DEBUGGER = 1,
+    OS_CHIPTYPE_PRODUCT = 0,
+    OS_CHIPTYPE_ALL_DEBUGGER = 1,
     OS_CHIPTYPE_EVALUATE = 3
 }
 OSChipType;
@@ -77,7 +77,23 @@ OSSpeedOfARM9;
  *---------------------------------------------------------------------------*/
 void OS_ChangeSpeedOfARM9( OSSpeedOfARM9 clock, void* itcm );
 
-#endif // SDK_ARM9
+#else // SDK_ARM7
+
+/*---------------------------------------------------------------------------*
+  Name:         OS_GetChipType
+
+  Description:  get chip type
+
+  Arguments:    None
+
+  Returns:      None
+ *---------------------------------------------------------------------------*/
+inline OSChipType OS_GetChipType( void )
+{
+    return (OSChipType)((reg_CFG_BONDING & REG_CFG_BONDING_CHIP_TYPE_MASK) >> REG_CFG_BONDING_CHIP_TYPE_SHIFT);
+}
+
+#endif // SDK_ARM7
 
 
 #ifdef __cplusplus
