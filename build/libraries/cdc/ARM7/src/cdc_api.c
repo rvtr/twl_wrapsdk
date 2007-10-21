@@ -174,10 +174,16 @@ void CDC_InitSound( void )
 
     // Setup DAC, Speaker Driver, Headphone Driver
     CDC_PowerUpDAC();
-
+/*
     CDC_SetupDAC( CDC_HP_DRV_PWON_TM_DEFAULT,
                  CDC_HP_DRV_RAMPUP_TM_DEFAULT,
                  CDC_HPSP_DRV_RAMPDWN_TM_DEFAULT );
+*/
+
+    CDC_SetupDAC( CDC_HP_DRV_PWON_TM_DEFAULT,
+                 CDC_HP_DRV_RAMPUP_TM_0MS,
+                 CDC_HPSP_DRV_RAMPDWN_TM_DEFAULT );
+
 
     CDC_EnableHeadphoneDriver();   // enable headphone driver
 
