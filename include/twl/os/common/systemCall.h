@@ -22,37 +22,64 @@
 extern "C" {
 #endif
 
-int SVC_InitSignHeap(
-                    int             acmemory_pool[3],
+typedef struct
+{
+    u32* head;
+    u32* tail;
+    u32  size;
+}
+SVCSignHeapContext;
+
+typedef struct SVCSHA1Context
+{
+    u32 h0,h1,h2,h3,h4;
+    u32 Nl,Nh;
+    u32 data[16];
+    int num;
+    void (*sha_block)(struct SVCSHA1Context *c, const u8 *W, int num);
+}
+SVCSHA1Context;
+
+typedef struct
+{
+    void*       output;
+    const void* input;
+    const void* key;
+}
+SVCSignBuffers;
+
+
+void SVC_InitSignHeap(
+                    SVCSignHeapContext* acmemory_pool,
                     void*           heap,
                     unsigned int    length
                     );
 
-int SVC_DecryptoRSA(
-                    const void*     acmemory_pool,
-                    const void*     pData,
+int SVC_DecryptRSA(
+                    const SVCSignHeapContext*     acmemory_pool,
+                    const SVCSignBuffers*     pData,
                     unsigned int*   len        // 出力サイズ
                     );
 
-int SVC_DecryptoSign(
-                    const void*     acmemory_pool,
+int SVC_DecryptSign(
+                    const SVCSignHeapContext*     acmemory_pool,
                     void*           buffer,     //  出力領域
                     const void*     sgn_ptr,    //  データへのポインタ
                     const void*     key_ptr     //  キーへのポインタ
                     );
 
-int SVC_DecryptoSignDER(
-                    const void*     acmemory_pool,
+int SVC_DecryptSignDER(
+                    const SVCSignHeapContext*     acmemory_pool,
                     void*           buffer,     //  出力領域
                     const void*     sgn_ptr,    //  データへのポインタ
                     const void*     key_ptr     //  キーへのポインタ
                     );
 
-void SVC_SHA1Init( void *c );
-void SVC_SHA1Update( void *c, const unsigned char *data, unsigned long len );
-void SVC_SHA1GetHash( unsigned char *md, void *c );
+void SVC_SHA1Init( SVCSHA1Context *ctx );
+void SVC_SHA1Update( SVCSHA1Context *ctx, const unsigned char *data, unsigned long len );
+void SVC_SHA1GetHash( SVCSHA1Context *ctx, unsigned char *md );
 
-int SVC_CalcSHA1(
+void SVC_CalcSHA1(
                     void*         buffer,     //  出力領域
                     const void*   buf,        //  データへのポインタ
                     unsigned int  len         //  データの長さ

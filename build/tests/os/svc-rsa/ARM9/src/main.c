@@ -75,8 +75,6 @@ static void dump(const char *str, const void *ptr, u32 length)
     OS_TPrintf("\n");
 }
 
-typedef int RSA_CTX[3];
-
 /*---------------------------------------------------------------------------*
   Name:         TwlMain
 
@@ -88,7 +86,7 @@ typedef int RSA_CTX[3];
  *---------------------------------------------------------------------------*/
 void TwlMain()
 {
-    RSA_CTX ctx;    // heapä«óùèÓïÒ
+    SVCSignHeapContext ctx;    // heapä«óùèÓïÒ
     u8 md[20];      // calculated by gs_data
     u8 data[128];   // decrypted by gs_sign
     u8 hash[20];    // decrypted and extructed by gs_sign
@@ -108,7 +106,7 @@ void TwlMain()
 
     {
         OSTick begin = OS_GetTick();
-        SVC_InitSignHeap(ctx, gs_heap, sizeof(gs_heap));
+        SVC_InitSignHeap(&ctx, gs_heap, sizeof(gs_heap));
         OS_TPrintf("SVC_InitSignHeap was consumed %d usec\n", (int)OS_TicksToMicroSeconds(OS_GetTick()-begin));
     }
 
@@ -118,8 +116,8 @@ void TwlMain()
 
     {
         OSTick begin = OS_GetTick();
-        SVC_DecryptoSign(ctx, data, gs_sign, gs_key);
-        OS_TPrintf("SVC_DecryptoSign was consumed %d usec\n", (int)OS_TicksToMicroSeconds(OS_GetTick()-begin));
+        SVC_DecryptSign(&ctx, data, gs_sign, gs_key);
+        OS_TPrintf("SVC_DecryptSign was consumed %d usec\n", (int)OS_TicksToMicroSeconds(OS_GetTick()-begin));
         dump("RSA Result:", data, sizeof(data));
     }
 
@@ -129,8 +127,8 @@ void TwlMain()
 
     {
         OSTick begin = OS_GetTick();
-        SVC_DecryptoSignDER(ctx, hash, gs_sign, gs_key);
-        OS_TPrintf("SVC_DecryptoSignDER was consumed %d usec\n", (int)OS_TicksToMicroSeconds(OS_GetTick()-begin));
+        SVC_DecryptSignDER(&ctx, hash, gs_sign, gs_key);
+        OS_TPrintf("SVC_DecryptSignDER was consumed %d usec\n", (int)OS_TicksToMicroSeconds(OS_GetTick()-begin));
         dump("Extracted hash:", hash, sizeof(hash));
     }
 

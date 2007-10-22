@@ -53,26 +53,17 @@ static void dump(const char *str, const void *ptr, u32 length)
 /*
     SHA1 API
 */
-typedef struct SHA1_CTX // 実際には、サイズが同じなら中身は何でも良い
-{
-    u32 h0,h1,h2,h3,h4;
-    u32 Nl,Nh;
-    u32 data[16];
-    int num;
-    void (*sha_block)(struct SHA1_CTX *c, const u8 *W, int num);
-}
-SHA1_CTX;
-
-static inline void SHA1_Init(SHA1_CTX *ctx)
+static inline void SHA1_Init(SVCSHA1Context *ctx)
 {
     if (ctx == NULL)
         return;
 
-    MI_CpuClear8(ctx, sizeof(SHA1_CTX));
+//    ctx->sha_block = NULL;
+//    MI_CpuClear8(ctx, sizeof(SVCSHA1Context));
     SVC_SHA1Init(ctx);
 }
 
-static inline void SHA1_Update(SHA1_CTX *ctx, const void* data, u32 len)
+static inline void SHA1_Update(SVCSHA1Context *ctx, const void* data, u32 len)
 {
     if (ctx == NULL)
         return;
@@ -81,13 +72,13 @@ static inline void SHA1_Update(SHA1_CTX *ctx, const void* data, u32 len)
     SVC_SHA1Update(ctx, data, len);
 }
 
-static inline void SHA1_GetHash(SHA1_CTX *ctx, u8* md)
+static inline void SHA1_GetHash(SVCSHA1Context *ctx, u8* md)
 {
     if (ctx == NULL)
         return;
     if (md == NULL)
         return;
-    SVC_SHA1GetHash(md, ctx);
+    SVC_SHA1GetHash(ctx, md);
 }
 
 static inline void SHA1_Calc(u8* md, const void* data, u32 len)
@@ -133,7 +124,7 @@ void TwlMain()
 
     {
         u8 md[20];
-        SHA1_CTX ctx;
+        SVCSHA1Context ctx;
         OSTick begin = OS_GetTick();
         SHA1_Init(&ctx);
         OS_TPrintf("\nSHA1_Init was consumed %d usec\n", (int)OS_TicksToMicroSeconds(OS_GetTick()-begin));
