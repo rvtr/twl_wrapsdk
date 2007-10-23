@@ -17,6 +17,8 @@
 #ifndef TWL_OS_SYSTEMCALL_H_
 #define TWL_OS_SYSTEMCALL_H_
 
+#define SVC_SHA1_BLOCK_SIZE     64
+#define SVC_SHA1_DIGEST_SIZE    20
 
 #ifdef __cplusplus
 extern "C" {
@@ -39,6 +41,14 @@ typedef struct SVCSHA1Context
     void (*sha_block)(struct SVCSHA1Context *c, const u8 *W, int num);
 }
 SVCSHA1Context;
+
+typedef struct SVCHMACSHA1Context
+{
+    SVCSHA1Context  sha1_ctx;
+    u8              key[SVC_SHA1_BLOCK_SIZE];
+    u32             keylen;
+}
+SVCHMACSHA1Context;
 
 typedef struct
 {
@@ -97,18 +107,22 @@ int SVC_RandomSHA1(
                     unsigned int    src_len     // ì¸óÕÉfÅ[É^ÇÃí∑Ç≥
                     );
 
-int SVC_UncompressLZ8FromDevice( const void* srcp,
+s32 SVC_UncompressLZ8FromDevice( const void* srcp,
                                   void* destp,
                                   const void* paramp,
                                   const MIReadStreamCallbacks *callbacks
                                   );
 
-int SVC_UncompressLZ16FromDeviceIMG( const void* srcp,
+s32 SVC_UncompressLZ16FromDeviceIMG( const void* srcp,
                                   void* destp,
                                   const void* paramp,
                                   const MIReadStreamCallbacks *callbacks
                                   );
 
+void SVC_HMACSHA1Init( SVCHMACSHA1Context *ctx, const void *key, u32 keylen );
+void SVC_HMACSHA1Update( SVCHMACSHA1Context *ctx, const void *data, u32 len );
+void SVC_HMACSHA1GetHash( SVCHMACSHA1Context *ctx, u8* md );
+void SVC_CalcHMACSHA1( void* md, const void* data, u32 len, void* key, u32 keylen );
 
 
 #ifdef __cplusplus
