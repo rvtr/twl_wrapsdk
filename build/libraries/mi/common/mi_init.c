@@ -41,7 +41,7 @@ void MI_Init(void)
     MI_SetMainMemoryPriority(MI_PROCESSOR_ARM7);
 
     //---- Init Work RAM (allocate both wram (block0/1) to ARM7)
-    MI_SetWramBank(MI_WRAM_ARM7_ALL);
+//    MI_SetWramBank(MI_WRAM_ARM7_ALL);
 #endif
 
     //---- dummy DMA
