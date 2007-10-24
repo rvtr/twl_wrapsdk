@@ -62,13 +62,13 @@ SVCSignBuffers;
 void SVC_InitSignHeap(
                     SVCSignHeapContext* acmemory_pool,
                     void*           heap,
-                    unsigned int    length
+                    u32             len
                     );
 
 int SVC_DecryptRSA(
                     const SVCSignHeapContext*     acmemory_pool,
                     const SVCSignBuffers*     pData,
-                    unsigned int*   len        // 出力サイズ
+                    u32*            len        // 出力サイズ
                     );
 
 int SVC_DecryptSign(
@@ -86,13 +86,13 @@ int SVC_DecryptSignDER(
                     );
 
 void SVC_SHA1Init( SVCSHA1Context *ctx );
-void SVC_SHA1Update( SVCSHA1Context *ctx, const unsigned char *data, unsigned long len );
-void SVC_SHA1GetHash( SVCSHA1Context *ctx, unsigned char *md );
+void SVC_SHA1Update( SVCSHA1Context *ctx, const void *data, u32 len );
+void SVC_SHA1GetHash( SVCSHA1Context *ctx, void *md );
 
 void SVC_CalcSHA1(
-                    void*         buffer,     //  出力領域
-                    const void*   buf,        //  データへのポインタ
-                    unsigned int  len         //  データの長さ
+                    void*         md,         //  出力領域
+                    const void*   data,       //  データへのポインタ
+                    u32           len         //  データの長さ
                     );
 
 int SVC_CompareSHA1(
@@ -102,9 +102,9 @@ int SVC_CompareSHA1(
 
 int SVC_RandomSHA1(
                     void*           dest_ptr,   // 出力データへのポインタ
-                    unsigned int    dest_len,   // 出力データの長さ
+                    u32             dest_len,   // 出力データの長さ
                     const void*     src_ptr,    // 入力データへのポインタ
-                    unsigned int    src_len     // 入力データの長さ
+                    u32             src_len     // 入力データの長さ
                     );
 
 s32 SVC_UncompressLZ8FromDevice( const void* srcp,
@@ -121,8 +121,8 @@ s32 SVC_UncompressLZ16FromDeviceIMG( const void* srcp,
 
 void SVC_HMACSHA1Init( SVCHMACSHA1Context *ctx, const void *key, u32 keylen );
 void SVC_HMACSHA1Update( SVCHMACSHA1Context *ctx, const void *data, u32 len );
-void SVC_HMACSHA1GetHash( SVCHMACSHA1Context *ctx, u8* md );
-void SVC_CalcHMACSHA1( void* md, const void* data, u32 len, void* key, u32 keylen );
+void SVC_HMACSHA1GetHash( SVCHMACSHA1Context *ctx, void* md );
+void SVC_CalcHMACSHA1( void* md, const void* data, u32 len, const void* key, u32 keylen );
 
 
 #ifdef __cplusplus
