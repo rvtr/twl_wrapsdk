@@ -412,6 +412,7 @@ void OS_WaitVBlankIntr(void)
  *---------------------------------------------------------------------------*/
 typedef void (*OSi_ChangeSpeedOfARM9Entry)( OSSpeedOfARM9 clock );
 
+#include <nitro/code32.h>
 static asm void OSi_ChangeSpeedOfARM9Core( OSSpeedOfARM9 clock )
 {
         ldr     r3, =REG_CLK_ADDR
@@ -430,6 +431,7 @@ static asm void OSi_ChangeSpeedOfARM9Core( OSSpeedOfARM9 clock )
 
         ltorg
 }
+#include <nitro/codereset.h>
 
 void OS_ChangeSpeedOfARM9( OSSpeedOfARM9 clock, void* itcm )
 {
