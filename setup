@@ -5,4 +5,7 @@
 # Please use 'source ./setup'.
 #----------------------------------------------------------------
 
+echo "Get NITROSDK_ROOT: $NITROSDK_ROOT"
+
 export TWLSDK_ROOT=`cygpath -m $PWD`
+echo "Set TWLSDK_ROOT: $TWLSDK_ROOT"
