@@ -181,7 +181,7 @@ void CDC_InitSound( void )
 */
 
     CDC_SetupDAC( CDC_HP_DRV_PWON_TM_DEFAULT,
-                 CDC_HP_DRV_RAMPUP_TM_0MS,
+                 CDC_HP_DRV_RAMPUP_TM_DEFAULT,
                  CDC_HPSP_DRV_RAMPDWN_TM_DEFAULT );
 
 
@@ -204,7 +204,7 @@ void CDC_InitSound( void )
 void CDC_InitMic( void )
 {
     // setup Mic Bias
-    CDC_WriteSpiRegisterEx( 1, REG_CDC1_MIC_BIAS_ADDR, CDC1_MIC_BIAS_2_5V );
+    CDC_WriteSpiRegisterEx( 1, REG_CDC1_MIC_BIAS_ADDR, CDC1_MIC_BIAS_AVDD );
 
 #if 1 // このコードは本来、cdcInitSound呼び出しルーチンが記述すべきコード。
     // Enable I2S
@@ -303,7 +303,7 @@ void CDC_GoDsMode( void )
 
     // マイクバイアスを設定しておく必要がある。
 	// DSモードに入ってからはこの設定を行う手段がない。
-    CDC_WriteSpiRegisterEx( 1, REG_CDC1_MIC_BIAS_ADDR, CDC1_MIC_BIAS_2_5V );
+    CDC_WriteSpiRegisterEx( 1, REG_CDC1_MIC_BIAS_ADDR, CDC1_MIC_BIAS_AVDD );
 
 	// PGAインピーダンス 設定も同様（18.8k 設定でDSと同等のゲインが得られる）
     CDC_WriteSpiRegisterEx( 1, REG_CDC1_MIC_PGA_P_ADDR,  1 << CDC1_MIC_PGA_P_I_SHIFT);
