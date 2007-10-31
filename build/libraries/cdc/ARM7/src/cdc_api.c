@@ -169,6 +169,9 @@ void CDC_InitSound( void )
     CDC_Init1stOrderFilter( cdc1stCoef_HPF_9_26Hz,
                            CDC_FILTER_1ST_IIR_LDAC | CDC_FILTER_1ST_IIR_RDAC );
 
+//    CDC_WriteSpiRegistersEx( 8, 12, cdcCoef_LowBoost24dB, sizeof(cdcCoef_LowBoost24dB) );
+//    CDC_WriteSpiRegistersEx( 8, 76, cdcCoef_LowBoost24dB, sizeof(cdcCoef_LowBoost24dB) );
+
     // default, DACs are muted.
     // CDC_MuteDAC();
 
@@ -332,7 +335,7 @@ void CDC_GoDsMode( void )
 
     // MicBias powered up
     // In Rev-A, MicBias must be powered up before enabling Master Sound Power
-    CDC_DsmodeSetSpiFlags( REG_CDC255_DS_MIC_CTL_ADDR, CDC255_DS_MIC_CTL_BIAS_PWR );
+//  CDC_DsmodeSetSpiFlags( REG_CDC255_DS_MIC_CTL_ADDR, CDC255_DS_MIC_CTL_BIAS_PWR );
 
     // change CODEC status variable
     cdcIsTwlMode = FALSE;
