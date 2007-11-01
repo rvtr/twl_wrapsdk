@@ -78,6 +78,48 @@ OSSpeedOfARM9;
  *---------------------------------------------------------------------------*/
 void OS_ChangeSpeedOfARM9( OSSpeedOfARM9 clock, void* itcm );
 
+/*---------------------------------------------------------------------------*
+  Name:         OS_IsARM9x2
+
+  Description:  speed of arm9
+
+  Arguments:    None
+
+  Returns:      None
+ *---------------------------------------------------------------------------*/
+inline BOOL OS_IsARM9x2( void )
+{
+    return (reg_CFG_CLK & REG_CFG_CLK_ARM2X_MASK) >> REG_CFG_CLK_ARM2X_SHIFT;
+}
+
+/*---------------------------------------------------------------------------*
+  Name:         OS_IsDSPOn
+
+  Description:  
+
+  Arguments:    None
+
+  Returns:      None
+ *---------------------------------------------------------------------------*/
+inline BOOL OS_IsDSPOn( void )
+{
+    return (reg_CFG_CLK & REG_CFG_CLK_DSP_MASK) >> REG_CFG_CLK_DSP_SHIFT;
+}
+
+/*---------------------------------------------------------------------------*
+  Name:         OS_IsDSPReset
+
+  Description:  
+
+  Arguments:    None
+
+  Returns:      None
+ *---------------------------------------------------------------------------*/
+inline BOOL OS_IsDSPReset( void )
+{
+    return TRUE ^ ((reg_CFG_DSP_RST & REG_CFG_DSP_RST_OFF_MASK) >> REG_CFG_DSP_RST_OFF_SHIFT);
+}
+
 #else // SDK_ARM7
 
 /*---------------------------------------------------------------------------*
