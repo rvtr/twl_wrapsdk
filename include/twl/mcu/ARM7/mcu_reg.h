@@ -26,10 +26,10 @@
 #define MCU_REG_CARDLED_1_ADDR          0x12
 #define MCU_REG_CARDLED_2_ADDR          0x13
 
-#define MCU_REG_VOLUME_ADDR             0x20
+#define MCU_REG_TEMP_ADDR               0x18
+#define MCU_REG_TEMP_LAST_ADDR          0x1f
 
-#define MCU_REG_TEMP_ADDR               0x21
-#define MCU_REG_TEMP_LAST_ADDR          0x30
+#define MCU_REG_VOLUME_ADDR             0x20
 
 /* MCU_REG_INFO */
 
