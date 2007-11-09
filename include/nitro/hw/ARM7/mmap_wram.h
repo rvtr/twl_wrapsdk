@@ -88,6 +88,11 @@ extern "C" {
 //---- offset in system reserved area (tentatively)
 #define HW_PRV_WRAM_SYSRV               (HW_WRAM_AREA_END - HW_PRV_WRAM_SYSRV_SIZE) // (HW_PRV_WRAM_END - HW_PRV_WRAM_SYSRV_SIZE)
 #define HW_PRV_WRAM_SYSRV_OFS_INTR_CHECK2    0x00
+#define HW_PRV_WRAM_SYSRV_OFS_TWL_FUNC       0x04
+#define HW_PRV_WRAM_SYSRV_OFS_ROM_JTAG       0x08
+#define HW_PRV_WRAM_SYSRV_OFS_CLK_BOND       0x09
+#define HW_PRV_WRAM_SYSRV_OFS_RESERVE        0x0a       // 6bytes
+#define HW_PRV_WRAM_SYSRV_OFS_RESERVE_END    0x10
 #define HW_PRV_WRAM_SYSRV_OFS_EXCP_STACK     0x10
 #define HW_PRV_WRAM_SYSRV_OFS_EXCP_STACK_END 0x1c
 #define HW_PRV_WRAM_SYSRV_OFS_EXCP_VECTOR    0x1c
@@ -111,6 +116,10 @@ extern "C" {
 #define HW_INTR_CHECK_BUF               (HW_PRV_WRAM_SYSRV + HW_PRV_WRAM_SYSRV_OFS_INTR_CHECK)
 #define HW_INTR_CHECK2_BUF              (HW_PRV_WRAM_SYSRV + HW_PRV_WRAM_SYSRV_OFS_INTR_CHECK2)
 #define HW_INTR_VECTOR_BUF              (HW_PRV_WRAM_SYSRV + HW_PRV_WRAM_SYSRV_OFS_INTR_VECTOR)
+
+#define HW_TWL_FUNC_BUF                 (HW_PRV_WRAM_SYSRV + HW_PRV_WRAM_SYSRV_OFS_TWL_FUNC)
+#define HW_ROM_JTAG_BUF                 (HW_PRV_WRAM_SYSRV + HW_PRV_WRAM_SYSRV_OFS_ROM_JTAG)
+#define HW_CLK_BOND_BUF                 (HW_PRV_WRAM_SYSRV + HW_PRV_WRAM_SYSRV_OFS_CLK_BOND)
 
 #ifdef __cplusplus
 } /* extern "C" */
