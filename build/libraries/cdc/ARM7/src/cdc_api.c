@@ -145,8 +145,8 @@ void CDC_Init( void )
 void CDC_Reset( void )
 {
     CDC_WriteSpiRegisterEx( 0, REG_CDC0_RST_ADDR, CDC0_RST_E );
-    CDC_SetInputPinControl( TRUE, TRUE, TRUE );  // enable VCNT5,SP#HP,PMOFF pin
     OS_Sleep(1);
+    CDC_SetInputPinControl( TRUE, TRUE, TRUE );  // enable VCNT5,SP#HP,PMOFF pin
 }
 
 /*---------------------------------------------------------------------------*
@@ -168,9 +168,6 @@ void CDC_InitSound( void )
     // setup High Pass Filter of 9.26Hz cutoff freq.
     CDC_Init1stOrderFilter( cdc1stCoef_HPF_9_26Hz,
                            CDC_FILTER_1ST_IIR_LDAC | CDC_FILTER_1ST_IIR_RDAC );
-
-//    CDC_WriteSpiRegistersEx( 8, 12, cdcCoef_LowBoost24dB, sizeof(cdcCoef_LowBoost24dB) );
-//    CDC_WriteSpiRegistersEx( 8, 76, cdcCoef_LowBoost24dB, sizeof(cdcCoef_LowBoost24dB) );
 
     // default, DACs are muted.
     // CDC_MuteDAC();
@@ -873,6 +870,6 @@ void CDC_Init1stOrderFilter( u8 *coef, int filter_target )
 void CDC_SetScanModeTimerClockDivider( u8 value )
 {
     SDK_ASSERT( value < 128);
-    CDC_WriteSpiRegisterEx( 3, REG_CDC3_TP_DELAY_CLK_ADDR, value );
+	CDC_SetSpiParamsEx( 3, REG_CDC3_TP_DELAY_CLK_ADDR, value, CDC3_TP_DELAY_CLK_DIV_MASK );
 }
 
