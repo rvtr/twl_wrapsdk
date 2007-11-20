@@ -399,7 +399,7 @@ int po_read(PCFD fd,    byte *in_buff, int count)    /*__apifn__*/
 
         /* how many clusters are left   */
         n_to_read = (n_left + 511) >> 9;
-        n_clusters = (CLUSTERTYPE) ((n_to_read+pdrive->secpalloc-1) >> pdrive->log2_secpalloc);
+        n_clusters = (CLUSTERTYPE) ((n_to_read+block_in_cluster+pdrive->secpalloc-1) >> pdrive->log2_secpalloc); // AICP modified
 
         /* how many contiguous clusters can we get ? <= n_clusters   */
         end_of_chain = 0;
