@@ -166,18 +166,18 @@ BOOLEAN pc_mkfs32(int driveno, FMTPARMS *pfmt, BOOLEAN use_raw)                 
     for (i=0;i<pfmt->secreserved;i++)
     {
         /* WRITE   */
-        if (!devio_write_format(driveno, (dword) i, &(b[0]), 1, use_raw) )
+        if (!devio_write_format(driveno, pfmt->numhide + (dword) i, &(b[0]), 1, use_raw) )	//ctr modified
         {
             goto errex;
         }
     }
 #if (INCLUDE_FAT32_BOOT_CODE)
     copybuff(&b[0],&FAT32_BOOT_CODE[512],512);
-    if (!devio_write_format(driveno, (dword) 8, &(b[0]), 1, use_raw) )
+    if (!devio_write_format(driveno, pfmt->numhide + (dword) 8, &(b[0]), 1, use_raw) )	//ctr modified
     {
         goto errex;
     }
-    if (!devio_write_format(driveno, (dword) 2, &(b[0]), 1, use_raw) )
+    if (!devio_write_format(driveno, pfmt->numhide + (dword) 2, &(b[0]), 1, use_raw) )	//ctr modified
     {
         goto errex;
     }
@@ -215,8 +215,8 @@ BOOLEAN pc_mkfs32(int driveno, FMTPARMS *pfmt, BOOLEAN use_raw)                 
     ltotsecs = pfmt->numcyl;
     ltotsecs *= pfmt->secptrk;
     ltotsecs *= pfmt->numhead;
-
-
+    ltotsecs -= pfmt->numhide;
+    
     if (ltotsecs > 0xffffL)
     {
         /* HUGE partition  the 3.xx totsecs field is zeroed   */
@@ -308,8 +308,8 @@ BOOLEAN pc_mkfs32(int driveno, FMTPARMS *pfmt, BOOLEAN use_raw)                 
         rtfs_set_errno(PEINVALIDPARMS);
         goto errex;
     }
-
-    if (!devio_write_format(driveno, 0, &(b[0]), 1, use_raw) )
+         
+    if (!devio_write_format(driveno, (dword) 0 + pfmt->numhide, &(b[0]), 1, use_raw) )
     {
         goto errex;
     }
@@ -321,11 +321,11 @@ BOOLEAN pc_mkfs32(int driveno, FMTPARMS *pfmt, BOOLEAN use_raw)                 
     fr_DWORD( &(b[0x01ec]), (dword)0x00000003);
     fr_WORD( &(b[0x01fe]), (word)0xaa55);
 
-    if (!devio_write_format(driveno, (dword) 7, &(b[0]), 1, use_raw) )
+    if (!devio_write_format(driveno, pfmt->numhide + (dword) 7, &(b[0]), 1, use_raw) )	//ctr modified
     {
         goto errex;
     }
-    if (!devio_write_format(driveno, (dword) 1, &(b[0]), 1, use_raw) )
+    if (!devio_write_format(driveno, pfmt->numhide + (dword) 1, &(b[0]), 1, use_raw) )	//ctr modified
     {
         goto errex;
     }
@@ -347,7 +347,7 @@ BOOLEAN pc_mkfs32(int driveno, FMTPARMS *pfmt, BOOLEAN use_raw)                 
                 b[--j] = (byte) 0xff;
         }
 
-        blockno = pfmt->secreserved + (i * pfmt->secpfat);
+        blockno = pfmt->numhide + pfmt->secreserved + (i * pfmt->secpfat);	//ctr modified
         for ( j = 0; j < pfmt->secpfat; j++)
         {
             /* WRITE   */
@@ -361,7 +361,7 @@ BOOLEAN pc_mkfs32(int driveno, FMTPARMS *pfmt, BOOLEAN use_raw)                 
     }
 
     /* Now write the root sectors   */
-    blockno = pfmt->secreserved + pfmt->numfats * pfmt->secpfat;
+    blockno = pfmt->numhide + pfmt->secreserved + pfmt->numfats * pfmt->secpfat;	//ctr modified
     rtfs_memset(&b[0], 0, 512);
     /* Bug fix 11-22-99 use <pfmt->secpalloc instead of 8 */
     for(k=0;k<pfmt->secpalloc;k++) /* Is 8 blocks per cluster? */

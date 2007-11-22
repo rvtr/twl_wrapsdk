@@ -137,6 +137,7 @@ BOOLEAN pc_mkfs16(int driveno, FMTPARMS *pfmt, BOOLEAN use_raw)                 
     ltotsecs = pfmt->numcyl;
     ltotsecs *= pfmt->secptrk;
     ltotsecs *= pfmt->numhead;
+    ltotsecs -= pfmt->numhide;	//ctr modified
 
     if (ltotsecs > 0xffffL)
     {
@@ -230,7 +231,7 @@ BOOLEAN pc_mkfs16(int driveno, FMTPARMS *pfmt, BOOLEAN use_raw)                 
     }
 
 
-    if (!devio_write_format(driveno, 0 , &(b[0]), 1, use_raw) )
+    if (!devio_write_format(driveno, (dword) 0 + pfmt->numhide, &(b[0]), 1, use_raw) )
     {
         goto errex;
     }
@@ -245,7 +246,7 @@ BOOLEAN pc_mkfs16(int driveno, FMTPARMS *pfmt, BOOLEAN use_raw)                 
         if (fausize == 4)
             b[3] = (byte) 0xff;
 
-        blockno = pfmt->secreserved + (i * pfmt->secpfat);
+        blockno = pfmt->numhide + pfmt->secreserved + (i * pfmt->secpfat);	//ctr modified
         for ( j = 0; j < pfmt->secpfat; j++)
         {
             /* WRITE   */
@@ -259,7 +260,7 @@ BOOLEAN pc_mkfs16(int driveno, FMTPARMS *pfmt, BOOLEAN use_raw)                 
     }
 
     /* Now write the root sectors   */
-    blockno = pfmt->secreserved + pfmt->numfats * pfmt->secpfat;
+    blockno = pfmt->numhide + pfmt->secreserved + pfmt->numfats * pfmt->secpfat; //ctr modified
     rtfs_memset(&b[0], 0, 512);
     for ( j = 0; j < (pfmt->numroot/INOPBLOCK) ; j++)
     {
