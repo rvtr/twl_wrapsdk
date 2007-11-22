@@ -15,7 +15,7 @@
 /* */
 void get_format_parameters(dword nblocks, int *psector_p_alloc, int *pnum_root_entries);
 word pc_fat_size(word nreserved, word cluster_size, word n_fat_copies,
-                 word root_sectors, dword volume_size, 
+                 word root_sectors, dword volume_size,
                  int *nibs_per_entry);
 
 
@@ -71,13 +71,13 @@ void pc_calculate_chs(dword total, dword *cylinders, int *heads, int *secptrack)
 Description
     Queries the drive s associated device driver for a description of the
     installed media. This information is used by the pc_format_media,
-    pc_partition_media and pc_format_volume routines. The application may 
-    use the results of this call to calculate how it wishes the media to 
+    pc_partition_media and pc_format_volume routines. The application may
+    use the results of this call to calculate how it wishes the media to
     be partitioned.
 
     Note that the floppy device driver uses a back door to communicate
-    with the format routine through the geometry structure. This allows us 
-    to not have floppy specific code in the format routine but still use the 
+    with the format routine through the geometry structure. This allows us
+    to not have floppy specific code in the format routine but still use the
     exact format parameters that DOS uses when it formats a floppy.
 
     See the following definition of the pgeometry structure:
@@ -138,7 +138,7 @@ inval:
 
     /* The geometry consists of cylinders, heads, and sectors
          per track.
-       The ATA spec says that the maximum values for these are 
+       The ATA spec says that the maximum values for these are
          65536 cylinders, 16 heads, and 255 sectors per track.
        However, the MBR spec says the maximum values are
          1023 cylinders, 255 heads, and 63 sectors per track.
@@ -163,9 +163,9 @@ Returns
     Returns TRUE if it was able to perform the operation otherwise
     it returns FALSE.
 
-    Note: The the logical drive must be claimed before this routine is 
+    Note: The the logical drive must be claimed before this routine is
     called and later released by the caller.
-    
+
     errno is set to one of the following
     0               - No error
     PEINVALIDDRIVEID- Drive component is invalid
@@ -213,7 +213,7 @@ inval:
 
 Description
     A partition list is provided (a list of partition sizes
-    in units of LBA s) by the user. 
+    in units of LBA s) by the user.
 
 Returns
     Returns TRUE if it was able to perform the operation otherwise
@@ -224,7 +224,7 @@ Returns
     PEINVALIDDRIVEID- Drive component is invalid
     PEINVALIDPARMS  - Inconsistent or missing parameters
     PEIOERRORWRITE  - Error writing partition table
-    An ERTFS system error 
+    An ERTFS system error
 ****************************************************************************/
 
 BOOLEAN pc_partition_media(byte *path, PDEV_GEOMETRY pgeometry, dword * partition_list) /* __apifn__*/
@@ -279,7 +279,7 @@ inval:
 /* 10-24-2000 - New code to support lba formatting */
     /* The first partition starts at cylinder=0, head=1, sector=1 */
     if (pgeometry->dev_geometry_lbas)
-        starting_lba = (dword) pgeometry->dev_geometry_secptrack; 
+        starting_lba = (dword) pgeometry->dev_geometry_secptrack;
     else
     {
         starting_lba = 0; /* Not used */
@@ -302,9 +302,9 @@ inval:
         {
 /* 10-24-2000 - New code to support lba formatting */
             /* Apparently, we must still align to cylinders even in LBA mode */
-            dwTemp = (dword) pgeometry->dev_geometry_heads; 
+            dwTemp = (dword) pgeometry->dev_geometry_heads;
             dwTemp *= (dword) pgeometry->dev_geometry_secptrack;
-            partition_size = ((partition_size / dwTemp) * dwTemp) - (starting_lba % dwTemp); 
+            partition_size = ((partition_size / dwTemp) * dwTemp) - (starting_lba % dwTemp);
         }
         else
         {
@@ -351,13 +351,13 @@ inval:
             /* Load the starting CHS */
             part.ents[partition_number].s_head = head;
             utemp = (word)((cyl & 0xff) << 8);   /* Low 8 bit to hi bite */
-            utemp2 = (word)((cyl >> 2) & 0xc0);  /* Hi 2 bits to bits 6 + 7 */ 
+            utemp2 = (word)((cyl >> 2) & 0xc0);  /* Hi 2 bits to bits 6 + 7 */
             utemp |= utemp2;
             utemp |= sec;
             fr_WORD((byte *)&(part.ents[partition_number].s_cyl), utemp);
 
             /* Load the starting LBA */
-            fr_DWORD((byte *)&(part.ents[partition_number].r_sec), starting_lba); 
+            fr_DWORD((byte *)&(part.ents[partition_number].r_sec), starting_lba);
         }
         else
         {
@@ -414,7 +414,7 @@ inval:
             /* Load the ending CHS */
             part.ents[partition_number].e_head = head;
             utemp = (word)((cyl & 0xff) << 8);   /* Low 8 bit to hi bite */
-            utemp2 = (word)((cyl >> 2) & 0xc0);  /* Hi 2 bits to bits 6 + 7 */ 
+            utemp2 = (word)((cyl >> 2) & 0xc0);  /* Hi 2 bits to bits 6 + 7 */
             utemp |= utemp2;
             utemp |= sec;
             fr_WORD((byte *)&(part.ents[partition_number].e_cyl), utemp);
@@ -426,15 +426,15 @@ inval:
             part.ents[partition_number].e_head = (byte) (pgeometry->dev_geometry_heads-1);
             /* Ending cylinder is in the top ten bits, secptrack in lower 6 ??     */
             /* Relative sector starting */
-            fr_DWORD((byte *)&(part.ents[partition_number].r_sec), (dword) pgeometry->dev_geometry_secptrack*starting_cylinder); 
+            fr_DWORD((byte *)&(part.ents[partition_number].r_sec), (dword) pgeometry->dev_geometry_secptrack*starting_cylinder);
 
             /* Set up for the next partition and use new value to calculate ending cyl */
             starting_cylinder = (word)((word)starting_cylinder + (word) *(partition_list+partition_number));
             utemp = (word)(((starting_cylinder-1) & 0xff) << 8);   /* Low 8 bit to hi bite */
-            utemp2 = (word)(((starting_cylinder-1) >> 2) & 0xc0);  /* Hi 2 bits to bits 6 + 7 */ 
+            utemp2 = (word)(((starting_cylinder-1) >> 2) & 0xc0);  /* Hi 2 bits to bits 6 + 7 */
             utemp |= utemp2;
             utemp |= (word) pgeometry->dev_geometry_secptrack;
- 
+
             fr_WORD((byte *)&(part.ents[partition_number].e_cyl), utemp);
             /* And partition size   */
             fr_DWORD((byte *)&(part.ents[partition_number].p_size), partition_size);
@@ -480,17 +480,17 @@ Description
     drive structure is queried to determine if the device is parttioned
     or not. If the device is partitioned then the partition table is read
     and the volume within the partition is formatted. If it is a non
-    partitioned device the device is formatted according to the supplied 
+    partitioned device the device is formatted according to the supplied
     pgeometry parameters. The pgeometry parameter contains the the media
-    size in HCN format. It also contains a 
+    size in HCN format. It also contains a
 
-    Note: The the logical drive must be claimed before this routine is 
+    Note: The the logical drive must be claimed before this routine is
     called and later released by the caller.
 
 Returns
     Returns TRUE if it was able to perform the operation otherwise
     it returns FALSE.
-    
+
     errno is set to one of the following
     0               - No error
     PEINVALIDDRIVEID- Drive component is invalid
@@ -498,8 +498,8 @@ Returns
     PEINVALIDMBR    - Partitioned device has no master boot record
     PEINVALIDMBROFFSET - Requested partition has no entry in master boot record
     PEINVALIDPARMS  - Inconsistent or missing parameters
-    PEIOERRORWRITE  - Error writing during format 
-    An ERTFS system error 
+    PEIOERRORWRITE  - Error writing during format
+    An ERTFS system error
 ****************************************************************************/
 
 BOOLEAN pc_format_volume(byte *path, PDEV_GEOMETRY pgeometry) /* __apifn__*/
@@ -541,9 +541,9 @@ int     nibs_per_entry,partition_status;
     if (pgeometry->fmt_parms_valid)
     {
         if( ((pgeometry->fmt.numcyl * pgeometry->fmt.numhead * pgeometry->fmt.secptrk) / pgeometry->fmt.secpalloc) > 0xFFFF) {
-	        return(pc_mkfs32(driveno, &pgeometry->fmt, TRUE)); /* TRUE == RAW IO */	//ctr modified
+         return(pc_mkfs32(driveno, &pgeometry->fmt, TRUE)); /* TRUE == RAW IO */
         }else{
-	        return(pc_mkfs16(driveno, &pgeometry->fmt, TRUE)); /* TRUE == RAW IO */
+         return(pc_mkfs16(driveno, &pgeometry->fmt, TRUE)); /* TRUE == RAW IO */
         }
     }
 
@@ -557,7 +557,7 @@ int     nibs_per_entry,partition_status;
         if (partition_status == READ_PARTION_OK)
         {
             partition_size = pdr->partition_size;
-            ltemp = partition_size / 
+            ltemp = partition_size /
                 (dword)(pgeometry->dev_geometry_heads * pgeometry->dev_geometry_secptrack);
             n_cyls = (word) ltemp;
             raw_mode_io = FALSE;
@@ -611,15 +611,10 @@ int     nibs_per_entry,partition_status;
         fmt.secreserved =    (word) 32;
         if (pdr->drive_flags & DRIVE_FLAGS_PARTITIONED)
         {
-            if (pgeometry->dev_geometry_lbas)
-                /* 10-24-2000 - New code to support lba formatting */
-                fmt.numhide     =    (unsigned long)  0; /*PS Does not work as fmt.secptrk here */
-            else
-                /* 10-24-2000 - This was the original code */
-                fmt.numhide     =    (unsigned long)  fmt.secptrk;
+            fmt.numhide     =    pdr->partition_base;
         }
         else
-            fmt.numhide     =    (unsigned long)  pgeometry->fmt.numhide;	//ctr modified
+            fmt.numhide     =    (unsigned long)  0;
         fmt.secpfat     =    (word) 0;
         fmt.numroot     =    (word) 0;
         fmt.mediadesc   =    (byte)  0xF8;
@@ -627,8 +622,11 @@ int     nibs_per_entry,partition_status;
     }
     else
     {
+        if (pdr->drive_flags & DRIVE_FLAGS_PARTITIONED)
+            fmt.numhide     =    pdr->partition_base;
+        else
+            fmt.numhide     =    0;
         fmt.secreserved =    (word) 1;
-        fmt.numhide     =    pgeometry->fmt.numhide;	//ctr modified
         fmt.secpfat     =    (word) secpfat;
         fmt.numroot     =    (word) root_entries;
         fmt.mediadesc   =    (byte)  0xF8;
@@ -644,15 +642,15 @@ int     nibs_per_entry,partition_status;
     Given a drive number and a format parameter block. Put an MS-DOS
     file system on the drive:
     The disk MUST already have a low level format. All blocks on the drive
-    should be intitialize with E5s or zeros. 
-    
+    should be intitialize with E5s or zeros.
+
     see pcmkfs in the samples directory.
 
     Some common parameters. Note: For other drive types use debug to get the
-    parameters from block zero after FORMAT has been run. 
+    parameters from block zero after FORMAT has been run.
 
             360     720     20M    80M          (DRIVE SIZE)
-oemname     =====  UP TO YOU. ONLY 8 Chars matter. Right filled with spaces 
+oemname     =====  UP TO YOU. ONLY 8 Chars matter. Right filled with spaces
 secpalloc   2       2       4       8
 secreserved 1       1       1       1
 numfats     2       2       2       2
@@ -674,14 +672,14 @@ See Also:
 
 
 word pc_fat_size(word nreserved, word cluster_size, word n_fat_copies,
-                 word root_sectors, dword volume_size, 
+                 word root_sectors, dword volume_size,
                  int *nibs_per_entry)   /*__fn__*/
 {
 
     dword  fat_size;
     dword  total_clusters;
     word entries_per_block;
-    
+
 #if (FAT32)
     if ((root_sectors == 0) || ((volume_size>>11) >= 512))/* FAT32 Format */
     {
@@ -697,12 +695,12 @@ word pc_fat_size(word nreserved, word cluster_size, word n_fat_copies,
     total_clusters /= cluster_size;
 
     /* Calculate the number of fat entries per block in the FAT. If
-        < 4087 clusters total the fat entries are 12 bits hence 341 
+        < 4087 clusters total the fat entries are 12 bits hence 341
         will fit. else 256 will fit
         we add in n_fat_copies * 12 here since it take 12 blocks to represent
         4087 clusters in 3 nibble form. So we add in the worst case FAT size
         here to enhance the accuracy of our guess of the total clusters.
-    */  
+    */
 
     if (total_clusters <= (dword) (4087 + (n_fat_copies * 12)) )
     {
@@ -717,7 +715,7 @@ word pc_fat_size(word nreserved, word cluster_size, word n_fat_copies,
 
     fat_size = (total_clusters + entries_per_block - 1)/entries_per_block;
 
-    return((word) fat_size);    
+    return((word) fat_size);
 }
 
 /* Choose format parameters based on the number of blocks in the volume */
@@ -779,5 +777,4 @@ void get_format_parameters(dword nblocks, int *psectors_per_alloc, int *pnum_roo
     *psectors_per_alloc = sectors_per_alloc;
     *pnum_root_entries = num_root_entries;
 }
-
 

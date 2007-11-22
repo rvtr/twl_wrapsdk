@@ -18,10 +18,10 @@
 #define INCLUDE_TSTSH_STRINGS       1
 
 
-/* Set this value to 1 if strings are entered as ascii and we require 
-   the unicode layer to expand them to 16 bit character strings 
-   set it to zero if you replace the strrings in the table with 
-   true UNICODE 
+/* Set this value to 1 if strings are entered as ascii and we require
+   the unicode layer to expand them to 16 bit character strings
+   set it to zero if you replace the strrings in the table with
+   true UNICODE
 */
 typedef struct rtfs_string_table {
     int string_id;
@@ -463,7 +463,7 @@ KS_CONSTANT RTFS_STRING_TABLE string_table[] = {
     {USTRING_RTFSDEM_14,(byte *)"regress_error was called with error" },
     {USTRING_RTFSDEM_15,(byte *)"Performing long file name test" },
     {USTRING_RTFSDEM_16,(byte *)"Performing buffered file io test" },
-    {USTRING_RTFSDEM_17,(byte *)"Performing Large (4Gig)File io test" },   
+    {USTRING_RTFSDEM_17,(byte *)"Performing Large (4Gig)File io test" },
 #endif
 #endif /* (INCLUDE_RTFSDEM_STRINGS) */
 #if (INCLUDE_TSTSH_STRINGS)
@@ -636,7 +636,7 @@ KS_CONSTANT RTFS_STRING_TABLE string_table[] = {
     {USTRING_TSTSHHELP_19,(byte *)L"DIR PATH" },
     {USTRING_TSTSHHELP_20,(byte *)L"DSKSEL D:" },
     {USTRING_TSTSHHELP_21,(byte *)L"ECHO: [args]" },
-    {USTRING_TSTSHHELP_22,(byte *)L"EJECT (ejects LS-120)" },
+    {USTRING_TSTSHHELP_22,(byte *)L"EJECT (Trigger Remove Event)" },
     {USTRING_TSTSHHELP_23,(byte *)L"FILLFILE PATH PATTERN NTIMES" },
     {USTRING_TSTSHHELP_24,(byte *)L"FORMAT (routine will prompt for arguments)" },
     {USTRING_TSTSHHELP_25,(byte *)L"GETATTR FILE" },
@@ -880,7 +880,7 @@ KS_CONSTANT RTFS_STRING_TABLE string_table[] = {
     {USTRING_TSTSHHELP_19,(byte *)"DIR PATH" },
     {USTRING_TSTSHHELP_20,(byte *)"DSKSEL D:" },
     {USTRING_TSTSHHELP_21,(byte *)"ECHO: [args]" },
-    {USTRING_TSTSHHELP_22,(byte *)"EJECT (ejects LS-120)" },
+    {USTRING_TSTSHHELP_22,(byte *)"EJECT (Trigger Remove Event)" },
     {USTRING_TSTSHHELP_23,(byte *)"FILLFILE PATH PATTERN NTIMES" },
     {USTRING_TSTSHHELP_24,(byte *)"FORMAT (routine will prompt for arguments)" },
     {USTRING_TSTSHHELP_25,(byte *)"GETATTR FILE" },
@@ -964,13 +964,13 @@ KS_CONSTANT RTFS_STRING_TABLE string_table[] = {
     {0,(byte *)"Unkown User String" }
 #endif
     };
-    
+
 
 
 static byte *rtfs_strtab_string(KS_CONSTANT RTFS_STRING_TABLE *ptable, int string_id)
 {
     while (ptable->string_id != 0)
-    {   
+    {
         if (ptable->string_id == string_id)
             break;
         ptable++;
@@ -988,4 +988,3 @@ byte *rtfs_strtab_user_string(int string_id)
 {
     return(rtfs_strtab_string(string_table, string_id));
 }
-

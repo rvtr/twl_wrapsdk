@@ -54,14 +54,12 @@ Summary
 */
 
 
+void pc_calculate_chs(dword total, dword *cylinders, int *heads, int *secptrack);
 
 #define DEFAULT_HOST_DISK_SIZE 10240 /* 5M, FAT16 */
 
 #define WINDOWS_HOSTDISK_PRINTF printf
 #define WINDOWS_HOSTDISK_SPRINTF sprintf
-
-
-void calculate_hcn(long n_blocks, PDEV_GEOMETRY pgeometry);
 
 
 #define MAXSEGMENTS_PER_UNIT 16
@@ -166,7 +164,6 @@ DWORD size, s;
     return((dword)size);
 }
 
-
 BOOLEAN hostdisk_io_64(int unit, dword block, void  *buffer, word _count, BOOLEAN reading) /*__fn__*/
 {
 dword segment_number;
@@ -177,12 +174,6 @@ dword nbytes,nblocks;
 byte *bbuffer;
     bbuffer = (byte *) buffer;
     count = (dword) _count;
-// if (reading)
-//    printf("%d,", block);
-//else
-//    printf("%d;", block);
-//if (block < 2000)
-//    printf("\n");
     while (count)
     {
         segment_number = block/BLOCKS_PER_GIG;
@@ -315,7 +306,7 @@ DDRIVE *pdr;
             gc.dev_geometry_lbas = size_64bit_volume(pdr->logical_unit_number);
             if (!gc.dev_geometry_lbas)
                 return(-1);
-            calculate_hcn(gc.dev_geometry_lbas, &gc);
+            pc_calculate_chs(gc.dev_geometry_lbas, &gc.dev_geometry_cylinders, &gc.dev_geometry_heads, &gc.dev_geometry_secptrack);
             copybuff(pargs, &gc, sizeof(gc));
             return (0);
         }
@@ -402,8 +393,7 @@ DDRIVE *pdr;
 
             /* Update caller's idea of geometry */
             pgc->dev_geometry_lbas = l;
-            calculate_hcn(pgc->dev_geometry_lbas, pgc);
-
+            pc_calculate_chs(pgc->dev_geometry_lbas, &pgc->dev_geometry_cylinders, &pgc->dev_geometry_heads, &pgc->dev_geometry_secptrack);
             return(0);
         }
         break;
@@ -447,6 +437,5 @@ DDRIVE *pdr;
     return(0);
 
 }
-
 
 #endif /* (INCLUDE_HOSTDISK) */

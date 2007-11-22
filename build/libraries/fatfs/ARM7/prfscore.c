@@ -899,6 +899,7 @@ struct fsblockmap *newpbm;
     if (!pfscntxt->blockmap_freelist)
     {
         error = 0;
+
         replacement_block = fs_block_map_scan(pfscntxt,blockno,&error);
         if (error) /* fs_block_map_scan set errno */
             return(0);

@@ -39,7 +39,7 @@ SRCS			= apistat.c prfsapi.c rtlowl.c apickdsk.c apiwrite.c \
                   apifilio.c csjis.c rtdevio.c rtvfat.c apifilmv.c csjistab.c \
                   rtdrobj.c apifrmat.c csstrtab.c rtfat16.c apigetwd.c \
                   rtfat32.c apigfrst.c csunicod.c rtfatxx.c apiinfo.c \
-                  portio.c apiinit.c portkern.c \
+                  portio.c apiinit.c portkern.c apifastmv.c \
                   apimkdir.c apirealt.c \
                   prapipro.c apiregrs.c prblock.c apisetwd.c \
                   rtkernfn.c \

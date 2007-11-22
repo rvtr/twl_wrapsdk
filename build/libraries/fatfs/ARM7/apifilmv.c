@@ -137,7 +137,10 @@ BOOLEAN pc_mv(byte *old_name, byte *new_name)  /*__apifn__*/
     /* Find the parent and make sure it is a directory  */
     new_parent_obj = pc_fndnode(path);
     if (!new_parent_obj || !pc_isadir(new_parent_obj) ||  pc_isavol(new_parent_obj))
+    {
+        p_errno = PEINVALIDPATH;
         goto errex;
+    }
 
 
     /* The cluster value old */

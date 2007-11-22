@@ -13,7 +13,7 @@
 CLUSTERTYPE fatxx_clalloc(DDRIVE *pdr, CLUSTERTYPE clhint);
 CLUSTERTYPE  fatxx_clgrow(DDRIVE *pdr, CLUSTERTYPE  clno);
 
-#if (FAT32) 
+#if (FAT32)
 
 struct fat32_info {
         dword   fs_sig;             /* Signature of FAT32 (0x61417272) */
@@ -31,21 +31,21 @@ BOOLEAN pc_init_drv_fat_info(DDRIVE *pdr, struct pcblk0 *pbl0)
     pdr->numfats = pbl0->numfats; /* Number of fat copies */
     if (pdr->secpfat == 0L)
         pdr->secpfat = pbl0->secpfat2;
-     
+
     if (pbl0->flags & NOFATMIRROR)
-    {                                                   
-        pdr->fatblock = (BLOCKT) pbl0->secreserved + 
+    {
+        pdr->fatblock = (BLOCKT) pbl0->secreserved +
                         ((pbl0->flags & ACTIVEFAT) * pdr->secpfat);
         pdr->numfats = 1;
-    }   
-    else    
+    }
+    else
         pdr->fatblock = (BLOCKT) pbl0->secreserved;
         /* The first block of the root is just past the fat copies   */
      pdr->firstclblock = pdr->fatblock + pdr->secpfat * pdr->numfats;
 /* DM: 7-6-99: BUG FIX: */
      pdr->rootblock = (pbl0->rootbegin-2) * pdr->secpalloc + pdr->firstclblock;
 /* WRONG: pdr->rootblock = pbl0->rootbegin-2 + pdr->firstclblock; */
-   
+
     /*  Calculate the largest index in the file allocation table.
         Total # block in the cluster area)/Blockpercluster == s total
         Number of clusters. Entries 0 & 1 are reserved so the highest
@@ -55,7 +55,7 @@ BOOLEAN pc_init_drv_fat_info(DDRIVE *pdr, struct pcblk0 *pbl0)
 	{
 		/* Make sure the calculated index doesn't overflow the fat sectors */
 		dword max_index;
-		/* For FAT32 Each block of the fat holds 128 entries so the maximum index is 
+		/* For FAT32 Each block of the fat holds 128 entries so the maximum index is
 		   (pdr->secpfat * 128)-1; */
 		max_index = (dword) pdr->secpfat;
 		max_index *= 128;
@@ -63,15 +63,20 @@ BOOLEAN pc_init_drv_fat_info(DDRIVE *pdr, struct pcblk0 *pbl0)
 		if (pdr->maxfindex > max_index)
 			pdr->maxfindex = max_index;
 	}
-   
-    /* Create a hint for where we should write file data. We do this 
+
+    /* Create a hint for where we should write file data. We do this
         because directories are allocated in one cluster chunks while
-        file may allocate larger chunks. We Try to put directory 
+        file may allocate larger chunks. We Try to put directory
         data at the beginning of the disk in a seperate region so we
         do not break the contiguous space further out */
 
     pdr->known_free_clusters = pbl0->free_alloc;
     pdr->free_contig_base = pbl0->next_alloc;
+   /* 2-10-2007 - Added defensive code to check for a valid start hint. If it is out of range set it to
+      the first cluster in the FAT */
+    if (pdr->free_contig_base < 2 || pdr->free_contig_base >= pdr->maxfindex)
+        pdr->free_contig_base = 2;
+
     pdr->free_contig_pointer = pdr->free_contig_base;
     pdr->infosec = pbl0->infosec;
     pdr->fasize = 8;
@@ -79,21 +84,21 @@ BOOLEAN pc_init_drv_fat_info(DDRIVE *pdr, struct pcblk0 *pbl0)
 }
 CLUSTERTYPE pc_get_parent_cluster(DDRIVE *pdrive, DROBJ *pobj) /* __fatfn__ */
 {
-        if ((pdrive->fasize == 8) && 
+        if ((pdrive->fasize == 8) &&
             (pobj->blkinfo.my_frstblock == pdrive->rootblock))
             return(0);
         else
             return(pc_sec2cluster(pdrive,pobj->blkinfo.my_frstblock));
 }
 
-/* Grab a cluster for a new directory entry. 
-   To minimize fragmentation give a hint where to start looking for new 
+/* Grab a cluster for a new directory entry.
+   To minimize fragmentation give a hint where to start looking for new
    clusters based on the position of the parent directory */
 
 CLUSTERTYPE pc_alloc_dir(DDRIVE *pdrive, DROBJ *pmom)  /* __fatfn__ */
 {
 CLUSTERTYPE clbase,cluster;
-        if ( pdrive->fasize != 8 && pc_isroot(pmom))   
+        if ( pdrive->fasize != 8 && pc_isroot(pmom))
             clbase = 0;
         else
             clbase = pc_finode_cluster(pmom->pdrive,pmom->finode);
@@ -105,7 +110,7 @@ CLUSTERTYPE clbase,cluster;
 CLUSTERTYPE pc_grow_dir(DDRIVE *pdrive, DROBJ *pobj) /* __fatfn__ */
 {
 CLUSTERTYPE tmpcl, cluster;
-    if ( pdrive->fasize != 8 && pc_isroot(pobj))   
+    if ( pdrive->fasize != 8 && pc_isroot(pobj))
     {
         rtfs_set_errno(PENOSPC);
         cluster = 0;
@@ -129,7 +134,7 @@ void pc_truncate_dir(DDRIVE *pdrive, DROBJ *pobj, CLUSTERTYPE cluster) /* __fatf
             tmpcl = pc_sec2cluster(pdrive, pdrive->rootblock);
         FATOP(pdrive)->fatop_cl_truncate_dir(pdrive, tmpcl, cluster);
     }
-    else      
+    else
         FATOP(pdrive)->fatop_cl_truncate_dir(pdrive, pc_finode_cluster(pdrive,pobj->finode), cluster);
 }
 
@@ -161,18 +166,18 @@ BOOLEAN pc_mkfs32(int driveno, FMTPARMS *pfmt, BOOLEAN use_raw)                 
     for (i=0;i<pfmt->secreserved;i++)
     {
         /* WRITE   */
-        if (!devio_write_format(driveno, pfmt->numhide + (dword) i, &(b[0]), 1, use_raw) )	//ctr modified
+        if (!devio_write_format(driveno, (dword) i, &(b[0]), 1, use_raw) )
         {
             goto errex;
         }
     }
 #if (INCLUDE_FAT32_BOOT_CODE)
     copybuff(&b[0],&FAT32_BOOT_CODE[512],512);
-    if (!devio_write_format(driveno, pfmt->numhide + (dword) 8, &(b[0]), 1, use_raw) )	//ctr modified
+    if (!devio_write_format(driveno, (dword) 8, &(b[0]), 1, use_raw) )
     {
         goto errex;
     }
-    if (!devio_write_format(driveno, pfmt->numhide + (dword) 2, &(b[0]), 1, use_raw) )	//ctr modified
+    if (!devio_write_format(driveno, (dword) 2, &(b[0]), 1, use_raw) )
     {
         goto errex;
     }
@@ -204,14 +209,14 @@ BOOLEAN pc_mkfs32(int driveno, FMTPARMS *pfmt, BOOLEAN use_raw)                 
     fr_WORD ( &(b[17]), pfmt->numroot);     /*X*/
     /* total sectors in the volume   */
 
-    /* Set totsecs to 0 if size > 64k. This triggers sensing huge 4.0 
+    /* Set totsecs to 0 if size > 64k. This triggers sensing huge 4.0
        partitions. */
 
     ltotsecs = pfmt->numcyl;
     ltotsecs *= pfmt->secptrk;
     ltotsecs *= pfmt->numhead;
-    ltotsecs -= pfmt->numhide;
-    
+
+
     if (ltotsecs > 0xffffL)
     {
         /* HUGE partition  the 3.xx totsecs field is zeroed   */
@@ -253,7 +258,7 @@ BOOLEAN pc_mkfs32(int driveno, FMTPARMS *pfmt, BOOLEAN use_raw)                 
         /* HUGE partition   */
         fr_DWORD ( &(b[32]), ltotsecs); /*X*/
     }
-    else 
+    else
     {
         fr_DWORD ( &(b[32]), 0L);       /*X*/
     }
@@ -261,13 +266,13 @@ BOOLEAN pc_mkfs32(int driveno, FMTPARMS *pfmt, BOOLEAN use_raw)                 
     fr_DWORD( &(b[0x43]), pfmt->binary_volume_label);
     pc_cppad( &(b[0x47]), (byte*)pfmt->text_volume_label, 11);
     pc_cppad( &(b[0x52]), (byte*)"FAT32",8);
-    fr_WORD(&(b[0x01fe]), (word)0xaa55); 
+    fr_WORD(&(b[0x01fe]), (word)0xaa55);
 
     /* Count the size of the area managed by the fat.   */
     ldata_area = ltotsecs;
     ldata_area -= pfmt->numfats * pfmt->secpfat;
     ldata_area -= pfmt->secreserved;
-    
+
     /* Note: numroot must be an even multiple op INOPBLOCK   */
     ldata_area -= pfmt->numroot/INOPBLOCK;
 
@@ -275,7 +280,7 @@ BOOLEAN pc_mkfs32(int driveno, FMTPARMS *pfmt, BOOLEAN use_raw)                 
     lnclusters =  ldata_area/pfmt->secpalloc;
     fausize = 8;
 
-    /* Check the FAT. 
+    /* Check the FAT.
     if ( (nibbles needed) > (nibbles if fatblocks)
             trouble;
     */
@@ -303,8 +308,8 @@ BOOLEAN pc_mkfs32(int driveno, FMTPARMS *pfmt, BOOLEAN use_raw)                 
         rtfs_set_errno(PEINVALIDPARMS);
         goto errex;
     }
-         
-    if (!devio_write_format(driveno, (dword) 0 + pfmt->numhide, &(b[0]), 1, use_raw) )
+
+    if (!devio_write_format(driveno, 0, &(b[0]), 1, use_raw) )
     {
         goto errex;
     }
@@ -316,11 +321,11 @@ BOOLEAN pc_mkfs32(int driveno, FMTPARMS *pfmt, BOOLEAN use_raw)                 
     fr_DWORD( &(b[0x01ec]), (dword)0x00000003);
     fr_WORD( &(b[0x01fe]), (word)0xaa55);
 
-    if (!devio_write_format(driveno, pfmt->numhide + (dword) 7, &(b[0]), 1, use_raw) )	//ctr modified
+    if (!devio_write_format(driveno, (dword) 7, &(b[0]), 1, use_raw) )
     {
         goto errex;
     }
-    if (!devio_write_format(driveno, pfmt->numhide + (dword) 1, &(b[0]), 1, use_raw) )	//ctr modified
+    if (!devio_write_format(driveno, (dword) 1, &(b[0]), 1, use_raw) )
     {
         goto errex;
     }
@@ -334,7 +339,7 @@ BOOLEAN pc_mkfs32(int driveno, FMTPARMS *pfmt, BOOLEAN use_raw)                 
         b[2] = (byte) 0xff;
         j = (word) fausize;
         if (j==8) j=12;
-        while(j > 3) 
+        while(j > 3)
         {
             if (j%4 == 0 && fausize == 8)
                 b[--j] = (byte) 0x0f;
@@ -342,7 +347,7 @@ BOOLEAN pc_mkfs32(int driveno, FMTPARMS *pfmt, BOOLEAN use_raw)                 
                 b[--j] = (byte) 0xff;
         }
 
-        blockno = pfmt->numhide + pfmt->secreserved + (i * pfmt->secpfat);	//ctr modified
+        blockno = pfmt->secreserved + (i * pfmt->secpfat);
         for ( j = 0; j < pfmt->secpfat; j++)
         {
             /* WRITE   */
@@ -354,9 +359,9 @@ BOOLEAN pc_mkfs32(int driveno, FMTPARMS *pfmt, BOOLEAN use_raw)                 
             rtfs_memset(&b[0], 0, 512);
         }
     }
-    
+
     /* Now write the root sectors   */
-    blockno = pfmt->numhide + pfmt->secreserved + pfmt->numfats * pfmt->secpfat;	//ctr modified
+    blockno = pfmt->secreserved + pfmt->numfats * pfmt->secpfat;
     rtfs_memset(&b[0], 0, 512);
     /* Bug fix 11-22-99 use <pfmt->secpalloc instead of 8 */
     for(k=0;k<pfmt->secpalloc;k++) /* Is 8 blocks per cluster? */
@@ -387,10 +392,9 @@ void pc_pfinode_cluster(DDRIVE *pdr, FINODE *finode, CLUSTERTYPE value) /*__fatf
 }
 BOOLEAN pc_gblk0_32(word driveno, struct pcblk0 *pbl0, byte *b)                 /*__fn__*/
 {
-    word i;
     if (pbl0->numroot == 0)
     {
-        pbl0->secpfat2    = to_DWORD(b+0x24); 
+        pbl0->secpfat2    = to_DWORD(b+0x24);
         pbl0->flags       = to_WORD(b+0x28);
         pbl0->fs_version  = to_WORD(b+0x2a);
         pbl0->rootbegin   = to_DWORD(b+0x2c);
@@ -401,8 +405,9 @@ BOOLEAN pc_gblk0_32(word driveno, struct pcblk0 *pbl0, byte *b)                 
         {
             return(FALSE);
         }
-        for (i=0; to_DWORD((void  *)b) != FSINFOSIG && i<512; b++,i++);
-        pbl0->free_alloc = to_DWORD((void  *)&((struct fat32_info *)b)->free_alloc);  
+        /* 3-07-02 - Remove scan to find INFOSIG. Access at offset 484. */
+        b += 484;
+        pbl0->free_alloc = to_DWORD((void  *)&((struct fat32_info *)b)->free_alloc);
         pbl0->next_alloc = to_DWORD((void  *)&((struct fat32_info *)b)->next_alloc);
     }
     return(TRUE);
@@ -422,7 +427,6 @@ BOOLEAN pc_validate_partition_type(byte p_type)
 BOOLEAN fat_flushinfo(DDRIVE *pdr)                                      /*__fn__*/
 {
     byte  *pf;
-    int j;
     BLKBUFF *buf;
 
     if (pdr->fasize == 8)
@@ -436,9 +440,14 @@ BOOLEAN fat_flushinfo(DDRIVE *pdr)                                      /*__fn__
         }
         /* Merge in the new values   */
         pf = buf->data;      /* Now we do not have to use the stack */
-        for (j=0; to_DWORD(pf)!=FSINFOSIG && j<512; pf++,j++);
+        /* 3-07-02 - Remove scan to find INFOSIG. Access at offset 484. */
+        pf += 484;
         fr_DWORD((byte *) (&((struct fat32_info *)pf)->free_alloc), pdr->known_free_clusters );
-        fr_DWORD((byte *) (&((struct fat32_info *)pf)->next_alloc), pdr->free_contig_pointer );
+/*        fr_DWORD((byte *) (&((struct fat32_info *)pf)->next_alloc), pdr->free_contig_pointer ); */
+        /* 2-10-2007 - put  free_contig_base in allocation hint field. This forces cluster
+           allocations to initially scan from the base of the FAT for free clusters rather
+           than from the previous "most likely" location */
+        fr_DWORD((byte *) (&((struct fat32_info *)pf)->next_alloc), pdr->free_contig_base );
         /* Use write_blk, to take advantage of the failsafe cache */
         if (!pc_write_blk(buf))
         {
@@ -462,7 +471,7 @@ byte * fatxx_pfswap(DDRIVE *pdr, CLUSTERTYPE index, BOOLEAN for_write);
 BOOLEAN fatxx_pfpdword(DDRIVE *pdr, dword index, dword *pvalue)          /*__fatfn__*/
 {
     dword  *ppage;
-    dword offset;    
+    dword offset;
     /* Make sure we have access to the page. Mark it for writing   */
     ppage = (dword  *)fatxx_pfswap(pdr,index,TRUE);
 
@@ -482,7 +491,7 @@ BOOLEAN fatxx_pfpdword(DDRIVE *pdr, dword index, dword *pvalue)          /*__fat
 BOOLEAN fatxx_pfgdword(DDRIVE *pdr, dword index, dword *value)          /*__fatfn__*/
 {
     dword  *ppage;
-    dword offset;    
+    dword offset;
     /* Make sure we have access to the page. Do not Mark it for writing   */
     ppage = (dword  *)fatxx_pfswap(pdr,index,FALSE);
 
@@ -499,4 +508,3 @@ BOOLEAN fatxx_pfgdword(DDRIVE *pdr, dword index, dword *value)          /*__fatf
 
 
 #endif
-

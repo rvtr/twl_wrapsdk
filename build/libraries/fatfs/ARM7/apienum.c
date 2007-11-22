@@ -12,13 +12,13 @@
 *
 *  Description - This routine traverses a subdirectory tree. It tests each
 *  directory entry to see if it matches user supplied selection criteria.
-*  if it does match the criteria a user supplied callback function is 
+*  if it does match the criteria a user supplied callback function is
 *  called with the full path name of the directory entry and a pointer
 *  to a DSTAT structure that contains detailed information about the
 *  directory entry. (see the manual page for a detailed description of the
 *  DSTAT structure.
-*  
-*  Selection criteria - Two arguments are used to determine the selection 
+*
+*  Selection criteria - Two arguments are used to determine the selection
 *  criteria. On is a flags word that specifies attributes the other is
 *  a pattern that specifies a wild card pattern.
 *  The flags argument contains a bitwise or of one or more of the following:
@@ -29,10 +29,10 @@
 *    MATCH_DOTDOT   - Select the '..' entry MATCH_DIR must be true also
 *
 *  The selection pattern is a standard wildcard pattern such as '*.*' or
-*  *.txt. 
+*  *.txt.
 *  Note: Patterns don't work the same for VFAT and DOS 8.3. If VFAT is
 *  enable the pattern *.* will return any file name that has a '.' in it
-*  in 8.3 systems it returns all files. 
+*  in 8.3 systems it returns all files.
 *
 *  Note: pc_enumerate() requires a fair amount of buffer space to function.
 *  Instead of allocating the space internally we require that the application
@@ -48,7 +48,7 @@
 *   byte * root_search         - Root of the search IE C:\ or C:\USR etc.
 *   word match_flags           - Selection flags (see above)
 *   byte match_pattern         - Match pattern (see above)
-*   int     maxdepth           - Maximum depth of the traversal. 
+*   int     maxdepth           - Maximum depth of the traversal.
 *                                Note: to scan only one level set this to
 *                                1. For all levels set it to 99
 *   PENUMCALLBACK pcallback    - User callback function. (see below)
@@ -66,44 +66,44 @@
 *  About the callback.
 *
 *  The callback function is a function that returns an integer and is passed
-*  the fully qualified path to the current directory entry and a DSTAT 
+*  the fully qualified path to the current directory entry and a DSTAT
 *  structure. The callback fuction must return 0 if it wishes the scan to
-*  continue or any other integer value to stop the scan and return the 
-*  callback's return value to the application layer. 
+*  continue or any other integer value to stop the scan and return the
+*  callback's return value to the application layer.
 *
 * Examples
 *
 * The next two function implement a multilevel directory scan.
 * int rdir_callback(byte *path, DSTAT *d) {printf("%s\n", path);return(0);}
-* 
+*
 * rdir(byte *path, byte *pattern)
 * {
-*   pc_enumerate(from_path,from_pattern,spath,dpath,path, 
+*   pc_enumerate(from_path,from_pattern,spath,dpath,path,
 *   (MATCH_DIR|MATCH_VOL|MATCH_FILES), pattern, 99, rdir_callback);
 * }
-* 
-* Poor mans deltree package 
+*
+* Poor mans deltree package
 * int delfile_callback(byte *path, DSTAT *d) {
 *     pc_unlink(path);  return(0);
 * }
 * int deldir_callback(byte *path, DSTAT *d) {
 *     pc_rmdir(path); return(0);
 * }
-* 
+*
 *
 * deltree(byte *path)
 * {
 * int i;
 *  ==> First delete all of the files
-*   pc_enumerate(from_path,from_pattern,spath,dpath,path, 
+*   pc_enumerate(from_path,from_pattern,spath,dpath,path,
 *   (MATCH_FILES), "*",99, delfile_callback);
 *   i = 0;
-*   ==> Now delete all of the dirs.. deleting path won't  work until the 
-*   ==> tree is empty 
+*   ==> Now delete all of the dirs.. deleting path won't  work until the
+*   ==> tree is empty
 *   while(!pc_rmdir(path) && i++ < 50)
-*       pc_enumerate(from_path,from_pattern,spath,dpath,path, 
+*       pc_enumerate(from_path,from_pattern,spath,dpath,path,
 *       (MATCH_DIR), "*", 99, deldir_callback);
-* }     
+* }
 *
 */
 
@@ -172,24 +172,24 @@ int pc_enumerate( /* __apifn__ */
     for(i = 0; i < 8; i++) if (filepat[i]==' ') filepat[i]=0;
     for(i = 0; i < 3; i++) if (extpat[i]==' ') extpat[i]=0;
 #endif
-    
+
     ret_val = 0;
     pc_str2upper((byte *)from_path_buffer, (byte *) root_search);
-    
+
     depth = 0;
-    
+
     pc_mpath(from_pattern_buffer, from_path_buffer, (byte *)ALL_FILES);
-    
+
     dir_index[0] = 0;
     dir_block[0] = 0;
-    
+
     do
     {
 step_into_dir:
     dodone = 0;
-    
-    if (pc_gfirst(&statobj, (byte *)from_pattern_buffer)) 
-    { 
+
+    if (pc_gfirst(&statobj, (byte *)from_pattern_buffer))
+    {
         dodone = 1;
         process_it = 0;
         do
@@ -204,30 +204,30 @@ step_into_dir:
             if (process_it)
             {
                 call_back = 1;
-                
-                /* Don't report directories if not requested */ 
+
+                /* Don't report directories if not requested */
                 if ((statobj.fattribute & ADIRENT) &&
                     !(match_flags & MATCH_DIR) )
                     call_back = 0;
-                
-                /* Don't report volumes if not requested */ 
+
+                /* Don't report volumes if not requested */
                 if (call_back && (statobj.fattribute & AVOLUME) &&
                     !(match_flags & MATCH_VOL) )
                     call_back = 0;
-                
-                /* Don't report plain files if not requested */ 
+
+                /* Don't report plain files if not requested */
                 if (call_back && !(statobj.fattribute & (AVOLUME|ADIRENT)) &&
                     !(match_flags & MATCH_FILES) )
                     call_back = 0;
-                
-                /* Don't report DOT if not requested */ 
+
+                /* Don't report DOT if not requested */
                 if (call_back && dirscan_isdot(&statobj) && !(match_flags & MATCH_DOT))
                     call_back = 0;
-                
-                /* Don't report DOTDOT if not requested */ 
+
+                /* Don't report DOTDOT if not requested */
                 if (call_back && dirscan_isdotdot(&statobj) && !(match_flags & MATCH_DOTDOT))
                     call_back = 0;
-                
+
                 if (call_back)
                 {
                     /* Take it if the pattern match work */
@@ -240,7 +240,7 @@ step_into_dir:
 #else
                     /* Non VFAT uses 8.3 matching conventions */
                     pc_ascii_fileparse(filepat, extpat, (byte *)match_pattern);
-                    call_back = 
+                    call_back =
                         pc_patcmp_8((byte *)&statobj.fname[0], (byte *)&filepat[0] , TRUE);
                     call_back = call_back &&
                         pc_patcmp_3((byte *)&statobj.fext[0],  (byte *)&extpat[0]  , TRUE);
@@ -267,7 +267,7 @@ step_into_dir:
             {
                 /* Construct the full path */
                 pc_mpath(spath_buffer, from_path_buffer, (byte *)statobj.filename);
-                
+
                 if (statobj.fattribute & (AVOLUME | ADIRENT))
                 {
                     if (pc_gnext(&statobj))
@@ -277,7 +277,7 @@ step_into_dir:
                         dir_index[depth] = ((DROBJ *) (statobj.pobj))->blkinfo.my_index;
                         dodone = 0;
                         pc_gdone(&statobj);
-                        
+
                     }
                     else
                     {
@@ -285,23 +285,23 @@ step_into_dir:
                         pc_gdone(&statobj);
                         dir_index[depth] = -1;
                     }
-                    
+
                     depth += 1;
                     dir_block[depth] = 0;
                     dir_index[depth] = 0;
-                    
+
                     rtfs_cs_strcpy((byte *)from_path_buffer, (byte *)spath_buffer);
                     pc_mpath(from_pattern_buffer, from_path_buffer, (byte *)ALL_FILES);
-                    
+
                     goto step_into_dir;
                 }
             }
             } while (pc_gnext(&statobj));   /* Get the next file in dir */
-            
+
             if (dodone)
                 pc_gdone(&statobj);
         }
-        
+
         if (!get_parent_path(from_path_buffer, from_path_buffer))
             break;
         pc_mpath(from_pattern_buffer, from_path_buffer, (byte *)ALL_FILES);
@@ -309,7 +309,12 @@ step_into_dir:
         while (depth >= 0 && dir_index[depth] == -1)
         {
             if (!get_parent_path(from_path_buffer, from_path_buffer))
-                break;
+            {
+                if(depth == 0)  /* If we are at the root and have no more files, exit */
+                    goto ex_it;
+                else
+                    break;
+            }
             pc_mpath(from_pattern_buffer, from_path_buffer, (byte *)ALL_FILES);
             depth--;
         }
@@ -322,9 +327,9 @@ int get_parent_path(byte *parent, byte *path)                                   
 {
     byte *last_backslash;
     int  size;
-    
+
     last_backslash = 0;
-    
+
     size = 0;
     while (*path != '\0')
     {
@@ -336,11 +341,11 @@ int get_parent_path(byte *parent, byte *path)                                   
         *(parent++) = *(path++);
     }
     /* This is to prevent catastrophie if caller ignores failure */
-    *parent = '\0'; 
-    
+    *parent = '\0';
+
     if (size < 3)
         return (0);
-    
+
     if (last_backslash)
         *last_backslash = '\0';
     return (1);
@@ -365,7 +370,7 @@ int dirscan_isdotdot(DSTAT *statobj)
 }
 
 #ifdef NOTDEF
-/* The section from here to the bottom of the file contains code that 
+/* The section from here to the bottom of the file contains code that
 shows via example how to use the enumerate function.
 */
 
@@ -401,21 +406,21 @@ int main(int argc,byte **argv)
     byte filter[20];
     byte op;
     rtfs_kernel_init();
-    
+
     argc--;
     argv++;
-    
+
     if (argc < 2)
     {
         goto usage;
     }
     op = *argv[0];
     rtfs_cs_strcpy((byte *)filter,FILTER);
-    
+
     argc--; argv++;
     /* Process user options */
     rtfs_cs_strcpy(src_path,*argv);
-    
+
     argc--; argv++;
     if (argc)
     {
@@ -425,7 +430,7 @@ int main(int argc,byte **argv)
     {
         rtfs_cs_strcpy((byte *)filter,FILTER);
     }
-    
+
     if (op=='R')
     {
         rdir(src_path, filter);
@@ -439,9 +444,9 @@ int main(int argc,byte **argv)
 usage:
     RTFS_PRINTF("(R)dir or (D)eltree PATH [pattern]\n");
     }
-    
-    
-    
+
+
+
     /*  treeprintnew (src_path, filter, be_verbose); */
 }
 
@@ -459,7 +464,7 @@ int rdir_callback(byte *path, DSTAT *d)
 
 rdir(byte *path, byte *pattern)
 {
-    pc_enumerate(from_path,from_pattern,spath,dpath,path, 
+    pc_enumerate(from_path,from_pattern,spath,dpath,path,
         (MATCH_DIR|MATCH_VOL|MATCH_FILES), pattern, 99, rdir_callback);
 }
 
@@ -482,19 +487,18 @@ deltree(byte *path)
 {
     int i;
     /* First delete all of the files */
-    pc_enumerate(from_path,from_pattern,spath,dpath,path, 
+    pc_enumerate(from_path,from_pattern,spath,dpath,path,
         (MATCH_FILES), "*",99, delfile_callback);
     i = 0;
     /* Now delete all of the dirs.. deleting the root of the path won't
     work until the tree is empty */
     while(!pc_rmdir(path) && i++ < 50)
     {
-        pc_enumerate(from_path,from_pattern,spath,dpath,path, 
+        pc_enumerate(from_path,from_pattern,spath,dpath,path,
             (MATCH_DIR), "*", 99, deldir_callback);
-        
+
     }
 }
 
 #endif
 #endif /* (!INCLUDE_CS_UNICODE)  BUGBUG - Not doing ENUM yet */
-

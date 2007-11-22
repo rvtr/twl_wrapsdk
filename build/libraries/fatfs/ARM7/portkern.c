@@ -433,6 +433,7 @@ character (\n or \r).
 void rtfs_port_puts(byte *buffer)
 {
     PRINTDEBUG( "%s\n", buffer);	//ctr modified
+  OS_TPrintf( "%s\n", buffer);	//ctr modified
 /* Use cputs or some other console output function. If you have no console
    output function then leave it blank */
 /*	cputs(buffer); */

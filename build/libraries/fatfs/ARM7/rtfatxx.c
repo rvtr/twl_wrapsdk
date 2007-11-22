@@ -6,7 +6,7 @@
 * This code may not be redistributed in source or linkable object form
 * without the consent of its author.
 */
-/* RTFATXX.C - Low level File allocation table management functions. 
+/* RTFATXX.C - Low level File allocation table management functions.
 
     Routines in this file include:
 
@@ -24,7 +24,7 @@
     fatxx_pfaxx            -   Put a value to the FAT.
     fatxx_pfswap           -   Swap a block of the FAT into the cache.
     fatxx_fword            -   Get or put a value from the swap cache.
-*/      
+*/
 
 
 
@@ -53,7 +53,7 @@ BOOLEAN fatxx_pfgdword(DDRIVE *pdr, dword index, dword *value);
         return the number of contiguous clusters reserved.
         If pstart_cluster points to a valid cluster and dolink is true
         then link the new chain to it.
-    
+
  Returns
     Returns the number of contiguous clusters found. Or zero on an error.
     pstart_cluster contains the address of the start of the chain on
@@ -74,7 +74,7 @@ CLUSTERTYPE fatxx_alloc_chain(DDRIVE *pdr, CLUSTERTYPE *pstart_cluster, CLUSTERT
 
     is_error = 0;
     start_cluster = *pstart_cluster;
-    if (start_cluster && 
+    if (start_cluster &&
         ( (start_cluster < 2) || (start_cluster > pdr->maxfindex) ) )
     {
         rtfs_set_errno(PEINVALIDCLUSTER);   /* fatxx_alloc_chain: bad cluster value internal error */
@@ -82,7 +82,7 @@ CLUSTERTYPE fatxx_alloc_chain(DDRIVE *pdr, CLUSTERTYPE *pstart_cluster, CLUSTERT
     }
 
     /* If the user provided a cluster we find the next cluster beyond that
-        one. Otherwise we look at the disk structure and find the next 
+        one. Otherwise we look at the disk structure and find the next
         free cluster in the free cluster region after the current best guess
         of the region. If that fails we look to the beginning of the region
         and if that fails we look in the non-contiguous region. */
@@ -108,9 +108,9 @@ CLUSTERTYPE fatxx_alloc_chain(DDRIVE *pdr, CLUSTERTYPE *pstart_cluster, CLUSTERT
     if (!clno)
     {
 /* NEW   */
-        if (!start_cluster || start_cluster >= pdr->free_contig_pointer) 
+        if (!start_cluster || start_cluster >= pdr->free_contig_pointer)
         {
-        /* search from free_contig_pointer to start_cluster or maxfindex whichever 
+        /* search from free_contig_pointer to start_cluster or maxfindex whichever
            is less */
             clno = fatxx_find_free_cluster(pdr, pdr->free_contig_pointer, last_cluster, &is_error);
             if (is_error)   /* Error reading fat */
@@ -124,7 +124,7 @@ CLUSTERTYPE fatxx_alloc_chain(DDRIVE *pdr, CLUSTERTYPE *pstart_cluster, CLUSTERT
     {
     /* NEW   */
         if (!start_cluster || start_cluster > pdr->free_contig_base)
-        /* search from free_contig_base to start_cluster or free_contig_pointer whichever 
+        /* search from free_contig_base to start_cluster or free_contig_pointer whichever
            is less */
             clno = fatxx_find_free_cluster(pdr, pdr->free_contig_base, last_cluster, &is_error);
             if (is_error)   /* Error reading fat */
@@ -206,7 +206,7 @@ CLUSTERTYPE value;
     *is_error = 0;
     for (i = startpt; i < endpt; i++)
     {
-        if ( !fatxx_faxx(pdr, i, &value) ) 
+        if ( !fatxx_faxx(pdr, i, &value) )
         {
             *is_error = 1;
             return(0);
@@ -224,9 +224,9 @@ CLUSTERTYPE value;
     PC_CLALLOC - Reserve and return the next free cluster on a drive
 
  Description
-    Given a DDRIVE, mark the next available cluster in the file allocation 
+    Given a DDRIVE, mark the next available cluster in the file allocation
     table as used and return the associated cluster number. Clhint provides
-    a means of selecting clusters that are near eachother. This should 
+    a means of selecting clusters that are near eachother. This should
     reduce fragmentation.
 
     NOTE: This routine is used to allocate single cluster chunks for
@@ -234,9 +234,9 @@ CLUSTERTYPE value;
             two regions. The first region is where single clusters chunks
             used in directory files come from. These are allocated by this
             routine only. Data file clusters are allocated by fatxx_alloc_chain.
-            
+
             THE DISK IS NOT REALLY PARTITIONED. If this routine runs out of
-            space in the first region it grabs a cluster from the second 
+            space in the first region it grabs a cluster from the second
             region.
  Returns
     Return a new cluster number or 0 if the disk is full.
@@ -295,7 +295,7 @@ CLUSTERTYPE fatxx_clalloc(DDRIVE *pdr, CLUSTERTYPE clhint)                     /
     by allocating a new cluster and linking clno to it. If clno is zero
     assume it is the start of a new file and allocate a new cluster.
 
-    Note: The chain is traversed to the end before linking in the new 
+    Note: The chain is traversed to the end before linking in the new
             cluster. The new cluster terminates the chain.
  Returns
     Return a new cluster number or 0 if the disk is full.
@@ -320,7 +320,7 @@ CLUSTERTYPE  fatxx_clgrow(DDRIVE *pdr, CLUSTERTYPE  clno)                      /
     nextcluster = fatxx_clnext(pdr , clno);
     while (nextcluster != 0xffffffff && ++range_check < MAX_CLUSTERS_PER_DIR)
     {
-        if (!nextcluster) /* fatxx_clnext - set errno */ 
+        if (!nextcluster) /* fatxx_clnext - set errno */
             return (0);
         clno = nextcluster;
         nextcluster = fatxx_clnext(pdr , clno);
@@ -356,15 +356,15 @@ CLUSTERTYPE  fatxx_clgrow(DDRIVE *pdr, CLUSTERTYPE  clno)                      /
 
 
 ***************************************************************************/
- 
+
 
 /* Return a cluster to the free list                             */
 /* Note: The caller locks the fat before calling this routine    */
 BOOLEAN fatxx_clrelease_dir(DDRIVE    *pdr, CLUSTERTYPE  clno)                        /*__fatfn__*/
 {
     int current_errno;
-    /* This is a cleanup routine, an earlier event is the interesting errno 
-       to the application, so we restore errno if we fail */ 
+    /* This is a cleanup routine, an earlier event is the interesting errno
+       to the application, so we restore errno if we fail */
     current_errno = get_errno();
     /* No need to check clno value, pfaxx will catch it */
     /* Do not catch any lower level errors here. You will catch them soon enough   */
@@ -513,8 +513,8 @@ CLUSTERTYPE  fatxx_cl_truncate_dir(DDRIVE *pdr, CLUSTERTYPE cluster, CLUSTERTYPE
     { /* Don't set errno in this function, it is a cleanup */
         return (0);
     }
-    /* This is a cleanup routine, an earlier event is the interesting errno 
-       to the application, so we restore errno if we fail */ 
+    /* This is a cleanup routine, an earlier event is the interesting errno
+       to the application, so we restore errno if we fail */
     current_errno = get_errno();
 
     nextcluster = fatxx_clnext(pdr , cluster);
@@ -553,16 +553,16 @@ CLUSTERTYPE  fatxx_cl_truncate_dir(DDRIVE *pdr, CLUSTERTYPE cluster, CLUSTERTYPE
 
 /******************************************************************************
     PC_PFAXXTERM - Write a terminating value to the FAT at clno.
-  
+
  Description
-    Given a DDRIVE,cluster number and value. Write the value 0xffffffff or 
+    Given a DDRIVE,cluster number and value. Write the value 0xffffffff or
     0xffff in the fat at clusterno. Handle 32, 16 and 12 bit fats correctly.
 
  Returns
     FALSE if an io error occurred during fat swapping, else TRUE
 
 *****************************************************************************/
- 
+
 /* Given a clno & fatval Put the value in the table at the index (clno)    */
 /* Note: The caller locks the fat before calling this routine              */
 BOOLEAN fatxx_pfaxxterm(DDRIVE   *pdr, CLUSTERTYPE  clno)             /*__fatfn__*/
@@ -573,11 +573,11 @@ BOOLEAN fatxx_pfaxxterm(DDRIVE   *pdr, CLUSTERTYPE  clno)             /*__fatfn_
             else
 #endif
                 return(fatxx_pfaxx(pdr, clno, 0xffff));
-            
+
 }
 /******************************************************************************
     PC_PFAXX - Write a value to the FAT at clno.
-  
+
  Description
     Given a DDRIVE,cluster number and value. Write the value in the fat
     at clusterno. Handle 16 and 12 bit fats correctly.
@@ -586,7 +586,7 @@ BOOLEAN fatxx_pfaxxterm(DDRIVE   *pdr, CLUSTERTYPE  clno)             /*__fatfn_
     No if an io error occurred during fat swapping, else TRUE.
 
 *****************************************************************************/
- 
+
 /* Given a clno & fatval Put the value in the table at the index (clno)    */
 /* Note: The caller locks the fat before calling this routine              */
 BOOLEAN fatxx_pfaxx(DDRIVE *pdr, CLUSTERTYPE  clno, CLUSTERTYPE  value)            /*__fatfn__*/
@@ -631,9 +631,9 @@ BOOLEAN fatxx_pfaxx(DDRIVE *pdr, CLUSTERTYPE  clno, CLUSTERTYPE  value)         
 /*
         |   W0      |   W1      |   W2  |
         A1 A0 B0 A2 B2 B1 C1 C0 D0 C2 D2 D1
-                xx  xx xx 
+                xx  xx xx
 */
-    
+
         else if (offset == 1) /* (B1 B2 << 4) | B0 */
         {
             /* Hi nibble of b[1] is lo nibble of value   */
@@ -653,9 +653,9 @@ BOOLEAN fatxx_pfaxx(DDRIVE *pdr, CLUSTERTYPE  clno, CLUSTERTYPE  value)         
 /*
         |   W0      |   W1  |   W2  |
         A1 A0 B0 A2 B2 B1 C1 C0 D0 C2 D2 D1
-                            xx xx   xx 
+                            xx xx   xx
 */
-    
+
         else if (offset == 2) /*(C2 << 8) | C1 C2 */
         {
             /* b[1] = low byte of value   */
@@ -677,8 +677,8 @@ BOOLEAN fatxx_pfaxx(DDRIVE *pdr, CLUSTERTYPE  clno, CLUSTERTYPE  value)         
         A1 A0 B0 A2 B2 B1 C1 C0 D0 C2 D2 D1
                                 xx  xx xx
 */
-    
-        else if (offset == 3) /* (D2 D1) << 4 | D0 */   
+
+        else if (offset == 3) /* (D2 D1) << 4 | D0 */
         {
             /* Hi nibble b[0] == low nible of value    */
             u.wrdbuf[0] &= 0x0f;
@@ -716,10 +716,10 @@ BOOLEAN fatxx_pfaxx(DDRIVE *pdr, CLUSTERTYPE  clno, CLUSTERTYPE  value)         
 
 /***************************************************************************
     PC_CLNEXT - Return the next cluster in a cluster chain
-                    
+
 
  Description
-    Given a DDRIVE and a cluster number, return the next cluster in the 
+    Given a DDRIVE and a cluster number, return the next cluster in the
     chain containing clno. Return 0 on end of chain.
 
  Returns
@@ -749,20 +749,27 @@ CLUSTERTYPE fatxx_clnext(DDRIVE *pdr, CLUSTERTYPE  clno)                        
     {
         _Oxffffffful = 0x0ffffffful;
         nxt &= _Oxffffffful;
-        if ( nxt == 0x0ffffffful )
-            nxt = 0xffffffff;                            /* end of chain */
+        /* Bug fix 2-01-2007 - fatxx_clnext() changed to detect terminate
+           on cluster value > xxfff7. Was expecting xxffff */
+        if ( (nxt > 0x0ffffff7ul) && (nxt <= 0x0ffffffful) )
+            nxt = 0xffffffff;
     }
     else
 #endif
     {
 #if (FAT32)
-        if ( (nxt >= (CLUSTERTYPE)0xfff7) && (nxt <= (CLUSTERTYPE)0xffff) )
+        /* Bug fix 2-01-2007 - fatxx_clnext() changed to detect terminate
+           on cluster value > xxfff7. Was expecting xxffff */
+        if ( (nxt > (CLUSTERTYPE)0xfff7) && (nxt <= (CLUSTERTYPE)0xffff) )
 #else
     /* If fat32 is not defined the nxt is always <= 0xffff. picky compilers
        notice this and emit a warning */
-        if (nxt >= (CLUSTERTYPE)0xfff7)
+        /* Bug fix 2-01-2007 - fatxx_clnext() changed to detect terminate
+           on cluster value > xxfff7. Was expecting xxffff */
+        if (nxt > (CLUSTERTYPE)0xfff7)
 #endif
             nxt = 0xffffffff;                            /* end of chain */
+
     }
     if (nxt != 0xffffffff && (nxt < 2 || nxt > pdr->maxfindex) )
     {
@@ -780,10 +787,10 @@ CLUSTERTYPE fatxx_clnext(DDRIVE *pdr, CLUSTERTYPE  clno)                        
     (the next cluster in a chain.) Handle 16 and 12 bit fats correctly.
 
  Returns
-    Returns the the value at clno. In pvalue. 
+    Returns the the value at clno. In pvalue.
     If any error occured while FAT swapping return FALSE else return TRUE.
 ***************************************************************************/
- 
+
 /* Retrieve a value from the fat   */
 BOOLEAN fatxx_faxx(DDRIVE *pdr, CLUSTERTYPE clno, CLUSTERTYPE *pvalue)             /*__fatfn__*/
 {
@@ -827,9 +834,9 @@ BOOLEAN fatxx_faxx(DDRIVE *pdr, CLUSTERTYPE clno, CLUSTERTYPE *pvalue)          
 /*
         |   W0      |   W1      |   W2  |
         A1 A0 B0 A2 B2 B1 C1 C0 D0 C2 D2 D1
-                xx  xx xx 
+                xx  xx xx
 */
-    
+
         else if (offset == 1) /* (B1 B2 << 4) | B0 */
         {
             /* BYTE 2 == High byte Byte 1 high nibb == low nib   */
@@ -843,7 +850,7 @@ BOOLEAN fatxx_faxx(DDRIVE *pdr, CLUSTERTYPE clno, CLUSTERTYPE *pvalue)          
 /*
         |   W0      |   W1      |   W2  |
         A1 A0 B0 A2 B2 B1 C1 C0 D0 C2 D2 D1
-                            xx xx   xx 
+                            xx xx   xx
 */
         else if (offset == 2) /*(C2 << 8) | C1 C2 */
         {
@@ -859,8 +866,8 @@ BOOLEAN fatxx_faxx(DDRIVE *pdr, CLUSTERTYPE clno, CLUSTERTYPE *pvalue)          
         A1 A0 B0 A2 B2 B1 C1 C0 D0 C2 D2 D1
                                 xx  xx xx
 */
-    
-        else if (offset == 3) /* (D2 D1) << 4 | D0 */   
+
+        else if (offset == 3) /* (D2 D1) << 4 | D0 */
         {
             result = u.wrdbuf[1];
             result <<= 4;
@@ -877,7 +884,7 @@ BOOLEAN fatxx_faxx(DDRIVE *pdr, CLUSTERTYPE clno, CLUSTERTYPE *pvalue)          
                 return (FALSE);
 #else
             if ( fatxx_pfgdword( pdr, clno, (dword *) &u.wrdbuf[0] ))
-                result = (CLUSTERTYPE) to_DWORD(&u.wrdbuf[0]); 
+                result = (CLUSTERTYPE) to_DWORD(&u.wrdbuf[0]);
             else
                 return (FALSE);
 #endif
@@ -904,7 +911,7 @@ BOOLEAN fatxx_faxx(DDRIVE *pdr, CLUSTERTYPE clno, CLUSTERTYPE *pvalue)          
         Starting at start_cluster return the number of contiguous clusters
         allocated in the chain containing start_cluster or n_clusters,
         whichever is less.
-    
+
  Returns
     Returns the number of contiguous clusters found. Or zero on an error.
     This function should always return at least one. (start_cluster). Unless
@@ -915,7 +922,7 @@ BOOLEAN fatxx_faxx(DDRIVE *pdr, CLUSTERTYPE clno, CLUSTERTYPE *pvalue)          
         the first cluster in the next segment of the chain.
         . If we are still in a section it contains
         the next cluster in the current segment of the chain.
-        . If we are at the end of the chain it contains the last cluster 
+        . If we are at the end of the chain it contains the last cluster
         in the chain.
 
 ****************************************************************************/
@@ -930,8 +937,8 @@ CLUSTERTYPE fatxx_get_chain(DDRIVE *pdr, CLUSTERTYPE start_cluster, CLUSTERTYPE 
     value = 0;
     clno = start_cluster;
     n_contig = 1;
-    *pnext_cluster = 0;     
- 
+    *pnext_cluster = 0;
+
     /* Get each FAT entry. If its value points to the next contiguous entry
         continue. Otherwise we have reached the end of the contiguous chain.
         At which point we return the number of contig s found and by reference
@@ -939,11 +946,11 @@ CLUSTERTYPE fatxx_get_chain(DDRIVE *pdr, CLUSTERTYPE start_cluster, CLUSTERTYPE 
     */
     *end_of_chain = 0;
     for (;;)
-    {       
+    {
         next_cluster = fatxx_clnext(pdr, clno);
         if (!next_cluster) /* clnext detected an error */
             return(0);
-        /* check for end markers set next cluster to the last 
+        /* check for end markers set next cluster to the last
            cluster in the chain if we are at the end */
         if (next_cluster == 0xffffffff) /* clnext detected end */
         {
@@ -969,16 +976,16 @@ CLUSTERTYPE fatxx_get_chain(DDRIVE *pdr, CLUSTERTYPE start_cluster, CLUSTERTYPE 
 }
 
 /***************************************************************************
-    PC_FATSW - Map in a page of the FAT 
+    PC_FATSW - Map in a page of the FAT
 ****************************************************************************/
-    
+
 /* Swap in the page containing index                           */
 /* Note: The caller locks the fat before calling this routine  */
 byte * fatxx_pfswap(DDRIVE *pdr, CLUSTERTYPE index, BOOLEAN for_write)         /*__fatfn__*/
 {
     dword  block_offset_in_fat;
     dword flags;
-    
+
     if (pdr->fasize == 8)
         block_offset_in_fat = (dword)(index >> 7);
     else
@@ -997,7 +1004,7 @@ byte * fatxx_pfswap(DDRIVE *pdr, CLUSTERTYPE index, BOOLEAN for_write)         /
 BOOLEAN fatxx_fword(DDRIVE *pdr, CLUSTERTYPE index, word *pvalue, BOOLEAN putting)         /*__fatfn__*/
 {
     word *ppage;
-    word offset;    
+    word offset;
     /* Make sure we have access to the page. Mark it for writing (if a put)   */
     ppage = (word *)fatxx_pfswap(pdr,index,putting);
 
@@ -1020,8 +1027,6 @@ FAT_DRIVER fatxx_d;
 static BOOLEAN init_fat(DDRIVE *pdr)
 {
     FAT_DRIVER *pfd;
-/*    int driveno;
-    driveno = pdr->driveno;*/
     pfd = &fatxx_d;
     pfd->fatop_alloc_chain = fatxx_alloc_chain;
     pfd->fatop_clnext = fatxx_clnext;
@@ -1066,6 +1071,5 @@ BOOLEAN init_fat12(DDRIVE *pdr)
 {
     return(init_fat(pdr) && faxx_check_free_space(pdr));
 }
-
 
 

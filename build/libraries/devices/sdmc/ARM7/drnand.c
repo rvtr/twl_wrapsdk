@@ -37,6 +37,8 @@
 /*---------------------------------------------------------------------------*
   extern変数
  *---------------------------------------------------------------------------*/
+extern void (*func_SDCARD_In)(void);    /* カード挿入イベント用コールバック保存用 */
+extern void (*func_SDCARD_Out)(void);   /* カード排出イベント用コールバック保存用 */
 extern int  rtfs_first_stat_flag[26];
 
 /*SDメモリカードのスペック構造体*/
@@ -306,7 +308,7 @@ int nandRtfsCtrl( int driveno, int opcode, void* pargs)
       case DEVCTL_WARMSTART:    //attachのときしか呼ばれない
         PRINTDEBUG( "DEVCTL_WARMSTART\n");
         /*-- GoIdleセット --*/
-        sdmcGoIdle( NULL, NULL);    //カード初期化シーケンス TODO:1ポートだけにする
+        sdmcGoIdle( func_SDCARD_In, func_SDCARD_Out);    //カード初期化シーケンス TODO:1ポートだけにする
         /*------------------*/
         pdr->drive_flags |= (DRIVE_FLAGS_VALID | DRIVE_FLAGS_REMOVABLE | DRIVE_FLAGS_PARTITIONED);
         pdr->drive_flags |= DRIVE_FLAGS_INSERTED;

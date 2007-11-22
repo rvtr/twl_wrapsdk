@@ -16,21 +16,22 @@ static void pc_release_blk(BLKBUFFCNTXT *pbuffcntxt, BLKBUFF *pinblk);
 static BLKBUFF *pc_allocate_blk(DDRIVE *pdrive, BLKBUFFCNTXT *pbuffcntxt);
 
 
+
 /* Debugging tools to be removed in he final product */
 #define DEBUG_BLOCK_CODE    0
 #define DEBUG_FAT_CODE      0
-void debug_check_blocks(BLKBUFFCNTXT *pbuffcntxt, int numblocks,  char *where);
+void debug_check_blocks(BLKBUFFCNTXT *pbuffcntxt, int numblocks,  char *where, dword line);
 void debug_check_fat(FATBUFFCNTXT *pfatbuffcntxt, char *where);
-void debug_break(char *where, char *message);
+void debug_break(char *where, dword line, char *message);
 #if (DEBUG_BLOCK_CODE)
-#define DEBUG_CHECK_BLOCKS(X,Y,Z) debug_check_blocks(X,Y,X);
+#define DEBUG_CHECK_BLOCKS(X,Y,Z) debug_check_blocks(X,Y,Z,0);
 #else
-#define DEBUG_CHECK_BLOCKS(X,Y,Z) 
+#define DEBUG_CHECK_BLOCKS(X,Y,Z)
 #endif
 #if (DEBUG_FAT_CODE)
 #define DEBUG_CHECK_FAT(X,Y) debug_check_fat(X,Y);
 #else
-#define DEBUG_CHECK_FAT(X,Y) 
+#define DEBUG_CHECK_FAT(X,Y)
 #endif
 
 #if (!INCLUDE_FAILSAFE_CODE)
@@ -45,7 +46,7 @@ BOOLEAN block_devio_write(BLKBUFF *pblk)
 /*    dword blockno;
     blockno = pblk->blockno;*/
     return(devio_write(pblk->pdrive->driveno,pblk->blockno, pblk->data, (int) 1, FALSE));
-} 
+}
 
 BOOLEAN fat_devio_write(DDRIVE *pdrive, FATBUFF *pblk, int fatnumber)
 {
@@ -73,9 +74,9 @@ BOOLEAN fat_devio_read(DDRIVE *pdrive, dword blockno, byte *fat_data);
 
 Description
     Give back a buffer to the system buffer pool so that it may
-    be re-used. If was_err is TRUE this means that the data in the 
+    be re-used. If was_err is TRUE this means that the data in the
     buffer is invalid so discard the buffer from the buffer pool.
-    
+
  Returns
     Nothing
 
@@ -88,9 +89,9 @@ void pc_release_buf(BLKBUFF *pblk)
     DEBUG_CHECK_BLOCKS(pblk->pdrive->pbuffcntxt, pblk->pdrive->pbuffcntxt->num_blocks, "Release")
 #if (DEBUG_BLOCK_CODE)
     if (!pblk->pdrive->mount_valid)
-        debug_break("release buf", "Mount not valid");
+        debug_break("release buf", __LINE__, "Mount not valid");
     if (pblk->block_state != DIRBLOCK_COMMITTED && pblk->block_state != DIRBLOCK_UNCOMMITTED)
-        debug_break("release buf", "releasing buffer not in use list");
+        debug_break("release buf", __LINE__,"releasing buffer not in use list");
 #endif
 
     if (pblk->block_state != DIRBLOCK_COMMITTED && pblk->block_state != DIRBLOCK_UNCOMMITTED)
@@ -99,8 +100,7 @@ void pc_release_buf(BLKBUFF *pblk)
     if (pblk->use_count)
     {
         pblk->use_count -= 1;
-        if (!pblk->use_count)
-            pblk->pdrive->pbuffcntxt->num_free += 1;
+      /* 03-07-07 Changed. No longer increment num_free if usecount goes to zero */
     }
     OS_RELEASE_FSCRITICAL()
 }
@@ -109,10 +109,10 @@ void pc_release_buf(BLKBUFF *pblk)
     pc_discard_buf - Put a buffer back on the free list.
 
 Description
-    Check if a buffer is in the buffer pool, unlink it from the 
+    Check if a buffer is in the buffer pool, unlink it from the
     buffer pool if it is.
     Put the buffer on the free list.
-    
+
  Returns
     Nothing
 
@@ -137,7 +137,7 @@ BLKBUFFCNTXT *pbuffcntxt;
 #endif
     if (pblk->block_state == DIRBLOCK_FREE)
         return;
-        
+
     OS_CLAIM_FSCRITICAL()
     pbuffcntxt = pblk->pdrive->pbuffcntxt;
     DEBUG_CHECK_BLOCKS(pbuffcntxt, pbuffcntxt->num_blocks, "Discard 1")
@@ -147,9 +147,9 @@ BLKBUFFCNTXT *pbuffcntxt;
         pc_release_blk(pbuffcntxt, pblk);
 #if (DEBUG_BLOCK_CODE)
         if (pblk->pnext && pblk->pnext->pprev != pblk)
-            debug_break("discard buf", "Buffer and populated pool inconsistent");
+            debug_break("discard buf", __LINE__,"Buffer and populated pool inconsistent");
         if (pblk->pprev && pblk->pprev->pnext != pblk)
-            debug_break("discard buf", "Buffer and populated pool inconsistent");
+            debug_break("discard buf", __LINE__,"Buffer and populated pool inconsistent");
 #endif
         /* Unlink it from the populated pool double check link integrity */
         if (pblk->pnext && pblk->pnext->pprev == pblk)
@@ -175,13 +175,15 @@ Description
     or get it from the buffer pool and return the buffer.
 
     Note: After reading, you own the buffer. You must release it by
-    calling pc_release_buff() or pc_discard_buff() before it may be 
+    calling pc_release_buff() or pc_discard_buff() before it may be
     used for other blocks.
 
  Returns
     Returns a valid pointer or NULL if block not found and not readable.
 
 *****************************************************************************/
+
+
 
 BLKBUFF *pc_read_blk(DDRIVE *pdrive, dword blockno)                /*__fn__*/
 {
@@ -228,7 +230,7 @@ BLKBUFFCNTXT *pbuffcntxt;
                 OS_RELEASE_FSCRITICAL()
             }
             else
-            {  
+            {
                 /* set errno to IO error unless devio set PEDEVICE */
                 if (!get_errno())
                     rtfs_set_errno(PEIOERRORREADBLOCK); /* pc_read_blk device read error */
@@ -256,6 +258,8 @@ BLKBUFF *pc_scratch_blk(void)                                   /*__fn__*/
 BLKBUFF *pblk;
     OS_CLAIM_FSCRITICAL()
     pblk = pc_allocate_blk(0, &prtfs_cfg->buffcntxt);
+    if (pblk)
+        prtfs_cfg->buffcntxt.scratch_alloc_count += 1;
     OS_RELEASE_FSCRITICAL()
     return (pblk);
 }
@@ -270,6 +274,7 @@ void pc_free_scratch_blk(BLKBUFF *pblk)
     pbuffcntxt->pfree_blocks = pblk;
     pblk->block_state = DIRBLOCK_FREE;
     pbuffcntxt->num_free += 1;
+    pbuffcntxt->scratch_alloc_count -= 1;
     OS_RELEASE_FSCRITICAL()
 }
 
@@ -280,7 +285,7 @@ Description
     Allocate and zero a BLKBUFF and add it to the to the buffer pool.
 
     Note: After initializing you own the buffer. You must release it by
-    calling pc_release_buff() or pc_discard_buf() before it may be used 
+    calling pc_release_buff() or pc_discard_buf() before it may be used
     for other blocks.
 
  Returns
@@ -357,7 +362,7 @@ BOOLEAN deleting;
         return;
     pbuffcntxt = pdrive->pbuffcntxt;
     DEBUG_CHECK_BLOCKS(pbuffcntxt, pbuffcntxt->num_blocks, "Free all 1")
-    do 
+    do
     {
         deleting = FALSE;
         OS_CLAIM_FSCRITICAL()
@@ -423,7 +428,7 @@ BLKBUFF *pblk;
     if (pblk == pinblk)
         *(pbuffcntxt->blk_hash_tbl+hash_index) = pinblk->pnext2;
     else
-    {   
+    {
         while (pblk)
         {
             if (pblk->pnext2==pinblk)
@@ -473,67 +478,87 @@ BLKBUFF *pblk;
 /* Allocate a block or re-use an un-committed one */
 static BLKBUFF *pc_allocate_blk(DDRIVE *pdrive, BLKBUFFCNTXT *pbuffcntxt)
 {
-BLKBUFF *pblk, *pblkscan;
-int num_free;
-    /* Note: pdrive may be NULL, do not dereference the pointer */ 
-    pblk = 0;
+BLKBUFF *pfreeblk,*puncommitedblk, *pfoundblk, *pblkscan;
+int populated_but_uncommited;
+
+    /* Note: pdrive may be NULL, do not dereference the pointer */
+    pfreeblk = pfoundblk = puncommitedblk = 0;
+    populated_but_uncommited = 0;
+
+    /* Use blocks that are on the freelist first */
     if (pbuffcntxt->pfree_blocks)
     {
-        pblk = pbuffcntxt->pfree_blocks;
-        pbuffcntxt->pfree_blocks = pblk->pnext;
+        pfreeblk = pbuffcntxt->pfree_blocks;
+        pbuffcntxt->pfree_blocks = pfreeblk->pnext;
+        pbuffcntxt->num_free -= 1;
     }
-    else if (pbuffcntxt->ppopulated_blocks)
+
+    /* Scan the populated list. Count the number of uncommited blocks to set low water marks
+       and, if we haven't already allocated a block from the free list, select a replacement block. */
+    if (pbuffcntxt->ppopulated_blocks)
     {
-        /* Find the oldest UNCOMMITED block (deepest into the list) */
+        int loop_guard = 0;
+        /* Count UNCOMMITED blocks and find the oldest UNCOMMITED block in the list */
         pblkscan = pbuffcntxt->ppopulated_blocks;
-        num_free = 0;
         while (pblkscan)
         {
-            if (pblkscan->block_state == DIRBLOCK_UNCOMMITTED && !pblkscan->use_count)
-            {
-                pblk = pblkscan;
-                num_free += 1;
-            }
-            pblkscan = pblkscan->pnext;
+           if (pblkscan->block_state == DIRBLOCK_UNCOMMITTED && !pblkscan->use_count)
+           {
+                puncommitedblk = pblkscan;
+                populated_but_uncommited += 1;
+           }
+           pblkscan = pblkscan->pnext;
+           /* Guard against endless loop */
+           if (loop_guard++ > pbuffcntxt->num_blocks)
+           {
+                rtfs_set_errno(PEINTERNAL); /* pc_allocate_blk: Internal error*/
+                return(0);
+           }
         }
-        pbuffcntxt->num_free = num_free;
-        if (pblk)
+        /* If we don't already have a free block we'll reuse the oldest uncommitted block so release it */
+        if (!pfreeblk && puncommitedblk)
         {
-            pc_release_blk(pbuffcntxt, pblk); /* Remove it from buffer pool */
+            pc_release_blk(pbuffcntxt, puncommitedblk); /* Remove it from buffer pool */
             /* Unlink it from the populated pool */
-            if (pblk->pnext)
-                pblk->pnext->pprev = pblk->pprev;
-            if (pblk->pprev)
-                pblk->pprev->pnext = pblk->pnext;
-            if (pbuffcntxt->ppopulated_blocks == pblk)
-                pbuffcntxt->ppopulated_blocks = pblk->pnext;
+            if (puncommitedblk->pnext)
+                puncommitedblk->pnext->pprev = puncommitedblk->pprev;
+            if (puncommitedblk->pprev)
+                puncommitedblk->pprev->pnext = puncommitedblk->pnext;
+            if (pbuffcntxt->ppopulated_blocks == puncommitedblk)
+                pbuffcntxt->ppopulated_blocks = puncommitedblk->pnext;
         }
     }
-    if (pblk)
+    if (pfreeblk)
+        pfoundblk = pfreeblk;
+    else
+        pfoundblk = puncommitedblk;
+
+    if (pfoundblk)
     {   /* Put in a known state */
-        pbuffcntxt->num_free -= 1;
-        if (pbuffcntxt->num_free < pbuffcntxt->low_water)
-            pbuffcntxt->low_water = pbuffcntxt->num_free;
-        pblk->use_count = 0;
-        pblk->block_state = DIRBLOCK_ALLOCATED;
-        pblk->pdrive = pdrive;
+        /* 03-07-2007 using a different method to calculate low water mark. Previous method
+           undercounted the worst case buffer allocation requirements */
+        if (pbuffcntxt->num_free + populated_but_uncommited < pbuffcntxt->low_water)
+            pbuffcntxt->low_water = pbuffcntxt->num_free + populated_but_uncommited;
+        pfoundblk->use_count = 0;
+        pfoundblk->block_state = DIRBLOCK_ALLOCATED;
+        pfoundblk->pdrive = pdrive;
     }
     else
     {
         pbuffcntxt->num_alloc_failures += 1;
         rtfs_set_errno(PERESOURCEBLOCK); /* pc_allocate_blk out of resources */
     }
-    return(pblk);
+    return(pfoundblk);
 }
 /* Tomo */
-/* Traverse a cluster chain and make sure that all blocks in the cluster 
- chain are flushed from the buffer pool. This is required when deleting 
+/* Traverse a cluster chain and make sure that all blocks in the cluster
+ chain are flushed from the buffer pool. This is required when deleting
  a directory since it is possible, although unlikely, that blocks used in
  the directory may be used in a file. This may cause the buffered
  block to be different from on-disk block.
  Called by pc_rmnode
 */
-void pc_flush_chain_blk(DDRIVE *pdrive, CLUSTERTYPE cluster) 
+void pc_flush_chain_blk(DDRIVE *pdrive, CLUSTERTYPE cluster)
 {
 int i;
 dword blockno;
@@ -565,7 +590,7 @@ BLKBUFF *pblk;
         if (cluster == 0) /* clnext detected error */
             break;
      }
-} 
+}
 
 /* Initialize and populate a block buffer context structure */
 BOOLEAN pc_initialize_block_pool(BLKBUFFCNTXT *pbuffcntxt, int nblkbuffs,
@@ -582,7 +607,7 @@ BLKBUFF *pblk;
         rtfs_memset(pblk,(byte) 0, sizeof(BLKBUFF));
         pblk->pnext = pblk+1;
     }
-    rtfs_memset(pblk,(byte) 0, sizeof(BLKBUFF)); 
+    rtfs_memset(pblk,(byte) 0, sizeof(BLKBUFF));
     /*  pblk->pnext = 0; accomplished by memset */
     pbuffcntxt->pfree_blocks = pmem_block_pool;
     pbuffcntxt->hash_size = blk_hashtble_size;
@@ -602,7 +627,7 @@ static void pc_commit_fat_blk(FATBUFFCNTXT *pfatbuffcntxt, FATBUFF *pblk);
 void pc_commit_fat_table(FATBUFFCNTXT *pfatbuffcntxt);
 void pc_sort_committed_blocks(FATBUFFCNTXT *pfatbuffcntxt);
 
- 
+
 BOOLEAN pc_flush_fat_blocks(DDRIVE *pdrive)
 {
 FATBUFFCNTXT *pfatbuffcntxt;
@@ -697,12 +722,12 @@ dword b;
 #if (INCLUDE_FAILSAFE_CODE)
         /* If in the primary cache and the new flag is write but the old
            flag was not write then we will need to journal the block */
-        if ((usage_flags & 0x80000000ul) && (!(b & 0x80000000ul))) 
+        if ((usage_flags & 0x80000000ul) && (!(b & 0x80000000ul)))
             if (pro_failsafe_journal_full(pdrive))
                 return(0); /* Failsafe sets errno */
 #endif
         if (usage_flags) /* bit 31 0x80000000ul is write bit 29 0x20000000ul is lock */
-            *(pfatbuffcntxt->mapped_blocks+hash_index) |= usage_flags; 
+            *(pfatbuffcntxt->mapped_blocks+hash_index) |= usage_flags;
         return (*(pfatbuffcntxt->mapped_data+hash_index));
     }
     else
@@ -729,7 +754,7 @@ dword b;
 #if (INCLUDE_FAILSAFE_CODE)
             else
             {
-                /* If in the primary cache but uncommitted, if it will 
+                /* If in the primary cache but uncommitted, if it will
                    switch to committed now then we will have to journal the block */
                 if (usage_flags & 0x80000000ul)
                 {
@@ -815,7 +840,7 @@ swap_write_error:
                 if (pblk == *(pfatbuffcntxt->fat_blk_hash_tbl+temp_hash_index))
                     *(pfatbuffcntxt->fat_blk_hash_tbl+temp_hash_index) = pblk->pnext2;
                 else
-                {   
+                {
                     pblkscan = *(pfatbuffcntxt->fat_blk_hash_tbl+temp_hash_index);
                     while (pblkscan)
                     {
@@ -833,14 +858,14 @@ swap_write_error:
                 DEBUG_CHECK_FAT(pfatbuffcntxt, "Map 5")
             }
         }
-        else 
+        else
         { /* the free list already had a block available for us */
             pfatbuffcntxt->stat_secondary_cache_loads += 1;
         }
         pblk = pfatbuffcntxt->pfree_blocks;
         if (!pblk)
         {
-            /* No blocks available. We tried to flush the secondary and 
+            /* No blocks available. We tried to flush the secondary and
                that didn't come up with any so we're completely out */
             rtfs_set_errno(PERESOURCEFATBLOCK);
             return(0);
@@ -867,7 +892,7 @@ swap_write_error:
             *(pfatbuffcntxt->mapped_data+hash_index) = pblk->fat_data;
             DEBUG_CHECK_FAT(pfatbuffcntxt, "Map 7")
 #if (INCLUDE_FAILSAFE_CODE)
-            /* We are coming from the FREE state, but write is 
+            /* We are coming from the FREE state, but write is
                 set so journal the buffer */
             if (usage_flags & 0x80000000ul)
             {
@@ -888,7 +913,7 @@ swap_write_error:
 
 BOOLEAN pc_initialize_fat_block_pool(FATBUFFCNTXT *pfatbuffcntxt,
             int fat_buffer_size, FATBUFF *pfat_buffers,
-            int fat_hashtbl_size,   FATBUFF **pfat_hash_table, 
+            int fat_hashtbl_size,   FATBUFF **pfat_hash_table,
             byte **pfat_primary_cache, dword *pfat_primary_index)
 {
 dword t;
@@ -959,7 +984,7 @@ static void pc_commit_fat_blk(FATBUFFCNTXT *pfatbuffcntxt, FATBUFF *pblk)
 {
 #if (DEBUG_FAT_CODE)
     if (pblk->fat_block_state != FATBLOCK_UNCOMMITTED)
-        debug_break("commit fat block", "Not un-committed");
+        debug_break("commit fat block", __LINE__,"Not un-committed");
 #endif
     /* Remove from the uncommitted list */
     if (pblk->pnext)
@@ -991,7 +1016,7 @@ FATBUFF *pblk;
             /* Move from uncommitted list to committed list */
             pblk = pc_find_fat_blk(pfatbuffcntxt, (b & 0x0ffffffful));
             if (pblk) /* This should not fail */
-                pc_commit_fat_blk(pfatbuffcntxt, pblk); 
+                pc_commit_fat_blk(pfatbuffcntxt, pblk);
             b |= 0x40000000ul;  /* set commited flag in primary */
             *(pfatbuffcntxt->mapped_blocks+i) = b;
         }
@@ -1001,7 +1026,7 @@ void pc_sort_committed_blocks(FATBUFFCNTXT *pfatbuffcntxt)
 {
 FATBUFF *pblk, *pprev, *psorted_list, *psort, *pblk_source_scan;
 
-    /* The first element is the root of the sorted list, we begin from the 
+    /* The first element is the root of the sorted list, we begin from the
        next element scanning foreward and inserting in sorted order */
     psorted_list = pfatbuffcntxt->pcommitted_blocks; /* pfatbuffcntxt->pcommitted_blocks is guaranteed not null */
 
@@ -1048,9 +1073,12 @@ FATBUFF *pblk, *pprev, *psorted_list, *psort, *pblk_source_scan;
 }
 
 #if (DEBUG_BLOCK_CODE || DEBUG_FAT_CODE)
-void debug_break(char *where, char *message)
+void debug_break(char *where, dword line, char *message)
 {
-    printf("%s: %s\n", where, message);
+    if (line)
+        printf("%s (%d): %s\n", where, line, message);
+    else
+        printf("%s: %s\n", where, message);
 }
 #endif
 
@@ -1127,32 +1155,41 @@ int numblocks;
 #endif /* DEBUG_FAT_CODE */
 
 #if (DEBUG_BLOCK_CODE)
-void debug_check_blocks(BLKBUFFCNTXT *pbuffcntxt, int numblocks,  char *where)
+void debug_check_blocks(BLKBUFFCNTXT *pbuffcntxt, int numblocks,  char *where, dword line)
 {
 BLKBUFF *pblk;
 BLKBUFF *pblk_prev;
 int nb = 0;
+int nfreelist = 0;
+int npopulatedlist = 0;
+
 int i;
     pblk = pbuffcntxt->pfree_blocks;
     while (pblk)
     {
         nb += 1;
         if (nb > numblocks)
-            debug_break(where, "Bad freelist");
+            debug_break(where,line, "Bad freelist");
         pblk = pblk->pnext;
     }
+    nfreelist = nb;
     pblk = pbuffcntxt->ppopulated_blocks;
     if (pblk && pblk->pprev)
-        debug_break(where, "Bad populated root");
+        debug_break(where,line, "Bad populated root");
     while (pblk)
     {
+        npopulatedlist += 1;
         nb += 1;
         if (nb > numblocks)
-            debug_break(where, "Bad populated list");
+            debug_break(where, line, "Bad populated list");
         pblk = pblk->pnext;
     }
+
+    /* Add in outstanding scratch allocates */
+    nb += pbuffcntxt->scratch_alloc_count;
+
     if (nb != numblocks)
-        debug_break(where, "Leak");
+        debug_break(where, line, "Leak");
 
     if (pbuffcntxt->ppopulated_blocks)
     {
@@ -1161,7 +1198,7 @@ int i;
         while (pblk)
         {
             if (pblk->pprev != pblk_prev)
-                debug_break(where, "Bad link in populated list");
+                debug_break(where, line, "Bad link in populated list");
             pblk_prev = pblk;
             pblk = pblk->pnext;
         }
@@ -1173,16 +1210,111 @@ int i;
         while (pblk)
         {
             if (i != (int) (pblk->blockno&pbuffcntxt->hash_mask))
-                debug_break(where, "Block in wrong hash slot");
+                debug_break(where, line, "Block in wrong hash slot");
 
             nb += 1;
             if (nb > numblocks)
-                debug_break(where, "Loop in hash table");
+                debug_break(where, line, "Loop in hash table");
             pblk = pblk->pnext2;
         }
-    }   
+    }
 }
+
+/* Diagnostic to display list list contents for FINODE and DROBJ pools.
+
+    display_free_lists(char *in_where)
+
+    Prints:
+        FINODES on FREE list, FINODES on in use list.
+        Drobj structures on  freelist,
+        drob structure count marked free by scanning the drobj pool sequentially
+        BLKBUFF buffer free count, and low water count
+        BLKBUFF buffers counted on populated list
+        BLKBUFF buffers counted on free list
+
+
+        If populated count and free list don't add up the remainder will be scratch
+        buffers.
+
+        To Do: Add counters for scratch buffer allocation and frees.
+
+    Useful for validating that no leaks are occuring.
+
+    Requires printf
+
+
+*/
+
+void display_free_lists(char *in_where)
+{
+    FINODE *pfi;
+    DROBJ *pobj;
+    struct blkbuff *pblk;
+    int j, i, objcount, finodecount,populated_block_count,free_list_count;
+    objcount = finodecount = i = populated_block_count = free_list_count = 0;
+
+    pfi = prtfs_cfg->mem_finode_freelist;
+    while (pfi)
+    {
+        i++;
+        pfi = pfi->pnext;
+    }
+    finodecount = 0;
+    pfi = prtfs_cfg->inoroot;
+    while (pfi)
+    {
+        finodecount++;
+        pfi = pfi->pnext;
+    }
+    printf("%-10.10s:INODES  free:%4.4d in-use:%4.4d total:%4.4d \n", in_where, i,finodecount,prtfs_cfg->cfg_NFINODES);
+    i = 0;
+    pobj = prtfs_cfg->mem_drobj_freelist;
+    while (pobj)
+    {
+        i++;
+        pobj = (DROBJ *) pobj->pdrive;
+    }
+    pobj =  prtfs_cfg->mem_drobj_pool;
+    objcount = 0;
+    for (j = 0; j < prtfs_cfg->cfg_NDROBJS; j++, pobj++)
+    {
+        if (!pobj->is_free)
+            objcount += 1;
+    }
+    printf("%-10.10s:DROBJS  free:%4.4d in-use:%4.4d total:%4.4d \n", in_where, i,objcount, prtfs_cfg->cfg_NDROBJS);
+
+    pblk = prtfs_cfg->buffcntxt.ppopulated_blocks; /* uses pnext/pprev */
+    populated_block_count = 0;
+    while (pblk)
+    {
+        populated_block_count += 1;
+        pblk = pblk->pnext;
+    }
+    printf("%-10.10s:BLKBUFS free:%4.4d in-use:%4.4d low w:%4.4d scratch:%4.4d total:%4.4d \n",in_where,
+        prtfs_cfg->buffcntxt.num_free,
+        populated_block_count,
+        prtfs_cfg->buffcntxt.low_water,
+        prtfs_cfg->buffcntxt.scratch_alloc_count,
+        prtfs_cfg->buffcntxt.num_blocks);
+
+    pblk = prtfs_cfg->buffcntxt.pfree_blocks;
+    free_list_count = 0;
+    while (pblk)
+    {
+        free_list_count += 1;
+        pblk = pblk->pnext;
+    }
+
+    if (free_list_count != prtfs_cfg->buffcntxt.num_free)
+    {
+        printf("%-10.10s:Error num_freelist == %d but %d elements on the freelist\n",in_where, prtfs_cfg->buffcntxt.num_free, free_list_count);
+    }
+}
+
+/* May be called to detect buffer pool leaks */
+void check_blocks(DDRIVE *pdrive, char *prompt, dword line)
+{
+    debug_check_blocks(pdrive->pbuffcntxt, pdrive->pbuffcntxt->num_blocks, prompt, line);
+}
+
 #endif /* (DEBUG_BLOCK_CODE) */
-
-
-

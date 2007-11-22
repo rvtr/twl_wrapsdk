@@ -299,7 +299,6 @@ int index;
 }
 
 
-
 /* ******************************************************************** */
 /* THIS IS THE MAIN PROGRAM FOR THE TEST SHELL */
 /* ******************************************************************** */
@@ -457,13 +456,39 @@ int nprinted = 0;
 }
 
 /* EJECT D: */
-BOOLEAN ide_eject_media(int driveno);
+
+void eject_driveno(int driveno)
+{
+    DDRIVE *pdr;
+
+    pdr = pc_drno_to_drive_struct(driveno);
+    if (pdr)
+    {
+        pdr->dev_table_perform_device_ioctl(driveno, DEVCTL_REPORT_REMOVE, (void *) 0);
+    }
+}
+void eject_drivename(byte *drivename)
+{
+    int driveno;
+    driveno = pc_parse_raw_drive(drivename);
+    if (driveno != -1)
+        eject_driveno(driveno);
+}
 
 int doeject(int agc, byte **agv)                                   /*__fn__*/
 {
-    RTFS_ARGSUSED_INT(agc);
-    RTFS_ARGSUSED_PVOID((void *)agv);
-      RTFS_PRINT_STRING_1(USTRING_TSTSH_02,PRFLG_NL); /* "Not implemented. See ide ioctl... " */
+    if (agc == 1)
+    {
+        if (!pc_set_default_drive(*agv))
+        {
+            RTFS_PRINT_STRING_1(USTRING_TSTSH_03,PRFLG_NL); /* "Set Default Drive Failed" */
+            return(-1);
+        }
+        else
+        {
+            eject_drivename(*agv);
+        }
+    }
     return(0);
 }
 
@@ -916,7 +941,6 @@ int pc_seedir(byte *path)                                          /*__fn__*/
             fcount++;
 
             rtfs_print_format_dir(display_buffer, &statobj);
-
              /* Get the next */
             if (!pc_gnext(&statobj))
                 break;
@@ -954,7 +978,6 @@ int docat(int agc, byte **agv)                                  /*__fn__*/
 {
     PCFD fd;
     int nread;
-
 
     if (agc == 1)
     {

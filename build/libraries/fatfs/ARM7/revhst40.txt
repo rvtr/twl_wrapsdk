@@ -1,6 +1,162 @@
+=================================================================
+Functional changes between version 4.4zb versus version 4.4za (March 16, 2007)
+=================================================================
+
+
+Bug fixes:
+            Fixed a finode structure memory leak that could occur if a removal event occured
+            under certain conditions. The bug has been present since 1994.
+
+            Fixed a bug that was under reporting block buffer freelist low water mark values.
+            The bug was only in the calculation of the low water mark and did not cause any
+            runtime errors.
+
+            Fixed a problem with FAT32 info block access routines that ran unnecessarily
+            slowly and could read beyond the end of a buffer.
+
+Features enhancements:
+
+            Implemented a shell command to simulate a card removal
+
+            Added a new display_free_lists() diagnostic routine to print current usage
+            stats. This routine may be called to monitor buffer usage.
+
+Changes by file:
+
+
+apigfrst.c - Fixed a bug that caused a leak of one finode structure if a card removal
+             event occured with an outstanding call to pc_gfirst() without a completed call
+             pc_gdone().
+
+prblock.c  - Fixed a bug that was causing an error in the calculation that produced incorrect
+             block buffer freelist low water mark values. The bug was only in the calculation of
+             the low water mark and did not cause any runtime errors.
+
+rtfs.h     - Modified the blkbuffcntxt structure to maintain a count of outstanding scratch
+             buffer allocations. This is used to correctly calculate low water usage and
+             for diagnostics.
+
+prblock.c  - Modified block diagnostic routines that is enabled by compiling with DEBUG_BLOCK_CODE
+             enabled in prblock.c
+             .. Include line numbers in diagnostics
+             .. Added a new dignostic
+                    display_free_lists(char *comment_string)
+                this routine prints usage stats about DROBJ, FINODE and BLKBUFF structures.
+                It can be called to display snapshot of resource usage and to detect leaks.
+
+rtfat32.c  - Modified code that accesses the on disk FAT32 info structure. The structure is now
+             accessed at byte offset 484 in the info block. Prvious code was wasting cycles and
+             scanning the info block for the info block signature.
+
+appcmdsh.c - Reprogrammed the shell's EJECT command to send a media removal event to
+             the specified drive id's device handler. This will trigger a remove event
+             for removable media device drivers.
+
+appcmdsh.c -  Implemented a callable routine named eject_driveno() that software can call to simulate
+              simulate a card removal. Useful for measuring the affects of card removals at specific
+              times
+
+apiinit.c  - Configure the host disk device driver as removable so it can process EJECT commands
+             from the command shell.
+
+
+=================================================================
+Functional changes between version 4.4za versus version 4.4y (February 16, 2007)
+=================================================================
+
+Note Version 44z was an unpublished interim release.
+
+Bug Fixes:
+
+.. rtfatxx.c - Changed fatxx_clnext() detect chain termination if the cluster value
+            is greater than xff7, xfff7 or xffffff7 for fat12, 16 , 32 respectively.
+            The current code detected only xfff, xffff and  xfffffff as terminators.
+
+.. rtkernfn.c  Fixed a bug in rtfs_get_system_user(). If NUMUSERS is greater than
+        one and we are reclaiming the default user (0), because not enough
+        user structures are avaliable, make sure the current working directory objects are
+        freed and the finode access counts are reduced
+
+.. rtfat32.c  Added defensive code to check for a valid start hint from the info block.
+        if it is out of range set it to the first cluster in the FAT. Eliminates a possible
+        error trap if start hint in the info block is incorrect.
+
+.. rtfat32.c  Modified the info block flush routine to update the infoblock start hint with the
+   previous start hint read from the info block. This forces the start hint to be 3 always on
+   volume that have been formatted and written to by RTFS only.
+
+.. prfstest.c - Minor bug fixes
+
+
+.. csjis.c Fixed bug in JIS version of pc_cs_malias(). Was causing an error if the 8th character in the
+   filename was a 2 byte character sequence.
+
+.. Bug in pc_emumerate - Added test to eliminate possible endless loop
+
+.. po_write - Fixed error processing on cluster allocation failure. The code was always returning
+a short write status, the number of bytes written, when the cluster allocation failed. This was
+assuming that the underlying code failed because it detected disk full, not because of some other
+error. The change tests the value of errno and if it is not set to PENOSPC, it return -1.
+
+apifilmv.c - Fixed an error that was in some cases leaving errno at zero and returning an error status.
+Now this condition sets ERRNO to PEINVALIDPATH;
+
+
+.. Changed how hidden sectors are handled by the format utilities. Previous support
+for hidden sectors was incorrect. The new method is correct. Hidden sectors are
+ignored completely except during the format procedure when the bpb hidden sector
+fields are set to the starting block of the partition.
+
+apifrmat.c  pc_format_volume changed the logic to set set numhide in the format
+            control structure to be the starting block number of the current partition.
+
+apifrmat.c  Obscure change that allows device drivers to specify format parameters for
+            32 bit formats. Previously supported only fat16/fat12 because the feature
+            was intended for floppy disks, to match IBM PC formats.
+
+rtfat16.c  - Changed the way hidden sectors are used in format
+rtfat32.c  - Changed the way hidden sectors are used in format
+rtlowl.c   - Fixed bug that was only initializig the low 16 bits of the
+             pdr->numhide, information field. This field is not used by RTFS.
+
+
+
+New features:
+
+.. Added a new device driver to Rtfs. The windev device is only available for the
+windows emulation environment. The windev driver accesses block devices directly on
+a windows platform using raw block accesses.
+
+portconf.h -  Added INCLUDE_WINDEV conditional constant.
+drwindev.c  - Source code for the direct block access driver
+apiinit.c   - Added code to mount a windev device if INCLUDE_WINDEV is
+              enabled in portconf.h
+
+.. Include a new special purpose fast file move function.
+
+apifastmv.c - New file containing pc_fast_mv().
+
+    pc_fast_mv      - Move a file to a filename in another subdirectoy when you know
+                      the destination filename does not already exist in that directory.
+                      (designed for moving multiple files from one subdirectory to another
+                      subdirectory that is initially empty.)
+
+=================================================================
+Functional changes between version 4.4y versus version 4.4x (November 3, 2006)
+=================================================================
+apifilio.c
+    Fixed parameter passing in seek functions to fix changes in beginning of
+    file and end of file processing that was introduced with po_ulseek in version
+    44v.
+apiint.c
+winhdisk.c
+    Added minor changes to these files forcing routines to query the device drive
+    again for media parms after a low level format. This was done in order to
+    support device drivers that may change media parameters during a low level format.
+
 Functional changes between version 4.4x versus version 4.4ws (August 25, 2006)
 =================================================================
-winhdisk,c - Removed some unreferenced performance diagnostic code that was
+winhdisk.c - Removed some unreferenced performance diagnostic code that was
              inadverdantly placed in the file.
 appcmdsh.c - Modified optional macro DISPLAY_ERRNO() to use RTFS print
              routines instead of printf.

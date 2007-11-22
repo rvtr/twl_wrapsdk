@@ -137,7 +137,6 @@ BOOLEAN pc_mkfs16(int driveno, FMTPARMS *pfmt, BOOLEAN use_raw)                 
     ltotsecs = pfmt->numcyl;
     ltotsecs *= pfmt->secptrk;
     ltotsecs *= pfmt->numhead;
-    ltotsecs -= pfmt->numhide;	//ctr modified
 
     if (ltotsecs > 0xffffL)
     {
@@ -157,7 +156,7 @@ BOOLEAN pc_mkfs16(int driveno, FMTPARMS *pfmt, BOOLEAN use_raw)                 
     /* number heads   */
     fr_WORD ( &(b[26]), pfmt->numhead); /*X*/
     /* number hidden sectors   */
-    fr_WORD ( &(b[28]), pfmt->numhide);             /*X*/	//ctr modified
+    fr_DWORD ( &(b[28]), pfmt->numhide);
     /* number of duplicate fats   */
     b[16] = pfmt->numfats;
     fr_WORD ( &(b[22]), (word)pfmt->secpfat); /*X*/
@@ -231,7 +230,7 @@ BOOLEAN pc_mkfs16(int driveno, FMTPARMS *pfmt, BOOLEAN use_raw)                 
     }
 
 
-    if (!devio_write_format(driveno, (dword) 0 + pfmt->numhide, &(b[0]), 1, use_raw) )
+    if (!devio_write_format(driveno, 0 , &(b[0]), 1, use_raw) )
     {
         goto errex;
     }
@@ -246,7 +245,7 @@ BOOLEAN pc_mkfs16(int driveno, FMTPARMS *pfmt, BOOLEAN use_raw)                 
         if (fausize == 4)
             b[3] = (byte) 0xff;
 
-        blockno = pfmt->numhide + pfmt->secreserved + (i * pfmt->secpfat);	//ctr modified
+        blockno = pfmt->secreserved + (i * pfmt->secpfat);
         for ( j = 0; j < pfmt->secpfat; j++)
         {
             /* WRITE   */
@@ -260,7 +259,7 @@ BOOLEAN pc_mkfs16(int driveno, FMTPARMS *pfmt, BOOLEAN use_raw)                 
     }
 
     /* Now write the root sectors   */
-    blockno = pfmt->numhide + pfmt->secreserved + pfmt->numfats * pfmt->secpfat; //ctr modified
+    blockno = pfmt->secreserved + pfmt->numfats * pfmt->secpfat;
     rtfs_memset(&b[0], 0, 512);
     for ( j = 0; j < (pfmt->numroot/INOPBLOCK) ; j++)
     {

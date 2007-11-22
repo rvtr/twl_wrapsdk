@@ -9,15 +9,16 @@
 /* APIGFRST.C - Contains user api level source code.
 
     The following routines are included:
-    
+
     pc_gfirst       - Get stats on the first file to match a pattern.
     pc_gnext        - Get stats on the next file to match a pattern.
     pc_gdone        - Free resources used by pc_gfirst/pc_gnext.
-    pc_upstat       -   Copy directory entry info to a user s stat buffer  
+    pc_upstat       -   Copy directory entry info to a user s stat buffer
 
 */
 
 #include <rtfs.h>
+
 
 /***************************************************************************
     PC_GFIRST - Get first entry in a directory to match a pattern.
@@ -43,9 +44,10 @@
     PEINVALIDDRIVEID- Drive component is invalid
     PEINVALIDPATH   - Path specified badly formed.
     PENOENT         - Not found, no match
-    An ERTFS system error 
+    An ERTFS system error
 
 ****************************************************************************/
+
 
 void pc_upstat(DSTAT *statobj);
 
@@ -59,7 +61,6 @@ BOOLEAN pc_gfirst(DSTAT *statobj, byte *name)      /*__apifn__*/
     CHECK_MEM(BOOLEAN, 0)   /* Make sure memory is initted */
 
     rtfs_set_errno(0);  /* po_gfirst: clear error status */
-
     rtfs_memset((byte *) statobj,0,sizeof(*statobj));
 /*    statobj->pobj = 0; */
 /*    statobj->pmom = 0; */
@@ -95,22 +96,24 @@ BOOLEAN pc_gfirst(DSTAT *statobj, byte *name)      /*__apifn__*/
     if (statobj->pmom)
         /* Found it. Check access permissions   */
     {
-        if(pc_isadir((DROBJ *)(statobj->pmom))) 
+        if(pc_isadir((DROBJ *)(statobj->pmom)))
         {
             /* Now find pattern in the directory   */
             statobj->pobj = (void *) pc_get_inode(0, (DROBJ *)(statobj->pmom), filename, (byte*) fileext, GET_INODE_WILD);
             if (statobj->pobj)
-            {
+           {
                 /* And update the stat structure   */
                 pc_upstat(statobj);
 
                 /* remember the drive number. used by gnext et al.   */
                 statobj->driveno = driveno;
-/* 9-20-94 release the FINODE and allocate a dummy. This will keep everyone 
-    who expects the drobj to own a finode happy but will not leave the 
-    finode open which locks out unlink et al */ 
+/* 9-20-94 release the FINODE and allocate a dummy. This will keep everyone
+    who expects the drobj to own a finode happy but will not leave the
+    finode open which locks out unlink et al */
                 pc_freei(((DROBJ *)(statobj->pobj))->finode); /* Release the current */
-                ((DROBJ *)(statobj->pobj))->finode = pc_alloci();
+/* 3-07-07 - Change: Remove additional call to pc_alloci(). Was not needed and caused a leak
+   on a hot swap event when a gfirst is outstanding */
+                ((DROBJ *)(statobj->pobj))->finode = 0;
 /* END 9-20-94   */
                 /* Remember the unique number associated with the drive
                    mount. If the drive is closed before we call gnext or
@@ -121,8 +124,8 @@ BOOLEAN pc_gfirst(DSTAT *statobj, byte *name)      /*__apifn__*/
             }
             else
             {
-            /* pc_gfirst: if statobj->pobj is 0 pc_get_inode() has set errno to PENOENT or 
-               to an internal or IO error status 
+            /* pc_gfirst: if statobj->pobj is 0 pc_get_inode() has set errno to PENOENT or
+               to an internal or IO error status
                if PENOENT set we will clear errno */
                 if (get_errno() == PENOENT)
                     rtfs_set_errno(0); /* pc_gfirst: file not found in directory
@@ -157,7 +160,7 @@ BOOLEAN pc_gfirst(DSTAT *statobj, byte *name)      /*__apifn__*/
     0               - No error
     PEINVALIDPARMS - statobj argument is not valid
     PENOENT        - Not found, no match (normal termination of scan)
-    An ERTFS system error 
+    An ERTFS system error
 ****************************************************************************/
 
 BOOLEAN pc_gnext(DSTAT *statobj)     /*__apifn__*/
@@ -165,7 +168,7 @@ BOOLEAN pc_gnext(DSTAT *statobj)     /*__apifn__*/
     DROBJ *nextobj;
     DDRIVE *pdrive;
     CHECK_MEM(BOOLEAN, 0)   /* Make sure memory is initted */
-    /* see if the drive is still mounted. Do not use pmom et al. since they 
+    /* see if the drive is still mounted. Do not use pmom et al. since they
         may be purged */
     if (!statobj || !statobj->pmom)
     {
@@ -176,7 +179,7 @@ BOOLEAN pc_gnext(DSTAT *statobj)     /*__apifn__*/
         return(FALSE);
     pdrive = pc_drno2dr(statobj->driveno);
     if (statobj->drive_opencounter != pdrive->drive_opencounter)
-    {
+    { /* Card was removed and re-inserted since pc_gfirst() */
         rtfs_set_errno(PEINVALIDPARMS); /* pc_gnext: statobj is not valid */
         release_drive_mount(statobj->driveno);/* Release lock, unmount if aborted */
         return(FALSE);
@@ -192,11 +195,13 @@ BOOLEAN pc_gnext(DSTAT *statobj)     /*__apifn__*/
         statobj->pobj = (void *)nextobj;
         /* And update the stat structure   */
         pc_upstat(statobj);
-/* 9-20-94 release the FINODE and allocate a dummy. This will keep everyone 
-    who expects the drobj to own a finode happy but will not leave the 
-    finode open which locks out unlink et al */ 
+/* 9-20-94 release the FINODE and allocate a dummy. This will keep everyone
+    who expects the drobj to own a finode happy but will not leave the
+    finode open which locks out unlink et al */
          pc_freei(((DROBJ *)(statobj->pobj))->finode); /* Release the current */
-         ((DROBJ *)(statobj->pobj))->finode = pc_alloci();
+/* 3-07-07 - Change: Remove additional call to pc_alloci(). Was not needed and caused a leak
+   on a hot swap event when a gfirst is outstanding */
+         ((DROBJ *)(statobj->pobj))->finode = 0;
 /* END 9-20-94   */
         release_drive_mount(statobj->driveno);/* Release lock, unmount if aborted */
         return(TRUE);
@@ -220,7 +225,7 @@ BOOLEAN pc_gnext(DSTAT *statobj)     /*__apifn__*/
     Given a pointer to a DSTAT structure that has been set up by a call to
     pc_gfirst() free internal elements used by the statobj.
 
-    NOTE: You MUST call this function when done searching through a 
+    NOTE: You MUST call this function when done searching through a
     directory.
 
  Returns
@@ -231,13 +236,14 @@ BOOLEAN pc_gnext(DSTAT *statobj)     /*__apifn__*/
     PEINVALIDPARMS - statobj argument is not valid
 ****************************************************************************/
 
+
 void pc_gdone(DSTAT *statobj)                                   /*__apifn__*/
 {
     DDRIVE *pdrive;
     VOID_CHECK_MEM()    /* Make sure memory is initted */
-    /* see if the drive is still mounted. Do not use pmom et al. since they 
+    /* see if the drive is still mounted. Do not use pmom et al. since they
         may be purged */
-    /* see if the drive is still mounted. Do not use pmom et al. since they 
+    /* see if the drive is still mounted. Do not use pmom et al. since they
         may be purged */
     if (!statobj || !statobj->pmom)
     {
@@ -247,12 +253,14 @@ void pc_gdone(DSTAT *statobj)                                   /*__apifn__*/
         return;
     pdrive = pc_drno2dr(statobj->driveno);
     if (statobj->drive_opencounter != pdrive->drive_opencounter)
-    {
+    { /* Card was removed and re-inserted since pc_gfirst() */
         release_drive_mount(statobj->driveno);/* Release lock, unmount if aborted */
         return;
     }
     if (statobj->pobj)
+    {
         pc_freeobj((DROBJ *)statobj->pobj);
+    }
     if (statobj->pmom)
         pc_freeobj((DROBJ *)statobj->pmom);
     release_drive_mount(statobj->driveno);/* Release lock, unmount if aborted */
@@ -262,7 +270,7 @@ void pc_gdone(DSTAT *statobj)                                   /*__apifn__*/
     PC_UPSTAT - Copy private information to public fields for a DSTAT struc.
 
  Description
-    Given a pointer to a DSTAT structure that contains a pointer to an 
+    Given a pointer to a DSTAT structure that contains a pointer to an
     initialized DROBJ structure, load the public elements of DSTAT with
     name filesize, date of modification et al. (Called by pc_gfirst &
     pc_gnext)
@@ -281,13 +289,13 @@ void pc_upstat(DSTAT *statobj)                                  /*__fn__*/
     pobj = (DROBJ *)(statobj->pobj);
 
     pi = pobj->finode;
-    
+
     copybuff( statobj->fname, pi->fname, 8);
     statobj->fname[8] = CS_OP_ASCII('\0');
     copybuff( statobj->fext, pi->fext, 3);
     statobj->fext[3] = CS_OP_ASCII('\0');
     /* put null termed file.ext into statobj   */
-    pc_ascii_mfile((byte *)statobj->filename, (byte *)statobj->fname, 
+    pc_ascii_mfile((byte *)statobj->filename, (byte *)statobj->fname,
              (byte *)statobj->fext);
 
     statobj->fattribute = pi->fattribute;
@@ -299,9 +307,7 @@ void pc_upstat(DSTAT *statobj)                                  /*__fn__*/
     if (!pc_get_lfn_filename(pobj, (byte *)statobj->lfname))
     {
         statobj->lfname[0] = statobj->lfname[1] = 0;
-        pc_cs_mfile((byte *)statobj->lfname, (byte *)statobj->fname, 
+        pc_cs_mfile((byte *)statobj->lfname, (byte *)statobj->fname,
              (byte *)statobj->fext);
     }
 }
-
-

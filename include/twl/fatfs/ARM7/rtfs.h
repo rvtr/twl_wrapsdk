@@ -383,7 +383,6 @@ typedef struct ddrive {
                                        etc are valid */
         BOOLEAN  mount_abort;       /* True if error handler requests abort */
         int drive_opencounter;      /* Value of global opencounter when we mounted */
-
         dword volume_serialno;      /* Volume serial number block 0 */
         byte  volume_label[14];     /* Volume entry from block 0 */
         int   bytespcluster;        /*  */
@@ -626,6 +625,7 @@ typedef struct blkbuffcntxt {
         struct blkbuff *pfree_blocks;      /* uses pnext */
         int     num_blocks;
         int     num_free;
+        int     scratch_alloc_count;
         int     low_water;
         int     num_alloc_failures;
         int     hash_size;
@@ -794,7 +794,6 @@ typedef struct fmtparms {
 #define CHECK_MEM(TYPE, RET)  if (!prtfs_cfg) {return((TYPE) RET);}
 #define VOID_CHECK_MEM()  if (!prtfs_cfg) {return;}
 #define IS_AVOLORDIR(X) ((X->isroot) || (X->finode->fattribute & AVOLUME|ADIRENT))
-
 
 /* File RTFSINIT.C: */
 BOOLEAN pc_ertfs_init(void);
@@ -1187,7 +1186,6 @@ typedef struct dev_geometry {
 #define	DEVCTL_FLUSH			7	
 /*----------------------------------*/
 
-
 typedef struct dev_geometry  *PDEV_GEOMETRY;
 
 
@@ -1390,7 +1388,7 @@ extern RTFS_CFG *prtfs_cfg;
 #include "prfs.h"
 #endif      /* INCLUDE_FAILSAFE_CODE */
 /* Include RTFS Pro features */
-#include "rtfspro.h" //twl modified
+#include <rtfspro.h>
 
 
 #include "attach.h"			//ctr modified

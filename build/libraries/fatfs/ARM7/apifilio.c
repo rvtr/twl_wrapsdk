@@ -776,27 +776,36 @@ BOOLEAN _po_ulseek(PC_FILE *pfile, dword offset, dword *new_offset, int origin) 
     else if (origin == PSEEK_CUR_NEG)   /* offset from current file pointer */
     {
         file_pointer =  pfile->fptr;
-        if (file_pointer > offset)
+        if (file_pointer >= offset)
             file_pointer -= offset;
         else
-            file_pointer = 0;
-
+        { /* Seek before beginning of file is an error */
+            p_errno = PEINVALIDPARMS;
+            goto errex;
+        }
     }
     else if (origin == PSEEK_END)   /*  offset from end of file */
     {
         file_pointer =  pfile->pobj->finode->fsize;
-        if (file_pointer > offset)
+        if (file_pointer >= offset)
             file_pointer -= offset;
         else
-            file_pointer = 0;
+        { /* Seek before beginning of file is an error */
+            p_errno = PEINVALIDPARMS;
+            goto errex;
+        }
     }
     else    /* Illegal origin */
     {
         p_errno = PEINVALIDPARMS;
         goto errex;
     }
-
-    if (file_pointer >= pfile->pobj->finode->fsize)
+    if (file_pointer > pfile->pobj->finode->fsize)
+    { /* Seek past end of file is an error */
+        p_errno = PEINVALIDPARMS;
+        goto errex;
+    }
+    if (file_pointer == pfile->pobj->finode->fsize)
     {
         file_pointer = pfile->pobj->finode->fsize;
 
@@ -942,29 +951,44 @@ long _po_lseek(PC_FILE *pfile, long offset, int origin)       /*__fn__*/
 {
     long    ret_val;
     int u_origin;
-    dword new_offset/*, u_offset*/;
+    dword new_offset, u_offset;
 
-    /*u_offset = offset;*/
+    u_offset = (dword) offset;
     u_origin = origin;
 
-    if (origin == PSEEK_CUR)   /* offset from current file pointer */
+    if (origin == PSEEK_SET)  /* offset from beginning of file */
+    {
+        if (offset < 0)
+        {
+            /* Negative seek from beginning is an error */
+            rtfs_set_errno(PEINVALIDPARMS);
+            return(-1L);
+        }
+    }
+    else if (origin == PSEEK_CUR)   /* offset from current file pointer */
     {
         if (offset < 0)
         {
             offset = -offset;
-            /*u_offset = (dword) offset;*/
+            u_offset = (dword) offset;
             u_origin = PSEEK_CUR_NEG;
         }
     }
     else if (origin == PSEEK_END)   /*  offset from end of file */
     {
-        if (offset < 0)
+        if (offset <= 0)
         {
             offset = -offset;
-            /*u_offset = (dword) offset;*/
+            u_offset = (dword) offset;
+        }
+        else
+        {
+            /* Positve seek from end is an error */
+            rtfs_set_errno(PEINVALIDPARMS);
+            return(-1L);
         }
     }
-    if (!_po_ulseek(pfile, offset, &new_offset, u_origin))
+    if (!_po_ulseek(pfile, u_offset, &new_offset, u_origin))
         ret_val = -1L;
     else
         ret_val = (long) new_offset;

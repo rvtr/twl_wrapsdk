@@ -166,10 +166,11 @@ int fs_test(byte *path)
 }
 
 #if (DO_INDEX_TEST)
-#define BIG_TEST_SIZE (4 * (CFG_NUM_INDEX_BUFFERS * 128))
+/* #define BIG_TEST_SIZE (4 * (CFG_NUM_INDEX_BUFFERS * 128)) */
+#define BIG_TEST_SIZE 4096
 dword map_check[BIG_TEST_SIZE];
 static BOOLEAN fs_test_map_cache(dword num_to_map);
-static BOOLEAN _fs_test_map_cache(dword num_to_map, BOOLEAN random_fill);
+static BOOLEAN _fs_test_map_cache(dword num_to_map, int fill_op);
 static BOOLEAN fs_test_index_errors(void);
 
 BOOLEAN fs_test_indexing_main(byte *path)
@@ -179,6 +180,11 @@ struct fsblockmap *save_freelist;
     fs_test_nvio_delete_fsfile(path);
     if (!open_index_test(path, FS_MODE_AUTORECOVER, TEST_BLOCKMAPSIZE, 0))
         return(FALSE);
+    if (test_fscontext.num_remap_blocks > BIG_TEST_SIZE)
+    {
+        FSDEBUG("INDEX TEST: BIG_TEST_SIZE too small to run index test. recompile")
+        return(FALSE);
+    }
     /* Test mapping with all fitting in cache */
     FSDEBUG("INDEX TEST: Test mapping with cache > # journaled blocks")
     if (!fs_test_map_cache(test_fscontext.blockmap_size-1))
@@ -1614,7 +1620,10 @@ return_error:
             fs_test_rm_file(path, filename);
             return(0);
         }
-        if (pc_get_file_extents(fd, 1, &seginfo, FALSE) != 1)
+/* if (pc_get_file_extents(fd, 1, &seginfo, FALSE) != 1)
+   Use raw block numbers since we are comparing with the partition base
+*/
+        if (pc_get_file_extents(fd, 1, &seginfo, TRUE) != 1)
             goto return_error;
         po_close(fd);
         return(seginfo.block);

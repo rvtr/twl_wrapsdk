@@ -176,7 +176,14 @@ int po_write(PCFD fd, byte *in_buff, int count)                   /*__apifn__*/
             n_clusters = FATOP(pdrive)->fatop_alloc_chain(pdrive, &(pfile->fptr_cluster), n_clusters, TRUE);
             if (!n_clusters)
             { /* Allocchain will set errno to PENOSPC or an IO or internal error */
-                break;
+                /* Handle PENOSPC as a short write - otherwise it is an error that returns -1*/
+                if (get_errno() == PENOSPC)
+                    break;
+                else
+                {
+                    ret_val = (int) -1;
+                    goto return_locked;
+                }
             }
 
             /* Calculate the last cluster in this chain.   */

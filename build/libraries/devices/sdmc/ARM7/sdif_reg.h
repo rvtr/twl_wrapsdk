@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*
-  Project:  CTR - SD driver
+  Project:  TWL - SD driver
   File:     sdif_reg.h
 
   Copyright 2006,2007 Nintendo.  All rights reserved.

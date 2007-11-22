@@ -10,19 +10,14 @@
 #include <rtfs.h>
 #include <rtfsconf.h>
 
-#if (RTFS_DEBUG_PRINT_ON == 1)
-	#if (CTR_DEF_ENVIRONMENT_DSEMU == 1)
-		#define PRINTDEBUG	osTPrintf
-	#else
-		#include <ctr/vlink.h>
-		#define PRINTDEBUG	vlink_dos_printf
-	#endif
-#else
-	#define PRINTDEBUG	i_no_print
-	static void i_no_print( const char *fmt, ... );
-	static void i_no_print( const char *fmt, ... ){ return; }
-#endif
 
+#if (RTFS_DEBUG_PRINT_ON == 1)
+//  #define PRINTDEBUG       OS_TPrintf
+#else
+//  #define PRINTDEBUG( ...) ((void)0)
+#endif
+//  #define PRINTDEBUG       OS_TPrintf
+  #define PRINTDEBUG( ...) ((void)0)
 
 /*---------------------------------------------------------------------------*
     global•Ï”
@@ -191,6 +186,11 @@ static void file_get_CHS_params( u32 file_sector_num)
     mbytes = (file_sector_num >> 11);
 
     while( 1) {
+//      if( mbytes < 1) {
+//          file_heads = 1;
+//          file_secptrack = 8;
+//        break;
+//      }
 	    if( mbytes <= 2) {
 	        file_heads 	= 2;
 	        file_secptrack = 16;

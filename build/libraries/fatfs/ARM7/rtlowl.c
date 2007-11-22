@@ -161,7 +161,14 @@ BOOLEAN pc_i_dskopen(int driveno)                      /*__fn__*/
     pdr->secreserved = bl0.secreserved; /* sectors reserved */
     pdr->secptrk    = bl0.secptrk;  /* sectors per track */
     pdr->numhead    = bl0.numhead;  /* number of heads */
-    pdr->numhide    =bl0.numhide;   /* # hidden sectors */
+    {
+
+    dword ltemp;
+        pdr->numhide    =bl0.numhide;   /* # hidden sectors */
+        ltemp = bl0.numhide2;
+        ltemp <<= 16;
+        pdr->numhide    |= ltemp;
+    }
 
     copybuff(pdr->volume_label, &bl0.vollabel[0], 11);
     pdr->volume_label[11] = 0;

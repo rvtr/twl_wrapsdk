@@ -2,9 +2,9 @@
 * rtkernfn.c - Miscelaneous portable functions
 *
 * ERTFS portable process management and other functions.
-* This file is portable but it requires interaction with the 
+* This file is portable but it requires interaction with the
 * porting layer functions in portrtfs.c.
-*  
+*
 *   Copyright EBS Inc. 1987-2003
 *   All rights reserved.
 *   This code may not be redistributed in source or linkable object form
@@ -33,7 +33,7 @@ BOOLEAN rtfs_resource_init(void)   /*__fn__*/
 
 PRTFS_SYSTEM_USER rtfs_get_system_user(void)
 {
-int i;
+int i,j;
 dword t;
 
     t = rtfs_port_get_taskid();
@@ -58,6 +58,17 @@ return_it:
     }
     /* We are out of user structures so use element 0 */
     i = 0;
+    /*  Bug fix 02-01-2007 - If we are using the default user (0), make sure the
+        current working directory objects are freed and the finode access counts
+        are reduced */
+    for(j = 0; j < prtfs_cfg->cfg_NDRIVES; j++)
+    {
+        if(prtfs_cfg->rtfs_user_table[i].lcwd[j])
+        {
+            pc_freeobj((DROBJ *) prtfs_cfg->rtfs_user_table[i].lcwd[j]);
+            prtfs_cfg->rtfs_user_table[i].lcwd[j] = 0;
+        }
+    }
     goto return_it;
 }
 
@@ -84,10 +95,10 @@ PRTFS_SYSTEM_USER s;
  *
  * This routine is called by RTFS when it closes a drive.
  * The routine must release the current directory object for that drive
- * for each user. If a user does not have a CWD for the drive it should 
+ * for each user. If a user does not have a CWD for the drive it should
  * not call pc_freeobj.
  *
- * In the reference port we cycle through our array of user structures 
+ * In the reference port we cycle through our array of user structures
  * to provide the enumeration. Other implementations are equally valid.
  */
 
@@ -118,24 +129,24 @@ int i;
 
 /* int rtfs_set_driver_errno() - set device driver errno for the calling task
 
-   Saves driver errno for the calling task in array based on callers taskid. 
+   Saves driver errno for the calling task in array based on callers taskid.
 
    Note: This routine must not be called from the interrupt service layer
 
-   Returns nothing 
+   Returns nothing
 */
 void rtfs_set_driver_errno(dword error)    /*__fn__*/
 {
     rtfs_get_system_user()->rtfs_driver_errno = error;
 }
 
-    
-/* ******************************************************************** 
- 
-dword rtfs_get_driver_errno() - get device driver errno for the calling task 
 
-  Returns device driver errno for the calling task in array based on 
-  callers taskid. 
+/* ********************************************************************
+
+dword rtfs_get_driver_errno() - get device driver errno for the calling task
+
+  Returns device driver errno for the calling task in array based on
+  callers taskid.
 */
 
 dword rtfs_get_driver_errno(void)    /*__fn__*/
@@ -146,9 +157,9 @@ dword rtfs_get_driver_errno(void)    /*__fn__*/
 
 /* int rtfs_set_errno() - set errno for the calling task
 
-   Saves errno for the calling task in array based on callers taskid. 
+   Saves errno for the calling task in array based on callers taskid.
 
-   Returns -1 
+   Returns -1
 */
 int rtfs_set_errno(int error)    /*__fn__*/
 {
@@ -156,12 +167,12 @@ int rtfs_set_errno(int error)    /*__fn__*/
     return(-1);
 }
 
-    
-/* ******************************************************************** 
- 
-int get_errno() - get errno for the calling task 
 
-  Returns errno for the calling task in array based on callers taskid. 
+/* ********************************************************************
+
+int get_errno() - get errno for the calling task
+
+  Returns errno for the calling task in array based on callers taskid.
 */
 
 int get_errno(void)    /*__fn__*/
@@ -177,19 +188,19 @@ void pc_report_error(int error_number)          /*__fn__*/
     RTFS_PRINT_LONG_1((dword) error_number, PRFLG_NL);
 }
 
-/* This routine will be called if an IO error occurs. It must return 
-   either CRITICAL_ERROR_ABORT to have the operation aborted and 
+/* This routine will be called if an IO error occurs. It must return
+   either CRITICAL_ERROR_ABORT to have the operation aborted and
    the drive to be unmounted or CRITICAL_ERROR_RETRY to force a retry
    of the operation.
 
    This routine prompts the user to Abort or Retry. If console input
-   is not implemented it return Abort. This routine may be modified 
+   is not implemented it return Abort. This routine may be modified
    to take corrective action (such as ask the user to reinsert the media)
-   before return Retry or Abort 
+   before return Retry or Abort
 */
 
-KS_CONSTANT int med_st[] = 
-{ 
+KS_CONSTANT int med_st[] =
+{
     USTRING_SYS_NULL, /* ""                  */
     USTRING_CRITERR_02, /* "BAD_FORMAT"         */
     USTRING_CRITERR_03, /* "CRERR_NO_CARD"      */
@@ -217,7 +228,7 @@ BOOLEAN needs_flush;
         needs_flush = FALSE;
 
     RTFS_PRINT_STRING_1(USTRING_CRITERR_07,0); /* "Media status == " */
-    RTFS_PRINT_STRING_1(med_st[media_status],PRFLG_NL); 
+    RTFS_PRINT_STRING_1(med_st[media_status],PRFLG_NL);
     RTFS_PRINT_STRING_2(USTRING_CRITERR_08, pdr->volume_label, PRFLG_NL); /* "Volume == " */
 
     if (needs_flush)
@@ -231,7 +242,7 @@ BOOLEAN needs_flush;
     CS_OP_ASSIGN_ASCII(p,'A');
     CS_OP_INC_PTR(p);
     CS_OP_TERM_STRING(p);
-    return (CRITICAL_ERROR_ABORT);	/* ctr modified */
+    return( CRITICAL_ERROR_ABORT); /* ctr modified */
 //    for (;;)
 //    {
 //        /* "Type A to abort R to Retry" */
@@ -247,7 +258,7 @@ BOOLEAN needs_flush;
     PC_NUM_DRIVES -  Return total number of drives in the system
 
  Description
-    This routine returns the number of drives in the system 
+    This routine returns the number of drives in the system
 
  Returns
     The number
@@ -261,7 +272,7 @@ int pc_num_drives(void)                                 /* __fn__ */
     PC_NUSERFILES -  Return total number of uses allowed in the system
 
  Description
-    This routine returns the number of user in the system   
+    This routine returns the number of user in the system
 
  Returns
     The number
@@ -275,7 +286,7 @@ int pc_num_users(void)                                  /* __fn__ */
     PC_NUSERFILES -  Return total number of userfiles alloed in the system
 
  Description
-    This routine returns the number of user files in the system 
+    This routine returns the number of user files in the system
 
  Returns
     The number
@@ -318,7 +329,7 @@ BOOLEAN pc_validate_driveno(int driveno)                            /* __fn__ */
     memory management this way to provide maximum flexibility for embedded
     system developers. In the reference port we use malloc to allocate the
     various chunks of memory we need, but we could just have easily comiled
-    the tables into the BSS section of the program. 
+    the tables into the BSS section of the program.
 
     Use whatever method makes sense in you system.
 
@@ -359,18 +370,18 @@ BOOLEAN pc_memory_init(void)                                                /*__
         return(FALSE);
 
     /* Initialize buffer pools for each drive */
-    for (pdrive=prtfs_cfg->mem_drives_structures,i = 0; 
+    for (pdrive=prtfs_cfg->mem_drives_structures,i = 0;
         i < prtfs_cfg->cfg_NDRIVES; i++, pdrive++)
     {
         /* Use the globally shared block buffer pool.
-            this can be overriden through the API to assign a private buffer pool to the drive */ 
+            this can be overriden through the API to assign a private buffer pool to the drive */
         pdrive->pbuffcntxt = &prtfs_cfg->buffcntxt;
 
         /* Initialize the fat block buffer array */
         if (!pc_initialize_fat_block_pool(
-            &pdrive->fatcontext, 
+            &pdrive->fatcontext,
             prtfs_cfg->cfg_FAT_BUFFER_SIZE[i], prtfs_cfg->fat_buffers[i],
-            prtfs_cfg->cfg_FAT_HASHTBL_SIZE[i], prtfs_cfg->fat_hash_table[i], 
+            prtfs_cfg->cfg_FAT_HASHTBL_SIZE[i], prtfs_cfg->fat_hash_table[i],
             prtfs_cfg->fat_primary_cache[i], prtfs_cfg->fat_primary_index[i]))
             return(FALSE);
 
@@ -380,7 +391,7 @@ BOOLEAN pc_memory_init(void)                                                /*__
         DROBJ memory allocator routine. */
     pobj = prtfs_cfg->mem_drobj_freelist = prtfs_cfg->mem_drobj_pool;
     pobj->is_free = TRUE;
-    for (i = 0,j = 1; i < prtfs_cfg->cfg_NDROBJS-1; i++, j++)  
+    for (i = 0,j = 1; i < prtfs_cfg->cfg_NDROBJS-1; i++, j++)
     {
         pobj = prtfs_cfg->mem_drobj_freelist + j;
         pobj->is_free = TRUE;
@@ -389,10 +400,10 @@ BOOLEAN pc_memory_init(void)                                                /*__
     prtfs_cfg->mem_drobj_freelist[prtfs_cfg->cfg_NDROBJS-1].pdrive = 0;
 
     /* Make a NULL terminated FINODE freelist using
-        pnext as the link. This linked freelist is used by the FINODE 
+        pnext as the link. This linked freelist is used by the FINODE
         memory allocator routine */
     pfi = prtfs_cfg->mem_finode_freelist = prtfs_cfg->mem_finode_pool;
-    for (i = 0; i < prtfs_cfg->cfg_NFINODES-1; i++)    
+    for (i = 0; i < prtfs_cfg->cfg_NFINODES-1; i++)
     {
         pfi->is_free = TRUE;
         pfi++;
@@ -432,7 +443,7 @@ DROBJ *preturn;
         if (!pobj->is_free)
         {
             pobj->is_free = TRUE;
-           /* Free it by putting it at the head of the freelist 
+           /* Free it by putting it at the head of the freelist
                 NOTE: pdrive is used to link the freelist */
             pobj->pdrive = (DDRIVE *) prtfs_cfg->mem_drobj_freelist;
             prtfs_cfg->mem_drobj_freelist = pobj;
@@ -518,5 +529,4 @@ BLKBUFF *pfile_buffer;
     }
     return(preturn);
 }
-
 

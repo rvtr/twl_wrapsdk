@@ -466,6 +466,10 @@ DEV_GEOMETRY geometry;
     if (!pc_format_media(drivename, &geometry))
            return(-1);
 
+    /* Get media parms again in case the format operation changed the parameters */
+    if (!pc_get_media_parms(drivename, &geometry))
+        return(-1);
+
     if (!pc_format_volume(drivename, &geometry))
         return(-1);
     return (0);

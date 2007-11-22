@@ -506,7 +506,7 @@ BOOLEAN validate_filename(byte * filename, byte * ext)
 BOOLEAN pc_cs_malias(byte *alias, byte *input_file, int try) /*__fn__*/
 {
     int n,s;
-    byte filename[9],fileext[4];
+    byte filename[10],fileext[4];
     byte *p_in, *p_in_ext, *p_temp, *p_temp_2;
     int char_len, jis_ext_len;
 
@@ -581,9 +581,11 @@ BOOLEAN pc_cs_malias(byte *alias, byte *input_file, int try) /*__fn__*/
         if (p_in_ext && p_temp>=p_in_ext)   /* hit extension ? */
             break;
         char_len = jis_char_length(p_temp);
-        /* break and use ' ' if 2 bite jis overflows 6 */
-        if(s==5&&char_len==2)
+        /* break and use ' ' if 2 bite jis overflows 8 character limit */
+        /* Bug fix 2-1-07 , was if(s==5&&char_len==2) */
+        if(s==7&&char_len==2)
         {
+            filename[7] = ' '; /* shift-jis first bytes clear */
             break;
         }
         else if(*p_temp!=' ' && *p_temp !='.')
@@ -602,7 +604,9 @@ BOOLEAN pc_cs_malias(byte *alias, byte *input_file, int try) /*__fn__*/
             }
         }
     }
-    filename[8]=0; /* null terminate filename[] */
+    /* Null terminate the file at length 8, the alias digits will be right justified in
+       file name and the result will be copied, stripping out spaces */
+    filename[8]=0;
 
     pc_ascii_str2upper(filename,filename);
     pc_ascii_str2upper(fileext,fileext);
@@ -620,41 +624,41 @@ BOOLEAN pc_cs_malias(byte *alias, byte *input_file, int try) /*__fn__*/
              filename[n]='~';
     }
 
-        p_temp_2 = alias;
-        p_temp = filename;
+    p_temp_2 = alias;
+    p_temp = filename;
 
-        /* copy filename[] to alias[], filtering out spaces */
-        s = 0;
-        while(*p_temp)
+    /* copy filename[] to alias[], filtering out spaces */
+    s = 0;
+    while(*p_temp)
+    {
+        char_len = jis_char_length(p_temp);
+
+        if (s == 7 && char_len == 2)
         {
-            char_len = jis_char_length(p_temp);
-
-            if (s == 7 && char_len == 2)
-                break;
-            if(*p_temp!=' ')
-            {
+            break;
+        }
+        if(*p_temp!=' ')
+        {
+            *p_temp_2++=*p_temp++;
+            if (char_len == 2)
                 *p_temp_2++=*p_temp++;
-                if (char_len == 2)
-                    *p_temp_2++=*p_temp++;
-                s += char_len;
-                if (s == 8)
-                    break;
-
-            }
-            else
-                p_temp++;
-
+            s += char_len;
+            if (s == 8)
+                break;
         }
-        if(jis_ext_len != 0)
+        else
+            p_temp++;
+     }
+    if(jis_ext_len != 0)
+    {
+        *p_temp_2++='.'; /* insert separating period */
+
+        /* copy fileext[] to alias[] */
+        for(s=0; s < jis_ext_len; s++)
         {
-            *p_temp_2++='.'; /* insert separating period */
-
-            /* copy fileext[] to alias[] */
-            for(s=0; s < jis_ext_len; s++)
-            {
-                *p_temp_2++ = fileext[s];
-            }
+            *p_temp_2++ = fileext[s];
         }
+    }
     *p_temp_2=0; /* null terminate alias[] */
     return(TRUE);
 }
@@ -907,4 +911,3 @@ int l;
 }
 
 #endif
-
