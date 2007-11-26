@@ -1388,7 +1388,7 @@ extern RTFS_CFG *prtfs_cfg;
 #include "prfs.h"
 #endif      /* INCLUDE_FAILSAFE_CODE */
 /* Include RTFS Pro features */
-#include <rtfspro.h>
+#include "rtfspro.h"
 
 
 #include "attach.h"			//ctr modified
