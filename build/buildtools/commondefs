@@ -289,6 +289,7 @@ TWL_INSTALL_ADDINS	:= $(TWL_INSTALL_ROOT)/add-ins
 MACRO_FLAGS += -DTWL_PLATFORM_$(TWL_PLATFORM)
 MACRO_FLAGS += -DSDK_DEBUGGER_$(TWL_DEBUGGER)
 MACRO_FLAGS += -DSDK_PMIC_REV=$(TWL_PMIC_REV)
+MACRO_FLAGS += $(if $(TWL_TS_VERSION),-DSDK_TS_VERSION=$(TWL_TS_VERSION),)
 
 
 #----------------------------------------------------------------------------
