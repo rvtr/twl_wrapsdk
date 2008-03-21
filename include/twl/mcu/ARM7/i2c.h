@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------*
-  Project:  TwlSDK - libraries - mcu
+  Project:  TwlSDK - mcu - include
   File:     i2c.h
 
   Copyright 2007 Nintendo.  All rights reserved.
@@ -10,13 +10,15 @@
   not be disclosed to third parties or copied or duplicated in any form,
   in whole or in part, without the prior written consent of Nintendo.
 
-  $Log: $
-  $NoKeywords: $
+  $Date::            $
+  $Rev$
+  $Author$
  *---------------------------------------------------------------------------*/
-#ifndef TWL_MCU_I2C_COMMON_H_
-#define TWL_MCU_I2C_COMMON_H_
+#ifndef TWL_MCU_I2C_H_
+#define TWL_MCU_I2C_H_
 
-#include <twl/types.h>
+#ifdef SDK_ARM7
+
 #include <twl/i2c/ARM7/i2c.h>
 
 #ifdef _cplusplus
@@ -63,46 +65,6 @@ static inline u8 MCU_ReadRegister( u8 reg )
     return I2C_ReadRegister( I2C_SLAVE_MICRO_CONTROLLER, reg );
 }
 
-/*---------------------------------------------------------------------------*
-  Name:         MCUi_WriteRegisters
-
-  Description:  set value to decive registers through I2C.
-
-  Arguments:    reg      : decive register
-                bufp     : data array to be written
-                size     : data size
-
-  Returns:      None
- *---------------------------------------------------------------------------*/
-static inline BOOL MCUi_WriteRegisters( u8 reg, const u8 *bufp, size_t size )
-{
-    return I2Ci_WriteRegisters( I2C_SLAVE_MICRO_CONTROLLER, reg, bufp, size );
-}
-static inline BOOL MCU_WriteRegisters( u8 reg, const u8 *bufp, size_t size )
-{
-    return I2C_WriteRegisters( I2C_SLAVE_MICRO_CONTROLLER, reg, bufp, size );
-}
-
-/*---------------------------------------------------------------------------*
-  Name:         MCUi_ReadRegisters
-
-  Description:  get value from decive registers through I2C.
-
-  Arguments:    reg      : decive register
-                bufp     : data array to be read
-                size     : data size
-
-  Returns:      value which is read from specified decive register
- *---------------------------------------------------------------------------*/
-static inline BOOL MCUi_ReadRegisters( u8 reg, u8 *bufp, size_t size )
-{
-    return I2Ci_ReadRegisters( I2C_SLAVE_MICRO_CONTROLLER, reg, bufp, size );
-}
-static inline BOOL MCU_ReadRegisters( u8 reg, u8 *bufp, size_t size )
-{
-    return I2C_ReadRegisters( I2C_SLAVE_MICRO_CONTROLLER, reg, bufp, size );
-}
-
 //================================================================================
 //        I2C BIT CONTROL
 //================================================================================
@@ -119,11 +81,20 @@ static inline BOOL MCU_ReadRegisters( u8 reg, u8 *bufp, size_t size )
  *---------------------------------------------------------------------------*/
 static inline BOOL MCUi_SetParams( u8 reg, u8 setBits, u8 maskBits )
 {
-    return I2Ci_SetParams( I2C_SLAVE_MICRO_CONTROLLER, reg, setBits, maskBits );
+    u8  tmp;
+    tmp = MCU_ReadRegister( reg );
+    tmp &= ~maskBits;
+    setBits &= maskBits;
+    tmp |= setBits;
+    return MCU_WriteRegister( reg, tmp );
 }
 static inline BOOL MCU_SetParams( u8 reg, u8 setBits, u8 maskBits )
 {
-    return I2C_SetParams( I2C_SLAVE_MICRO_CONTROLLER, reg, setBits, maskBits );
+    BOOL result;
+    (void)I2C_Lock();
+    result = MCUi_SetParams( reg, setBits, maskBits );
+    (void)I2C_Unlock();
+    return result;
 }
 
 /*---------------------------------------------------------------------------*
@@ -168,5 +139,7 @@ static inline BOOL MCU_ClearFlags( u8 reg, u8 clrBits )
 } /* extern "C" */
 #endif
 
-/* TWL_MCU_I2C_COMMON_H_ */
+#endif // SDK_ARM7
+
+/* TWL_MCU_I2C_H_ */
 #endif

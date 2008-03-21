@@ -32,7 +32,8 @@ SUBDIRS += \
              dsp    \
              spi    \
              el     \
-             mcu    \
+
+#             mcu    \
 
 endif # TWL_PLATFORM != DSTEG
 
