@@ -205,11 +205,74 @@ extern "C" {
 //----------------------------------------------------------------------
 // MEMORY MAP of SYSTEM SHARED AREA
 //----------------------------------------------------------------------
-//
+/*
+  4K -+------------------------------+- 0x03000000
+      |                              |
+      | System Shared                |
+      |                              |
+  3K -+------------------------------+- 0x02fffc00
+      | Download Parameter           |
+      +------------------------------+- 0x02fffbe0
+      | Card Rom Header              |
+      +------------------------------+- 0x02fffa80
+      | Unused                       |
+      +------------------------------+- 0x02fffa00
+      | RED Reserved                 |
+  2K -+------------------------------+- 0x02fff800
+      | System Shared 2              |
+      +------------------------------+- 0x02fff680
+      |                              |
+      | Shared Arena                 |
+      |                              |
+   0 -+------------------------------+- 0x02fff000
+      | Booted application RomHeader |
+ -4K -+------------------------------+- 0x02ffe000
+      | Booted application SRL Path  |
+     -+------------------------------+- 0x02ffdfc0
+      | FS Mount Parameter           |
+     -+------------------------------+- 0x02ffdc00
+      | TitleID list for system use  |
+     -+------------------------------+- 0x02ffd800
+      | SD NAND Context buf          |
+     -+------------------------------+- 0x02ffd7bc
+      | Reserved.                    |
+-12K -+------------------------------+- 0x02ffc000
+*/
+
+/*----------------------------------------------------------------------*
+    TWL SHARED RESERVED AREA
+ *----------------------------------------------------------------------*/
+#define HW_TWL_SHARED_RESERVED					HW_TWL_MAIN_MEM_SHARED
+#define HW_TWL_SHARED_RESERVED_END				HW_SD_NAND_CONTEXT_BUF
+
+/*----------------------------------------------------------------------*
+    Nand context of SD driver
+ *----------------------------------------------------------------------*/
+#define HW_SD_NAND_CONTEXT_BUF					(HW_MAIN_MEM + 0x00ffd7bc )	// ランチャーから引継いだSDドライバ用NANDコンテキストデータ
+#define HW_SD_NAND_CONTEXT_BUF_END				(HW_MAIN_MEM + 0x00ffd800 )
+
+/*----------------------------------------------------------------------*
+    TitleID list for system use
+ *----------------------------------------------------------------------*/
+#define HW_OS_TITLE_ID_LIST                     (HW_MAIN_MEM + 0x00ffd800 ) // ユーザー用TitleIDリスト
+#define HW_OS_TITLE_ID_LIST_SIZE                0x400
+
+/*----------------------------------------------------------------------*
+    FS PARAMETER from SystemMenu
+ *----------------------------------------------------------------------*/
+#define HW_TWL_FS_MOUNT_INFO_BUF                (HW_MAIN_MEM + 0x00ffdc00 ) // マウント情報（サイズは0x3c0確保。11個までマウント指定可能。11*84+1=0x39d）
+#define HW_TWL_FS_BOOT_SRL_PATH_BUF             (HW_MAIN_MEM + 0x00ffdfc0 ) // 起動SRLのパス
+
+/*----------------------------------------------------------------------*
+    MEMORY MAP of temporary area for sheltering each extended rom header
+ *----------------------------------------------------------------------*/
 #define HW_TWL_ROM_HEADER_BUF           (HW_MAIN_MEM_EX_END - 0x2000)    // TWL-ROM内登録エリアデータ・バッファ
 #define HW_TWL_ROM_HEADER_BUF_END       (HW_MAIN_MEM_EX_END - 0x1000)
 #define HW_TWL_ROM_HEADER_BUF_SIZE      0x1000
 
+/*----------------------------------------------------------------------*
+    MEMORY MAP of SHARED AREA (4K bytes)
+ *----------------------------------------------------------------------*/
 #define HW_RED_RESERVED                 (HW_MAIN_MEM_EX_END - 0x800)      // maybe change later
 #define HW_RED_RESERVED_END             (HW_RED_RESERVED + HW_RED_RESERVED_SIZE)
 #define HW_RED_RESERVED_SIZE            0x200
