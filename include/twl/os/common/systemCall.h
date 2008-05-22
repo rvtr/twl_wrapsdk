@@ -17,8 +17,9 @@
 #ifndef TWL_OS_SYSTEMCALL_H_
 #define TWL_OS_SYSTEMCALL_H_
 
-#define SVC_SHA1_BLOCK_SIZE     64
 #define SVC_SHA1_DIGEST_SIZE    20
+#define SVC_SHA1_BLOCK_SIZE     64
+#define SVC_RSA1024_BLOCK_SIZE  128
 
 #ifdef __cplusplus
 extern "C" {
@@ -124,6 +125,14 @@ void SVC_HMACSHA1Update( SVCHMACSHA1Context *ctx, const void *data, u32 len );
 void SVC_HMACSHA1GetHash( SVCHMACSHA1Context *ctx, void* md );
 void SVC_CalcHMACSHA1( void* md, const void* data, u32 len, const void* key, u32 keylen );
 
+// internal
+
+int SVCi_DecryptSign(
+                    const SVCSignHeapContext*     acmemory_pool,
+                    void*           buffer,     //  出力領域
+                    const void*     sgn_ptr,    //  データへのポインタ
+                    const void*     key_ptr     //  キーへのポインタ
+                    );
 
 #ifdef __cplusplus
 } /* extern "C" */
